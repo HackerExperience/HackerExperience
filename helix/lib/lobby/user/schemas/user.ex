@@ -11,7 +11,8 @@ defmodule Lobby.User do
     {:username, :string},
     {:email, :string},
     {:password, :string},
-    {:inserted_at, {:datetime_utc, [precision: :millisecond], mod: :inserted_at}}
+    {:inserted_at,
+     {:datetime_utc, [precision: :millisecond], mod: :inserted_at}}
   ]
 
   @derived_fields [:id]

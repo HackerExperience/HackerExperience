@@ -26,7 +26,10 @@ defmodule Mix.Tasks.Db.Schema.Dump do
     # Migrate
     {:ok, conn} = SQLite.open(@tmp_db)
     SQLite.raw!(conn, "PRAGMA synchronous=0")
-    {:needs_migration, migrations} = DB.Migrator.get_migration_status(conn, context, :readwrite)
+
+    {:needs_migration, migrations} =
+      DB.Migrator.get_migration_status(conn, context, :readwrite)
+
     :ok = DB.Migrator.migrate(conn, migrations)
 
     output_file = "#{@output_path}/#{context}.sql"

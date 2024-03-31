@@ -109,6 +109,7 @@ defmodule DB.Boot do
 
   def validate_database(all_models, context) do
     all_models
+    |> Enum.filter(fn {_, ctx, _, _} -> ctx == context end)
     |> Enum.map(fn {_module, _context, table, _schema} = model ->
       {:ok, table_info} = DB.raw("PRAGMA table_info(#{table})")
       validate_table_info!(model, table_info)

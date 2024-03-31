@@ -8,6 +8,7 @@ defmodule DB.Migrator.Metadata do
 
   # TODO: In the future this should be kept in `__db_apps` but for now that's GoodEnough(TM)
   def initial_summary_for_context(:lobby), do: %{lobby: 0}
+  def initial_summary_for_context(:player), do: %{player: 0}
   def initial_summary_for_context(:test), do: %{test: 0}
 
   @doc """

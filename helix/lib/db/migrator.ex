@@ -3,7 +3,7 @@ defmodule DB.Migrator do
   alias DB.Migrator.Metadata
 
   @env Mix.env()
-  @config_migrations_path Application.compile_env(:core, [:db, :migrations_dir])
+  @config_migrations_path Application.compile_env(:helix, [:db, :migrations_dir])
   @default_migrations_path "priv/migrations"
 
   @doc """
@@ -111,6 +111,9 @@ defmodule DB.Migrator do
         # [{mod, _}] = Code.compile_file(exs_file)
         # apply(mod, :change, [conn])
         raise "Not supported yet"
+
+      nil ->
+        raise "Migration not found: #{domain}@#{v}"
     end
   end
 

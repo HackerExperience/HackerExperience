@@ -6,7 +6,7 @@ defmodule DB.Repo do
   alias DB.SQLite
 
   @env Mix.env()
-  @data_dir Application.compile_env(:core, [:db, :data_dir])
+  @data_dir Application.compile_env(:helix, [:db, :data_dir])
 
   # Callbacks
 

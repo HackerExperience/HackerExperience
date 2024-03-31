@@ -9,6 +9,7 @@ defmodule DB.SchemaFinder do
     :ets.new(@ets_table, [:named_table, :public])
     Mix.Task.clear()
     Mix.Task.run("compile", ["--force", "--tracer", __MODULE__])
+
     # This compilation may be causing the "Inspect protocol is already consolidated" warning
   end
 
