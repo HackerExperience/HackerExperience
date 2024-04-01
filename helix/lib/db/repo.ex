@@ -42,6 +42,12 @@ defmodule DB.Repo do
 
   # Bootstrap
   def handle_continue(:bootstrap, state) do
+    # NOTE: There's room for optimization here by executing all pragmas in a
+    # single query. I *think* that will speed up the bootstrap process, but
+    # of course needs proper benchmarking. Also, consider running the pragmas
+    # with synchronous=0, and then, once this is done, call synchronous=1
+    # (Again, needs proper measurement to make sure it's a valid change)
+
     # We overwrite some defaults for testing
     if @env == :test do
       # Note you want to do this at the beginning so it doesn't slow down the
@@ -69,8 +75,6 @@ defmodule DB.Repo do
     :ok = SQLite.exec(state.conn, "PRAGMA foreign_keys=1")
 
     # Maximum number of pages to store in the cache.
-    # We only set this on :readwrite because it requires a lock, which
-    # conflicts with BEGIN EXCLUSIVE.
     # TODO: Review this number for HE
     :ok = SQLite.exec(state.conn, "PRAGMA cache_size=1200")
 
