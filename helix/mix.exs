@@ -48,7 +48,8 @@ defmodule Helix.MixProject do
   defp deps do
     [
       {:exqlite, "~> 0.20"},
-      {:jason, "~> 1.4"}
+      {:jason, "~> 1.4"},
+      {:rustler, "~> 0.32.0"}
     ]
   end
 

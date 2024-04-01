@@ -1,0 +1,17 @@
+[package]
+name = "argon2"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[lib]
+name = "argon2"
+path = "src/argon2.rs"
+crate-type = ["dylib"]
+
+[dependencies]
+rustler = "0.32"
+argon2 = "0.5.3"
+rand_core = { version = "0.6.4", features = ["std"] }
+
