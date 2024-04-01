@@ -221,8 +221,7 @@ defmodule DB.Migrator do
         domain_entries
         |> Enum.group_by(fn {_, v, _} -> v end)
         |> Enum.map(fn {v, path_entries} ->
-          path_entries =
-            Enum.map(path_entries, fn {_domain, _v, path} -> path end)
+          path_entries = Enum.map(path_entries, fn {_domain, _v, path} -> path end)
 
           {type, path_entries} =
             case path_entries do

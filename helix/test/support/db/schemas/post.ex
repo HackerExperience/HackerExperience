@@ -8,8 +8,7 @@ defmodule Sample.Post do
     {:id, :integer},
     {:title, :string},
     {:body, :string},
-    {:inserted_at,
-     {:datetime_utc, [precision: :millisecond], mod: :inserted_at}},
+    {:inserted_at, {:datetime_utc, [precision: :millisecond], mod: :inserted_at}},
     {:updated_at, {:datetime_utc, [precision: :millisecond], mod: :updated_at}}
   ]
 

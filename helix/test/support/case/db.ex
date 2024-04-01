@@ -26,8 +26,7 @@ defmodule Test.DBCase do
     # TODO: Skip setup on tests with `unit: true` tags
     context = Map.get(tags, :db, default_db_context(tags))
 
-    {_, {:ok, shard_id, path}} =
-      :timer.tc(fn -> Test.DB.Setup.new_test_db(context) end)
+    {_, {:ok, shard_id, path}} = :timer.tc(fn -> Test.DB.Setup.new_test_db(context) end)
 
     Test.DB.Setup.compile_test_queries()
 

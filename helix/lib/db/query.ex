@@ -126,8 +126,7 @@ defmodule DB.Query do
       |> Enum.map(fn _ -> "?" end)
       |> Enum.join(", ")
 
-    sql =
-      "INSERT INTO #{domain} ( #{columns_clause} ) VALUES ( #{values_clause} );"
+    sql = "INSERT INTO #{domain} ( #{columns_clause} ) VALUES ( #{values_clause} );"
 
     adhoc_query = {sql, {[], target_fields}, :insert}
     append_runtime_query(query_id, adhoc_query)
@@ -203,8 +202,7 @@ defmodule DB.Query do
         )
 
     # Replace domain queries with the new query we compiled in runtime
-    adhoc_queries =
-      :persistent_term.get({:db_sql_queries, {context, domain}}, %{})
+    adhoc_queries = :persistent_term.get({:db_sql_queries, {context, domain}}, %{})
 
     new_adhoc_queries = Map.put(adhoc_queries, query_name, adhoc_query)
 
@@ -361,20 +359,13 @@ defmodule DB.Query do
     name = fn -> {Process.get({:db_sql, :domain}), id} end
 
     if String.at(sql, -1) != ";",
-      do:
-        raise(
-          "You forgot to end this SQL query with a semicolon: #{inspect(name.())}"
-        )
+      do: raise("You forgot to end this SQL query with a semicolon: #{inspect(name.())}")
 
     if Utils.String.count(sql, ";") > 1,
-      do:
-        raise("You've got multiple semicolons at SQL query #{inspect(name.())}")
+      do: raise("You've got multiple semicolons at SQL query #{inspect(name.())}")
 
     if not Binding.validate(qt, sql, bindings),
-      do:
-        raise(
-          "Invalid bind count detected for query #{inspect(id)}: #{inspect(bindings)}"
-        )
+      do: raise("Invalid bind count detected for query #{inspect(id)}: #{inspect(bindings)}")
   end
 
   defp store_queries(queries, context, domain) do

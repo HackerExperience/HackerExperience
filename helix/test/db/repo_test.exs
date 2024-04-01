@@ -10,8 +10,7 @@ defmodule DB.RepoTest do
   setup %{shard_id: shard_id, db: db} = flags do
     repo_pid =
       unless Map.get(flags, :skip_init, false) do
-        {:ok, pid} =
-          start_supervised({Repo, {@context, shard_id, db, :readwrite}})
+        {:ok, pid} = start_supervised({Repo, {@context, shard_id, db, :readwrite}})
 
         pid
       else
@@ -25,8 +24,7 @@ defmodule DB.RepoTest do
     @describetag skip_init: true
 
     test "in readwrite mode", %{shard_id: shard_id, db: db} do
-      assert {:ok, pid} =
-               start_supervised({Repo, {@context, shard_id, db, :readwrite}})
+      assert {:ok, pid} = start_supervised({Repo, {@context, shard_id, db, :readwrite}})
 
       state = :sys.get_state(pid)
       c = state.conn
@@ -51,8 +49,7 @@ defmodule DB.RepoTest do
     end
 
     test "in readonly mode", %{shard_id: shard_id, db: db} do
-      assert {:ok, pid} =
-               start_supervised({Repo, {@context, shard_id, db, :readonly}})
+      assert {:ok, pid} = start_supervised({Repo, {@context, shard_id, db, :readonly}})
 
       state = :sys.get_state(pid)
       c = state.conn
@@ -65,8 +62,7 @@ defmodule DB.RepoTest do
       assert [[_]] = SQLite.raw!(c, "SELECT name FROM friends WHERE id = 1")
 
       # But I can't write
-      assert {:error, reason} =
-               SQLite.raw(c, "DELETE FROM friends WHERE id = 1")
+      assert {:error, reason} = SQLite.raw(c, "DELETE FROM friends WHERE id = 1")
 
       assert reason =~ "attempt to write a readonly database"
     end
@@ -107,16 +103,14 @@ defmodule DB.RepoTest do
     test "returns the corresponding result", %{repo: repo} do
       q = {:friends, :get_by_id}
 
-      assert {:ok, %{id: 1, name: "Phoebe"}} =
-               GS.call(repo, {:query, :one, q, [1]})
+      assert {:ok, %{id: 1, name: "Phoebe"}} = GS.call(repo, {:query, :one, q, [1]})
 
       assert {:ok, nil} == GS.call(repo, {:query, :one, q, [9]})
     end
 
     test "handles errors", %{repo: repo} do
       # Multiple results being returned at once
-      assert {:error, :multiple_results} =
-               GS.call(repo, {:query, :one, {:friends, :get_all}, []})
+      assert {:error, :multiple_results} = GS.call(repo, {:query, :one, {:friends, :get_all}, []})
 
       # Wrong number of bindings
       assert {:error, :arguments_wrong_length} =
@@ -131,8 +125,7 @@ defmodule DB.RepoTest do
       assert length(rows) == 6
 
       # Now with bindings
-      assert {:ok, _} =
-               GS.call(repo, {:raw, "delete from friends where id = ?", [1]})
+      assert {:ok, _} = GS.call(repo, {:raw, "delete from friends where id = ?", [1]})
 
       assert {:ok, rows} = GS.call(repo, {:raw, "select * from friends", []})
       assert length(rows) == 5

@@ -103,8 +103,7 @@ defmodule DB.MigratorTest do
       refute Enum.count(migrations.lobby) > 1
 
       # Lobby's first migration
-      assert {:sql_only, "priv/migrations/lobby/0001_add_users.sql"} =
-               migrations.lobby[1]
+      assert {:sql_only, "priv/migrations/lobby/0001_add_users.sql"} = migrations.lobby[1]
     end
   end
 
@@ -163,8 +162,7 @@ defmodule DB.MigratorTest do
       mock_migrations = %{lobby: %{1 => {:sql_only, []}, 2 => {:sql_only, []}}}
 
       # Calculates the latest version correctly
-      latest_version =
-        DB.Migrator.calculate_latest_version(:lobby, mock_migrations)
+      latest_version = DB.Migrator.calculate_latest_version(:lobby, mock_migrations)
 
       assert latest_version == 2
 

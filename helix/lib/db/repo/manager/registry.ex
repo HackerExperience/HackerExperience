@@ -97,9 +97,7 @@ defmodule DB.Repo.Manager.Registry.Worker do
         if Process.alive?(manager_pid) do
           {:reply, {:ok, manager_pid}, state}
         else
-          Logger.warning(
-            "Registry information is out-of-date for manager #{inspect(manager_pid)}"
-          )
+          Logger.warning("Registry information is out-of-date for manager #{inspect(manager_pid)}")
 
           # TODO: Maybe return error here and fix the underlying root issue?
           {:ok, manager_pid} = Manager.create(context, shard_id)
@@ -122,21 +120,15 @@ defmodule DB.Repo.Manager.Registry.Worker do
 
       other_pid ->
         if Process.alive?(other_pid) do
-          Logger.error(
-            "Multiple active managers detected for shard #{shard_id}"
-          )
+          Logger.error("Multiple active managers detected for shard #{shard_id}")
 
-          Logger.error(
-            "Got old=#{inspect(other_pid)} and new=#{inspect(manager_pid)}"
-          )
+          Logger.error("Got old=#{inspect(other_pid)} and new=#{inspect(manager_pid)}")
 
           {:reply, :error, state}
         else
           Logger.info("Updating Manager entry for shard #{shard_id}")
 
-          Logger.info(
-            "Old=#{inspect(other_pid)} and new=#{inspect(manager_pid)}"
-          )
+          Logger.info("Old=#{inspect(other_pid)} and new=#{inspect(manager_pid)}")
 
           {:reply, :ok, Map.put(state, shard_id, manager_pid)}
         end

@@ -48,8 +48,7 @@ defmodule DB.Migrator.MetadataTest do
     setup [:with_migrator_setup]
 
     test "inserts migration", %{conn: conn} do
-      list_migrations =
-        "SELECT * FROM #{@migrations_table} ORDER BY domain ASC, version DESC"
+      list_migrations = "SELECT * FROM #{@migrations_table} ORDER BY domain ASC, version DESC"
 
       # Initially we have no migrations
       assert [] == SQLite.raw!(conn, list_migrations)
@@ -64,14 +63,12 @@ defmodule DB.Migrator.MetadataTest do
       # And another!
       Metadata.insert_migration(conn, :core, 2)
 
-      assert [["core", 2, _], ["core", 1, _]] =
-               SQLite.raw!(conn, list_migrations)
+      assert [["core", 2, _], ["core", 1, _]] = SQLite.raw!(conn, list_migrations)
 
       # And another, now from a different domain
       Metadata.insert_migration(conn, :mob, 1)
 
-      assert [["core", 2, _], ["core", 1, _], ["mob", 1, _]] =
-               SQLite.raw!(conn, list_migrations)
+      assert [["core", 2, _], ["core", 1, _], ["mob", 1, _]] = SQLite.raw!(conn, list_migrations)
 
       # The summary table was updated correctly
       assert [["core", 2, _], ["mob", 1, _]] =

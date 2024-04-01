@@ -15,8 +15,7 @@ defmodule DB.BootTest do
     @tag unit: true
     test "stores migrations in persistent term" do
       # For the test environment, it includes both test and real migrations
-      assert [:lobby, :test] =
-               Migrator.get_all_migrations() |> Map.keys() |> Enum.sort()
+      assert [:lobby, :test] = Migrator.get_all_migrations() |> Map.keys() |> Enum.sort()
     end
 
     @tag unit: true

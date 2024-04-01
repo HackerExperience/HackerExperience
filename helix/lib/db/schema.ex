@@ -154,10 +154,7 @@ defmodule DB.Schema do
 
   def update(%_{} = struct, args_map) when is_map(args_map) do
     if struct.__meta__.origin != :db,
-      do:
-        raise(
-          "Can't update an application-originated struct: #{inspect(struct)}"
-        )
+      do: raise("Can't update an application-originated struct: #{inspect(struct)}")
 
     schema = struct.__struct__.__schema__()
     current_target = struct.__meta__[:target]
@@ -237,10 +234,7 @@ defmodule DB.Schema do
       FunctionClauseError ->
         if is_nil(Map.fetch!(struct, field)) and
              not Map.has_key?(opts, :nullable),
-           do:
-             raise(
-               "#{struct.__struct__}.#{field} is null but it isn't supposed to be"
-             )
+           do: raise("#{struct.__struct__}.#{field} is null but it isn't supposed to be")
     end
   end
 
@@ -261,16 +255,14 @@ defmodule DB.Schema do
           fp = fields_to_populate
           ef = extended_fields
 
-          details =
-            "\n\nRow: #{inspect(row)}; \nfields: #{inspect(fp)} or #{inspect(ef)}"
+          details = "\n\nRow: #{inspect(row)}; \nfields: #{inspect(fp)} or #{inspect(ef)}"
 
           raise "Row results do not match with fields to populate: #{details}"
         end
       end
 
     if length(fields_to_populate) != length(row) do
-      details =
-        "\n\nRow: #{inspect(row)}; \nfields: #{inspect(fields_to_populate)}"
+      details = "\n\nRow: #{inspect(row)}; \nfields: #{inspect(fields_to_populate)}"
 
       raise "Row results do not match with fields to populate: #{details}"
     end

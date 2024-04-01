@@ -97,8 +97,7 @@ defmodule DB.SQLiteTest do
       assert :ok = SQLite.perform(c, stmt)
 
       # No results here
-      {:ok, stmt} =
-        SQLite.prepare(c, "UPDATE friends SET name = ? WHERE id = ?")
+      {:ok, stmt} = SQLite.prepare(c, "UPDATE friends SET name = ? WHERE id = ?")
 
       SQLite.bind(c, stmt, ["Jessie", 1])
       assert :ok = SQLite.perform(c, stmt)

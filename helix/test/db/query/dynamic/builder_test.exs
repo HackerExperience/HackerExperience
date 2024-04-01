@@ -186,15 +186,13 @@ defmodule DB.Query.Dynamic.BuilderTest do
     test "in - one elements" do
       filter_map = [imoveis: [{:id, {:in, [1]}}]]
 
-      assert {_, _, ["i.id IN (?)"], [1]} =
-               B.build_wheres(@assoc_map, filter_map)
+      assert {_, _, ["i.id IN (?)"], [1]} = B.build_wheres(@assoc_map, filter_map)
     end
 
     test "in - multiple elements" do
       filter_map = [imoveis: [{:id, {:in, [1, 2]}}]]
 
-      assert {_, _, ["i.id IN (?, ?)"], [1, 2]} =
-               B.build_wheres(@assoc_map, filter_map)
+      assert {_, _, ["i.id IN (?, ?)"], [1, 2]} = B.build_wheres(@assoc_map, filter_map)
 
       filter_map = [imoveis: [{:id, {:in, [1, 2, 3, 4, 5]}}]]
 
@@ -205,8 +203,7 @@ defmodule DB.Query.Dynamic.BuilderTest do
     test "likep" do
       filter_map = [imoveis: [{:address, {:likep, "Rua"}}]]
 
-      assert {_, _, ["i.address LIKE ? || '%'"], ["Rua"]} =
-               B.build_wheres(@assoc_map, filter_map)
+      assert {_, _, ["i.address LIKE ? || '%'"], ["Rua"]} = B.build_wheres(@assoc_map, filter_map)
     end
 
     test "plikep" do
@@ -219,8 +216,7 @@ defmodule DB.Query.Dynamic.BuilderTest do
     test "fragment - no args" do
       filter_map = [imoveis: [{:deleted_at, {:fragment, "IS NULL"}}]]
 
-      assert {_, _, ["i.deleted_at IS NULL"], []} =
-               B.build_wheres(@assoc_map, filter_map)
+      assert {_, _, ["i.deleted_at IS NULL"], []} = B.build_wheres(@assoc_map, filter_map)
     end
   end
 end

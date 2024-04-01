@@ -52,8 +52,7 @@ defmodule DB.Query.DynamicTest do
 
       schema_mock = %{__table__: :crm_contacts}
 
-      assert {query, bindings} =
-               Dynamic.build(schema_mock, assoc_map, search_input)
+      assert {query, bindings} = Dynamic.build(schema_mock, assoc_map, search_input)
 
       expected_query =
         "SELECT c.* FROM crm_contacts c " <>

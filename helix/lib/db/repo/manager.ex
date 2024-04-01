@@ -31,9 +31,7 @@ defmodule DB.Repo.Manager do
   # Server API
 
   def init({context, shard_id}) do
-    Logger.info(
-      "Starting repo manager for shard #{shard_id} #{inspect(self())}"
-    )
+    Logger.info("Starting repo manager for shard #{shard_id} #{inspect(self())}")
 
     state = %{
       context: context,
@@ -80,9 +78,7 @@ defmodule DB.Repo.Manager do
       {:reply, :ok, new_state}
     else
       e ->
-        Logger.error(
-          "Unable to close connection from Repo.Manager: #{inspect(e)}"
-        )
+        Logger.error("Unable to close connection from Repo.Manager: #{inspect(e)}")
 
         {:reply, :error, state}
     end
@@ -176,7 +172,7 @@ defmodule DB.Repo.Manager do
 
   defp fetch_available_connection(state, key) do
     pid = get_in(state, [key, :pid])
-    log(:info, "Fetched #{key} connection - #{inspect(pid)}", state)
+    # log(:info, "Fetched #{key} connection - #{inspect(pid)}", state)
     {:ok, pid, put_in(state, [key, :busy?], true)}
   end
 

@@ -10,8 +10,7 @@ defmodule DB.SchemaTest do
     test "select", %{shard_id: shard_id} do
       DB.begin(@context, shard_id, :read)
 
-      assert %Friend{id: 1, name: "Phoebe", __meta__: meta} =
-               DB.one({:friends, :get_by_id}, [1])
+      assert %Friend{id: 1, name: "Phoebe", __meta__: meta} = DB.one({:friends, :get_by_id}, [1])
 
       assert meta.origin == :db
     end

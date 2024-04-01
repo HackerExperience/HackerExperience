@@ -204,8 +204,7 @@ defmodule DB do
   def has_env?, do: Process.get(:repo_pid, false) && true
 
   defp setup_env(context, shard_id, type) when type in [:write, :read] do
-    {:ok, manager_pid} =
-      Repo.Manager.Registry.fetch_or_create(context, shard_id)
+    {:ok, manager_pid} = Repo.Manager.Registry.fetch_or_create(context, shard_id)
 
     # TODO: Handle busy
     {:ok, repo_pid} = Repo.Manager.fetch_connection(manager_pid, type)
