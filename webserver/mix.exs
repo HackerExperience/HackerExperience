@@ -1,13 +1,13 @@
-defmodule Helix.MixProject do
+defmodule Webserver.MixProject do
   use Mix.Project
 
   @env Mix.env()
 
   def project do
     [
-      app: :helix,
+      app: :webserver,
       version: "0.0.1",
-      elixir: "~> 1.14",
+      elixir: "~> 1.17",
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
       aliases: aliases(),
@@ -18,9 +18,7 @@ defmodule Helix.MixProject do
         "coveralls.detail": :test,
         "coveralls.post": :test,
         "coveralls.html": :test,
-        "coveralls.cobertura": :test,
-        # Must be run in `:test` to include all possible schemas
-        "db.schema.list": :test
+        "coveralls.cobertura": :test
       ]
     ]
   end
@@ -30,7 +28,7 @@ defmodule Helix.MixProject do
   # Type `mix help compile.app` for more information.
   def application do
     [
-      mod: {Helix.Application, []},
+      mod: {Webserver.Application, []},
       extra_applications: extra_applications(@env) ++ [:logger, :runtime_tools]
     ]
   end
@@ -47,10 +45,7 @@ defmodule Helix.MixProject do
   # Type `mix help deps` for examples and options.
   defp deps do
     [
-      {:cowboy, "~> 2.12"},
-      {:exqlite, "~> 0.20"},
-      {:jason, "~> 1.4"},
-      {:rustler, "~> 0.32.0"}
+      {:cowboy, "~> 2.12"}
     ]
   end
 
@@ -61,8 +56,6 @@ defmodule Helix.MixProject do
   #
   # See the documentation for `Mix` for more info on aliases.
   defp aliases do
-    [
-      "db.schema.list": "run scripts/db/schema_finder.exs"
-    ]
+    []
   end
 end
