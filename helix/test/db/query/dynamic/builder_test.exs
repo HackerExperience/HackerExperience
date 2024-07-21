@@ -128,8 +128,8 @@ defmodule DB.Query.Dynamic.BuilderTest do
 
     test "with three assocs" do
       q =
-        "FROM imoveis i JOIN imovel_tags it ON i.id = it.imovel_id " <>
-          "JOIN imovel_attrs ia ON i.id = ia.imovel_id"
+        "FROM imoveis i JOIN imovel_attrs ia ON i.id = ia.imovel_id " <>
+          "JOIN imovel_tags it ON i.id = it.imovel_id"
 
       assert q == B.build_joins(:imoveis, "i", @assoc_map, Map.keys(@assoc_map))
     end

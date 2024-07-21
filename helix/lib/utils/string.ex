@@ -8,8 +8,9 @@ defmodule Utils.String do
   end
 
   def fast_length(str) do
-    str
-    |> String.to_charlist()
-    |> length()
+    String.length(str)
+    # str
+    # |> String.to_charlist()
+    # |> length()
   end
 end

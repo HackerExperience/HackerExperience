@@ -5,9 +5,7 @@ defmodule Helix.Application do
 
   @impl true
   def start(_type, _args) do
-    children = [
-      {DB.Supervisor, name: DB.Supervisor}
-    ]
+    children = []
 
     opts = [strategy: :one_for_one, name: Helix.Supervisor]
     Supervisor.start_link(children, opts)
