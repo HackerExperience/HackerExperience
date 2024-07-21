@@ -47,10 +47,10 @@ defmodule Helix.MixProject do
   # Type `mix help deps` for examples and options.
   defp deps do
     [
-      {:cowboy, "~> 2.12"},
       {:exqlite, "~> 0.20"},
       {:jason, "~> 1.4"},
-      {:rustler, "~> 0.32.0"}
+      {:rustler, "~> 0.32.0"},
+      {:excoveralls, "~> 0.18.1"}
     ]
   end
 
