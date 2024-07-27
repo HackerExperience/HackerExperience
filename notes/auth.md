@@ -1,5 +1,7 @@
 # Auth
 
+Below is outdated. Needs confirmation. Don't trust it.
+
 - We use server-side sessions (not JWTs)
 
 ### Flow
