@@ -1,5 +1,6 @@
 import Config
 
-if config_env() == :prod do
-  # Prod stuff goes here
-end
+config :webserver,
+  routes: Lobby.Webserver.routes(),
+  # TODO: Support Belts being applied on a per-route basis
+  belts: Lobby.Webserver.belts()

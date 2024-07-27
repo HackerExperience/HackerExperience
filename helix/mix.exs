@@ -47,10 +47,13 @@ defmodule Helix.MixProject do
   # Type `mix help deps` for examples and options.
   defp deps do
     [
-      {:exqlite, "~> 0.20"},
-      {:jason, "~> 1.4"},
+      # {:exqlite, "~> 0.20"},
+      # {:jason, "~> 1.4"},
       {:rustler, "~> 0.32.0"},
-      {:excoveralls, "~> 0.18.1"}
+      {:excoveralls, "~> 0.18.1"},
+      {:dblite, path: "~/dblite"},
+      {:webserver, path: "../webserver"},
+      {:renatils, path: "../renatils"}
     ]
   end
 
