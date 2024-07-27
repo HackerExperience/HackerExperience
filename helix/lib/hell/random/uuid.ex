@@ -1,4 +1,4 @@
-defmodule Renatils.Random.UUID do
+defmodule HELL.Random.UUID do
   @type t :: <<_::288>>
   @type raw :: <<_::128>>
 

@@ -44,7 +44,7 @@ defmodule Lobby.Endpoint.User.Register do
 
     user_args =
       %{
-        external_id: Renatils.Random.uuid(),
+        external_id: HELL.Random.uuid(),
         username: params.username,
         email: params.email,
         password: context.hashed_password

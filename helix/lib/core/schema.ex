@@ -25,7 +25,7 @@ defmodule Core.Schema do
       defmodule unquote(module_name) do
         unquote(block)
 
-        def str_length(v), do: Utils.String.fast_length(v)
+        def str_length(v), do: HELL.Utils.String.fast_length(v)
       end
     end
   end

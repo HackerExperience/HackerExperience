@@ -1,4 +1,4 @@
-defmodule Utils.String do
+defmodule HELL.String do
   def count(str, needle) do
     # TODO: Benchmark against alternative `String.graphemes` implementation
     str

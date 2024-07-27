@@ -1,4 +1,4 @@
-defmodule Renatils.Random.Int do
+defmodule HELL.Random.Int do
   def int(_opts \\ []) do
     :rand.uniform()
     |> Kernel.*(1_000_000)

@@ -50,8 +50,7 @@ defmodule Helix.MixProject do
       {:cowboy, "~> 2.12"},
       {:rustler, "~> 0.32.0"},
       {:excoveralls, "~> 0.18.1"},
-      {:dblite, path: "~/dblite"},
-      {:renatils, path: "../renatils"}
+      {:dblite, path: "~/dblite"}
     ]
   end
 
