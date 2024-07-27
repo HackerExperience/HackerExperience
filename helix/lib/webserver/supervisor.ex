@@ -1,18 +1,20 @@
-defmodule Webserver.Application do
+defmodule Webserver.Supervisor do
   @moduledoc false
-  use Application
+  use Supervisor
 
   @dispatch_table :webserver_dispatch
 
-  def start(_type, _args) do
+  def start_link(_) do
+    Supervisor.start_link(__MODULE__, [], name: __MODULE__)
+  end
+
+  def init(_) do
     children = [
       webserver_spec()
     ]
 
     Logger.add_translator({Webserver.RanchTranslator, :translate})
-
-    opts = [strategy: :one_for_one, name: Webserver.Supervisor]
-    Supervisor.start_link(children, opts)
+    Supervisor.init(children, strategy: :one_for_one)
   end
 
   @doc """
@@ -20,7 +22,9 @@ defmodule Webserver.Application do
   """
   def recompile do
     routes =
-      Application.get_env(:webserver, :routes, [])
+      Application.get_env(:helix, :webserver, routes: [])
+      |> Map.new()
+      |> Map.fetch!(:routes)
       |> Enum.map(fn {route, opts} -> {route, Webserver.Dispatcher, opts} end)
 
     dispatch = :cowboy_router.compile([{:_, routes}])
@@ -30,7 +34,9 @@ defmodule Webserver.Application do
   defp webserver_spec do
     # TODO: DRY routes (also used in `recompile/0` above)
     routes =
-      Application.get_env(:webserver, :routes, [])
+      Application.get_env(:helix, :webserver, [])
+      |> Map.new()
+      |> Map.fetch!(:routes)
       |> Enum.map(fn {route, opts} -> {route, Webserver.Dispatcher, opts} end)
 
     dispatch = :cowboy_router.compile([{:_, routes}])

@@ -1,5 +1,5 @@
 defmodule Webserver.Belt.ReadBody do
-  alias Webserver.Vaqueiro
+  alias Webserver.{Conveyor, Vaqueiro}
 
   # Won't parse JSONs larger than 2 MB
   @max_body_size 2_000_000

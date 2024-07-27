@@ -1,5 +1,5 @@
 defmodule Webserver.Hooks do
-  @hooks_module Application.compile_env(:webserver, :hooks)
+  @hooks_module Application.compile_env(:helix, :webserver) |> Map.new() |> Map.fetch!(:hooks)
 
   @callback on_get_params_ok(req :: any, req_identifier :: any) :: any
   @callback on_handle_request_ok(req :: any, req_identifier :: any) :: any

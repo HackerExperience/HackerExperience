@@ -1,6 +1,5 @@
 defmodule Webserver.Vaqueiro do
   @moduledoc """
-  NOTE: This could also be moved to its own library, just like Conveyor.
   Middleman between Helix and `:cowboy_req`. Heavily based on Plug.Cowboy.Conn.
   """
 

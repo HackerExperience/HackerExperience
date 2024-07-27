@@ -1,7 +1,7 @@
 defmodule Webserver.Dispatcher do
   require Logger
 
-  alias Webserver.{Belt, Endpoint, Hooks, Request}
+  alias Webserver.{Belt, Conveyor, Endpoint, Hooks, Request}
 
   @belts [
     Belt.RequestId,
@@ -60,7 +60,7 @@ defmodule Webserver.Dispatcher do
 
   # defp do_dispatch(cowboy_request, %{handler: endpoint, scope: scope}) do
   defp do_dispatch(cowboy_request, %{handler: endpoint}) do
-    belts = Application.fetch_env!(:webserver, :belts)
+    belts = Application.fetch_env!(:helix, :webserver) |> Map.new() |> Map.fetch!(:belts)
     IO.inspect(belts)
 
     request =

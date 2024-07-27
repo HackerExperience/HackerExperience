@@ -1,5 +1,6 @@
 defmodule Webserver.Endpoint do
   require Logger
+  alias Webserver.Conveyor
 
   defmacro __using__(_) do
     quote do

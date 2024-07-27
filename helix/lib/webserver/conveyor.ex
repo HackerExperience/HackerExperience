@@ -1,9 +1,11 @@
-defmodule Conveyor do
+defmodule Webserver.Conveyor do
   @moduledoc """
   NOTE: This could be moved to its own library.
   """
 
   defstruct [:halt?, :trace, :response_status, :response_message]
+
+  alias __MODULE__
 
   def new do
     %__MODULE__{
@@ -94,8 +96,8 @@ defmodule Conveyor do
   end
 end
 
-defmodule Conveyor.Belts.Entrypoint do
-  def call(request, %Conveyor{trace: []} = conveyor, _) do
+defmodule Webserver.Conveyor.Belts.Entrypoint do
+  def call(request, %Webserver.Conveyor{trace: []} = conveyor, _) do
     %{request | conveyor: conveyor}
   end
 end
