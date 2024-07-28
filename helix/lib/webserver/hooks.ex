@@ -6,13 +6,7 @@ defmodule Webserver.Hooks do
   @optional_callbacks on_get_params_ok: 2, on_handle_request_ok: 2
 
   def maybe_invoke(name, webserver, args, default_return) do
-    # TODO: This is needed for now, but figure out a way to have the callback module be
-    # loaded. Maybe use it somewhere in the application, or do a no-op boot hook.
-    # We don't want to load it all the time in the critical path.
-    # Alternatively, ensure loaded on Webserver startup via a one-off Boot task
-    # hooks_module = Application.get_env(:helix, :webserver) |> Map.new() |> Map.fetch!(:hooks)
-    hooks_module = Config.get_webserver_hooks(webserver)
-    Code.ensure_loaded(hooks_module)
+    hooks_module = Config.get_webserver_hooks_module(webserver)
 
     if function_exported?(hooks_module, name, length(args)) do
       apply(hooks_module, name, args)

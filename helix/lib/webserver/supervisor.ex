@@ -10,6 +10,8 @@ defmodule Webserver.Supervisor do
   end
 
   def init(_) do
+    load_hooks_modules()
+
     children =
       Config.list_webservers()
       |> Enum.map(&Config.get_webserver_config/1)
@@ -56,5 +58,14 @@ defmodule Webserver.Supervisor do
   defp create_dispatch_table(config) do
     dispatch = :cowboy_router.compile([{:_, config.routes}])
     :persistent_term.put(config.dispatch_table, dispatch)
+  end
+
+  defp load_hooks_modules do
+    # This ensures that the Hooks module for each Webserver is loaded. This is required because
+    # these modules are called based on the return of `Kernel.function_exported?/3`, which does not
+    # load the module in case it is not loaded.
+    Config.list_webservers()
+    |> Enum.map(&Config.get_webserver_hooks_module/1)
+    |> Enum.map(&Code.ensure_loaded/1)
   end
 end

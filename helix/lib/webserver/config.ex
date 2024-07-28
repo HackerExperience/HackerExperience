@@ -24,7 +24,7 @@ defmodule Webserver.Config do
 
   def get_webserver_belts(webserver), do: apply(webserver, :belts, [])
 
-  def get_webserver_hooks(webserver), do: Module.concat([webserver, Hooks])
+  def get_webserver_hooks_module(webserver), do: Module.concat([webserver, Hooks])
 
   def get_webserver_dispatch_table(webserver) do
     webserver
