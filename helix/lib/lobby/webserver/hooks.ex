@@ -5,7 +5,7 @@ defmodule Lobby.Webserver.Hooks do
 
   @impl true
   def on_get_params_ok(req, _) do
-    DBLite.begin(:lobby, 1, :write)
+    DBLite.begin(:lobby, req.session.shard_id, :write)
     {:ok, req}
   end
 
@@ -15,5 +15,5 @@ defmodule Lobby.Webserver.Hooks do
     {:ok, req}
   end
 
-  # TODO: Hook on $last_minute that asserts there's no pending DB transaction or whatever
+  # TODO: Hook on "before_push" that asserts there's no pending DB transaction or whatever
 end

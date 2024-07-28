@@ -6,8 +6,7 @@ defmodule Lobby.Services.User do
 
   # TODO: Rethink API so it becomes deep and narrow instead of shallow and wide
   def fetch_by_email(email) do
-    # TODO
-    nil
+    DB.one({:users, :get_by_email}, [email])
   end
 
   def email_taken?(email) do

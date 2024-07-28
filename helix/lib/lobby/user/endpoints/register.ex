@@ -2,10 +2,10 @@ defmodule Lobby.Endpoint.User.Register do
   use Webserver.Endpoint
   require Logger
 
-  # alias Core.Crypto
+  alias DBLite, as: DB
+  alias Core.Crypto
   alias Lobby.User
   alias Lobby.Services, as: Svc
-  # alias Lobby.Events.UserCreated, as: UserCreatedEvent
 
   def get_params(request, unsafe, _session) do
     with {:ok, username} <- cast(User, :username, unsafe["username"]),
@@ -22,12 +22,10 @@ defmodule Lobby.Endpoint.User.Register do
   def get_context(request, params, session) do
     with true <- not Svc.User.email_taken?(params.email) || :email_taken,
          true <- not Svc.User.username_taken?(params.username) || :username_taken,
-         hashed_password = "hashed_password" do
-      # TODO:
-      # # Release connection so it does not block while password is being hashed
-      # :ok = DB.commit(),
-      # hashed_password = Crypto.Password.generate_hash!(params.raw_password) do
-      # DB.begin(:lobby, session.shard_id, :write)
+         # Release connection so it does not block while password is being hashed
+         :ok = DB.commit(),
+         hashed_password = Crypto.Password.generate_hash!(params.raw_password) do
+      DB.begin(:lobby, session.shard_id, :write)
       {:ok, %{request | context: %{hashed_password: hashed_password}}}
     else
       :email_taken ->
@@ -51,7 +49,6 @@ defmodule Lobby.Endpoint.User.Register do
       }
 
     with {:ok, user} <- Svc.User.create(user_args) do
-      #   events = [UserCreatedEvent.new(user)]
       {:ok, %{request | result: %{user: user}}}
     else
       {:error, reason} ->

@@ -2,6 +2,7 @@ defmodule Webserver.Supervisor do
   @moduledoc false
   use Supervisor
 
+  @env Mix.env()
   @dispatch_table :webserver_dispatch
 
   def start_link(_) do
@@ -44,7 +45,13 @@ defmodule Webserver.Supervisor do
 
     # TODO: Move these hard-coded values to a config
     # 4001 if test, via config (TODO)
-    port = 4000
+    # TODO: Consider port use-case when supporting multiple webservers
+    port =
+      if @env == :test do
+        4001
+      else
+        4000
+      end
 
     # TODO: Move these hard-coded values to a config
     %{

@@ -3,21 +3,7 @@ defmodule Webserver.Dispatcher do
 
   alias Webserver.{Belt, Conveyor, Endpoint, Hooks, Request}
 
-  @belts [
-    Belt.RequestId,
-    # Belt.HandleCors,
-    Belt.ReadBody,
-    Belt.ParseRequestParams,
-    # Belt.Session,
-    __MODULE__,
-    Belt.SendResponse
-  ]
-
   def init(cowboy_request, args) do
-    IO.puts("Oiiii")
-    IO.inspect(cowboy_request)
-    IO.inspect(args)
-
     {duration, {_, _, request} = result} = :timer.tc(fn -> do_dispatch(cowboy_request, args) end)
 
     # Log in a different process because sometimes Cowboy kills the request
@@ -33,13 +19,10 @@ defmodule Webserver.Dispatcher do
   """
   def call(%{endpoint: endpoint} = req, _, _) do
     session = req.session
-    # true = not is_nil(session)
-
-    IO.inspect(endpoint)
+    true = not is_nil(session)
 
     with {:ok, req} <- endpoint.get_params(req, req.unsafe_params, session),
          params = req.params,
-         IO.inspect(params),
          {:ok, req} <- Hooks.on_get_params_ok(req),
          {:ok, req} <- endpoint.get_context(req, params, session),
          context = req.context,
@@ -61,7 +44,6 @@ defmodule Webserver.Dispatcher do
   # defp do_dispatch(cowboy_request, %{handler: endpoint, scope: scope}) do
   defp do_dispatch(cowboy_request, %{handler: endpoint}) do
     belts = Application.fetch_env!(:helix, :webserver) |> Map.new() |> Map.fetch!(:belts)
-    IO.inspect(belts)
 
     request =
       cowboy_request
@@ -69,7 +51,6 @@ defmodule Webserver.Dispatcher do
       |> Conveyor.execute(belts)
 
     {:ok, request.cowboy_request, request}
-    |> IO.inspect()
   end
 
   defp log_request(duration, %{cowboy_request: cowboy_request, conveyor: conveyor}) do

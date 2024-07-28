@@ -40,6 +40,7 @@ defmodule Helix.MixProject do
   defp elixirc_paths(_), do: ["lib"]
 
   defp extra_applications(:dev), do: [:observer, :wx, :eex]
+  defp extra_applications(:test), do: [:observer]
   defp extra_applications(_), do: []
 
   # Specifies your project dependencies.
@@ -49,8 +50,10 @@ defmodule Helix.MixProject do
     [
       {:cowboy, "~> 2.12"},
       {:rustler, "~> 0.32.0"},
-      {:excoveralls, "~> 0.18.1"},
-      {:dblite, path: "~/dblite"}
+      {:dblite, path: "~/dblite"},
+      {:jose, "~> 1.11"},
+      {:excoveralls, "~> 0.18.1", only: :test},
+      {:req, "~> 0.4.8", only: :test}
     ]
   end
 

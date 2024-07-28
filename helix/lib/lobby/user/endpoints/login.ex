@@ -5,7 +5,7 @@ defmodule Lobby.Endpoint.User.Login do
   alias DBLite, as: DB
   alias Lobby.User
   alias Lobby.Services, as: Svc
-  # alias Core.Crypto
+  alias Core.Crypto
 
   def get_params(request, unsafe, _session) do
     with {:ok, password} <- cast(User, :password, unsafe["password"]),

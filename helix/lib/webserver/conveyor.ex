@@ -28,8 +28,6 @@ defmodule Webserver.Conveyor do
           mod -> {mod, nil}
         end
 
-      IO.inspect(belt_module)
-
       prev_conveyor = request_acc.conveyor || new()
 
       new_request =
