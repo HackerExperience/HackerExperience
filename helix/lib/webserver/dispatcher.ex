@@ -1,7 +1,7 @@
 defmodule Webserver.Dispatcher do
   require Logger
 
-  alias Webserver.{Belt, Conveyor, Endpoint, Hooks, Request}
+  alias Webserver.{Belt, Config, Conveyor, Endpoint, Hooks, Request}
 
   def init(cowboy_request, args) do
     {duration, {_, _, request} = result} = :timer.tc(fn -> do_dispatch(cowboy_request, args) end)
@@ -42,12 +42,12 @@ defmodule Webserver.Dispatcher do
   end
 
   # defp do_dispatch(cowboy_request, %{handler: endpoint, scope: scope}) do
-  defp do_dispatch(cowboy_request, %{handler: endpoint}) do
-    belts = Application.fetch_env!(:helix, :webserver) |> Map.new() |> Map.fetch!(:belts)
+  defp do_dispatch(cowboy_request, %{handler: endpoint, webserver: webserver}) do
+    belts = Config.get_webserver_belts(webserver)
 
     request =
       cowboy_request
-      |> Request.new(endpoint, :foo)
+      |> Request.new(endpoint, webserver)
       |> Conveyor.execute(belts)
 
     {:ok, request.cowboy_request, request}

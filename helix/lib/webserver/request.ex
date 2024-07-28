@@ -4,7 +4,7 @@ defmodule Webserver.Request do
     :cowboy_request,
     :conveyor,
     :endpoint,
-    :scope,
+    :webserver,
     :session,
     :unsafe_params,
     :params,
@@ -14,11 +14,11 @@ defmodule Webserver.Request do
     :response
   ]
 
-  def new(cowboy_request, endpoint, scope) do
+  def new(cowboy_request, endpoint, webserver) do
     %__MODULE__{
       cowboy_request: cowboy_request,
       endpoint: endpoint,
-      scope: scope
+      webserver: webserver
     }
   end
 end

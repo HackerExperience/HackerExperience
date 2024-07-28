@@ -3,7 +3,7 @@ defmodule Test.HTTPClient do
   alias HELL.Utils
 
   # TODO
-  @default_base_url "http://localhost:4001/v1"
+  @default_base_url "http://localhost:5000/v1"
 
   def post(endpoint_or_url, body \\ %{}, opts \\ [])
 

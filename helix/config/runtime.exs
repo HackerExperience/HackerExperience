@@ -1,6 +1,5 @@
 import Config
 
-config :helix, :webserver,
-  routes: Lobby.Webserver.routes(),
-  # TODO: Support Belts being applied on a per-route basis
-  belts: Lobby.Webserver.belts()
+config :helix, Lobby.Webserver, port: if(Mix.env() != :test, do: 4000, else: 5000)
+
+config :helix, :webserver, webservers: [Lobby.Webserver]
