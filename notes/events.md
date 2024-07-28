@@ -13,3 +13,9 @@ are not initiated (i.e. stop receiving requests, disable workers etc, wait a few
 
 They should be very well logged and with good visibility, as well as proper tracing and backtrack information. Those will be invaluable to
 debugging.
+
+### Notifications & published (outgoing) events
+
+Notifications probably live in the database (SQLite). Published events might benefit from Redis Streams.
+
+Note that I might use Redis for process mapping, so Redis as a dependency may be inevitable.
