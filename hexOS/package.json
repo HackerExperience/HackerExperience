@@ -1,0 +1,24 @@
+{
+  "name": "front",
+  "private": true,
+  "version": "0.0.1",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "devDependencies": {
+    "@dillonkearns/elm-graphql": "^4.3.1",
+    "elm-format": "^0.8.7",
+    "elm-json": "^0.2.13",
+    "elm-review": "^2.14.0",
+    "elm-test-rs": "^3.0.0-5",
+    "vite": "^5.0.11",
+    "vite-plugin-elm": "^3.0.0"
+  },
+  "dependencies": {
+    "elm": "^0.19.1-6",
+    "elm-debug-transformer": "^1.2.1"
+  }
+}
