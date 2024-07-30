@@ -8,6 +8,7 @@ import Debounce exposing (Debounce)
 import Dict exposing (Dict)
 import Html exposing (Html)
 import Json.Decode as JD
+import Login
 import OS
 import Process
 import Random
@@ -22,18 +23,32 @@ import WM
 type Msg
     = ClickedLink Browser.UrlRequest
     | ChangedUrl Url
-    | BrowserResizedViewport ( Int, Int )
-    | ResizedViewportDebounced ( Int, Int )
-    | ResizedViewportDebouncing Debounce.Msg
+      -- | BrowserResizedViewport ( Int, Int )
+      -- | ResizedViewportDebounced ( Int, Int )
+      -- | ResizedViewportDebouncing Debounce.Msg
     | BrowserMouseUp
     | BrowserVisibilityChanged Browser.Events.Visibility
     | OSMsg OS.Msg
+    | LoginMsg Login.Msg
+
+
+type alias GameModel =
+    { os : OS.Model }
+
+
+type State
+    = LoginState Login.Model
+    | BootState
+    | GameState GameModel
+    | InstallState
+    | ErrorState
 
 
 type alias Model =
     { seeds : Seeds
-    , os : OS.Model
-    , resizeDebouncer : Debounce ( Int, Int )
+    , state : State
+
+    -- , resizeDebouncer : Debounce ( Int, Int )
     }
 
 
@@ -76,8 +91,10 @@ init flags url navKey =
         credentials =
             Just "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3MDk3NTMxNDgsImFfaWQiOiJhZmY1YWIwYi1mZmRiLTQ2ODgtOWY0Zi0zMzExNjZjZDM2YTgiLCJjX2lkIjoiYWZmNWFiMGItZmZkYi00Njg4LTlmNGYtMzMxMTY2Y2QzNmE4IiwiaWF0IjoxNzA5MTQ4MzQ4fQ.lGPrwspZAkMRfA-xsvt0RNoesigGNh9qDbC3SpMbqWQ"
 
-        ( osModel, osCmd ) =
-            OS.init (flags.viewportX, flags.viewportY)
+        -- ( osModel, osCmd ) =
+        --     OS.init ( flags.viewportX, flags.viewportY )
+        osCmd =
+            Cmd.none
 
         firstSeeds =
             Seeds
@@ -87,8 +104,9 @@ init flags url navKey =
                 (Random.initialSeed flags.randomSeed4)
     in
     ( { seeds = firstSeeds
-      , os = osModel
-      , resizeDebouncer = Debounce.init
+      , state = LoginState Login.initialModel
+
+      -- , resizeDebouncer = Debounce.init
       }
     , Cmd.batch
         [ Cmd.map OSMsg osCmd
@@ -102,55 +120,82 @@ init flags url navKey =
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
-    case msg of
-        ClickedLink urlRequest ->
+    case model.state of
+        LoginState loginModel ->
+            case msg of
+                LoginMsg (Login.ProceedToBoot token) ->
+                    -- No boot for now
+                    ( model, Cmd.none )
+
+                LoginMsg subMsg ->
+                    let
+                        ( newLoginModel, loginCmd ) =
+                            Login.update subMsg loginModel
+                    in
+                    ( { model | state = LoginState newLoginModel }
+                    , Cmd.batch [ Cmd.map LoginMsg loginCmd ]
+                    )
+
+                _ ->
+                    ( model, Cmd.none )
+
+        GameState gameModel ->
+            case msg of
+                ClickedLink urlRequest ->
+                    ( model, Cmd.none )
+
+                ChangedUrl url ->
+                    ( model, Cmd.none )
+
+                BrowserVisibilityChanged _ ->
+                    -- We may do more things in the future
+                    ( model, Utils.msgToCmd (OSMsg OS.BrowserVisibilityChanged) )
+
+                BrowserMouseUp ->
+                    ( model, Utils.msgToCmd (OSMsg OS.StopDrag) )
+
+                -- BrowserResizedViewport v ->
+                --     let
+                --         debounceConfig =
+                --             Debounce.after 100 ResizedViewportDebouncing
+                --         ( debounce, cmd ) =
+                --             Debounce.push debounceConfig v model.resizeDebouncer
+                --     in
+                --     ( { model | resizeDebouncer = debounce }, cmd )
+                -- ResizedViewportDebounced ( w, h ) ->
+                --     ( { model | os = OS.updateViewport model.os ( w, h ) }, Cmd.none )
+                -- ResizedViewportDebouncing msg_ ->
+                --     let
+                --         debounceConfig =
+                --             Debounce.after 100 ResizedViewportDebouncing
+                --         ( debounce, cmd ) =
+                --             Debounce.update
+                --                 debounceConfig
+                --                 (Debounce.takeLast (Debounce.save ResizedViewportDebounced))
+                --                 msg_
+                --                 model.resizeDebouncer
+                --     in
+                --     ( { model | resizeDebouncer = debounce }, cmd )
+                OSMsg subMsg ->
+                    let
+                        ( osModel, osCmd ) =
+                            OS.update subMsg gameModel.os
+                    in
+                    ( { model | state = GameState { os = osModel } }
+                    , Cmd.batch [ Cmd.map OSMsg osCmd ]
+                    )
+
+                LoginMsg _ ->
+                    ( model, Cmd.none )
+
+        BootState ->
             ( model, Cmd.none )
 
-        ChangedUrl url ->
+        InstallState ->
             ( model, Cmd.none )
 
-        BrowserVisibilityChanged _ ->
-            -- We may do more things in the future
-            ( model, Utils.msgToCmd (OSMsg OS.BrowserVisibilityChanged) )
-
-        BrowserMouseUp ->
-            ( model, Utils.msgToCmd (OSMsg OS.StopDrag) )
-
-        BrowserResizedViewport v ->
-            let
-                debounceConfig =
-                    Debounce.after 100 ResizedViewportDebouncing
-
-                ( debounce, cmd ) =
-                    Debounce.push debounceConfig v model.resizeDebouncer
-            in
-            ( { model | resizeDebouncer = debounce }, cmd )
-
-        ResizedViewportDebounced ( w, h ) ->
-            ( { model | os = OS.updateViewport model.os ( w, h ) }, Cmd.none )
-
-        ResizedViewportDebouncing msg_ ->
-            let
-                debounceConfig =
-                    Debounce.after 100 ResizedViewportDebouncing
-
-                ( debounce, cmd ) =
-                    Debounce.update
-                        debounceConfig
-                        (Debounce.takeLast (Debounce.save ResizedViewportDebounced))
-                        msg_
-                        model.resizeDebouncer
-            in
-            ( { model | resizeDebouncer = debounce }, cmd )
-
-        OSMsg subMsg ->
-            let
-                ( osModel, osCmd ) =
-                    OS.update subMsg model.os
-            in
-            ( { model | os = osModel }
-            , Cmd.batch [ Cmd.map OSMsg osCmd ]
-            )
+        ErrorState ->
+            ( model, Cmd.none )
 
 
 
@@ -159,11 +204,23 @@ update msg model =
 
 view : Model -> UI.Document Msg
 view model =
-    let
-        { title, body } =
-            OS.documentView model.os
-    in
-    { title = title, body = List.map (Html.map OSMsg) body }
+    case model.state of
+        LoginState loginModel ->
+            let
+                { title, body } =
+                    Login.documentView loginModel
+            in
+            { title = title, body = List.map (Html.map LoginMsg) body }
+
+        GameState gameModel ->
+            let
+                { title, body } =
+                    OS.documentView gameModel.os
+            in
+            { title = title, body = List.map (Html.map OSMsg) body }
+
+        _ ->
+            { title = "UNHANdled", body = [] }
 
 
 
@@ -172,13 +229,18 @@ view model =
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    Sub.batch
-        [ Browser.Events.onResize (\w h -> BrowserResizedViewport ( w, h ))
-        , Browser.Events.onVisibilityChange BrowserVisibilityChanged
-        , case WM.isDragging model.os.wm of
-            True ->
-                Browser.Events.onMouseUp (JD.succeed BrowserMouseUp)
+    case model.state of
+        GameState gameModel ->
+            Sub.batch
+                [ Browser.Events.onResize (\w h -> BrowserResizedViewport ( w, h ))
+                , Browser.Events.onVisibilityChange BrowserVisibilityChanged
+                , case WM.isDragging gameModel.os.wm of
+                    True ->
+                        Browser.Events.onMouseUp (JD.succeed BrowserMouseUp)
 
-            False ->
-                Sub.none
-        ]
+                    False ->
+                        Sub.none
+                ]
+
+        _ ->
+            Sub.none

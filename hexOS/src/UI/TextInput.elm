@@ -22,7 +22,7 @@ type alias Opts msg =
     { onChange : Maybe (String -> msg)
     , onBlur : Maybe msg
     , placeholder : Maybe String
-    , icon : Maybe Icon
+    , icon : Maybe (Icon msg)
     , problem : Maybe String
     }
 
@@ -37,7 +37,7 @@ new label value =
         { defaultOpts | placeholder = Just label }
 
 
-fromIcon : String -> Icon -> Input msg
+fromIcon : String -> Icon msg -> Input msg
 fromIcon value icon =
     Input
         { label = Maybe.withDefault "" (UI.Icon.getHint icon)
@@ -162,6 +162,6 @@ attrProblem problem =
             UI.emptyAttr
 
 
-inputIcon : Icon -> UI msg
+inputIcon : Icon msg -> UI msg
 inputIcon icon =
     UI.Icon.toUI icon

@@ -8,8 +8,8 @@ export default defineConfig(({ command, mode }) => {
   return {
     plugins: [
       elmPlugin({
-        debug: false,
-        optimize: true,
+        debug: true,
+        optimize: false,
       })
     ],
     server: {
