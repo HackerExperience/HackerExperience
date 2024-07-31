@@ -1,5 +1,8 @@
 module Login exposing (..)
 
+import API.Lobby as LobbyAPI
+import API.Lobby.Types as LobbyAPI
+import Task
 import UI exposing (UI, cl, col, id, row, style, text)
 import UI.Button
 import UI.Icon
@@ -15,8 +18,8 @@ type Msg
     = SetEmail String
     | SetPassword String
     | OnFormSubmit
-    | OnLoginOk String
     | ProceedToBoot String
+    | OnLoginResponse (Result (LobbyAPI.Error LobbyAPI.LoginError) LobbyAPI.UserLoginResponse)
 
 
 type alias Model =
@@ -48,12 +51,22 @@ update msg model =
             ( { model | password = value }, Cmd.none )
 
         OnFormSubmit ->
-            ( model, Utils.msgToCmd (OnLoginOk "token") )
-
-        OnLoginOk token ->
-            ( model, Utils.msgToCmd (ProceedToBoot token) )
+            let
+                task =
+                    LobbyAPI.login "renato@renato.com" "renato"
+            in
+            ( model, Task.attempt OnLoginResponse task )
 
         ProceedToBoot _ ->
+            ( model, Cmd.none )
+
+        OnLoginResponse (Ok { token }) ->
+            ( model, Utils.msgToCmd <| ProceedToBoot token )
+
+        OnLoginResponse (Err (LobbyAPI.AppError _)) ->
+            ( model, Cmd.none )
+
+        OnLoginResponse (Err LobbyAPI.InternalError) ->
             ( model, Cmd.none )
 
 
