@@ -1,5 +1,6 @@
 module Main exposing (main)
 
+import Boot
 import Browser
 import Browser.Events
 import Browser.Navigation as Nav
@@ -30,6 +31,7 @@ type Msg
     | BrowserVisibilityChanged Browser.Events.Visibility
     | OSMsg OS.Msg
     | LoginMsg Login.Msg
+    | BootMsg Boot.Msg
 
 
 type alias GameModel =
@@ -38,7 +40,7 @@ type alias GameModel =
 
 type State
     = LoginState Login.Model
-    | BootState
+    | BootState Boot.Model
     | GameState GameModel
     | InstallState
     | ErrorState
@@ -124,8 +126,7 @@ update msg model =
         LoginState loginModel ->
             case msg of
                 LoginMsg (Login.ProceedToBoot token) ->
-                    -- No boot for now
-                    ( model, Cmd.none )
+                    ( { model | state = BootState (Boot.initialModel token) }, Cmd.none )
 
                 LoginMsg subMsg ->
                     let
@@ -134,6 +135,24 @@ update msg model =
                     in
                     ( { model | state = LoginState newLoginModel }
                     , Cmd.batch [ Cmd.map LoginMsg loginCmd ]
+                    )
+
+                _ ->
+                    ( model, Cmd.none )
+
+        BootState bootModel ->
+            case msg of
+                BootMsg Boot.ProceedToGame ->
+                    -- ( { model | state = GameState (Boot.initialModel token) }, Cmd.none )
+                    ( model, Cmd.none )
+
+                BootMsg subMsg ->
+                    let
+                        ( newBootModel, bootCmd ) =
+                            Boot.update subMsg bootModel
+                    in
+                    ( { model | state = BootState newBootModel }
+                    , Cmd.batch [ Cmd.map BootMsg bootCmd ]
                     )
 
                 _ ->
@@ -188,8 +207,8 @@ update msg model =
                 LoginMsg _ ->
                     ( model, Cmd.none )
 
-        BootState ->
-            ( model, Cmd.none )
+                BootMsg _ ->
+                    ( model, Cmd.none )
 
         InstallState ->
             ( model, Cmd.none )
@@ -218,6 +237,13 @@ view model =
                     OS.documentView gameModel.os
             in
             { title = title, body = List.map (Html.map OSMsg) body }
+
+        BootState bootModel ->
+            let
+                { title, body } =
+                    Boot.documentView bootModel
+            in
+            { title = title, body = List.map (Html.map BootMsg) body }
 
         _ ->
             { title = "UNHANdled", body = [] }
