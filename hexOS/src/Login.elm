@@ -1,7 +1,6 @@
 module Login exposing (..)
 
 import API.Lobby as LobbyAPI
-import API.Lobby.Types as LobbyAPI
 import Task
 import UI exposing (UI, cl, col, id, row, style, text)
 import UI.Button
@@ -19,7 +18,7 @@ type Msg
     | SetPassword String
     | OnFormSubmit
     | ProceedToBoot String
-    | OnLoginResponse (Result (LobbyAPI.Error LobbyAPI.LoginError) LobbyAPI.UserLoginResponse)
+    | OnLoginResponse (Result (LobbyAPI.Error LobbyAPI.LoginError) LobbyAPI.LoginResponse)
 
 
 type alias Model =

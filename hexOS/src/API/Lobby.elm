@@ -15,10 +15,14 @@ type LoginError
     = Unauthorized
 
 
+type alias LoginResponse =
+    Types.UserLoginResponse
+
+
 login :
     String
     -> String
-    -> Task (Error LoginError) Types.UserLoginResponse
+    -> Task (Error LoginError) LoginResponse
 login email password =
     let
         config =
@@ -27,30 +31,47 @@ login email password =
             }
     in
     Api.loginTask config
-        |> withInnerData
-        |> withErrorHandler
-        |> Task.onError
+        |> mapResponse genericDataMapper
+        |> mapError
             (\apiError ->
                 case apiError of
                     LegitimateError (Types.Login_401 _) ->
-                        Task.fail (AppError Unauthorized)
+                        AppError Unauthorized
 
                     LegitimateError (Types.Login_422 { error }) ->
                         case error of
                             "bad_password" ->
-                                Task.fail (AppError Unauthorized)
+                                AppError Unauthorized
 
                             _ ->
-                                Task.fail InternalError
+                                InternalError
 
                     UnexpectedError ->
-                        Task.fail InternalError
+                        InternalError
             )
 
 
-withInnerData : Task x { a | data : b } -> Task x b
-withInnerData =
-    Task.andThen (\response -> Task.succeed response.data)
+mapResponse : (a -> b) -> Task e a -> Task e b
+mapResponse mapper =
+    Task.andThen (\resp -> Task.succeed (mapper resp))
+
+
+genericDataMapper : { b | data : a } -> a
+genericDataMapper =
+    \{ data } -> data
+
+
+mapError : (PrivateErrType a -> Error b) -> Task (OpenApi.Common.Error a x) r -> Task (Error b) r
+mapError mapper =
+    Task.onError
+        (\apiError ->
+            case apiError of
+                OpenApi.Common.KnownBadStatus _ appError ->
+                    Task.fail <| mapper (LegitimateError appError)
+
+                _ ->
+                    Task.fail <| mapper UnexpectedError
+        )
 
 
 
