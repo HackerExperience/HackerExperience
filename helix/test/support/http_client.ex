@@ -42,15 +42,15 @@ defmodule Test.HTTPClient do
   #     else: req
   # end
 
-  defp parse_response({_, %Req.Response{status: status, body: ""}}),
-    do: %{status: status, raw_body: "", body: nil, data: nil, error: nil} |> wrap_response(status)
+  # defp parse_response({_, %Req.Response{status: status, body: ""}}),
+  #   do: %{status: status, raw_body: "", body: nil, data: nil, error: nil} |> wrap_response(status)
 
-  defp parse_response({_, %Req.Response{status: status, body: body}}) when is_binary(body) do
-    body = body |> :json.decode() |> Utils.Map.atomify_keys()
+  defp parse_response({_, %Req.Response{status: status, body: raw_body}}) when is_map(raw_body) do
+    body = Utils.Map.atomify_keys(raw_body)
 
     %{
       status: status,
-      raw_body: body,
+      raw_body: raw_body,
       body: body,
       data: body[:data],
       error: body[:error]

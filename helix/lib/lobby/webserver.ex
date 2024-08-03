@@ -10,6 +10,7 @@ defmodule Lobby.Webserver do
   def belts do
     [
       Webserver.Belt.RequestId,
+      Lobby.Webserver.Belt.HandleCors,
       Webserver.Belt.ReadBody,
       Webserver.Belt.ParseRequestParams,
       Lobby.Webserver.Belt.Contextualization,
