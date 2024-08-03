@@ -31,10 +31,10 @@ defmodule Lobby.Endpoint.User.Login do
         # # Dummy hashing to avoid leaking (via timing attack) that the given email is used
         # # in the system. This is also why we return `password_mismatch` here.
         # Crypto.Password.verify_hash(Crypto.Password.dummy_hash(), raw_pwd)
-        {:error, %{request | response: {400, "bad_password"}}}
+        {:error, %{request | response: {422, "bad_password"}}}
 
       :bad_password ->
-        {:error, %{request | response: {400, "bad_password"}}}
+        {:error, %{request | response: {422, "bad_password"}}}
     end
   end
 
@@ -47,7 +47,7 @@ defmodule Lobby.Endpoint.User.Login do
 
       {:error, reason} ->
         Logger.error("Failed to create session: #{inspect(reason)}")
-        {:error, %{request | response: {400, "error_creating_session"}}}
+        {:error, %{request | response: {500, "error_creating_session"}}}
     end
   end
 
