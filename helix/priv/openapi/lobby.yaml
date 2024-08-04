@@ -4,6 +4,17 @@ info:
   title: Lobby API
 components:
   responses:
+    GenericBadRequestResponse:
+      description: TODO description
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - data
+            properties:
+              data:
+                $ref: '#/components/schemas/UserLoginOutput'
     GenericErrorResponse:
       description: TODO
       content:
@@ -14,7 +25,7 @@ components:
       description: TODO
       content: {}
     UserLoginOkResponse:
-      description: TODO Description
+      description: TODO description
       content:
         application/json:
           schema:
@@ -25,7 +36,7 @@ components:
               data:
                 $ref: '#/components/schemas/UserLoginOutput'
     UserRegisterOkResponse:
-      description: TODO Description
+      description: TODO description
       content:
         application/json:
           schema:
@@ -37,14 +48,14 @@ components:
                 $ref: '#/components/schemas/UserRegisterOutput'
   requestBodies:
     UserLoginRequest:
-      description: TODO descriptioin
+      description: TODO description
       required: true
       content:
         application/json:
           schema:
             $ref: '#/components/schemas/UserLoginInput'
     UserRegisterRequest:
-      description: TODO descriptioin
+      description: TODO description
       required: true
       content:
         application/json:
@@ -102,6 +113,8 @@ paths:
       responses:
         '200':
           $ref: '#/components/responses/UserLoginOkResponse'
+        '400':
+          $ref: '#/components/responses/GenericBadRequestResponse'
         '401':
           $ref: '#/components/responses/GenericUnauthorizedResponse'
         '422':
@@ -114,6 +127,8 @@ paths:
       responses:
         '200':
           $ref: '#/components/responses/UserRegisterOkResponse'
+        '400':
+          $ref: '#/components/responses/GenericBadRequestResponse'
         '422':
           $ref: '#/components/responses/GenericErrorResponse'
       operationId: UserRegister

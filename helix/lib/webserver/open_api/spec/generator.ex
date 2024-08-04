@@ -78,7 +78,7 @@ defmodule Webserver.OpenApi.Spec.Generator do
       request_body =
         %{
           required: true,
-          description: "TODO descriptioin",
+          description: "TODO description",
           content: request_body_content
         }
 
@@ -112,7 +112,7 @@ defmodule Webserver.OpenApi.Spec.Generator do
 
           entry =
             %{
-              description: "TODO Description",
+              description: "TODO description",
               content: Map.put(%{}, "application/json", response_schema)
             }
 

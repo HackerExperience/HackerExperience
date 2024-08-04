@@ -16,11 +16,11 @@ defmodule Lobby.Webserver.Spec do
     %{
       {Lobby.Endpoint.User.Login, :post} => %{
         path: "/v1/user/login",
-        responses: [200, 401, 422]
+        responses: [200, 400, 401, 422]
       },
       {Lobby.Endpoint.User.Register, :post} => %{
         path: "/v1/user/register",
-        responses: [200, 422]
+        responses: [200, 400, 422]
       }
     }
   end
