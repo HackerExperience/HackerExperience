@@ -1,7 +1,8 @@
 module API.Lobby.Types exposing
-    ( EmptyOkResponse, GenericError, GenericErrorModel, LoginOkResponse, LoginUser, LoginUserRequest, NewUser
-    , NewUserRequest, Unauthorized, User, UserLoginResponse
-    , CreateUser_Error(..), Login_Error(..)
+    ( GenericError, GenericErrorResponse, GenericUnauthorizedResponse, Log, Server, UserLoginInput
+    , UserLoginOkResponse, UserLoginOutput, UserLoginRequest, UserRegisterInput, UserRegisterOkResponse
+    , UserRegisterOutput, UserRegisterRequest
+    , UserLogin_Error(..), UserRegister_Error(..)
     )
 
 {-|
@@ -9,70 +10,74 @@ module API.Lobby.Types exposing
 
 ## Aliases
 
-@docs EmptyOkResponse, GenericError, GenericErrorModel, LoginOkResponse, LoginUser, LoginUserRequest, NewUser
-@docs NewUserRequest, Unauthorized, User, UserLoginResponse
+@docs GenericError, GenericErrorResponse, GenericUnauthorizedResponse, Log, Server, UserLoginInput
+@docs UserLoginOkResponse, UserLoginOutput, UserLoginRequest, UserRegisterInput, UserRegisterOkResponse
+@docs UserRegisterOutput, UserRegisterRequest
 
 
 ## Errors
 
-@docs CreateUser_Error, Login_Error
+@docs UserLogin_Error, UserRegister_Error
 
 -}
 
 
-type CreateUser_Error
-    = CreateUser_422 GenericError
+type UserLogin_Error
+    = UserLogin_401 GenericUnauthorizedResponse
+    | UserLogin_422 GenericErrorResponse
 
 
-type Login_Error
-    = Login_401 Unauthorized
-    | Login_422 GenericError
+type UserRegister_Error
+    = UserRegister_422 GenericErrorResponse
 
 
-type alias UserLoginResponse =
+type alias UserRegisterOutput =
+    { endpoints : Maybe Server, gateways : List Server }
+
+
+type alias UserRegisterInput =
+    { todo_empty_body : String }
+
+
+type alias UserLoginOutput =
     { token : String }
 
 
-type alias User =
-    { bio : Maybe String
-    , email : String
-    , image : String
-    , token : String
-    , username : String
-    }
-
-
-type alias NewUser =
-    { email : String, password : String, username : String }
-
-
-type alias LoginUser =
+type alias UserLoginInput =
     { email : String, password : String }
 
 
-type alias GenericErrorModel =
-    { error : String }
+type alias Server =
+    { logs : List Log, nip : String }
 
 
-type alias Unauthorized =
-    ()
-
-
-type alias LoginOkResponse =
-    { data : UserLoginResponse }
+type alias Log =
+    { id : String }
 
 
 type alias GenericError =
-    GenericErrorModel
+    { error : String }
 
 
-type alias EmptyOkResponse =
+type alias UserRegisterOkResponse =
+    { data : UserRegisterOutput }
+
+
+type alias UserLoginOkResponse =
+    { data : UserLoginOutput }
+
+
+type alias GenericUnauthorizedResponse =
     ()
 
 
-type alias NewUserRequest =
-    { user : NewUser }
+type alias GenericErrorResponse =
+    GenericError
 
 
-type alias LoginUserRequest =
-    LoginUser
+type alias UserRegisterRequest =
+    UserRegisterInput
+
+
+type alias UserLoginRequest =
+    UserLoginInput

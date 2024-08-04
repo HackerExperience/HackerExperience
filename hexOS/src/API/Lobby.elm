@@ -16,7 +16,7 @@ type LoginError
 
 
 type alias LoginResponse =
-    Types.UserLoginResponse
+    Types.UserLoginOutput
 
 
 login :
@@ -30,15 +30,15 @@ login email password =
             , body = { email = email, password = password }
             }
     in
-    Api.loginTask config
+    Api.userLoginTask config
         |> mapResponse genericDataMapper
         |> mapError
             (\apiError ->
                 case apiError of
-                    LegitimateError (Types.Login_401 _) ->
+                    LegitimateError (Types.UserLogin_401 _) ->
                         AppError Unauthorized
 
-                    LegitimateError (Types.Login_422 { error }) ->
+                    LegitimateError (Types.UserLogin_422 { error }) ->
                         case error of
                             "bad_password" ->
                                 AppError Unauthorized
