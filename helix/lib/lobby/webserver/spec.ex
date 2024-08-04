@@ -26,12 +26,22 @@ defmodule Lobby.Webserver.Spec do
   end
 
   defp default_schemas do
+    # TODO: Ideally, these schemas should be generated off of Endpoint.output_spec_for_error
     %{
+      "GenericBadRequest" => %{
+        type: :object,
+        required: [:msg],
+        properties: %{
+          msg: %{type: :string},
+          details: %{type: :string}
+        }
+      },
       "GenericError" => %{
         type: :object,
-        required: [:error],
+        required: [:msg],
         properties: %{
-          error: %{type: :string}
+          msg: %{type: :string},
+          details: %{type: :string}
         }
       }
     }
@@ -39,19 +49,44 @@ defmodule Lobby.Webserver.Spec do
 
   defp default_responses do
     %{
+      # 400
+      "GenericBadRequestResponse" => %{
+        description: "TODO",
+        content: %{
+          "application/json" => %{
+            schema: %{
+              type: :object,
+              required: [:error],
+              properties: %{
+                error: %{
+                  "$ref" => "#/components/schemas/GenericBadRequest"
+                }
+              }
+            }
+          }
+        }
+      },
+      # 401
+      "GenericUnauthorizedResponse" => %{
+        description: "TODO",
+        content: %{}
+      },
+      # 422
       "GenericErrorResponse" => %{
         description: "TODO",
         content: %{
           "application/json" => %{
             schema: %{
-              "$ref" => "\#/components/schemas/GenericError"
+              type: :object,
+              required: [:error],
+              properties: %{
+                error: %{
+                  "$ref" => "#/components/schemas/GenericError"
+                }
+              }
             }
           }
         }
-      },
-      "GenericUnauthorizedResponse" => %{
-        description: "TODO",
-        content: %{}
       }
     }
   end

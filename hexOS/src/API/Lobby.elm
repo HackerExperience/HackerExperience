@@ -26,7 +26,7 @@ login :
 login email password =
     let
         config =
-            { server = "http://localhost:4000/v1"
+            { server = "http://localhost:4000"
             , body = { email = email, password = password }
             }
     in
@@ -35,11 +35,14 @@ login email password =
         |> mapError
             (\apiError ->
                 case apiError of
+                    LegitimateError (Types.UserLogin_400 _) ->
+                        InternalError
+
                     LegitimateError (Types.UserLogin_401 _) ->
                         AppError Unauthorized
 
                     LegitimateError (Types.UserLogin_422 { error }) ->
-                        case error of
+                        case error.msg of
                             "bad_password" ->
                                 AppError Unauthorized
 

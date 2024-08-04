@@ -5,22 +5,27 @@ info:
 components:
   responses:
     GenericBadRequestResponse:
-      description: TODO description
+      description: TODO
       content:
         application/json:
           schema:
             type: object
             required:
-              - data
+              - error
             properties:
-              data:
-                $ref: '#/components/schemas/UserLoginOutput'
+              error:
+                $ref: '#/components/schemas/GenericBadRequest'
     GenericErrorResponse:
       description: TODO
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/GenericError'
+            type: object
+            required:
+              - error
+            properties:
+              error:
+                $ref: '#/components/schemas/GenericError'
     GenericUnauthorizedResponse:
       description: TODO
       content: {}
@@ -62,12 +67,23 @@ components:
           schema:
             $ref: '#/components/schemas/UserRegisterInput'
   schemas:
+    GenericBadRequest:
+      type: object
+      required:
+        - msg
+      properties:
+        msg:
+          type: string
+        details:
+          type: string
     GenericError:
       type: object
       required:
-        - error
+        - msg
       properties:
-        error:
+        msg:
+          type: string
+        details:
           type: string
     UserLoginInput:
       type: object

@@ -1,10 +1,12 @@
 module API.Lobby.Json exposing
-    ( encodeGenericError, encodeGenericErrorResponse, encodeGenericUnauthorizedResponse, encodeUserLoginInput
-    , encodeUserLoginOkResponse, encodeUserLoginOutput, encodeUserLoginRequest, encodeUserRegisterInput
-    , encodeUserRegisterOkResponse, encodeUserRegisterOutput, encodeUserRegisterRequest
-    , decodeGenericError, decodeGenericErrorResponse, decodeGenericUnauthorizedResponse, decodeUserLoginInput
-    , decodeUserLoginOkResponse, decodeUserLoginOutput, decodeUserLoginRequest, decodeUserRegisterInput
-    , decodeUserRegisterOkResponse, decodeUserRegisterOutput, decodeUserRegisterRequest
+    ( encodeGenericBadRequest, encodeGenericBadRequestResponse, encodeGenericError, encodeGenericErrorResponse
+    , encodeGenericUnauthorizedResponse, encodeUserLoginInput, encodeUserLoginOkResponse, encodeUserLoginOutput
+    , encodeUserLoginRequest, encodeUserRegisterInput, encodeUserRegisterOkResponse, encodeUserRegisterOutput
+    , encodeUserRegisterRequest
+    , decodeGenericBadRequest, decodeGenericBadRequestResponse, decodeGenericError, decodeGenericErrorResponse
+    , decodeGenericUnauthorizedResponse, decodeUserLoginInput, decodeUserLoginOkResponse, decodeUserLoginOutput
+    , decodeUserLoginRequest, decodeUserRegisterInput, decodeUserRegisterOkResponse, decodeUserRegisterOutput
+    , decodeUserRegisterRequest
     )
 
 {-|
@@ -12,16 +14,18 @@ module API.Lobby.Json exposing
 
 ## Encoders
 
-@docs encodeGenericError, encodeGenericErrorResponse, encodeGenericUnauthorizedResponse, encodeUserLoginInput
-@docs encodeUserLoginOkResponse, encodeUserLoginOutput, encodeUserLoginRequest, encodeUserRegisterInput
-@docs encodeUserRegisterOkResponse, encodeUserRegisterOutput, encodeUserRegisterRequest
+@docs encodeGenericBadRequest, encodeGenericBadRequestResponse, encodeGenericError, encodeGenericErrorResponse
+@docs encodeGenericUnauthorizedResponse, encodeUserLoginInput, encodeUserLoginOkResponse, encodeUserLoginOutput
+@docs encodeUserLoginRequest, encodeUserRegisterInput, encodeUserRegisterOkResponse, encodeUserRegisterOutput
+@docs encodeUserRegisterRequest
 
 
 ## Decoders
 
-@docs decodeGenericError, decodeGenericErrorResponse, decodeGenericUnauthorizedResponse, decodeUserLoginInput
-@docs decodeUserLoginOkResponse, decodeUserLoginOutput, decodeUserLoginRequest, decodeUserRegisterInput
-@docs decodeUserRegisterOkResponse, decodeUserRegisterOutput, decodeUserRegisterRequest
+@docs decodeGenericBadRequest, decodeGenericBadRequestResponse, decodeGenericError, decodeGenericErrorResponse
+@docs decodeGenericUnauthorizedResponse, decodeUserLoginInput, decodeUserLoginOkResponse, decodeUserLoginOutput
+@docs decodeUserLoginRequest, decodeUserRegisterInput, decodeUserRegisterOkResponse, decodeUserRegisterOutput
+@docs decodeUserRegisterRequest
 
 -}
 
@@ -115,17 +119,53 @@ encodeUserLoginInput rec =
 decodeGenericError : Json.Decode.Decoder API.Lobby.Types.GenericError
 decodeGenericError =
     Json.Decode.succeed
-        (\error -> { error = error })
+        (\details msg -> { details = details, msg = msg })
         |> OpenApi.Common.jsonDecodeAndMap
-            (Json.Decode.field
-                "error"
+            (OpenApi.Common.decodeOptionalField
+                "details"
                 Json.Decode.string
             )
+        |> OpenApi.Common.jsonDecodeAndMap
+            (Json.Decode.field "msg" Json.Decode.string)
 
 
 encodeGenericError : API.Lobby.Types.GenericError -> Json.Encode.Value
 encodeGenericError rec =
-    Json.Encode.object [ ( "error", Json.Encode.string rec.error ) ]
+    Json.Encode.object
+        (List.filterMap
+            Basics.identity
+            [ Maybe.map
+                (\mapUnpack -> ( "details", Json.Encode.string mapUnpack ))
+                rec.details
+            , Just ( "msg", Json.Encode.string rec.msg )
+            ]
+        )
+
+
+decodeGenericBadRequest : Json.Decode.Decoder API.Lobby.Types.GenericBadRequest
+decodeGenericBadRequest =
+    Json.Decode.succeed
+        (\details msg -> { details = details, msg = msg })
+        |> OpenApi.Common.jsonDecodeAndMap
+            (OpenApi.Common.decodeOptionalField
+                "details"
+                Json.Decode.string
+            )
+        |> OpenApi.Common.jsonDecodeAndMap
+            (Json.Decode.field "msg" Json.Decode.string)
+
+
+encodeGenericBadRequest : API.Lobby.Types.GenericBadRequest -> Json.Encode.Value
+encodeGenericBadRequest rec =
+    Json.Encode.object
+        (List.filterMap
+            Basics.identity
+            [ Maybe.map
+                (\mapUnpack -> ( "details", Json.Encode.string mapUnpack ))
+                rec.details
+            , Just ( "msg", Json.Encode.string rec.msg )
+            ]
+        )
 
 
 decodeUserRegisterOkResponse : Json.Decode.Decoder API.Lobby.Types.UserRegisterOkResponse
@@ -172,12 +212,34 @@ encodeGenericUnauthorizedResponse rec =
 
 decodeGenericErrorResponse : Json.Decode.Decoder API.Lobby.Types.GenericErrorResponse
 decodeGenericErrorResponse =
-    decodeGenericError
+    Json.Decode.succeed
+        (\error -> { error = error })
+        |> OpenApi.Common.jsonDecodeAndMap
+            (Json.Decode.field
+                "error"
+                decodeGenericError
+            )
 
 
 encodeGenericErrorResponse : API.Lobby.Types.GenericErrorResponse -> Json.Encode.Value
-encodeGenericErrorResponse =
-    encodeGenericError
+encodeGenericErrorResponse rec =
+    Json.Encode.object [ ( "error", encodeGenericError rec.error ) ]
+
+
+decodeGenericBadRequestResponse : Json.Decode.Decoder API.Lobby.Types.GenericBadRequestResponse
+decodeGenericBadRequestResponse =
+    Json.Decode.succeed
+        (\error -> { error = error })
+        |> OpenApi.Common.jsonDecodeAndMap
+            (Json.Decode.field
+                "error"
+                decodeGenericBadRequest
+            )
+
+
+encodeGenericBadRequestResponse : API.Lobby.Types.GenericBadRequestResponse -> Json.Encode.Value
+encodeGenericBadRequestResponse rec =
+    Json.Encode.object [ ( "error", encodeGenericBadRequest rec.error ) ]
 
 
 decodeUserRegisterRequest : Json.Decode.Decoder API.Lobby.Types.UserRegisterRequest

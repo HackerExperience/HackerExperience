@@ -30,7 +30,12 @@ userLogin config =
             OpenApi.Common.expectJsonCustom
                 config.toMsg
                 (Dict.fromList
-                    [ ( "401"
+                    [ ( "400"
+                      , Json.Decode.map
+                            API.Lobby.Types.UserLogin_400
+                            API.Lobby.Json.decodeGenericBadRequestResponse
+                      )
+                    , ( "401"
                       , Json.Decode.map
                             API.Lobby.Types.UserLogin_401
                             API.Lobby.Json.decodeGenericUnauthorizedResponse
@@ -62,7 +67,12 @@ userLoginTask config =
         , resolver =
             OpenApi.Common.jsonResolverCustom
                 (Dict.fromList
-                    [ ( "401"
+                    [ ( "400"
+                      , Json.Decode.map
+                            API.Lobby.Types.UserLogin_400
+                            API.Lobby.Json.decodeGenericBadRequestResponse
+                      )
+                    , ( "401"
                       , Json.Decode.map
                             API.Lobby.Types.UserLogin_401
                             API.Lobby.Json.decodeGenericUnauthorizedResponse
@@ -94,7 +104,12 @@ userRegister config =
             OpenApi.Common.expectJsonCustom
                 config.toMsg
                 (Dict.fromList
-                    [ ( "422"
+                    [ ( "400"
+                      , Json.Decode.map
+                            API.Lobby.Types.UserRegister_400
+                            API.Lobby.Json.decodeGenericBadRequestResponse
+                      )
+                    , ( "422"
                       , Json.Decode.map
                             API.Lobby.Types.UserRegister_422
                             API.Lobby.Json.decodeGenericErrorResponse
@@ -124,7 +139,12 @@ userRegisterTask config =
         , resolver =
             OpenApi.Common.jsonResolverCustom
                 (Dict.fromList
-                    [ ( "422"
+                    [ ( "400"
+                      , Json.Decode.map
+                            API.Lobby.Types.UserRegister_400
+                            API.Lobby.Json.decodeGenericBadRequestResponse
+                      )
+                    , ( "422"
                       , Json.Decode.map
                             API.Lobby.Types.UserRegister_422
                             API.Lobby.Json.decodeGenericErrorResponse

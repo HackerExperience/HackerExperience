@@ -1,7 +1,7 @@
 module API.Lobby.Types exposing
-    ( GenericError, GenericErrorResponse, GenericUnauthorizedResponse, UserLoginInput, UserLoginOkResponse
-    , UserLoginOutput, UserLoginRequest, UserRegisterInput, UserRegisterOkResponse, UserRegisterOutput
-    , UserRegisterRequest
+    ( GenericBadRequest, GenericBadRequestResponse, GenericError, GenericErrorResponse
+    , GenericUnauthorizedResponse, UserLoginInput, UserLoginOkResponse, UserLoginOutput, UserLoginRequest
+    , UserRegisterInput, UserRegisterOkResponse, UserRegisterOutput, UserRegisterRequest
     , UserLogin_Error(..), UserRegister_Error(..)
     )
 
@@ -10,9 +10,9 @@ module API.Lobby.Types exposing
 
 ## Aliases
 
-@docs GenericError, GenericErrorResponse, GenericUnauthorizedResponse, UserLoginInput, UserLoginOkResponse
-@docs UserLoginOutput, UserLoginRequest, UserRegisterInput, UserRegisterOkResponse, UserRegisterOutput
-@docs UserRegisterRequest
+@docs GenericBadRequest, GenericBadRequestResponse, GenericError, GenericErrorResponse
+@docs GenericUnauthorizedResponse, UserLoginInput, UserLoginOkResponse, UserLoginOutput, UserLoginRequest
+@docs UserRegisterInput, UserRegisterOkResponse, UserRegisterOutput, UserRegisterRequest
 
 
 ## Errors
@@ -23,12 +23,14 @@ module API.Lobby.Types exposing
 
 
 type UserLogin_Error
-    = UserLogin_401 GenericUnauthorizedResponse
+    = UserLogin_400 GenericBadRequestResponse
+    | UserLogin_401 GenericUnauthorizedResponse
     | UserLogin_422 GenericErrorResponse
 
 
 type UserRegister_Error
-    = UserRegister_422 GenericErrorResponse
+    = UserRegister_400 GenericBadRequestResponse
+    | UserRegister_422 GenericErrorResponse
 
 
 type alias UserRegisterOutput =
@@ -48,7 +50,11 @@ type alias UserLoginInput =
 
 
 type alias GenericError =
-    { error : String }
+    { details : Maybe String, msg : String }
+
+
+type alias GenericBadRequest =
+    { details : Maybe String, msg : String }
 
 
 type alias UserRegisterOkResponse =
@@ -64,7 +70,11 @@ type alias GenericUnauthorizedResponse =
 
 
 type alias GenericErrorResponse =
-    GenericError
+    { error : GenericError }
+
+
+type alias GenericBadRequestResponse =
+    { error : GenericBadRequest }
 
 
 type alias UserRegisterRequest =
