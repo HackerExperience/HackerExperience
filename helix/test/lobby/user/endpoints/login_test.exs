@@ -60,20 +60,20 @@ defmodule Lobby.Endpoint.User.LoginTest do
     end
 
     test "fails with missing input", %{shard_id: shard_id} do
-      valid_params = valid_unsafe()
+      valid_params = valid_raw()
 
       [
-        {Map.drop(valid_params, ["password"]), "password_missing_input"},
-        {Map.drop(valid_params, ["email"]), "email_missing_input"}
+        Map.drop(valid_params, ["password"]),
+        Map.drop(valid_params, ["email"])
       ]
-      |> Enum.each(fn {invalid_params, expected_error_message} ->
+      |> Enum.each(fn invalid_params ->
         assert {:error, %{error: reason}} = post(@path, invalid_params, shard_id: shard_id)
-        assert reason == expected_error_message
+        assert reason =~ "missing_or_invalid_input"
       end)
     end
   end
 
-  defp valid_unsafe do
+  defp valid_raw do
     # TODO: Make randou
     %{
       email: "foo@bar.com",

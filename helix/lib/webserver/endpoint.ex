@@ -1,29 +1,22 @@
 defmodule Webserver.Endpoint do
   require Logger
+  alias HELL.Utils
   alias Webserver.Conveyor
 
   defmacro __using__(_) do
     quote do
-      import unquote(__MODULE__), only: [cast: 3]
+      # No-op for now
     end
   end
 
-  def cast(model, field, raw_v, opts \\ []) do
-    opts = Keyword.put_new(opts, :cast, true)
-    validator_module = Module.concat(model, Validator)
+  def validate_input(%{endpoint: endpoint} = request, raw_params) do
+    case Norm.conform(raw_params, endpoint.input_spec()) do
+      {:ok, parsed_params} ->
+        {:ok, %{request | parsed_params: Utils.Map.safe_atomify_keys(parsed_params)}}
 
-    result =
-      try do
-        apply(validator_module, field, [raw_v, opts])
-      rescue
-        FunctionClauseError ->
-          if is_nil(raw_v), do: {:error, :missing_input}, else: :error
-      end
-
-    case result do
-      {:ok, v} -> {:ok, v}
-      {:error, r} -> {:error, {field, r}}
-      :error -> {:error, {field, :invalid_input}}
+      {:error, reason} ->
+        # TODO: Proper formatting of error
+        {:error, %{request | response: {400, "missing_or_invalid_input: #{inspect(reason)}"}}}
     end
   end
 

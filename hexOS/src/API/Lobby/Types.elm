@@ -1,7 +1,7 @@
 module API.Lobby.Types exposing
-    ( GenericError, GenericErrorResponse, GenericUnauthorizedResponse, Log, Server, UserLoginInput
-    , UserLoginOkResponse, UserLoginOutput, UserLoginRequest, UserRegisterInput, UserRegisterOkResponse
-    , UserRegisterOutput, UserRegisterRequest
+    ( GenericError, GenericErrorResponse, GenericUnauthorizedResponse, UserLoginInput, UserLoginOkResponse
+    , UserLoginOutput, UserLoginRequest, UserRegisterInput, UserRegisterOkResponse, UserRegisterOutput
+    , UserRegisterRequest
     , UserLogin_Error(..), UserRegister_Error(..)
     )
 
@@ -10,9 +10,9 @@ module API.Lobby.Types exposing
 
 ## Aliases
 
-@docs GenericError, GenericErrorResponse, GenericUnauthorizedResponse, Log, Server, UserLoginInput
-@docs UserLoginOkResponse, UserLoginOutput, UserLoginRequest, UserRegisterInput, UserRegisterOkResponse
-@docs UserRegisterOutput, UserRegisterRequest
+@docs GenericError, GenericErrorResponse, GenericUnauthorizedResponse, UserLoginInput, UserLoginOkResponse
+@docs UserLoginOutput, UserLoginRequest, UserRegisterInput, UserRegisterOkResponse, UserRegisterOutput
+@docs UserRegisterRequest
 
 
 ## Errors
@@ -32,11 +32,11 @@ type UserRegister_Error
 
 
 type alias UserRegisterOutput =
-    { endpoints : Maybe Server, gateways : List Server }
+    { id : String }
 
 
 type alias UserRegisterInput =
-    { todo_empty_body : String }
+    { email : String, password : String, username : String }
 
 
 type alias UserLoginOutput =
@@ -45,14 +45,6 @@ type alias UserLoginOutput =
 
 type alias UserLoginInput =
     { email : String, password : String }
-
-
-type alias Server =
-    { logs : List Log, nip : String }
-
-
-type alias Log =
-    { id : String }
 
 
 type alias GenericError =

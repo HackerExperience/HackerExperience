@@ -58,34 +58,15 @@ components:
       properties:
         error:
           type: string
-    Log:
-      type: object
-      required:
-        - id
-      properties:
-        id:
-          type: string
-    Server:
-      type: object
-      required:
-        - logs
-        - nip
-      properties:
-        nip:
-          type: string
-        logs:
-          type: array
-          items:
-            $ref: '#/components/schemas/Log'
     UserLoginInput:
       type: object
       required:
-        - email
         - password
+        - email
       properties:
-        password:
-          type: string
         email:
+          type: string
+        password:
           type: string
     UserLoginOutput:
       type: object
@@ -97,21 +78,23 @@ components:
     UserRegisterInput:
       type: object
       required:
-        - todo_empty_body
+        - username
+        - password
+        - email
       properties:
-        todo_empty_body:
+        email:
+          type: string
+        password:
+          type: string
+        username:
           type: string
     UserRegisterOutput:
       type: object
       required:
-        - gateways
+        - id
       properties:
-        gateways:
-          type: array
-          items:
-            $ref: '#/components/schemas/Server'
-        endpoints:
-          $ref: '#/components/schemas/Server'
+        id:
+          type: string
 openapi: 3.1.0
 paths:
   /v1/user/login:

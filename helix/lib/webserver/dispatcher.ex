@@ -21,7 +21,8 @@ defmodule Webserver.Dispatcher do
     session = req.session
     true = not is_nil(session)
 
-    with {:ok, req} <- endpoint.get_params(req, req.unsafe_params, session),
+    with {:ok, req} <- Endpoint.validate_input(req, req.raw_params),
+         {:ok, req} <- endpoint.get_params(req, req.parsed_params, session),
          params = req.params,
          {:ok, req} <- Hooks.on_get_params_ok(req),
          {:ok, req} <- endpoint.get_context(req, params, session),
