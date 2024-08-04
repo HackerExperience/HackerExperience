@@ -29,13 +29,14 @@ defmodule Lobby.Endpoint.User.RegisterTest do
       valid_params = valid_raw()
 
       [
-        Map.drop(valid_params, ["username"]),
-        Map.drop(valid_params, ["password"]),
-        Map.drop(valid_params, ["email"])
+        {Map.drop(valid_params, ["username"]), "username"},
+        {Map.drop(valid_params, ["password"]), "password"},
+        {Map.drop(valid_params, ["email"]), "email"}
       ]
-      |> Enum.each(fn invalid_params ->
-        assert {:error, %{error: reason}} = post(@path, invalid_params, shard_id: shard_id)
-        assert reason =~ "missing_or_invalid_input"
+      |> Enum.each(fn {invalid_params, missing_input_field} ->
+        assert {:error, %{error: error}} = post(@path, invalid_params, shard_id: shard_id)
+        assert error.msg == "invalid_input"
+        assert error.details =~ missing_input_field
       end)
     end
 
@@ -47,8 +48,8 @@ defmodule Lobby.Endpoint.User.RegisterTest do
       assert {:ok, _} = post(@path, params_1, shard_id: shard_id)
 
       # Second request fails
-      assert {:error, %{error: reason}} = post(@path, params_2, shard_id: shard_id)
-      assert reason == "username_taken"
+      assert {:error, %{error: error}} = post(@path, params_2, shard_id: shard_id)
+      assert error.msg == "username_taken"
     end
 
     test "fails if email is taken", %{shard_id: shard_id} do
@@ -59,8 +60,8 @@ defmodule Lobby.Endpoint.User.RegisterTest do
       assert {:ok, _} = post(@path, params_1, shard_id: shard_id)
 
       # Second request fails
-      assert {:error, %{error: reason}} = post(@path, params_2, shard_id: shard_id)
-      assert reason == "email_taken"
+      assert {:error, %{error: error}} = post(@path, params_2, shard_id: shard_id)
+      assert error.msg == "email_taken"
     end
   end
 

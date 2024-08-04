@@ -19,7 +19,7 @@ defmodule Lobby.Endpoint.User.Register do
     )
   end
 
-  def output_spec do
+  def output_spec(200) do
     selection(
       schema(%{
         # TODO: uuid

@@ -43,8 +43,8 @@ defmodule Lobby.Endpoint.User.LoginTest do
 
       # I can't login with the wrong email
       params = %{email: "mundialdopalmeiras@doesntexist.com", password: password}
-      assert {:error, %{error: reason}} = post(@path, params, shard_id: shard_id)
-      assert reason == "bad_password"
+      assert {:error, %{error: error}} = post(@path, params, shard_id: shard_id)
+      assert error.msg == "bad_password"
     end
 
     test "fails with incorrect password", %{shard_id: shard_id} do
@@ -55,20 +55,21 @@ defmodule Lobby.Endpoint.User.LoginTest do
 
       # I can't login with the wrong password
       params = %{email: user.email, password: "wr0ng3r"}
-      assert {:error, %{error: reason}} = post(@path, params, shard_id: shard_id)
-      assert reason == "bad_password"
+      assert {:error, %{error: error}} = post(@path, params, shard_id: shard_id)
+      assert error.msg == "bad_password"
     end
 
     test "fails with missing input", %{shard_id: shard_id} do
       valid_params = valid_raw()
 
       [
-        Map.drop(valid_params, ["password"]),
-        Map.drop(valid_params, ["email"])
+        {Map.drop(valid_params, ["password"]), "password"},
+        {Map.drop(valid_params, ["email"]), "email"}
       ]
-      |> Enum.each(fn invalid_params ->
-        assert {:error, %{error: reason}} = post(@path, invalid_params, shard_id: shard_id)
-        assert reason =~ "missing_or_invalid_input"
+      |> Enum.each(fn {invalid_params, missing_input_field} ->
+        assert {:error, %{error: error}} = post(@path, invalid_params, shard_id: shard_id)
+        assert error.msg == "invalid_input"
+        assert error.details =~ missing_input_field
       end)
     end
   end
