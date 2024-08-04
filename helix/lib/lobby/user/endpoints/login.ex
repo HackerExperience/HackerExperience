@@ -18,7 +18,7 @@ defmodule Lobby.Endpoint.User.Login do
     )
   end
 
-  def output_spec() do
+  def output_spec(200) do
     selection(
       schema(%{
         token: binary()

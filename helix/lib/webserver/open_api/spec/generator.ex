@@ -129,7 +129,7 @@ defmodule Webserver.OpenApi.Spec.Generator do
       output_schema_name = "#{entry.id}Output"
 
       input_spec = apply(endpoint, :input_spec, [])
-      output_spec = apply(endpoint, :output_spec, [])
+      output_spec = apply(endpoint, :output_spec, [200])
 
       acc = build_schema(input_spec, input_schema_name, acc)
       build_schema(output_spec, output_schema_name, acc)
