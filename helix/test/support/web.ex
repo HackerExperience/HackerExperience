@@ -9,7 +9,7 @@ defmodule Test.Web do
     cowboy_req = gen_cowboy_req(Keyword.get(opts, :cowboy_opts, []))
 
     Request.new(cowboy_req, endpoint, :scope_todo)
-    |> Map.put(:unsafe, Keyword.get(opts, :unsafe, nil))
+    |> Map.put(:parsed, Keyword.get(opts, :parsed, nil))
     |> Map.put(:params, Keyword.get(opts, :params, nil))
     |> Map.put(:context, Keyword.get(opts, :context, nil))
     |> Map.put(:result, Keyword.get(opts, :result, nil))

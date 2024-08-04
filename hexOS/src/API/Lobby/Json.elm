@@ -1,10 +1,10 @@
 module API.Lobby.Json exposing
-    ( encodeGenericError, encodeGenericErrorResponse, encodeGenericUnauthorizedResponse, encodeLog, encodeServer
-    , encodeUserLoginInput, encodeUserLoginOkResponse, encodeUserLoginOutput, encodeUserLoginRequest
-    , encodeUserRegisterInput, encodeUserRegisterOkResponse, encodeUserRegisterOutput, encodeUserRegisterRequest
-    , decodeGenericError, decodeGenericErrorResponse, decodeGenericUnauthorizedResponse, decodeLog, decodeServer
-    , decodeUserLoginInput, decodeUserLoginOkResponse, decodeUserLoginOutput, decodeUserLoginRequest
-    , decodeUserRegisterInput, decodeUserRegisterOkResponse, decodeUserRegisterOutput, decodeUserRegisterRequest
+    ( encodeGenericError, encodeGenericErrorResponse, encodeGenericUnauthorizedResponse, encodeUserLoginInput
+    , encodeUserLoginOkResponse, encodeUserLoginOutput, encodeUserLoginRequest, encodeUserRegisterInput
+    , encodeUserRegisterOkResponse, encodeUserRegisterOutput, encodeUserRegisterRequest
+    , decodeGenericError, decodeGenericErrorResponse, decodeGenericUnauthorizedResponse, decodeUserLoginInput
+    , decodeUserLoginOkResponse, decodeUserLoginOutput, decodeUserLoginRequest, decodeUserRegisterInput
+    , decodeUserRegisterOkResponse, decodeUserRegisterOutput, decodeUserRegisterRequest
     )
 
 {-|
@@ -12,16 +12,16 @@ module API.Lobby.Json exposing
 
 ## Encoders
 
-@docs encodeGenericError, encodeGenericErrorResponse, encodeGenericUnauthorizedResponse, encodeLog, encodeServer
-@docs encodeUserLoginInput, encodeUserLoginOkResponse, encodeUserLoginOutput, encodeUserLoginRequest
-@docs encodeUserRegisterInput, encodeUserRegisterOkResponse, encodeUserRegisterOutput, encodeUserRegisterRequest
+@docs encodeGenericError, encodeGenericErrorResponse, encodeGenericUnauthorizedResponse, encodeUserLoginInput
+@docs encodeUserLoginOkResponse, encodeUserLoginOutput, encodeUserLoginRequest, encodeUserRegisterInput
+@docs encodeUserRegisterOkResponse, encodeUserRegisterOutput, encodeUserRegisterRequest
 
 
 ## Decoders
 
-@docs decodeGenericError, decodeGenericErrorResponse, decodeGenericUnauthorizedResponse, decodeLog, decodeServer
-@docs decodeUserLoginInput, decodeUserLoginOkResponse, decodeUserLoginOutput, decodeUserLoginRequest
-@docs decodeUserRegisterInput, decodeUserRegisterOkResponse, decodeUserRegisterOutput, decodeUserRegisterRequest
+@docs decodeGenericError, decodeGenericErrorResponse, decodeGenericUnauthorizedResponse, decodeUserLoginInput
+@docs decodeUserLoginOkResponse, decodeUserLoginOutput, decodeUserLoginRequest, decodeUserRegisterInput
+@docs decodeUserRegisterOkResponse, decodeUserRegisterOutput, decodeUserRegisterRequest
 
 -}
 
@@ -33,45 +33,46 @@ import OpenApi.Common
 
 decodeUserRegisterOutput : Json.Decode.Decoder API.Lobby.Types.UserRegisterOutput
 decodeUserRegisterOutput =
-    Json.Decode.succeed
-        (\endpoints gateways -> { endpoints = endpoints, gateways = gateways })
-        |> OpenApi.Common.jsonDecodeAndMap
-            (OpenApi.Common.decodeOptionalField
-                "endpoints"
-                decodeServer
-            )
+    Json.Decode.succeed (\id -> { id = id })
         |> OpenApi.Common.jsonDecodeAndMap
             (Json.Decode.field
-                "gateways"
-                (Json.Decode.list decodeServer)
+                "id"
+                Json.Decode.string
             )
 
 
 encodeUserRegisterOutput : API.Lobby.Types.UserRegisterOutput -> Json.Encode.Value
 encodeUserRegisterOutput rec =
-    Json.Encode.object
-        (List.filterMap
-            Basics.identity
-            [ Maybe.map
-                (\mapUnpack -> ( "endpoints", encodeServer mapUnpack ))
-                rec.endpoints
-            , Just ( "gateways", Json.Encode.list encodeServer rec.gateways )
-            ]
-        )
+    Json.Encode.object [ ( "id", Json.Encode.string rec.id ) ]
 
 
 decodeUserRegisterInput : Json.Decode.Decoder API.Lobby.Types.UserRegisterInput
 decodeUserRegisterInput =
     Json.Decode.succeed
-        (\todo_empty_body -> { todo_empty_body = todo_empty_body })
+        (\email password username ->
+            { email = email, password = password, username = username }
+        )
         |> OpenApi.Common.jsonDecodeAndMap
-            (Json.Decode.field "todo_empty_body" Json.Decode.string)
+            (Json.Decode.field "email" Json.Decode.string)
+        |> OpenApi.Common.jsonDecodeAndMap
+            (Json.Decode.field
+                "password"
+                Json.Decode.string
+            )
+        |> OpenApi.Common.jsonDecodeAndMap
+            (Json.Decode.field
+                "username"
+                Json.Decode.string
+            )
 
 
 encodeUserRegisterInput : API.Lobby.Types.UserRegisterInput -> Json.Encode.Value
 encodeUserRegisterInput rec =
     Json.Encode.object
-        [ ( "todo_empty_body", Json.Encode.string rec.todo_empty_body ) ]
+        [ ( "email", Json.Encode.string rec.email )
+        , ( "password", Json.Encode.string rec.password )
+        , ( "username", Json.Encode.string rec.username )
+        ]
 
 
 decodeUserLoginOutput : Json.Decode.Decoder API.Lobby.Types.UserLoginOutput
@@ -109,39 +110,6 @@ encodeUserLoginInput rec =
         [ ( "email", Json.Encode.string rec.email )
         , ( "password", Json.Encode.string rec.password )
         ]
-
-
-decodeServer : Json.Decode.Decoder API.Lobby.Types.Server
-decodeServer =
-    Json.Decode.succeed
-        (\logs nip -> { logs = logs, nip = nip })
-        |> OpenApi.Common.jsonDecodeAndMap
-            (Json.Decode.field "logs" (Json.Decode.list decodeLog))
-        |> OpenApi.Common.jsonDecodeAndMap
-            (Json.Decode.field "nip" Json.Decode.string)
-
-
-encodeServer : API.Lobby.Types.Server -> Json.Encode.Value
-encodeServer rec =
-    Json.Encode.object
-        [ ( "logs", Json.Encode.list encodeLog rec.logs )
-        , ( "nip", Json.Encode.string rec.nip )
-        ]
-
-
-decodeLog : Json.Decode.Decoder API.Lobby.Types.Log
-decodeLog =
-    Json.Decode.succeed (\id -> { id = id })
-        |> OpenApi.Common.jsonDecodeAndMap
-            (Json.Decode.field
-                "id"
-                Json.Decode.string
-            )
-
-
-encodeLog : API.Lobby.Types.Log -> Json.Encode.Value
-encodeLog rec =
-    Json.Encode.object [ ( "id", Json.Encode.string rec.id ) ]
 
 
 decodeGenericError : Json.Decode.Decoder API.Lobby.Types.GenericError

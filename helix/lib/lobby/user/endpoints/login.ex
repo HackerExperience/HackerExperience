@@ -1,5 +1,5 @@
 defmodule Lobby.Endpoint.User.Login do
-  use Norm
+  use Core.Spec
   use Webserver.Endpoint
   require Logger
 
@@ -11,31 +11,26 @@ defmodule Lobby.Endpoint.User.Login do
   def input_spec do
     selection(
       schema(%{
-        password: spec(is_binary() and (&cast_and_validate(&1, :password))),
-        email: spec(is_binary())
+        "password" => spec(is_binary() and (&cast_and_validate(&1, :password))),
+        "email" => spec(is_binary() and (&cast_and_validate(&1, :email)))
       }),
-      [:password, :email]
+      ["password", "email"]
     )
   end
 
   def output_spec() do
     selection(
       schema(%{
-        token: spec(is_binary())
+        token: binary()
       }),
       [:token]
     )
   end
 
-  def get_params(request, unsafe, _session) do
-    with {:ok, password} <- cast(User, :password, unsafe["password"]),
-         {:ok, email} <- cast(User, :email, unsafe["email"]) do
-      params = %{raw_password: password, email: email}
-      {:ok, %{request | params: params}}
-    else
-      {:error, error} ->
-        {:error, %{request | response: {400, error}}}
-    end
+  def get_params(request, parsed, _session) do
+    password = User.Validator.cast_password(parsed.password)
+    email = User.Validator.cast_email(parsed.email)
+    {:ok, %{request | params: %{raw_password: password, email: email}}}
   end
 
   def get_context(request, %{email: email, raw_password: raw_pwd}, session) do
@@ -77,7 +72,8 @@ defmodule Lobby.Endpoint.User.Login do
   # Private
 
   defp cast_and_validate(value, :password),
-    do: value |> cast(:password) |> User.Validator.validate_password()
+    do: value |> User.Validator.cast_password() |> User.Validator.validate_password()
 
-  defp cast(value, :password), do: User.Validator.cast_password(value)
+  defp cast_and_validate(value, :email),
+    do: value |> User.Validator.cast_email() |> User.Validator.validate_email()
 end

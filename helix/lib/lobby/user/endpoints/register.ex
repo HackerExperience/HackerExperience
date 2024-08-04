@@ -1,5 +1,5 @@
 defmodule Lobby.Endpoint.User.Register do
-  use Norm
+  use Core.Spec
   use Webserver.Endpoint
   require Logger
 
@@ -8,57 +8,34 @@ defmodule Lobby.Endpoint.User.Register do
   alias Lobby.User
   alias Lobby.Services, as: Svc
 
-  # TODO: Below is just an example of what a more complex contract would look like
   def input_spec do
     selection(
       schema(%{
-        todo_empty_body: spec(is_binary())
+        "username" => spec(is_binary() and (&cast_and_validate(&1, :username))),
+        "password" => spec(is_binary() and (&cast_and_validate(&1, :password))),
+        "email" => spec(is_binary() and (&cast_and_validate(&1, :email)))
       }),
-      [:todo_empty_body]
+      ["username", "password", "email"]
     )
   end
 
   def output_spec do
     selection(
       schema(%{
-        gateways: coll_of(server_spec()),
-        endpoints: server_spec()
-      }),
-      [:gateways]
-    )
-  end
-
-  def server_spec do
-    selection(
-      schema(%{
-        __openapi_name: "Server",
-        nip: spec(is_binary()),
-        logs: coll_of(log_spec())
-      }),
-      [:nip, :logs]
-    )
-  end
-
-  def log_spec do
-    selection(
-      schema(%{
-        __openapi_name: "Log",
-        id: spec(is_binary())
+        # TODO: uuid
+        id: binary()
       }),
       [:id]
     )
   end
 
-  def get_params(request, unsafe, _session) do
-    with {:ok, username} <- cast(User, :username, unsafe["username"]),
-         {:ok, password} <- cast(User, :password, unsafe["password"]),
-         {:ok, email} <- cast(User, :email, unsafe["email"]) do
-      params = %{username: username, raw_password: password, email: email}
-      {:ok, %{request | params: params}}
-    else
-      {:error, error} ->
-        {:error, %{request | response: {400, error}}}
-    end
+  def get_params(request, parsed, _session) do
+    username = User.Validator.cast_username(parsed.username)
+    password = User.Validator.cast_password(parsed.password)
+    email = User.Validator.cast_email(parsed.email)
+
+    params = %{username: username, raw_password: password, email: email}
+    {:ok, %{request | params: params}}
   end
 
   def get_context(request, params, session) do
@@ -102,4 +79,15 @@ defmodule Lobby.Endpoint.User.Register do
   def render_response(request, %{user: %{external_id: external_id}}, _session) do
     {:ok, %{request | response: {200, %{id: external_id}}}}
   end
+
+  # Private
+
+  defp cast_and_validate(value, :username),
+    do: value |> User.Validator.cast_username() |> User.Validator.validate_username()
+
+  defp cast_and_validate(value, :password),
+    do: value |> User.Validator.cast_password() |> User.Validator.validate_password()
+
+  defp cast_and_validate(value, :email),
+    do: value |> User.Validator.cast_email() |> User.Validator.validate_email()
 end
