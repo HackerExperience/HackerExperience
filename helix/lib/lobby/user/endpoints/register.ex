@@ -1,4 +1,5 @@
 defmodule Lobby.Endpoint.User.Register do
+  use Norm
   use Webserver.Endpoint
   require Logger
 
@@ -6,6 +7,47 @@ defmodule Lobby.Endpoint.User.Register do
   alias Core.Crypto
   alias Lobby.User
   alias Lobby.Services, as: Svc
+
+  # TODO: Below is just an example of what a more complex contract would look like
+  def input_spec do
+    selection(
+      schema(%{
+        todo_empty_body: spec(is_binary())
+      }),
+      [:todo_empty_body]
+    )
+  end
+
+  def output_spec do
+    selection(
+      schema(%{
+        gateways: coll_of(server_spec()),
+        endpoints: server_spec()
+      }),
+      [:gateways]
+    )
+  end
+
+  def server_spec do
+    selection(
+      schema(%{
+        __openapi_name: "Server",
+        nip: spec(is_binary()),
+        logs: coll_of(log_spec())
+      }),
+      [:nip, :logs]
+    )
+  end
+
+  def log_spec do
+    selection(
+      schema(%{
+        __openapi_name: "Log",
+        id: spec(is_binary())
+      }),
+      [:id]
+    )
+  end
 
   def get_params(request, unsafe, _session) do
     with {:ok, username} <- cast(User, :username, unsafe["username"]),

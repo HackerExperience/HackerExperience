@@ -1,4 +1,5 @@
 defmodule Lobby.Endpoint.User.Login do
+  use Norm
   use Webserver.Endpoint
   require Logger
 
@@ -6,6 +7,25 @@ defmodule Lobby.Endpoint.User.Login do
   alias Lobby.User
   alias Lobby.Services, as: Svc
   alias Core.Crypto
+
+  def input_spec do
+    selection(
+      schema(%{
+        password: spec(is_binary() and (&cast_and_validate(&1, :password))),
+        email: spec(is_binary())
+      }),
+      [:password, :email]
+    )
+  end
+
+  def output_spec() do
+    selection(
+      schema(%{
+        token: spec(is_binary())
+      }),
+      [:token]
+    )
+  end
 
   def get_params(request, unsafe, _session) do
     with {:ok, password} <- cast(User, :password, unsafe["password"]),
@@ -54,4 +74,11 @@ defmodule Lobby.Endpoint.User.Login do
   def render_response(request, %{jwt: jwt}, _session) do
     {:ok, %{request | response: {200, %{token: jwt}}}}
   end
+
+  # Private
+
+  defp cast_and_validate(value, :password),
+    do: value |> cast(:password) |> User.Validator.validate_password()
+
+  defp cast(value, :password), do: User.Validator.cast_password(value)
 end
