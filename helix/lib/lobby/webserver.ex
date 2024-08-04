@@ -1,5 +1,8 @@
 defmodule Lobby.Webserver do
+  defdelegate spec, to: __MODULE__.Spec
+
   # TODO: Check what the compilation graph looks like, as this is used by config at compile time?
+  # TODO: Routes should be generated from the Spec
   def routes do
     [
       {"/v1/user/register", %{handler: Lobby.Endpoint.User.Register, method: :post}},

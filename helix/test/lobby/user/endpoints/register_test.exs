@@ -9,7 +9,7 @@ defmodule Lobby.Endpoint.User.RegisterTest do
 
   describe "User.Register request" do
     test "succeeds with correct input", %{shard_id: shard_id} do
-      params = valid_unsafe()
+      params = valid_raw()
       assert {:ok, %{data: %{id: external_id}}} = post(@path, params, shard_id: shard_id)
 
       # The user was correctly inserted into the database
@@ -26,41 +26,42 @@ defmodule Lobby.Endpoint.User.RegisterTest do
     end
 
     test "fails with missing parameters", %{shard_id: shard_id} do
-      valid_params = valid_unsafe()
+      valid_params = valid_raw()
 
       [
-        {Map.drop(valid_params, ["username"]), "username_missing_input"},
-        {Map.drop(valid_params, ["password"]), "password_missing_input"},
-        {Map.drop(valid_params, ["email"]), "email_missing_input"}
+        {Map.drop(valid_params, ["username"]), "username"},
+        {Map.drop(valid_params, ["password"]), "password"},
+        {Map.drop(valid_params, ["email"]), "email"}
       ]
-      |> Enum.each(fn {invalid_params, expected_error_message} ->
-        assert {:error, %{error: reason}} = post(@path, invalid_params, shard_id: shard_id)
-        assert reason == expected_error_message
+      |> Enum.each(fn {invalid_params, missing_input_field} ->
+        assert {:error, %{error: error}} = post(@path, invalid_params, shard_id: shard_id)
+        assert error.msg == "invalid_input"
+        assert error.details =~ missing_input_field
       end)
     end
 
     test "fails if username is taken", %{shard_id: shard_id} do
-      params_1 = valid_unsafe(username: "abc", email: "foo1@bar.com")
-      params_2 = valid_unsafe(username: "abc", email: "foo2@bar.com")
+      params_1 = valid_raw(username: "abc", email: "foo1@bar.com")
+      params_2 = valid_raw(username: "abc", email: "foo2@bar.com")
 
       # First request goes through (user is created)
       assert {:ok, _} = post(@path, params_1, shard_id: shard_id)
 
       # Second request fails
-      assert {:error, %{error: reason}} = post(@path, params_2, shard_id: shard_id)
-      assert reason == "username_taken"
+      assert {:error, %{error: error}} = post(@path, params_2, shard_id: shard_id)
+      assert error.msg == "username_taken"
     end
 
     test "fails if email is taken", %{shard_id: shard_id} do
-      params_1 = valid_unsafe(username: "abc1", email: "foo@bar.com")
-      params_2 = valid_unsafe(username: "abc2", email: "foo@bar.com")
+      params_1 = valid_raw(username: "abc1", email: "foo@bar.com")
+      params_2 = valid_raw(username: "abc2", email: "foo@bar.com")
 
       # First request goes through (user is created)
       assert {:ok, _} = post(@path, params_1, shard_id: shard_id)
 
       # Second request fails
-      assert {:error, %{error: reason}} = post(@path, params_2, shard_id: shard_id)
-      assert reason == "email_taken"
+      assert {:error, %{error: error}} = post(@path, params_2, shard_id: shard_id)
+      assert error.msg == "email_taken"
     end
   end
 
@@ -80,7 +81,7 @@ defmodule Lobby.Endpoint.User.RegisterTest do
     end
   end
 
-  defp valid_unsafe(opts \\ []) do
+  defp valid_raw(opts \\ []) do
     # TODO: Make random
     %{
       username: Keyword.get(opts, :username, "abc"),

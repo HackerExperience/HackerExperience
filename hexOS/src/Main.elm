@@ -258,8 +258,8 @@ subscriptions model =
     case model.state of
         GameState gameModel ->
             Sub.batch
-                [ Browser.Events.onResize (\w h -> BrowserResizedViewport ( w, h ))
-                , Browser.Events.onVisibilityChange BrowserVisibilityChanged
+                [ -- Browser.Events.onResize (\w h -> BrowserResizedViewport ( w, h ))
+                  Browser.Events.onVisibilityChange BrowserVisibilityChanged
                 , case WM.isDragging gameModel.os.wm of
                     True ->
                         Browser.Events.onMouseUp (JD.succeed BrowserMouseUp)

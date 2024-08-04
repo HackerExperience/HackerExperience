@@ -1,10 +1,12 @@
 module API.Lobby.Json exposing
-    ( encodeEmptyOkResponse, encodeGenericError, encodeGenericErrorModel, encodeLoginOkResponse, encodeLoginUser
-    , encodeLoginUserRequest, encodeNewUser, encodeNewUserRequest, encodeUnauthorized, encodeUser
-    , encodeUserLoginResponse
-    , decodeEmptyOkResponse, decodeGenericError, decodeGenericErrorModel, decodeLoginOkResponse, decodeLoginUser
-    , decodeLoginUserRequest, decodeNewUser, decodeNewUserRequest, decodeUnauthorized, decodeUser
-    , decodeUserLoginResponse
+    ( encodeGenericBadRequest, encodeGenericBadRequestResponse, encodeGenericError, encodeGenericErrorResponse
+    , encodeGenericUnauthorizedResponse, encodeUserLoginInput, encodeUserLoginOkResponse, encodeUserLoginOutput
+    , encodeUserLoginRequest, encodeUserRegisterInput, encodeUserRegisterOkResponse, encodeUserRegisterOutput
+    , encodeUserRegisterRequest
+    , decodeGenericBadRequest, decodeGenericBadRequestResponse, decodeGenericError, decodeGenericErrorResponse
+    , decodeGenericUnauthorizedResponse, decodeUserLoginInput, decodeUserLoginOkResponse, decodeUserLoginOutput
+    , decodeUserLoginRequest, decodeUserRegisterInput, decodeUserRegisterOkResponse, decodeUserRegisterOutput
+    , decodeUserRegisterRequest
     )
 
 {-|
@@ -12,16 +14,18 @@ module API.Lobby.Json exposing
 
 ## Encoders
 
-@docs encodeEmptyOkResponse, encodeGenericError, encodeGenericErrorModel, encodeLoginOkResponse, encodeLoginUser
-@docs encodeLoginUserRequest, encodeNewUser, encodeNewUserRequest, encodeUnauthorized, encodeUser
-@docs encodeUserLoginResponse
+@docs encodeGenericBadRequest, encodeGenericBadRequestResponse, encodeGenericError, encodeGenericErrorResponse
+@docs encodeGenericUnauthorizedResponse, encodeUserLoginInput, encodeUserLoginOkResponse, encodeUserLoginOutput
+@docs encodeUserLoginRequest, encodeUserRegisterInput, encodeUserRegisterOkResponse, encodeUserRegisterOutput
+@docs encodeUserRegisterRequest
 
 
 ## Decoders
 
-@docs decodeEmptyOkResponse, decodeGenericError, decodeGenericErrorModel, decodeLoginOkResponse, decodeLoginUser
-@docs decodeLoginUserRequest, decodeNewUser, decodeNewUserRequest, decodeUnauthorized, decodeUser
-@docs decodeUserLoginResponse
+@docs decodeGenericBadRequest, decodeGenericBadRequestResponse, decodeGenericError, decodeGenericErrorResponse
+@docs decodeGenericUnauthorizedResponse, decodeUserLoginInput, decodeUserLoginOkResponse, decodeUserLoginOutput
+@docs decodeUserLoginRequest, decodeUserRegisterInput, decodeUserRegisterOkResponse, decodeUserRegisterOutput
+@docs decodeUserRegisterRequest
 
 -}
 
@@ -31,75 +35,23 @@ import Json.Encode
 import OpenApi.Common
 
 
-decodeUserLoginResponse : Json.Decode.Decoder API.Lobby.Types.UserLoginResponse
-decodeUserLoginResponse =
-    Json.Decode.succeed
-        (\token -> { token = token })
+decodeUserRegisterOutput : Json.Decode.Decoder API.Lobby.Types.UserRegisterOutput
+decodeUserRegisterOutput =
+    Json.Decode.succeed (\id -> { id = id })
         |> OpenApi.Common.jsonDecodeAndMap
             (Json.Decode.field
-                "token"
+                "id"
                 Json.Decode.string
             )
 
 
-encodeUserLoginResponse : API.Lobby.Types.UserLoginResponse -> Json.Encode.Value
-encodeUserLoginResponse rec =
-    Json.Encode.object [ ( "token", Json.Encode.string rec.token ) ]
+encodeUserRegisterOutput : API.Lobby.Types.UserRegisterOutput -> Json.Encode.Value
+encodeUserRegisterOutput rec =
+    Json.Encode.object [ ( "id", Json.Encode.string rec.id ) ]
 
 
-decodeUser : Json.Decode.Decoder API.Lobby.Types.User
-decodeUser =
-    Json.Decode.succeed
-        (\bio email image token username ->
-            { bio = bio
-            , email = email
-            , image = image
-            , token = token
-            , username = username
-            }
-        )
-        |> OpenApi.Common.jsonDecodeAndMap
-            (OpenApi.Common.decodeOptionalField
-                "bio"
-                Json.Decode.string
-            )
-        |> OpenApi.Common.jsonDecodeAndMap
-            (Json.Decode.field "email" Json.Decode.string)
-        |> OpenApi.Common.jsonDecodeAndMap
-            (Json.Decode.field
-                "image"
-                Json.Decode.string
-            )
-        |> OpenApi.Common.jsonDecodeAndMap
-            (Json.Decode.field
-                "token"
-                Json.Decode.string
-            )
-        |> OpenApi.Common.jsonDecodeAndMap
-            (Json.Decode.field
-                "username"
-                Json.Decode.string
-            )
-
-
-encodeUser : API.Lobby.Types.User -> Json.Encode.Value
-encodeUser rec =
-    Json.Encode.object
-        (List.filterMap
-            Basics.identity
-            [ Maybe.map
-                (\mapUnpack -> ( "bio", Json.Encode.string mapUnpack ))
-                rec.bio
-            , Just ( "email", Json.Encode.string rec.email )
-            , Just ( "image", Json.Encode.string rec.image )
-            , Just ( "token", Json.Encode.string rec.token )
-            , Just ( "username", Json.Encode.string rec.username )
-            ]
-        )
-
-
-decodeNewUser : Json.Decode.Decoder API.Lobby.Types.NewUser
-decodeNewUser =
+decodeUserRegisterInput : Json.Decode.Decoder API.Lobby.Types.UserRegisterInput
+decodeUserRegisterInput =
     Json.Decode.succeed
         (\email password username ->
             { email = email, password = password, username = username }
@@ -118,8 +70,8 @@ decodeNewUser =
             )
 
 
-encodeNewUser : API.Lobby.Types.NewUser -> Json.Encode.Value
-encodeNewUser rec =
+encodeUserRegisterInput : API.Lobby.Types.UserRegisterInput -> Json.Encode.Value
+encodeUserRegisterInput rec =
     Json.Encode.object
         [ ( "email", Json.Encode.string rec.email )
         , ( "password", Json.Encode.string rec.password )
@@ -127,8 +79,24 @@ encodeNewUser rec =
         ]
 
 
-decodeLoginUser : Json.Decode.Decoder API.Lobby.Types.LoginUser
-decodeLoginUser =
+decodeUserLoginOutput : Json.Decode.Decoder API.Lobby.Types.UserLoginOutput
+decodeUserLoginOutput =
+    Json.Decode.succeed
+        (\token -> { token = token })
+        |> OpenApi.Common.jsonDecodeAndMap
+            (Json.Decode.field
+                "token"
+                Json.Decode.string
+            )
+
+
+encodeUserLoginOutput : API.Lobby.Types.UserLoginOutput -> Json.Encode.Value
+encodeUserLoginOutput rec =
+    Json.Encode.object [ ( "token", Json.Encode.string rec.token ) ]
+
+
+decodeUserLoginInput : Json.Decode.Decoder API.Lobby.Types.UserLoginInput
+decodeUserLoginInput =
     Json.Decode.succeed
         (\email password -> { email = email, password = password })
         |> OpenApi.Common.jsonDecodeAndMap
@@ -140,97 +108,155 @@ decodeLoginUser =
             )
 
 
-encodeLoginUser : API.Lobby.Types.LoginUser -> Json.Encode.Value
-encodeLoginUser rec =
+encodeUserLoginInput : API.Lobby.Types.UserLoginInput -> Json.Encode.Value
+encodeUserLoginInput rec =
     Json.Encode.object
         [ ( "email", Json.Encode.string rec.email )
         , ( "password", Json.Encode.string rec.password )
         ]
 
 
-decodeGenericErrorModel : Json.Decode.Decoder API.Lobby.Types.GenericErrorModel
-decodeGenericErrorModel =
+decodeGenericError : Json.Decode.Decoder API.Lobby.Types.GenericError
+decodeGenericError =
     Json.Decode.succeed
-        (\error -> { error = error })
+        (\details msg -> { details = details, msg = msg })
         |> OpenApi.Common.jsonDecodeAndMap
-            (Json.Decode.field
-                "error"
+            (OpenApi.Common.decodeOptionalField
+                "details"
                 Json.Decode.string
             )
+        |> OpenApi.Common.jsonDecodeAndMap
+            (Json.Decode.field "msg" Json.Decode.string)
 
 
-encodeGenericErrorModel : API.Lobby.Types.GenericErrorModel -> Json.Encode.Value
-encodeGenericErrorModel rec =
-    Json.Encode.object [ ( "error", Json.Encode.string rec.error ) ]
+encodeGenericError : API.Lobby.Types.GenericError -> Json.Encode.Value
+encodeGenericError rec =
+    Json.Encode.object
+        (List.filterMap
+            Basics.identity
+            [ Maybe.map
+                (\mapUnpack -> ( "details", Json.Encode.string mapUnpack ))
+                rec.details
+            , Just ( "msg", Json.Encode.string rec.msg )
+            ]
+        )
 
 
-decodeUnauthorized : Json.Decode.Decoder API.Lobby.Types.Unauthorized
-decodeUnauthorized =
-    Json.Decode.succeed ()
+decodeGenericBadRequest : Json.Decode.Decoder API.Lobby.Types.GenericBadRequest
+decodeGenericBadRequest =
+    Json.Decode.succeed
+        (\details msg -> { details = details, msg = msg })
+        |> OpenApi.Common.jsonDecodeAndMap
+            (OpenApi.Common.decodeOptionalField
+                "details"
+                Json.Decode.string
+            )
+        |> OpenApi.Common.jsonDecodeAndMap
+            (Json.Decode.field "msg" Json.Decode.string)
 
 
-encodeUnauthorized : API.Lobby.Types.Unauthorized -> Json.Encode.Value
-encodeUnauthorized rec =
-    Json.Encode.null
+encodeGenericBadRequest : API.Lobby.Types.GenericBadRequest -> Json.Encode.Value
+encodeGenericBadRequest rec =
+    Json.Encode.object
+        (List.filterMap
+            Basics.identity
+            [ Maybe.map
+                (\mapUnpack -> ( "details", Json.Encode.string mapUnpack ))
+                rec.details
+            , Just ( "msg", Json.Encode.string rec.msg )
+            ]
+        )
 
 
-decodeLoginOkResponse : Json.Decode.Decoder API.Lobby.Types.LoginOkResponse
-decodeLoginOkResponse =
+decodeUserRegisterOkResponse : Json.Decode.Decoder API.Lobby.Types.UserRegisterOkResponse
+decodeUserRegisterOkResponse =
     Json.Decode.succeed
         (\data -> { data = data })
         |> OpenApi.Common.jsonDecodeAndMap
             (Json.Decode.field
                 "data"
-                decodeUserLoginResponse
+                decodeUserRegisterOutput
             )
 
 
-encodeLoginOkResponse : API.Lobby.Types.LoginOkResponse -> Json.Encode.Value
-encodeLoginOkResponse rec =
-    Json.Encode.object [ ( "data", encodeUserLoginResponse rec.data ) ]
+encodeUserRegisterOkResponse : API.Lobby.Types.UserRegisterOkResponse -> Json.Encode.Value
+encodeUserRegisterOkResponse rec =
+    Json.Encode.object [ ( "data", encodeUserRegisterOutput rec.data ) ]
 
 
-decodeGenericError : Json.Decode.Decoder API.Lobby.Types.GenericError
-decodeGenericError =
-    decodeGenericErrorModel
+decodeUserLoginOkResponse : Json.Decode.Decoder API.Lobby.Types.UserLoginOkResponse
+decodeUserLoginOkResponse =
+    Json.Decode.succeed
+        (\data -> { data = data })
+        |> OpenApi.Common.jsonDecodeAndMap
+            (Json.Decode.field
+                "data"
+                decodeUserLoginOutput
+            )
 
 
-encodeGenericError : API.Lobby.Types.GenericError -> Json.Encode.Value
-encodeGenericError =
-    encodeGenericErrorModel
+encodeUserLoginOkResponse : API.Lobby.Types.UserLoginOkResponse -> Json.Encode.Value
+encodeUserLoginOkResponse rec =
+    Json.Encode.object [ ( "data", encodeUserLoginOutput rec.data ) ]
 
 
-decodeEmptyOkResponse : Json.Decode.Decoder API.Lobby.Types.EmptyOkResponse
-decodeEmptyOkResponse =
+decodeGenericUnauthorizedResponse : Json.Decode.Decoder API.Lobby.Types.GenericUnauthorizedResponse
+decodeGenericUnauthorizedResponse =
     Json.Decode.succeed ()
 
 
-encodeEmptyOkResponse : API.Lobby.Types.EmptyOkResponse -> Json.Encode.Value
-encodeEmptyOkResponse rec =
+encodeGenericUnauthorizedResponse : API.Lobby.Types.GenericUnauthorizedResponse -> Json.Encode.Value
+encodeGenericUnauthorizedResponse rec =
     Json.Encode.null
 
 
-decodeNewUserRequest : Json.Decode.Decoder API.Lobby.Types.NewUserRequest
-decodeNewUserRequest =
+decodeGenericErrorResponse : Json.Decode.Decoder API.Lobby.Types.GenericErrorResponse
+decodeGenericErrorResponse =
     Json.Decode.succeed
-        (\user -> { user = user })
+        (\error -> { error = error })
         |> OpenApi.Common.jsonDecodeAndMap
             (Json.Decode.field
-                "user"
-                decodeNewUser
+                "error"
+                decodeGenericError
             )
 
 
-encodeNewUserRequest : API.Lobby.Types.NewUserRequest -> Json.Encode.Value
-encodeNewUserRequest rec =
-    Json.Encode.object [ ( "user", encodeNewUser rec.user ) ]
+encodeGenericErrorResponse : API.Lobby.Types.GenericErrorResponse -> Json.Encode.Value
+encodeGenericErrorResponse rec =
+    Json.Encode.object [ ( "error", encodeGenericError rec.error ) ]
 
 
-decodeLoginUserRequest : Json.Decode.Decoder API.Lobby.Types.LoginUserRequest
-decodeLoginUserRequest =
-    decodeLoginUser
+decodeGenericBadRequestResponse : Json.Decode.Decoder API.Lobby.Types.GenericBadRequestResponse
+decodeGenericBadRequestResponse =
+    Json.Decode.succeed
+        (\error -> { error = error })
+        |> OpenApi.Common.jsonDecodeAndMap
+            (Json.Decode.field
+                "error"
+                decodeGenericBadRequest
+            )
 
 
-encodeLoginUserRequest : API.Lobby.Types.LoginUserRequest -> Json.Encode.Value
-encodeLoginUserRequest =
-    encodeLoginUser
+encodeGenericBadRequestResponse : API.Lobby.Types.GenericBadRequestResponse -> Json.Encode.Value
+encodeGenericBadRequestResponse rec =
+    Json.Encode.object [ ( "error", encodeGenericBadRequest rec.error ) ]
+
+
+decodeUserRegisterRequest : Json.Decode.Decoder API.Lobby.Types.UserRegisterRequest
+decodeUserRegisterRequest =
+    decodeUserRegisterInput
+
+
+encodeUserRegisterRequest : API.Lobby.Types.UserRegisterRequest -> Json.Encode.Value
+encodeUserRegisterRequest =
+    encodeUserRegisterInput
+
+
+decodeUserLoginRequest : Json.Decode.Decoder API.Lobby.Types.UserLoginRequest
+decodeUserLoginRequest =
+    decodeUserLoginInput
+
+
+encodeUserLoginRequest : API.Lobby.Types.UserLoginRequest -> Json.Encode.Value
+encodeUserLoginRequest =
+    encodeUserLoginInput

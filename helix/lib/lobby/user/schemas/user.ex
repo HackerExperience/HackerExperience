@@ -22,55 +22,30 @@ defmodule Lobby.User do
   end
 
   defmodule Validator do
-    def password(v, opts) when is_binary(v) do
-      v = if opts[:cast], do: String.trim(v), else: v
+    def validate_username(v) do
       len = String.length(v)
-
-      with true <- len < 100,
-           true <- len >= 6 do
-        {:ok, v}
-      else
-        _ -> :error
-      end
-    end
-
-    def username(v, opts) when is_binary(v) do
-      v = if opts[:cast], do: cast_username(v), else: v
-      len = String.length(v)
-
       # TODO: Regex allowlist
-      with true <- len <= 20,
-           true <- len >= 3 do
-        {:ok, v}
-      else
-        _ -> :error
-      end
+      len >= 3 and len <= 20
     end
 
-    def email(v, opts) when is_binary(v) do
-      v = if opts[:cast], do: cast_email(v), else: v
-
-      # TODO: Regex
-      with true <- String.length(v) < 255,
-           true <- String.length(v) >= 3,
-           true <- String.contains?(v, "@") do
-        {:ok, v}
-      else
-        _ -> :error
-      end
+    def validate_password(v) do
+      len = String.length(v)
+      len >= 6 and len < 100
     end
 
-    defp cast_username(v) do
-      # TODO: Generic cast
-      v
-      |> String.trim()
-      |> String.downcase()
+    def validate_email(v) do
+      len = String.length(v)
+      # TODO: Regex allowlist?
+      len >= 3 and len < 255 and String.contains?(v, "@")
     end
 
-    defp cast_email(v) do
-      v
-      |> String.trim()
-      |> String.downcase()
-    end
+    def cast_username(v),
+      do: v |> String.trim() |> String.downcase()
+
+    def cast_password(v),
+      do: String.trim(v)
+
+    def cast_email(v),
+      do: v |> String.trim() |> String.downcase()
   end
 end

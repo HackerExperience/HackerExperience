@@ -1,11 +1,11 @@
-module API.Lobby.Api exposing (createUser, createUserTask, login, loginTask)
+module API.Lobby.Api exposing (userLogin, userLoginTask, userRegister, userRegisterTask)
 
 {-|
 
 
-## User and Authentication
+## Operations
 
-@docs createUser, createUserTask, login, loginTask
+@docs userLogin, userLoginTask, userRegister, userRegisterTask
 
 -}
 
@@ -20,121 +20,139 @@ import Task
 import Url.Builder
 
 
-{-| Register a new user
--}
-createUser config =
+userLogin config =
     Http.request
-        { url = Url.Builder.crossOrigin config.server [ "user" ] []
+        { url =
+            Url.Builder.crossOrigin config.server [ "v1", "user", "login" ] []
         , method = "POST"
         , headers = []
         , expect =
             OpenApi.Common.expectJsonCustom
                 config.toMsg
                 (Dict.fromList
-                    [ ( "422"
+                    [ ( "400"
                       , Json.Decode.map
-                            API.Lobby.Types.CreateUser_422
-                            API.Lobby.Json.decodeGenericError
+                            API.Lobby.Types.UserLogin_400
+                            API.Lobby.Json.decodeGenericBadRequestResponse
+                      )
+                    , ( "401"
+                      , Json.Decode.map
+                            API.Lobby.Types.UserLogin_401
+                            API.Lobby.Json.decodeGenericUnauthorizedResponse
+                      )
+                    , ( "422"
+                      , Json.Decode.map
+                            API.Lobby.Types.UserLogin_422
+                            API.Lobby.Json.decodeGenericErrorResponse
                       )
                     ]
                 )
-                API.Lobby.Json.decodeLoginOkResponse
-        , body = Http.jsonBody (API.Lobby.Json.encodeNewUserRequest config.body)
+                API.Lobby.Json.decodeUserLoginOkResponse
+        , body =
+            Http.jsonBody (API.Lobby.Json.encodeUserLoginRequest config.body)
         , timeout = Nothing
         , tracker = Nothing
         }
 
 
-{-| Register a new user
--}
-createUserTask :
-    { server : String, body : API.Lobby.Types.NewUserRequest }
-    -> Task.Task (OpenApi.Common.Error API.Lobby.Types.CreateUser_Error String) API.Lobby.Types.LoginOkResponse
-createUserTask config =
+userLoginTask :
+    { server : String, body : API.Lobby.Types.UserLoginRequest }
+    -> Task.Task (OpenApi.Common.Error API.Lobby.Types.UserLogin_Error String) API.Lobby.Types.UserLoginOkResponse
+userLoginTask config =
     Http.task
-        { url = Url.Builder.crossOrigin config.server [ "user" ] []
+        { url =
+            Url.Builder.crossOrigin config.server [ "v1", "user", "login" ] []
         , method = "POST"
         , headers = []
         , resolver =
             OpenApi.Common.jsonResolverCustom
                 (Dict.fromList
-                    [ ( "422"
+                    [ ( "400"
                       , Json.Decode.map
-                            API.Lobby.Types.CreateUser_422
-                            API.Lobby.Json.decodeGenericError
+                            API.Lobby.Types.UserLogin_400
+                            API.Lobby.Json.decodeGenericBadRequestResponse
+                      )
+                    , ( "401"
+                      , Json.Decode.map
+                            API.Lobby.Types.UserLogin_401
+                            API.Lobby.Json.decodeGenericUnauthorizedResponse
+                      )
+                    , ( "422"
+                      , Json.Decode.map
+                            API.Lobby.Types.UserLogin_422
+                            API.Lobby.Json.decodeGenericErrorResponse
                       )
                     ]
                 )
-                API.Lobby.Json.decodeLoginOkResponse
-        , body = Http.jsonBody (API.Lobby.Json.encodeNewUserRequest config.body)
+                API.Lobby.Json.decodeUserLoginOkResponse
+        , body =
+            Http.jsonBody (API.Lobby.Json.encodeUserLoginRequest config.body)
         , timeout = Nothing
         }
 
 
-{-| Existing user login
-
-Login for existing user
-
--}
-login config =
+userRegister config =
     Http.request
-        { url = Url.Builder.crossOrigin config.server [ "user", "login" ] []
+        { url =
+            Url.Builder.crossOrigin
+                config.server
+                [ "v1", "user", "register" ]
+                []
         , method = "POST"
         , headers = []
         , expect =
             OpenApi.Common.expectJsonCustom
                 config.toMsg
                 (Dict.fromList
-                    [ ( "401"
+                    [ ( "400"
                       , Json.Decode.map
-                            API.Lobby.Types.Login_401
-                            API.Lobby.Json.decodeUnauthorized
+                            API.Lobby.Types.UserRegister_400
+                            API.Lobby.Json.decodeGenericBadRequestResponse
                       )
                     , ( "422"
                       , Json.Decode.map
-                            API.Lobby.Types.Login_422
-                            API.Lobby.Json.decodeGenericError
+                            API.Lobby.Types.UserRegister_422
+                            API.Lobby.Json.decodeGenericErrorResponse
                       )
                     ]
                 )
-                API.Lobby.Json.decodeLoginOkResponse
+                API.Lobby.Json.decodeUserRegisterOkResponse
         , body =
-            Http.jsonBody (API.Lobby.Json.encodeLoginUserRequest config.body)
+            Http.jsonBody (API.Lobby.Json.encodeUserRegisterRequest config.body)
         , timeout = Nothing
         , tracker = Nothing
         }
 
 
-{-| Existing user login
-
-Login for existing user
-
--}
-loginTask :
-    { server : String, body : API.Lobby.Types.LoginUserRequest }
-    -> Task.Task (OpenApi.Common.Error API.Lobby.Types.Login_Error String) API.Lobby.Types.LoginOkResponse
-loginTask config =
+userRegisterTask :
+    { server : String, body : API.Lobby.Types.UserRegisterRequest }
+    -> Task.Task (OpenApi.Common.Error API.Lobby.Types.UserRegister_Error String) API.Lobby.Types.UserRegisterOkResponse
+userRegisterTask config =
     Http.task
-        { url = Url.Builder.crossOrigin config.server [ "user", "login" ] []
+        { url =
+            Url.Builder.crossOrigin
+                config.server
+                [ "v1", "user", "register" ]
+                []
         , method = "POST"
         , headers = []
         , resolver =
             OpenApi.Common.jsonResolverCustom
                 (Dict.fromList
-                    [ ( "401"
+                    [ ( "400"
                       , Json.Decode.map
-                            API.Lobby.Types.Login_401
-                            API.Lobby.Json.decodeUnauthorized
+                            API.Lobby.Types.UserRegister_400
+                            API.Lobby.Json.decodeGenericBadRequestResponse
                       )
                     , ( "422"
                       , Json.Decode.map
-                            API.Lobby.Types.Login_422
-                            API.Lobby.Json.decodeGenericError
+                            API.Lobby.Types.UserRegister_422
+                            API.Lobby.Json.decodeGenericErrorResponse
                       )
                     ]
                 )
-                API.Lobby.Json.decodeLoginOkResponse
+                API.Lobby.Json.decodeUserRegisterOkResponse
         , body =
-            Http.jsonBody (API.Lobby.Json.encodeLoginUserRequest config.body)
+            Http.jsonBody (API.Lobby.Json.encodeUserRegisterRequest config.body)
         , timeout = Nothing
         }

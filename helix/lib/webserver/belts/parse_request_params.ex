@@ -14,11 +14,11 @@ defmodule Webserver.Belt.ParseRequestParams do
 
     # TODO: Only merge body if request is not multipart/upload
 
-    new_unsafe_params =
+    new_raw_params =
       qs_params
       |> Map.merge(cowboy_request.bindings)
-      |> Map.merge(request.unsafe_params)
+      |> Map.merge(request.raw_params)
 
-    Map.put(request, :unsafe_params, new_unsafe_params)
+    Map.put(request, :raw_params, new_raw_params)
   end
 end

@@ -25,11 +25,11 @@ defmodule Webserver.Belt.ReadBody do
 
         cond do
           raw_body == "" ->
-            %{customs_request | unsafe_params: %{}}
+            %{customs_request | raw_params: %{}}
 
           true ->
             try do
-              %{customs_request | unsafe_params: :json.decode(raw_body)}
+              %{customs_request | raw_params: :json.decode(raw_body)}
             rescue
               ErlangError ->
                 Conveyor.halt_with_response(customs_request, conveyor, 400)

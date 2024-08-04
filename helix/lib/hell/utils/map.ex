@@ -1,4 +1,5 @@
 defmodule HELL.Utils.Map do
+  # DOCME
   def atomify_keys(map, opts \\ []) when is_map(map) do
     with_existing_atom? = Keyword.get(opts, :with_existing_atom, false)
 
@@ -22,6 +23,10 @@ defmodule HELL.Utils.Map do
   end
 
   def atomify_keys(v, _), do: v
+
+  # DOCME
+  def safe_atomify_keys(map),
+    do: atomify_keys(map, with_existing_atom: true)
 
   # DOCME
   def stringify_keys(map) when is_map(map) do
