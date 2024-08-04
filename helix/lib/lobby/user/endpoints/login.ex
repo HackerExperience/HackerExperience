@@ -42,8 +42,7 @@ defmodule Lobby.Endpoint.User.Login do
     with %User{} = user <- Svc.User.fetch_by_email(email) || :nxuser,
          :ok = DB.commit(),
          true <- Crypto.Password.verify_hash(user.password, raw_pwd) || :bad_password do
-      # TODO: NOTE: shard_id must not be hardcoded because tests
-      DB.begin(:lobby, 1, :read)
+      DB.begin(:lobby, session.shard_id, :read)
       {:ok, %{request | context: %{user: user}}}
     else
       :nxuser ->
