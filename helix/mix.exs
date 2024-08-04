@@ -52,6 +52,7 @@ defmodule Helix.MixProject do
       {:rustler, "~> 0.32.0"},
       {:dblite, path: "~/dblite"},
       {:jose, "~> 1.11"},
+      {:norm, "~> 0.13"},
       {:excoveralls, "~> 0.18.1", only: :test},
       {:req, "~> 0.4.8", only: :test}
     ]
