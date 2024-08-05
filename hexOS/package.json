@@ -6,9 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview",
-    "openapi:lobby": "npx elm-open-api ../helix/priv/openapi/lobby.yaml --module-name API.Lobby --output-dir src/ --server '{}'",
-    "openapi:game": "npx elm-open-api ../helix/priv/openapi/game.yaml --module-name API.Game --output-dir src/ --server '{}'"
+    "preview": "vite preview"
   },
   "devDependencies": {
     "elm-format": "^0.8.7",
