@@ -1,0 +1,34 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+OPENAPI_PATH="../helix/priv/openapi"
+ELM_OUTPUT_DIR="src/"
+
+generate_elm_types_for_lobby_api() {
+    # NOTE: The empty server argument is on purpose, so the generated Elm
+    # functions functions accept a `server` string as an argument.
+    npx elm-open-api $OPENAPI_PATH/lobby.yaml \
+        --module-name API.Lobby \
+        --output-dir $ELM_OUTPUT_DIR \
+        --server '{}'
+}
+
+generate_elm_types_for_game_api() {
+    npx elm-open-api $OPENAPI_PATH/game.yaml \
+        --module-name API.Game \
+        --output-dir $ELM_OUTPUT_DIR \
+        --server '{"sp": "http://localhost:4001", "mp": "http://localhost:4002"}'
+}
+
+# Always use script dirname as starting point
+cd "$(dirname "$0")"
+
+# Generate the OAS files from Helix
+(cd ../helix && mix openapi.generate_schemas)
+
+# Generate Elm types for the Lobby API
+(cd ../hexOS && generate_elm_types_for_lobby_api)
+
+# Generate Elm types for the Game API
+(cd ../hexOS && generate_elm_types_for_game_api)
