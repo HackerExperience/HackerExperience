@@ -1,10 +1,10 @@
-defmodule Lobby.Webserver.Spec do
+defmodule Game.Webserver.Spec do
   @doc """
   DOCME
   """
   def spec do
     %{
-      title: "Lobby API",
+      title: "Game API",
       version: "1.0.0",
       endpoints: endpoints(),
       default_responses: default_responses(),
@@ -14,20 +14,16 @@ defmodule Lobby.Webserver.Spec do
 
   defp endpoints do
     %{
+      # TODO: It's Sync, not Login
       {Lobby.Endpoint.User.Login, :post} => %{
         path: "/v1/user/login",
         responses: [200, 400, 401, 422]
-      },
-      {Lobby.Endpoint.User.Register, :post} => %{
-        path: "/v1/user/register",
-        responses: [200, 400, 422]
       }
     }
   end
 
   # TODO: Error defaults are shared between Lobby and Game.{MP|SP}. DRY it
   defp default_schemas do
-    # TODO: Ideally, these schemas should be generated off of Endpoint.output_spec_for_error
     %{
       "GenericBadRequest" => %{
         type: :object,
