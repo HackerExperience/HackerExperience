@@ -19,22 +19,27 @@ defmodule Mix.Tasks.Openapi.GenerateSchemasTest do
     test "successfully generates json and yaml specs" do
       GenerateSchemas.run(["--target-dir", @tmp_dir])
 
-      # Both json and yaml files were created
-      assert ["lobby.json", "lobby.yaml"] ==
+      # Both json and yaml files were created for the GameAPI and LobbyAPI
+      assert ["game.json", "game.yaml", "lobby.json", "lobby.yaml"] ==
                @tmp_dir |> File.ls!() |> Enum.sort()
 
-      # JSON file is decodeable and appears to be semantically correct
-      spec =
-        @tmp_dir
-        |> Path.join("lobby.json")
-        |> File.read!()
-        |> :json.decode()
-
-      assert Map.has_key?(spec, "components")
-      assert Map.has_key?(spec, "info")
-      assert Map.has_key?(spec, "openapi")
-      assert Map.has_key?(spec, "paths")
-      assert spec["info"]["title"] == "Lobby API"
+      # JSON file is decodeable and appears to be correct for both GameAPI and LobbyAPI
+      assert_spec("lobby.json", "Lobby API")
+      assert_spec("game.json", "Game API")
     end
+  end
+
+  defp assert_spec(path, title) do
+    spec =
+      @tmp_dir
+      |> Path.join(path)
+      |> File.read!()
+      |> :json.decode()
+
+    assert Map.has_key?(spec, "components")
+    assert Map.has_key?(spec, "info")
+    assert Map.has_key?(spec, "openapi")
+    assert Map.has_key?(spec, "paths")
+    assert spec["info"]["title"] == title
   end
 end
