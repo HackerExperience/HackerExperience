@@ -29,7 +29,9 @@ defmodule Mix.Tasks.Openapi.GenerateSchemas do
   defp do_run(args) do
     target_dir = get_target_dir(args)
     setup_env(target_dir)
+
     generate_openapi_spec_file(:lobby, target_dir)
+    generate_openapi_spec_file(:game, target_dir)
   end
 
   defp setup_env(target_dir) do
@@ -40,6 +42,12 @@ defmodule Mix.Tasks.Openapi.GenerateSchemas do
     Lobby.Webserver.spec()
     |> SpecGenerator.generate()
     |> write_spec(:lobby, target_dir)
+  end
+
+  defp generate_openapi_spec_file(:game, target_dir) do
+    Game.Webserver.spec()
+    |> SpecGenerator.generate()
+    |> write_spec(:game, target_dir)
   end
 
   defp write_spec(spec, name, target_dir) do

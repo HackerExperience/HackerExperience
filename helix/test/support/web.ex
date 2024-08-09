@@ -14,6 +14,7 @@ defmodule Test.Web do
     |> Map.put(:context, Keyword.get(opts, :context, nil))
     |> Map.put(:result, Keyword.get(opts, :result, nil))
     |> Map.put(:response, Keyword.get(opts, :response, nil))
+    |> Map.put(:universe, Keyword.get(opts, :universe, nil))
   end
 
   def gen_session(opts \\ []) do

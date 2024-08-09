@@ -12,7 +12,8 @@ defmodule Webserver.Request do
     :context,
     :result,
     :events,
-    :response
+    :response,
+    :universe
   ]
 
   def new(cowboy_request, endpoint, webserver) do

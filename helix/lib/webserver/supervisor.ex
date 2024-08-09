@@ -39,7 +39,7 @@ defmodule Webserver.Supervisor do
         :cowboy,
         :start_clear,
         [
-          :server,
+          config.webserver,
           %{
             socket_opts: [port: config.port],
             # TODO: Move these hard-coded values to a config

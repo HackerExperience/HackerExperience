@@ -1,4 +1,5 @@
 defmodule Webserver.Belt.RequestId do
+  # TODO: Consider scenario where frontend specifies a request ID (x-request-id)
   def call(request, _, _) do
     request_id = gen_request_id()
     %{request | id: request_id}

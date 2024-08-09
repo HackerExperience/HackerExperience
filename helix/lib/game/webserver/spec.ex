@@ -1,10 +1,10 @@
-defmodule Lobby.Webserver.Spec do
+defmodule Game.Webserver.Spec do
   @doc """
   DOCME
   """
   def spec do
     %{
-      title: "Lobby API",
+      title: "Game API",
       version: "1.0.0",
       endpoints: endpoints(),
       default_responses: default_responses(),
@@ -14,13 +14,10 @@ defmodule Lobby.Webserver.Spec do
 
   defp endpoints do
     %{
+      # TODO: It's Sync, not Login
       {Lobby.Endpoint.User.Login, :post} => %{
         path: "/v1/user/login",
         responses: [200, 400, 401, 422]
-      },
-      {Lobby.Endpoint.User.Register, :post} => %{
-        path: "/v1/user/register",
-        responses: [200, 400, 422]
       }
     }
   end
