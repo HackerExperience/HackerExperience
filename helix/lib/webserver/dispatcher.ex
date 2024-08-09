@@ -1,7 +1,7 @@
 defmodule Webserver.Dispatcher do
   require Logger
 
-  alias Webserver.{Belt, Config, Conveyor, Endpoint, Hooks, Request}
+  alias Webserver.{Belt, Conveyor, Endpoint, Hooks, Request}
 
   @env Mix.env()
 
@@ -48,12 +48,10 @@ defmodule Webserver.Dispatcher do
 
   # defp do_dispatch(cowboy_request, %{handler: endpoint, scope: scope}) do
   defp do_dispatch(cowboy_request, %{handler: endpoint, webserver: webserver} = args) do
-    belts = Config.get_webserver_belts(webserver)
-
     request =
       cowboy_request
       |> Request.new(endpoint, webserver, args)
-      |> Conveyor.execute(belts)
+      |> Conveyor.execute()
 
     {:ok, request.cowboy_request, request}
   end

@@ -16,7 +16,7 @@ defmodule Webserver.Conveyor do
     }
   end
 
-  def execute(request, belts) when is_list(belts) do
+  def execute(%{belts: belts} = request) when is_list(belts) do
     # TODO: Maybe change this so that Entrypoint is executed automatically from within `execute/2`
     belts = [Conveyor.Belts.Entrypoint | belts]
 
