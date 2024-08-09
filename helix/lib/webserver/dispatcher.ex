@@ -3,6 +3,8 @@ defmodule Webserver.Dispatcher do
 
   alias Webserver.{Belt, Config, Conveyor, Endpoint, Hooks, Request}
 
+  @env Mix.env()
+
   def init(cowboy_request, args) do
     {duration, {_, _, request} = result} = :timer.tc(fn -> do_dispatch(cowboy_request, args) end)
 
@@ -17,11 +19,13 @@ defmodule Webserver.Dispatcher do
   @doc """
   Belt entrypoint. Actually dispatches the request to the corresponding handler.
   """
-  def call(%{endpoint: endpoint} = req, _, _) do
+  def call(req, _, _) do
+    endpoint = Request.get_endpoint(req, @env)
+
     session = req.session
     true = not is_nil(session)
 
-    with {:ok, req} <- Endpoint.validate_input(req, req.raw_params),
+    with {:ok, req} <- Endpoint.validate_input(req, endpoint, req.raw_params),
          {:ok, req} <- endpoint.get_params(req, req.parsed_params, session),
          params = req.params,
          {:ok, req} <- Hooks.on_get_params_ok(req),
@@ -34,21 +38,21 @@ defmodule Webserver.Dispatcher do
          # emit_events!(req),
          result = req.result,
          {:ok, req} <- endpoint.render_response(req, result, session) do
-      Endpoint.render_response(req)
+      Endpoint.render_response(req, endpoint)
     else
       {:error, req} ->
         # TODO: Determine if we should rollback
-        Endpoint.render_response(req)
+        Endpoint.render_response(req, endpoint)
     end
   end
 
   # defp do_dispatch(cowboy_request, %{handler: endpoint, scope: scope}) do
-  defp do_dispatch(cowboy_request, %{handler: endpoint, webserver: webserver}) do
+  defp do_dispatch(cowboy_request, %{handler: endpoint, webserver: webserver} = args) do
     belts = Config.get_webserver_belts(webserver)
 
     request =
       cowboy_request
-      |> Request.new(endpoint, webserver)
+      |> Request.new(endpoint, webserver, args)
       |> Conveyor.execute(belts)
 
     {:ok, request.cowboy_request, request}
