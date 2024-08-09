@@ -10,7 +10,7 @@ defmodule Webserver.Endpoint do
     end
   end
 
-  def validate_input(%{endpoint: endpoint} = request, raw_params) do
+  def validate_input(request, endpoint, raw_params) do
     case Norm.conform(raw_params, endpoint.input_spec()) do
       {:ok, parsed_params} ->
         {:ok, %{request | parsed_params: Utils.Map.safe_atomify_keys(parsed_params)}}
@@ -27,11 +27,11 @@ defmodule Webserver.Endpoint do
     end
   end
 
-  def render_response(%{conveyor: conveyor, response: response} = request) do
+  def render_response(%{conveyor: conveyor, response: response} = request, endpoint) do
     {status_code, response_payload} = parse_response(response)
 
     # Ensures that the outgoing message adheres to the API contract
-    enforce_output_spec!(request.endpoint, status_code, response_payload)
+    enforce_output_spec!(endpoint, status_code, response_payload)
 
     conveyor =
       conveyor

@@ -7,8 +7,9 @@ defmodule Test.Web do
 
   def gen_req(endpoint \\ nil, opts \\ []) do
     cowboy_req = gen_cowboy_req(Keyword.get(opts, :cowboy_opts, []))
+    webserver = Keyword.get(opts, :webserver, Game.Webserver.Multiplayer)
 
-    Request.new(cowboy_req, endpoint, :scope_todo)
+    Request.new(cowboy_req, endpoint, webserver)
     |> Map.put(:parsed, Keyword.get(opts, :parsed, nil))
     |> Map.put(:params, Keyword.get(opts, :params, nil))
     |> Map.put(:context, Keyword.get(opts, :context, nil))
@@ -37,28 +38,44 @@ defmodule Test.Web.Request do
       bindings: Keyword.get(opts, :bindings, %{}),
       ref: :server,
       cert: :undefined,
-      headers: gen_cowboy_req_headers(opts[:headers] || []),
+      headers: gen_cowboy_req_headers(opts),
       method: Keyword.get(opts, :method, "POST"),
       host_info: :undefined,
       path_info: :undefined,
       streamid: 1,
       body_length: Keyword.get(opts, :body_length, 9381),
-      has_body: Keyword.get(opts, :has_body, true),
+      has_body: Keyword.get(opts, :has_body, false),
       qs: Keyword.get(opts, :qs, ""),
       sock: {{127, 0, 0, 1}, Keyword.get(opts, :port, 4001)}
     }
   end
 
   defp gen_cowboy_req_headers(opts) do
+    maybe_put_mock_header = fn headers ->
+      case opts[:mock_body] do
+        nil ->
+          headers
+
+        mock_body when is_binary(mock_body) ->
+          Map.put(headers, "test-body-mock", mock_body)
+
+        mock_body when is_map(mock_body) ->
+          stringified_body = mock_body |> :json.encode() |> to_string()
+          Map.put(headers, "test-body-mock", stringified_body)
+      end
+    end
+
     default_headers =
       %{
         "accept" => "*/*",
         "content-length" => 9381,
         "content-type" => "application/json",
         "host" => "localhost:4001",
-        "user-agent" => "curl/8.2.1"
+        "user-agent" => "curl/8.2.1",
+        "test-lobby-shard-id" => "1"
       }
 
     Map.merge(default_headers, Keyword.get(opts, :headers, %{}))
+    |> maybe_put_mock_header.()
   end
 end

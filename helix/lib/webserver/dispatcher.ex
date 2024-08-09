@@ -1,7 +1,9 @@
 defmodule Webserver.Dispatcher do
   require Logger
+  use Webserver.Conveyor.Belt
+  alias Webserver.{Belt, Conveyor, Endpoint, Hooks, Request}
 
-  alias Webserver.{Belt, Config, Conveyor, Endpoint, Hooks, Request}
+  @env Mix.env()
 
   def init(cowboy_request, args) do
     {duration, {_, _, request} = result} = :timer.tc(fn -> do_dispatch(cowboy_request, args) end)
@@ -15,13 +17,16 @@ defmodule Webserver.Dispatcher do
   end
 
   @doc """
-  Belt entrypoint. Actually dispatches the request to the corresponding handler.
+  Belt entrypoint for the dispatcher. Actually dispatches the request to the corresponding handler.
   """
-  def call(%{endpoint: endpoint} = req, _, _) do
+  @impl Webserver.Conveyor.Belt
+  def call(req, _, _) do
+    endpoint = Request.get_endpoint(req, @env)
+
     session = req.session
     true = not is_nil(session)
 
-    with {:ok, req} <- Endpoint.validate_input(req, req.raw_params),
+    with {:ok, req} <- Endpoint.validate_input(req, endpoint, req.raw_params),
          {:ok, req} <- endpoint.get_params(req, req.parsed_params, session),
          params = req.params,
          {:ok, req} <- Hooks.on_get_params_ok(req),
@@ -34,22 +39,20 @@ defmodule Webserver.Dispatcher do
          # emit_events!(req),
          result = req.result,
          {:ok, req} <- endpoint.render_response(req, result, session) do
-      Endpoint.render_response(req)
+      Endpoint.render_response(req, endpoint)
     else
       {:error, req} ->
         # TODO: Determine if we should rollback
-        Endpoint.render_response(req)
+        Endpoint.render_response(req, endpoint)
     end
   end
 
   # defp do_dispatch(cowboy_request, %{handler: endpoint, scope: scope}) do
-  defp do_dispatch(cowboy_request, %{handler: endpoint, webserver: webserver}) do
-    belts = Config.get_webserver_belts(webserver)
-
+  defp do_dispatch(cowboy_request, %{handler: endpoint, webserver: webserver} = args) do
     request =
       cowboy_request
-      |> Request.new(endpoint, webserver)
-      |> Conveyor.execute(belts)
+      |> Request.new(endpoint, webserver, args)
+      |> Conveyor.execute()
 
     {:ok, request.cowboy_request, request}
   end

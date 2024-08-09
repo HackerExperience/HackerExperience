@@ -1,4 +1,6 @@
 defmodule Webserver.Belt.ParseRequestParams do
+  use Webserver.Conveyor.Belt
+
   def call(request, _conveyor, _opts) do
     cowboy_request = request.cowboy_request
 
