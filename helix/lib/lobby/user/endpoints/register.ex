@@ -8,6 +8,8 @@ defmodule Lobby.Endpoint.User.Register do
   alias Lobby.User
   alias Lobby.Services, as: Svc
 
+  @behaviour Webserver.Endpoint.Behaviour
+
   def input_spec do
     selection(
       schema(%{
