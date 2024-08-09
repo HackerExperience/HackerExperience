@@ -25,71 +25,9 @@ defmodule Lobby.Webserver.Spec do
     }
   end
 
-  # TODO: Error defaults are shared between Lobby and Game.{MP|SP}. DRY it
-  defp default_schemas do
-    # TODO: Ideally, these schemas should be generated off of Endpoint.output_spec_for_error
-    %{
-      "GenericBadRequest" => %{
-        type: :object,
-        required: [:msg],
-        properties: %{
-          msg: %{type: :string},
-          details: %{type: :string}
-        }
-      },
-      "GenericError" => %{
-        type: :object,
-        required: [:msg],
-        properties: %{
-          msg: %{type: :string},
-          details: %{type: :string}
-        }
-      }
-    }
-  end
+  defp default_schemas,
+    do: Core.Webserver.Spec.default_schemas()
 
-  # TODO: Error defaults are shared between Lobby and Game.{MP|SP}. DRY it
-  defp default_responses do
-    %{
-      # 400
-      "GenericBadRequestResponse" => %{
-        description: "TODO",
-        content: %{
-          "application/json" => %{
-            schema: %{
-              type: :object,
-              required: [:error],
-              properties: %{
-                error: %{
-                  "$ref" => "#/components/schemas/GenericBadRequest"
-                }
-              }
-            }
-          }
-        }
-      },
-      # 401
-      "GenericUnauthorizedResponse" => %{
-        description: "TODO",
-        content: %{}
-      },
-      # 422
-      "GenericErrorResponse" => %{
-        description: "TODO",
-        content: %{
-          "application/json" => %{
-            schema: %{
-              type: :object,
-              required: [:error],
-              properties: %{
-                error: %{
-                  "$ref" => "#/components/schemas/GenericError"
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-  end
+  defp default_responses,
+    do: Core.Webserver.Spec.default_responses()
 end
