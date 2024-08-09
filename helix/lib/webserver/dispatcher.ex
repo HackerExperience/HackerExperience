@@ -1,6 +1,6 @@
 defmodule Webserver.Dispatcher do
   require Logger
-
+  use Webserver.Conveyor.Belt
   alias Webserver.{Belt, Conveyor, Endpoint, Hooks, Request}
 
   @env Mix.env()
@@ -17,8 +17,9 @@ defmodule Webserver.Dispatcher do
   end
 
   @doc """
-  Belt entrypoint. Actually dispatches the request to the corresponding handler.
+  Belt entrypoint for the dispatcher. Actually dispatches the request to the corresponding handler.
   """
+  @impl Webserver.Conveyor.Belt
   def call(req, _, _) do
     endpoint = Request.get_endpoint(req, @env)
 

@@ -12,6 +12,8 @@ defmodule Core.Webserver.Belt.Entrypoint do
   This will be used mainly to determine which database a request should initially connect to.
   """
 
+  use Webserver.Conveyor.Belt
+
   def call(request, _, opts) do
     request
     |> put_universe(opts)

@@ -95,6 +95,8 @@ defmodule Webserver.Conveyor do
 end
 
 defmodule Webserver.Conveyor.Belts.Entrypoint do
+  use Webserver.Conveyor.Belt
+
   def call(request, %Webserver.Conveyor{trace: []} = conveyor, _) do
     %{request | conveyor: conveyor}
   end
