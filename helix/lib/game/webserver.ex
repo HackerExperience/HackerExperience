@@ -4,7 +4,7 @@ defmodule Game.Webserver do
   # TODO: Routes should be generated from the Spec
   def routes do
     [
-      {"/v1/sync", %{handler: Game.Endpoint.Sync, method: :post}}
+      {"/v1/player/sync", %{handler: Game.Endpoint.Player.Sync, method: :post, sse: true}}
     ]
   end
 
@@ -17,7 +17,7 @@ defmodule Game.Webserver do
       Webserver.Belt.ReadBody,
       Webserver.Belt.ParseRequestParams,
       # TODO: Contextualization should/could be Core
-      # Lobby.Webserver.Belt.Contextualization,
+      Lobby.Webserver.Belt.Contextualization,
       Webserver.Dispatcher,
       Webserver.Belt.SendResponse
     ]

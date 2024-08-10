@@ -1,12 +1,14 @@
 defmodule Webserver.Dispatcher do
   require Logger
   use Webserver.Conveyor.Belt
-  alias Webserver.{Belt, Conveyor, Endpoint, Hooks, Request}
+  alias Webserver.{Conveyor, Endpoint, Hooks, Request}
 
+  @behaviour :cowboy_handler
   @env Mix.env()
 
+  @impl :cowboy_handler
   def init(cowboy_request, args) do
-    {duration, {_, _, request} = result} = :timer.tc(fn -> do_dispatch(cowboy_request, args) end)
+    {duration, {:ok, result, request}} = :timer.tc(fn -> do_dispatch(cowboy_request, args) end)
 
     # Log in a different process because sometimes Cowboy kills the request
     # process as soon as the response is sent and we may lose logs.
@@ -14,6 +16,24 @@ defmodule Webserver.Dispatcher do
     spawn(fn -> log_request(duration, request) end)
 
     result
+  end
+
+  def info(event, req, %{dispatcher: :sse} = state) do
+    Webserver.SSE.info(event, req, state)
+  end
+
+  def info(e, req, state) do
+    Logger.warning("Unhandled msg: #{inspect(e)} - #{inspect({req, state})}")
+    {:ok, req, state}
+  end
+
+  @impl :cowboy_handler
+  def terminate(:normal, _, _), do: :ok
+
+  @impl :cowboy_handler
+  def terminate(reason, req, state) do
+    Logger.warning("Unexpected termination: #{inspect(reason)} - #{inspect({req, state})}")
+    :ok
   end
 
   @doc """
@@ -54,7 +74,25 @@ defmodule Webserver.Dispatcher do
       |> Request.new(endpoint, webserver, args)
       |> Conveyor.execute()
 
-    {:ok, request.cowboy_request, request}
+    # Result that should be returned by the `init/2` call from the :cowboy_handler behaviour
+    cowboy_result =
+      case {request.cowboy_return, request.conveyor} do
+        {:ok, _conveyor} ->
+          {:ok, request.cowboy_request, %{}}
+
+        {{:start_sse, state}, _conveyor} ->
+          {:cowboy_loop, request.cowboy_request, state}
+
+        # Request never reached the end of the conveyor belt because it was halted mid-way. As such,
+        # we need to return whatever error code and reason was defined during the halting.
+        # TODO: Maybe consider the possibility of a halted request being handled by a custom belt?
+        {nil, %{halt?: true, response_status: error_code, response_message: _msg}} ->
+          # TODO: For now, I'm ignoring `response_message`
+          cowboy_request = :cowboy_req.reply(error_code, %{}, "", request.cowboy_request)
+          {:ok, cowboy_request, %{}}
+      end
+
+    {:ok, cowboy_result, request}
   end
 
   defp log_request(duration, %{cowboy_request: cowboy_request, conveyor: conveyor}) do

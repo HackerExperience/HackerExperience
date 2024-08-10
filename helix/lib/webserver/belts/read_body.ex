@@ -11,6 +11,10 @@ defmodule Webserver.Belt.ReadBody do
     # TODO: This will require some fine-tunning when accepting file uploads
 
     cond do
+      cowboy_request.method == "GET" ->
+        # GET requests have no body to be read; default to empty map.
+        %{request | raw_params: %{}}
+
       # TODO: Do not use `:cowboy_req.parse_header/2`. If the header is invalid, it breaks
       # silently
       {"application", "json", []} !=

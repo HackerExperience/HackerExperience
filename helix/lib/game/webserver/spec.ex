@@ -14,10 +14,10 @@ defmodule Game.Webserver.Spec do
 
   defp endpoints do
     %{
-      # TODO: It's Sync, not Login
-      {Lobby.Endpoint.User.Login, :post} => %{
-        path: "/v1/user/login",
-        responses: [200, 400, 401, 422]
+      {Game.Endpoint.Player.Sync, :post} => %{
+        # TODO: How do I turn this into an SSE spec?
+        path: "/v1/player/sync",
+        responses: [200, 400]
       }
     }
   end

@@ -6,6 +6,7 @@ defmodule Webserver.Request do
   defstruct [
     :id,
     :cowboy_request,
+    :cowboy_return,
     :conveyor,
     :belts,
     :endpoint,
@@ -19,7 +20,8 @@ defmodule Webserver.Request do
     :result,
     :events,
     :response,
-    :universe
+    :universe,
+    :xargs
   ]
 
   def new(cowboy_request, endpoint, webserver, xargs \\ %{}) do
@@ -28,7 +30,8 @@ defmodule Webserver.Request do
       endpoint: endpoint,
       endpoint_mock: xargs[:endpoint_mock],
       webserver: webserver,
-      belts: get_belts(webserver, xargs, @env)
+      belts: get_belts(webserver, xargs, @env),
+      xargs: xargs
     }
   end
 

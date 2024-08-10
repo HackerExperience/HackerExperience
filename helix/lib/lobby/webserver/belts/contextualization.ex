@@ -32,9 +32,10 @@ defmodule Lobby.Webserver.Belt.Contextualization do
   end
 
   defp get_db_context_on_public_endpoint(endpoint) do
+    # TODO (also, this is now `universe` and set elsewhere, no?)
     case Module.split(endpoint) do
       ["Lobby" | _] -> :lobby
-      _ -> raise "TODO"
+      _ -> :multiplayer
     end
   end
 
@@ -53,5 +54,10 @@ defmodule Lobby.Webserver.Belt.Contextualization do
           raise "Missing `test-lobby-shard-id` header"
       end
     end
+  end
+
+  defp get_shard_id_for_context(:multiplayer, _) do
+    # TODO
+    1
   end
 end
