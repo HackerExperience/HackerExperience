@@ -35,7 +35,7 @@ defmodule Test.DBCase do
   defp default_db_context(%{file: file}) do
     cond do
       file =~ "/test/lobby" -> :lobby
-      # file =~ "/test/game" -> :game
+      file =~ "/test/game" -> :multiplayer
       :else -> raise "TODO db context at Test.DBCase"
     end
   end
