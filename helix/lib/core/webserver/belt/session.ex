@@ -1,7 +1,4 @@
-# NOTE: It probably makes sense to move this to Core and have the same Contextualization
-# belt in both Lobby/SP/MP/etc...
-# TODO: Not a big fan of this name
-defmodule Lobby.Webserver.Belt.Contextualization do
+defmodule Core.Webserver.Belt.Session do
   @env Mix.env()
 
   # TODO: Maybe convert the session and session.data maps in proper structs

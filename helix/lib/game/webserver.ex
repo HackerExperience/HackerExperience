@@ -16,8 +16,7 @@ defmodule Game.Webserver do
       Lobby.Webserver.Belt.HandleCors,
       Webserver.Belt.ReadBody,
       Webserver.Belt.ParseRequestParams,
-      # TODO: Contextualization should/could be Core
-      Lobby.Webserver.Belt.Contextualization,
+      Core.Webserver.Belt.Session,
       Webserver.Dispatcher,
       Webserver.Belt.SendResponse
     ]
