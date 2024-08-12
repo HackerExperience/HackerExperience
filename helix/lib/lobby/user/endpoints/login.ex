@@ -36,7 +36,7 @@ defmodule Lobby.Endpoint.User.Login do
   end
 
   def get_context(request, %{email: email, raw_password: raw_pwd}, session) do
-    with %User{} = user <- Svc.User.fetch_by_email(email) || :nxuser,
+    with %User{} = user <- Svc.User.fetch(by_email: email) || :nxuser,
          :ok = DB.commit(),
          true <- Crypto.Password.verify_hash(user.password, raw_pwd) || :bad_password do
       DB.begin(:lobby, session.shard_id, :read)

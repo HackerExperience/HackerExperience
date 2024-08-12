@@ -4,7 +4,7 @@ defmodule Test.Setup.Lobby.User do
 
   def new(opts \\ []) do
     opts
-    |> params
+    |> params()
     |> User.new()
     |> DB.insert!()
   end

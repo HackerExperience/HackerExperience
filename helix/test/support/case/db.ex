@@ -10,7 +10,9 @@ defmodule Test.DBCase do
       # import Test.Finders
       # import Test.Utils
 
+      alias HELL.{Random, Utils}
       alias Test.Setup
+      alias Test.Utils, as: U
       alias DBLite, as: DB
     end
   end
