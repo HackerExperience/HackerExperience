@@ -1,63 +1,113 @@
 # NOTE: It probably makes sense to move this to Core and have the same Contextualization
 # belt in both Lobby/SP/MP/etc...
+# TODO: Not a big fan of this name
 defmodule Lobby.Webserver.Belt.Contextualization do
   @env Mix.env()
 
-  def call(request, _, _) do
-    # TODO
-    session =
-      if true do
-        session_for_public_endpoint(request)
-      else
-        session_for_private_endpoint(request)
-      end
+  # TODO: Maybe convert the session and session.data maps in proper structs
 
-    %{request | session: session}
+  alias Core.Crypto
+  alias Game.Services, as: Svc
+  alias DBLite, as: DB
+
+  def call(request, conveyor, _) do
+    # Maybe move the session_for_* functions to a Session module? Easier to test
+    cond do
+      is_sse_request?(request) ->
+        session_for_sse_endpoint(request)
+
+      is_request_on_public_endpoint?(request) ->
+        {:ok, session_for_public_endpoint(request)}
+
+      true ->
+        {:ok, session_for_private_endpoint(request)}
+    end
+    |> case do
+      {:ok, session} ->
+        %{request | session: session}
+
+      {:error, reason} when is_binary(reason) ->
+        Conveyor.halt_with_response(request, conveyor, 400, reason)
+    end
   end
 
-  defp session_for_public_endpoint(request) do
-    type = :public
-    db_context = get_db_context_on_public_endpoint(request.endpoint)
-    shard_id = get_shard_id_for_context(db_context, request)
+  defp is_sse_request?(%{xargs: %{sse: true}}), do: true
+  defp is_sse_request?(_), do: false
 
-    %{type: type, db_context: db_context, shard_id: shard_id}
+  defp is_request_on_public_endpoint?(%{xargs: %{public: true}}), do: true
+  defp is_request_on_public_endpoint?(_), do: false
+
+  defp session_for_public_endpoint(request) do
+    shard_id = get_shard_id_for_universe(request)
+    %{type: :public, universe: request.universe, shard_id: shard_id, data: nil}
+  end
+
+  defp session_for_sse_endpoint(request) do
+    shard_id = get_shard_id_for_universe(request)
+
+    case parse_jwt(request.raw_params["token"]) do
+      {:ok, %{external_id: external_id}} ->
+        DB.begin(request.universe, shard_id, :read)
+
+        session_data =
+          case Svc.Player.fetch(by_external_id: external_id) do
+            %{} = player ->
+              DB.commit()
+              %{type: :authenticated, player_id: player.id, external_id: player.external_id}
+
+            nil ->
+              %{type: :unauthenticated, external_id: external_id}
+          end
+
+        {:ok, %{type: :sse, universe: request.universe, shard_id: shard_id, data: session_data}}
+
+      {:error, reason} = error ->
+        error
+    end
   end
 
   defp session_for_private_endpoint(_request) do
-    # NOTE: This module may need a wild refactor once we actually implement auth
-    # for private endpoints. The way it's currently structured will lead to
-    # code duplication
-
     raise "TODO"
   end
 
-  defp get_db_context_on_public_endpoint(endpoint) do
-    # TODO (also, this is now `universe` and set elsewhere, no?)
-    case Module.split(endpoint) do
-      ["Lobby" | _] -> :lobby
-      _ -> :multiplayer
+  defp get_shard_id_for_universe(%{universe: :lobby} = request) do
+    if @env != :test, do: 1, else: get_shard_id_for_test(request, "test-lobby-shard-id")
+  end
+
+  defp get_shard_id_for_universe(%{universe: universe} = request)
+       when universe in [:singleplayer, :multiplayer] do
+    if @env != :test, do: 1, else: get_shard_id_for_test(request, "test-game-shard-id")
+  end
+
+  defp get_shard_id_for_test(request, header_name) do
+    # Each test runs their own shard, which should be defined in the following header
+    case Map.get(request.cowboy_request.headers, header_name) do
+      raw_shard_id when is_binary(raw_shard_id) ->
+        String.to_integer(raw_shard_id)
+
+      nil ->
+        raise "Missing `#{header_name}` header"
     end
   end
 
-  defp get_shard_id_for_context(:lobby, request) do
-    if @env != :test do
-      # In prod/dev, there is a single Lobby shard (1).
-      1
-    else
-      # Each test runs their own shard of lobby, which should be defined in the
-      # following header.
-      case Map.get(request.cowboy_request.headers, "test-lobby-shard-id") do
-        raw_shard_id when is_binary(raw_shard_id) ->
-          String.to_integer(raw_shard_id)
+  defp parse_jwt(nil), do: {:error, :missing_token}
 
-        nil ->
-          raise "Missing `test-lobby-shard-id` header"
-      end
+  defp parse_jwt(token) when is_binary(token) do
+    case Crypto.JWT.verify(token) do
+      {true, %JOSE.JWT{fields: raw_claims}, %JOSE.JWS{alg: {:jose_jws_alg_hmac, :HS256}}} ->
+        iat = Map.fetch!(raw_claims, "iat")
+        external_id = Map.fetch!(raw_claims, "uid")
+
+        claims = %{
+          session_id: "#{external_id}_#{iat}",
+          iat: iat,
+          external_id: external_id
+        }
+
+        {:ok, claims}
+
+      _ ->
+        {:error, :invalid_token}
     end
-  end
-
-  defp get_shard_id_for_context(:multiplayer, _) do
-    # TODO
-    1
   end
 end
