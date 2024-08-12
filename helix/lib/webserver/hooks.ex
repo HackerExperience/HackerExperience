@@ -6,7 +6,7 @@ defmodule Webserver.Hooks do
   @optional_callbacks on_get_params_ok: 2, on_handle_request_ok: 2
 
   def maybe_invoke(name, webserver, args, default_return) do
-    hooks_module = Config.get_webserver_hooks_module(webserver)
+    hooks_module = Config.get_webserver_config(webserver).hooks_module
 
     if function_exported?(hooks_module, name, length(args)) do
       apply(hooks_module, name, args)

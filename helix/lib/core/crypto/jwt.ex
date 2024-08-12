@@ -24,6 +24,9 @@ defmodule Core.Crypto.JWT do
     |> JOSE.JWS.compact()
   end
 
+  # TODO: Test that `verify` handles exp etc
+  # TODO: Pattern match _here_ that the token uses the correct alg and return {:ok, claims} for a
+  # simpler API
   def verify(jwt) do
     JOSE.JWT.verify_strict(@jwk, [@alg], jwt)
   end

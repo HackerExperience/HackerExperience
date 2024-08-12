@@ -73,7 +73,8 @@ defmodule Webserver.Supervisor do
     # these modules are called based on the return of `Kernel.function_exported?/3`, which does not
     # load the module in case it is not loaded.
     Config.list_webservers()
-    |> Enum.map(&Config.get_webserver_hooks_module/1)
+    |> Enum.map(&Config.get_webserver_config/1)
+    |> Enum.map(& &1.hooks_module)
     |> Enum.map(&Code.ensure_loaded/1)
   end
 end

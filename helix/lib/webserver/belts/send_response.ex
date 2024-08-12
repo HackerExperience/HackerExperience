@@ -17,16 +17,20 @@ defmodule Webserver.Belt.SendResponse do
         %{request | cowboy_request: cowboy_request, cowboy_return: {:start_sse, sse_state}}
 
       e when e >= 400 ->
-        raise "TODO"
+        # In the event of an error, we immediatelly return the error code
+        cowboy_request = push_conveyor_response(cowboy_request, conveyor)
+        %{request | cowboy_request: cowboy_request, cowboy_return: :ok}
     end
   end
 
   def call(%{cowboy_request: cowboy_request} = request, conveyor, _) do
-    body = conveyor.response_message |> :json.encode()
-
-    cowboy_request = :cowboy_req.reply(conveyor.response_status, %{}, body, cowboy_request)
-
+    cowboy_request = push_conveyor_response(cowboy_request, conveyor)
     %{request | cowboy_request: cowboy_request, cowboy_return: :ok}
+  end
+
+  defp push_conveyor_response(cowboy_request, conveyor) do
+    body = :json.encode(conveyor.response_message)
+    :cowboy_req.reply(conveyor.response_status, %{}, body, cowboy_request)
   end
 
   defp set_sse_headers(req) do

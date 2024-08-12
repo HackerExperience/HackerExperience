@@ -4,6 +4,7 @@ defmodule Game.Services.Player do
 
   # Operations
 
+  # TODO: Where/how do I create the player DB?
   def create(params) do
     params
     |> Player.new()
