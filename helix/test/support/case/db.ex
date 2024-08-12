@@ -37,7 +37,7 @@ defmodule Test.DBCase do
   defp default_db_context(%{file: file}) do
     cond do
       file =~ "/test/lobby" -> :lobby
-      file =~ "/test/game" -> :multiplayer
+      file =~ "/test/game" -> Enum.random([:singleplayer, :multiplayer])
       :else -> raise "TODO db context at Test.DBCase"
     end
   end

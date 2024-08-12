@@ -13,6 +13,9 @@ defmodule Test.WebCase do
       alias DBLite, as: DB
       alias HELL.{Random, Utils}
       alias Test.Setup
+      alias Test.Utils, as: U
+
+      alias Game.Services, as: Svc
     end
   end
 
