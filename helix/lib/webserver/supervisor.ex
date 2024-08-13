@@ -33,6 +33,7 @@ defmodule Webserver.Supervisor do
   defp webserver_spec(config) do
     create_dispatch_table(config)
 
+    # TODO: Confirm HTTP2 support in curl + browser
     %{
       id: config.webserver,
       start: {
@@ -46,7 +47,14 @@ defmodule Webserver.Supervisor do
             max_connections: 16_384,
             num_acceptors: 16
           },
-          %{env: %{dispatch: {:persistent_term, config.dispatch_table}}}
+          %{
+            env: %{dispatch: {:persistent_term, config.dispatch_table}},
+            # We need an infinite idle timeout for SSE support.
+            idle_timeout: :infinity,
+            # If the SSE connection does not push a single event in `inactivity_timeout` ms, close
+            # it. We send pings every 60s. If it reached 150s of inactivity, something is wrong.
+            inactivity_timeout: 150_000
+          }
         ]
       },
       restart: :permanent,
@@ -65,7 +73,8 @@ defmodule Webserver.Supervisor do
     # these modules are called based on the return of `Kernel.function_exported?/3`, which does not
     # load the module in case it is not loaded.
     Config.list_webservers()
-    |> Enum.map(&Config.get_webserver_hooks_module/1)
+    |> Enum.map(&Config.get_webserver_config/1)
+    |> Enum.map(& &1.hooks_module)
     |> Enum.map(&Code.ensure_loaded/1)
   end
 end

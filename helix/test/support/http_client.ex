@@ -6,17 +6,24 @@ defmodule Test.HTTPClient do
   @default_base_url "http://localhost:5000/v1"
 
   def post(endpoint_or_url, body \\ %{}, opts \\ [])
+  def get(endpoint_or_url, params \\ %{}, opts \\ [])
 
   def post(partial_url, body, opts) do
-    [
-      url: get_full_url(partial_url),
-      body: body |> :json.encode() |> to_string(),
-      method: :post
-    ]
+    [body: body |> :json.encode() |> to_string(), method: :post]
+    |> do_process_request(partial_url, opts)
+  end
+
+  def get(partial_url, params, opts) do
+    [params: params, method: :get, retry: false]
+    |> do_process_request(partial_url, opts)
+  end
+
+  defp do_process_request(req_opts, partial_url, opts) do
+    req_opts
+    |> Keyword.merge(url: get_full_url(partial_url))
     |> Req.new()
     |> add_default_headers()
-    |> maybe_add_lobby_context(partial_url, opts)
-    # |> maybe_add_events_header(opts)
+    |> add_shard_header(partial_url, opts)
     |> Req.Request.run_request()
     |> parse_response()
   end
@@ -27,13 +34,11 @@ defmodule Test.HTTPClient do
     |> put_header("content-type", "application/json")
   end
 
-  defp maybe_add_lobby_context(req, partial_url, opts) do
-    if is_lobby_request(partial_url) do
-      shard_id = Keyword.fetch!(opts, :shard_id)
-      put_header(req, "test-lobby-shard-id", "#{shard_id}")
-    else
-      req
-    end
+  defp add_shard_header(req, partial_url, opts) do
+    header_name =
+      if is_lobby_request(partial_url), do: "test-lobby-shard-id", else: "test-game-shard-id"
+
+    put_header(req, header_name, "#{Keyword.fetch!(opts, :shard_id)}")
   end
 
   # defp maybe_add_events_header(req, opts) do

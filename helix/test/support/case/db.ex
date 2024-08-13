@@ -10,7 +10,9 @@ defmodule Test.DBCase do
       # import Test.Finders
       # import Test.Utils
 
+      alias HELL.{Random, Utils}
       alias Test.Setup
+      alias Test.Utils, as: U
       alias DBLite, as: DB
     end
   end
@@ -27,6 +29,8 @@ defmodule Test.DBCase do
     # TODO: Skip setup on tests with `unit: true` tags
     context = Map.get(tags, :db, default_db_context(tags))
 
+    Process.put(:helix_universe, context)
+
     {_, {:ok, shard_id, path}} = :timer.tc(fn -> Test.DB.Setup.new_test_db(context) end)
 
     {:ok, %{db: path, shard_id: shard_id, db_context: context}}
@@ -35,7 +39,7 @@ defmodule Test.DBCase do
   defp default_db_context(%{file: file}) do
     cond do
       file =~ "/test/lobby" -> :lobby
-      # file =~ "/test/game" -> :game
+      file =~ "/test/game" -> Enum.random([:singleplayer, :multiplayer])
       :else -> raise "TODO db context at Test.DBCase"
     end
   end

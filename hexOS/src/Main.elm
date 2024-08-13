@@ -1,4 +1,4 @@
-module Main exposing (main)
+port module Main exposing (main)
 
 import Boot
 import Browser
@@ -32,6 +32,7 @@ type Msg
     | OSMsg OS.Msg
     | LoginMsg Login.Msg
     | BootMsg Boot.Msg
+    | OnEventReceived String
 
 
 type alias GameModel =
@@ -63,6 +64,13 @@ type alias Flags =
     , viewportX : Int
     , viewportY : Int
     }
+
+
+
+-- Port (TODO)
+
+
+port eventReader : (String -> msg) -> Sub msg
 
 
 
@@ -137,6 +145,13 @@ update msg model =
                     , Cmd.batch [ Cmd.map LoginMsg loginCmd ]
                     )
 
+                OnEventReceived ev ->
+                    let
+                        _ =
+                            Debug.log "Got event:" ev
+                    in
+                    ( model, Cmd.none )
+
                 _ ->
                     ( model, Cmd.none )
 
@@ -210,6 +225,13 @@ update msg model =
                 BootMsg _ ->
                     ( model, Cmd.none )
 
+                OnEventReceived ev ->
+                    let
+                        _ =
+                            Debug.log "Got event:" ev
+                    in
+                    ( model, Cmd.none )
+
         InstallState ->
             ( model, Cmd.none )
 
@@ -269,4 +291,4 @@ subscriptions model =
                 ]
 
         _ ->
-            Sub.none
+            eventReader OnEventReceived

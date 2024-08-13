@@ -41,8 +41,8 @@ defmodule Lobby.Endpoint.User.Register do
   end
 
   def get_context(request, params, session) do
-    with true <- not Svc.User.email_taken?(params.email) || :email_taken,
-         true <- not Svc.User.username_taken?(params.username) || :username_taken,
+    with true <- not email_taken?(params.email) || :email_taken,
+         true <- not username_taken?(params.username) || :username_taken,
          # Release connection so it does not block while password is being hashed
          :ok = DB.commit(),
          hashed_password = Crypto.Password.generate_hash!(params.raw_password) do
@@ -92,4 +92,18 @@ defmodule Lobby.Endpoint.User.Register do
 
   defp cast_and_validate(value, :email),
     do: value |> User.Validator.cast_email() |> User.Validator.validate_email()
+
+  defp email_taken?(email) do
+    case Svc.User.fetch(by_email: email) do
+      nil -> false
+      %{} -> true
+    end
+  end
+
+  defp username_taken?(username) do
+    case Svc.User.fetch(by_username: username) do
+      nil -> false
+      %{} -> true
+    end
+  end
 end

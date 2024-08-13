@@ -5,6 +5,7 @@ defmodule Lobby.Webserver.Hooks do
 
   @impl true
   def on_get_params_ok(req, _) do
+    Process.put(:helix_universe, :lobby)
     DBLite.begin(:lobby, req.session.shard_id, :write)
     {:ok, req}
   end

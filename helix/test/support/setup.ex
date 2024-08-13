@@ -10,6 +10,9 @@ defmodule Test.Setup do
     end
   end
 
+  # Game
+  defdelegate player(opts \\ []), to: S.Player, as: :new
+
   # Lobby
   defdelegate lobby_user(opts \\ []), to: S.Lobby.User, as: :new
 end

@@ -8,6 +8,14 @@ config :dblite,
   contexts: %{
     lobby: %{
       shard_type: :global
+    },
+    singleplayer: %{
+      shard_type: :global,
+      domains: [:game]
+    },
+    multiplayer: %{
+      shard_type: :global,
+      domains: [:game]
     }
   },
   is_test_mode: true

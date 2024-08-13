@@ -20,8 +20,6 @@ defmodule Core.Webserver.Belt.Entrypoint do
   end
 
   defp put_universe(request, opts) do
-    universe = Keyword.fetch!(opts, :universe)
-
     %{request | universe: get_universe!(opts)}
   end
 

@@ -5,14 +5,20 @@ defmodule Webserver.Config do
   end
 
   def get_webserver_config(webserver) do
-    Application.get_env(:helix, webserver)
-    |> Map.new()
-    |> Map.merge(%{
-      webserver: webserver,
-      routes: get_webserver_routes(webserver),
-      belts: get_webserver_belts(webserver),
-      dispatch_table: get_webserver_dispatch_table(webserver)
-    })
+    config =
+      Application.get_env(:helix, webserver)
+      |> Map.new()
+
+    default_opts =
+      %{
+        webserver: webserver,
+        routes: get_webserver_routes(webserver),
+        belts: get_webserver_belts(webserver),
+        dispatch_table: get_webserver_dispatch_table(webserver),
+        hooks_module: Module.concat([webserver, Hooks])
+      }
+
+    Map.merge(default_opts, config)
   end
 
   def get_webserver_routes(webserver) do
@@ -23,8 +29,6 @@ defmodule Webserver.Config do
   end
 
   def get_webserver_belts(webserver), do: apply(webserver, :belts, [])
-
-  def get_webserver_hooks_module(webserver), do: Module.concat([webserver, Hooks])
 
   def get_webserver_dispatch_table(webserver) do
     webserver
