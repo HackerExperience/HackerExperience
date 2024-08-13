@@ -7,7 +7,10 @@ defmodule Game.Webserver.Hooks do
   @impl true
   def on_get_params_ok(req, _) do
     true = req.universe in [:singleplayer, :multiplayer]
+
+    Process.put(:helix_universe, req.universe)
     DBLite.begin(req.universe, req.session.shard_id, :write)
+
     {:ok, req}
   end
 
