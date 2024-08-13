@@ -43,7 +43,7 @@ defmodule Core.Webserver.Belt.Session do
     shard_id = get_shard_id_for_universe(request)
 
     case parse_jwt(request.raw_params["token"]) do
-      {:ok, %{external_id: external_id}} ->
+      {:ok, %{session_id: session_id, external_id: external_id}} ->
         DB.begin(request.universe, shard_id, :read)
 
         session_data =
@@ -56,7 +56,14 @@ defmodule Core.Webserver.Belt.Session do
               %{type: :unauthenticated, external_id: external_id}
           end
 
-        {:ok, %{type: :sse, universe: request.universe, shard_id: shard_id, data: session_data}}
+        {:ok,
+         %{
+           id: session_id,
+           type: :sse,
+           universe: request.universe,
+           shard_id: shard_id,
+           data: session_data
+         }}
 
       {:error, reason} = error ->
         error

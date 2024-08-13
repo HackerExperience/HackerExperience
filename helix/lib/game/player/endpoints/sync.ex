@@ -3,6 +3,7 @@ defmodule Game.Endpoint.Player.Sync do
   use Core.Spec
   require Logger
   alias Game.Services, as: Svc
+  alias Core.Session.State.SSEMapping
 
   @behaviour Webserver.Endpoint.Behaviour
 
@@ -44,13 +45,19 @@ defmodule Game.Endpoint.Player.Sync do
     end
   end
 
-  def get_context(request, _params, %{data: %{type: :authenticated, player_id: player_id}}) do
-    # TODO: verify that this user (and this session) isn't already subscribed to a sync endpoint
-    {:ok, request}
+  def get_context(request, _, %{data: %{type: :authenticated}} = session) do
+    case SSEMapping.is_subscribed?(session.data.external_id, session.id) do
+      false ->
+        {:ok, request}
+
+      true ->
+        {:error, %{request | response: {422, :already_subscribed}}}
+    end
   end
 
-  def handle_request(request, _params, _context, _session) do
-    # TODO: Maybe use ETS to register subscribed processes?
+  def handle_request(request, _params, _context, session) do
+    # TODO: Logging (needs prior logging infra)
+    SSEMapping.subscribe(session.data.external_id, session.id, self())
     {:ok, request}
   end
 
