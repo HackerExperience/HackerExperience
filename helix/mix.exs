@@ -50,7 +50,7 @@ defmodule Helix.MixProject do
     [
       {:cowboy, "~> 2.12"},
       {:rustler, "~> 0.32.0"},
-      {:feebdb, path: "~/feebdb"},
+      {:feebdb, github: "renatomassaro/feebdb"},
       {:jose, "~> 1.11"},
       {:norm, "~> 0.13"},
       {:mox, "~> 1.1", only: :test},
