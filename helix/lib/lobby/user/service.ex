@@ -1,5 +1,5 @@
 defmodule Lobby.Services.User do
-  alias DBLite, as: DB
+  alias Feeb.DB
   alias Lobby.User
 
   # Operations

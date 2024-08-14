@@ -5,7 +5,7 @@ defmodule Test.Setup do
     quote do
       alias Keyword, as: Kw
       alias Test.Setup, as: S
-      alias DBLite, as: DB
+      alias Feeb.DB
       alias HELL.{Random, Utils}
     end
   end

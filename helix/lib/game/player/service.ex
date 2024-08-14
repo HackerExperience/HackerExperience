@@ -1,5 +1,5 @@
 defmodule Game.Services.Player do
-  alias DBLite, as: DB
+  alias Feeb.DB
   alias Game.Player
 
   # Operations

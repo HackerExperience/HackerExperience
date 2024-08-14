@@ -2,7 +2,7 @@ import Config
 
 config :logger, level: :warning
 
-config :dblite,
+config :feebdb,
   data_dir: "/he2_test",
   migrations_dir: "priv/migrations",
   contexts: %{

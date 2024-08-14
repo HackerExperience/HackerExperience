@@ -10,7 +10,7 @@ defmodule Test.WebCase do
       import Test.Setup.Shared
       import Test.Web
 
-      alias DBLite, as: DB
+      alias Feeb.DB
       alias HELL.{Random, Utils}
       alias Test.Setup
       alias Test.Utils, as: U

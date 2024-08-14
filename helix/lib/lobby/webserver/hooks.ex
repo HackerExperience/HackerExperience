@@ -1,12 +1,12 @@
 defmodule Lobby.Webserver.Hooks do
   @behaviour Webserver.Hooks
 
-  alias DBLite, as: DB
+  alias Feeb.DB
 
   @impl true
   def on_get_params_ok(req, _) do
     Process.put(:helix_universe, :lobby)
-    DBLite.begin(:lobby, req.session.shard_id, :write)
+    Feeb.DB.begin(:lobby, req.session.shard_id, :write)
     {:ok, req}
   end
 

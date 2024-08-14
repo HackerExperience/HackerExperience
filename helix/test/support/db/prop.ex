@@ -1,5 +1,5 @@
 defmodule Test.DB.Prop do
-  alias DBLite.{Config, SQLite}
+  alias Feeb.DB.{Config, SQLite}
   alias __MODULE__
 
   # NOTE: If instead of :nooping you decide on always generating props for each
@@ -38,11 +38,11 @@ defmodule Test.DB.Prop do
     File.rm(prop_path)
 
     # Create them (in data dir)
-    DBLite.begin(ctx_name, 0, :write)
-    DBLite.commit()
+    Feeb.DB.begin(ctx_name, 0, :write)
+    Feeb.DB.commit()
 
     # Make sure the DB in datadir is synced
-    db_path = DBLite.Repo.get_path(ctx_name, 0)
+    db_path = Feeb.DB.Repo.get_path(ctx_name, 0)
     {:ok, db_conn} = SQLite.open(db_path)
     :ok = SQLite.exec(db_conn, "PRAGMA wal_checkpoint(TRUNCATE)")
     SQLite.close(db_conn)
