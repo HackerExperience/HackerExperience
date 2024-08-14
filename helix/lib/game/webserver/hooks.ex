@@ -1,7 +1,7 @@
 defmodule Game.Webserver.Hooks do
   @behaviour Webserver.Hooks
 
-  alias DBLite, as: DB
+  alias Feeb.DB
   alias Game.Endpoint
 
   @impl true
@@ -9,7 +9,7 @@ defmodule Game.Webserver.Hooks do
     true = req.universe in [:singleplayer, :multiplayer]
 
     Process.put(:helix_universe, req.universe)
-    DBLite.begin(req.universe, req.session.shard_id, :write)
+    Feeb.DB.begin(req.universe, req.session.shard_id, :write)
 
     {:ok, req}
   end

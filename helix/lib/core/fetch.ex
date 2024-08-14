@@ -12,7 +12,7 @@ defmodule Core.Fetch do
   This module is inspired by the TokenOperator library.
   """
 
-  alias DBLite, as: DB
+  alias Feeb.DB
 
   @doc """
   Runs the filter(s) specified by the caller at `filter_params` and defined by the code at

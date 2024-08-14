@@ -1,5 +1,5 @@
 defmodule Lobby.User do
-  use DBLite.Schema
+  use Feeb.DB.Schema
 
   @context :lobby
   @table :users

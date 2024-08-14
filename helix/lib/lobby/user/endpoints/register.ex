@@ -3,7 +3,7 @@ defmodule Lobby.Endpoint.User.Register do
   use Webserver.Endpoint
   require Logger
 
-  alias DBLite, as: DB
+  alias Feeb.DB
   alias Core.Crypto
   alias Lobby.User
   alias Lobby.Services, as: Svc
@@ -59,7 +59,7 @@ defmodule Lobby.Endpoint.User.Register do
 
   def handle_request(request, params, context, _session) do
     # TODO
-    # DBLite.assert_in_transaction!()
+    # Feeb.DB.assert_in_transaction!()
 
     user_args =
       %{

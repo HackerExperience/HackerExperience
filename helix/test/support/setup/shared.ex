@@ -1,6 +1,6 @@
 defmodule Test.Setup.Shared do
   alias Test.Setup
-  alias DBLite, as: DB
+  alias Feeb.DB
 
   # DB
 

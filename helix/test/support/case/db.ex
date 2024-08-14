@@ -1,6 +1,6 @@
 defmodule Test.DBCase do
   use ExUnit.CaseTemplate
-  alias DBLite, as: DB
+  alias Feeb.DB
 
   using do
     quote do
@@ -13,7 +13,7 @@ defmodule Test.DBCase do
       alias HELL.{Random, Utils}
       alias Test.Setup
       alias Test.Utils, as: U
-      alias DBLite, as: DB
+      alias Feeb.DB
     end
   end
 

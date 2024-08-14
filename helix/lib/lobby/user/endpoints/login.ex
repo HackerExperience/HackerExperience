@@ -3,7 +3,7 @@ defmodule Lobby.Endpoint.User.Login do
   use Webserver.Endpoint
   require Logger
 
-  alias DBLite, as: DB
+  alias Feeb.DB
   alias Lobby.User
   alias Lobby.Services, as: Svc
   alias Core.Crypto

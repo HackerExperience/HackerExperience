@@ -1,5 +1,5 @@
 defmodule Game.Player do
-  use DBLite.Schema
+  use Feeb.DB.Schema
 
   @context :game
   @table :players

@@ -5,7 +5,7 @@ defmodule Core.Webserver.Belt.Session do
 
   alias Core.Crypto
   alias Game.Services, as: Svc
-  alias DBLite, as: DB
+  alias Feeb.DB
 
   def call(request, conveyor, _) do
     # Maybe move the session_for_* functions to a Session module? Easier to test

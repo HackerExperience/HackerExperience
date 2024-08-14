@@ -6,7 +6,7 @@ defmodule Test.Utils do
       alias Keyword, as: Kw
       alias Test.Setup, as: S
       alias Test.Utils, as: U
-      alias DBLite, as: DB
+      alias Feeb.DB
       alias HELL.{Random, Utils}
     end
   end

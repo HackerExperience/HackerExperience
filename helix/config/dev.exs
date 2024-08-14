@@ -1,6 +1,6 @@
 import Config
 
-config :dblite,
+config :feebdb,
   data_dir: "/he2",
   migrations_dir: "priv/migrations",
   contexts: %{

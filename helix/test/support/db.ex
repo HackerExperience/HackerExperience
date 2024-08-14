@@ -1,9 +1,9 @@
 defmodule Test.DB do
-  alias DBLite.{Config, Repo}
+  alias Feeb.DB.{Config, Repo}
 
   def on_start do
-    # Don't have the DBLite boot running in parallel to what we are doing here
-    DBLite.Boot.wait_boot!()
+    # Don't have the Feeb.DB boot running in parallel to what we are doing here
+    Feeb.DB.Boot.wait_boot!()
 
     delete_all_dbs()
     File.mkdir_p!(props_path())
@@ -39,8 +39,8 @@ defmodule Test.DB do
   # def random_autoincrement(schema) do
   #   table = schema.__table__()
   #   rand = :rand.uniform() |> Kernel.*(1_000_000) |> trunc()
-  #   DBLite.raw!("insert into #{table} (id) values (#{rand})")
-  #   DBLite.raw!("delete from #{table} where id = #{rand}")
+  #   Feeb.DB.raw!("insert into #{table} (id) values (#{rand})")
+  #   Feeb.DB.raw!("delete from #{table} where id = #{rand}")
   # end
 
   defp delete_all_dbs do
