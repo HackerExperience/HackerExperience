@@ -3,6 +3,7 @@ on: [push]
 
 env:
   MIX_ENV: test
+  HELIX_TEST_DATA_DIR: tmp/helix_test
 
 jobs:
   tests:
@@ -22,6 +23,9 @@ jobs:
           version-file: .tool-versions
           version-type: strict
 
+
+      - name: Setup database directories
+        run: mkdir -p tmp/helix_test/{lobby,singleplayer,multiplayer}
 
       # TODO: Why _both_ deps and _build being cached? Is that okay?
       - name: Restore build cache
