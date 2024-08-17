@@ -26,17 +26,17 @@ jobs:
       - name: Setup database directories
         run: mkdir -p tmp/helix_test/{lobby,singleplayer,multiplayer}
 
-      # TODO: Why _both_ deps and _build being cached? Is that okay?
       - name: Restore build cache
-        uses: actions/cache@v2
+        uses: actions/cache@v4
         id: mix_cache
         with:
           path: |
-            deps
-            _build
-          key: ${{ runner.os }}-mix-${{ hashFiles('**/mix.lock') }}
+            helix/deps
+            helix/_build
+            helix/priv/native
+          key: ${{ runner.os }}-mix-${{ hashFiles('helix/mix.lock') }}-${{ hashFiles('helix/native/**/Cargo.lock') }}
           restore-keys: |
-            ${{ runner.os }}-mix-
+            ${{ runner.os }}-mix-${{ hashFiles('helix/mix.lock') }}-${{ hashFiles('helix/native/**/Cargo.lock') }}
 
       - name: Install Elixir Dependencies
         if: steps.mix_cache.outputs.cache-hit != 'true'
@@ -52,3 +52,11 @@ jobs:
 
       - name: Test app
         run: mix test
+
+      # NOTE: I'm unsure about `Uncache Helix`. I'll leave it uncommented (cached) for a while and
+      # see whether it causes any problems. For a more robust CI, we may want a separate
+      # "pre-release" build which performs a full build, but for the vast majority of CI checks we
+      # don't need such strict requirements.
+      # # Force a full Helix compilation on every CI run.
+      # - name: Uncache Helix
+      #   run: rm -rf _build/{dev,test}/lib/helix
