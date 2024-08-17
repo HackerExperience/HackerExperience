@@ -87,8 +87,8 @@ defmodule Game.Endpoint.Player.SyncTest do
     end)
 
     # TODO: I might be able to reduce this if I eagerly load every module on startup first
-    # TODO: Check how long I should wait
-    :timer.sleep(100)
+    # TODO: Find a work-around that doesn't involve this kind of waiting
+    :timer.sleep(300)
   end
 
   defp make_sse_request_sync(jwt, shard_id) do

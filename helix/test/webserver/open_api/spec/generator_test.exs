@@ -83,8 +83,8 @@ defmodule Webserver.OpenApi.Spec.GeneratorTest do
       # It includes default schemas defined at the Helix Spec
       generic_error = Map.fetch!(schemas, "GenericError")
       assert generic_error.type == :object
-      assert generic_error.required == [:error]
-      assert generic_error.properties[:error] == %{type: :string}
+      assert generic_error.required == [:msg]
+      assert generic_error.properties[:msg] == %{type: :string}
     end
   end
 
