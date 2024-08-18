@@ -60,6 +60,9 @@ jobs:
       - name: Check formatting
         run: mix format --check-formatted
 
+      - name: Validate feebdb_schemas.json is up-to-date
+        run: mix feeb_db.list_schemas && git diff --exit-code --no-ext-diff
+
       - name: Test app
         run: mix test
 
