@@ -54,7 +54,7 @@ defmodule Helix.MixProject do
       {:jose, "~> 1.11"},
       {:norm, "~> 0.13"},
       {:mox, "~> 1.1", only: :test},
-      {:excoveralls, "~> 0.18.1", only: :test},
+      {:excoveralls, "~> 0.18.2", only: :test},
       {:req, "~> 0.4.8", only: :test}
     ]
   end
