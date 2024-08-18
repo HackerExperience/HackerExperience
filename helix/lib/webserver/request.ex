@@ -31,7 +31,8 @@ defmodule Webserver.Request do
       endpoint_mock: xargs[:endpoint_mock],
       webserver: webserver,
       belts: get_belts(webserver, xargs, @env),
-      xargs: xargs
+      xargs: xargs,
+      events: []
     }
   end
 

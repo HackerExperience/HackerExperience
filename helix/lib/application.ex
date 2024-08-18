@@ -7,6 +7,7 @@ defmodule Helix.Application do
   def start(_type, _args) do
     children =
       [
+        {PartitionSupervisor, child_spec: Task.Supervisor, name: Helix.TaskSupervisor},
         {Core.Supervisor, name: Core.Supervisor},
         {Webserver.Supervisor, name: Webserver.Supervisor}
       ]
