@@ -10,9 +10,9 @@ defmodule Core.Supervisor do
   def init(_) do
     children =
       [
-        supervisor(Session.State.Supervisor, [])
+        {Session.State.Supervisor, name: Session.State.Supervisor}
       ]
 
-    supervise(children, strategy: :one_for_one)
+    Supervisor.init(children, strategy: :one_for_one)
   end
 end

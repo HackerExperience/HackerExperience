@@ -1,6 +1,5 @@
 defmodule Test.DBCase do
   use ExUnit.CaseTemplate
-  alias Feeb.DB
 
   using do
     quote do

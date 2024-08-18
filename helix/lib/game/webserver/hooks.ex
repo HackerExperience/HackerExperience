@@ -2,7 +2,6 @@ defmodule Game.Webserver.Hooks do
   @behaviour Webserver.Hooks
 
   alias Feeb.DB
-  alias Game.Endpoint
 
   @impl true
   def on_get_params_ok(req, _) do

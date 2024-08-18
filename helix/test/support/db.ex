@@ -1,5 +1,5 @@
 defmodule Test.DB do
-  alias Feeb.DB.{Config, Repo}
+  alias Feeb.DB.{Config}
 
   def on_start do
     # Don't have the Feeb.DB boot running in parallel to what we are doing here

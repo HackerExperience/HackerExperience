@@ -3,8 +3,6 @@ defmodule Webserver.Supervisor do
   use Supervisor
   alias Webserver.Config
 
-  @env Mix.env()
-
   def start_link(_) do
     Supervisor.start_link(__MODULE__, [], name: __MODULE__)
   end

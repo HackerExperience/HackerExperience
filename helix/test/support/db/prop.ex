@@ -1,6 +1,5 @@
 defmodule Test.DB.Prop do
   alias Feeb.DB.{Config, SQLite}
-  alias __MODULE__
 
   # NOTE: If instead of :nooping you decide on always generating props for each
   # test execution, watch out for flakes. Run the test suite dozens of times in

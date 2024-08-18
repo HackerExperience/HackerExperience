@@ -1,6 +1,6 @@
 defmodule Test.DB.Setup do
   alias Test.DB.Prop
-  alias Feeb.DB.{Query, SQLite}
+  alias Feeb.DB.{SQLite}
 
   def test_conn(path) do
     {:ok, conn} = SQLite.open(path)

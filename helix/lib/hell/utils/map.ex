@@ -1,8 +1,8 @@
 defmodule HELL.Utils.Map do
   # DOCME
-  def atomify_keys(map, opts \\ []) when is_map(map) do
-    with_existing_atom? = Keyword.get(opts, :with_existing_atom, false)
+  def atomify_keys(map, opts \\ [])
 
+  def atomify_keys(map, opts) when is_map(map) do
     atomify_fun =
       if Keyword.get(opts, :with_existing_atom, false),
         do: &String.to_existing_atom/1,
