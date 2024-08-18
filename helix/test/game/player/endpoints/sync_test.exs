@@ -76,6 +76,7 @@ defmodule Game.Endpoint.Player.SyncTest do
   # (including an E2E test)
   defp make_sse_request_async(jwt, shard_id) do
     http_client_base_url = Process.get(:test_http_client_base_url)
+    x_request_id = Random.uuid()
 
     spawn(fn ->
       # Inherit process environment needed by test utils
@@ -83,16 +84,19 @@ defmodule Game.Endpoint.Player.SyncTest do
 
       # We need to run the request in another thread because, since it's an SSE request,
       # it will block indefinitely.
-      make_sse_request_sync(jwt, shard_id)
+      make_sse_request_sync(jwt, shard_id, x_request_id)
     end)
 
-    # TODO: I might be able to reduce this if I eagerly load every module on startup first
-    # TODO: Find a work-around that doesn't involve this kind of waiting
-    :timer.sleep(300)
+    # This is a hack for the async nature of SSE requests. A successful SSE request will block
+    # indefinitely. For these tests, we want the test to proceed once we know the SSE connection has
+    # been established. We know that's the case once the outgoing events generated within the Sync
+    # request are emitted and fully processed, which is what `wait_events` ensures! As a result,
+    # once `wait_events/1` returns, we know the SSE process is ready and we can proceed testing.
+    wait_events(x_request_id: x_request_id)
   end
 
-  defp make_sse_request_sync(jwt, shard_id) do
+  defp make_sse_request_sync(jwt, shard_id, x_request_id \\ nil) do
     params = %{token: jwt}
-    get(@path, params, shard_id: shard_id)
+    get(@path, params, shard_id: shard_id, x_request_id: x_request_id)
   end
 end

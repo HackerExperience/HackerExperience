@@ -1,3 +1,4 @@
+Test.Event.on_start()
 Test.DB.on_start()
 
 ExUnit.start()

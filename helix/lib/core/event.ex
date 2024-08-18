@@ -48,8 +48,11 @@ defmodule Core.Event do
     # TODO: These will include a lookup for Publishable, Notificable, Loggable etc
     native_handlers = []
 
-    custom_handlers ++ native_handlers
+    custom_handlers ++ native_handlers ++ test_handler(@env)
   end
+
+  defp test_handler(:test), do: [Core.Event.Handler.Test]
+  defp test_handler(_), do: []
 
   defp do_emit(event, handler_mod, acc_events) do
     try do
