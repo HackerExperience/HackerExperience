@@ -46,9 +46,13 @@ jobs:
           mix deps.get
           mix deps.compile
 
+      # This is the equivalent of `apt-get install <packages>` but with built-in cache. Note it may
+      # not work well with packages that have pre/post installation scripts
       - name: Install OS dependencies
-        run: |
-          sudo apt-get install yq
+        uses: awalsh128/cache-apt-pkgs-action@v1
+        with:
+          packages: yq
+          version: 1.0
 
       - name: Test app
         run: mix test
