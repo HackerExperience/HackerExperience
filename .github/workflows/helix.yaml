@@ -54,6 +54,9 @@ jobs:
           packages: yq
           version: 1.0
 
+      - name: Compile app
+        run: mix compile --warnings-as-errors
+
       - name: Test app
         run: mix test
 
