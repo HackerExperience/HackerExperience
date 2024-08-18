@@ -1,7 +1,7 @@
 defmodule Core.Event do
   require Logger
 
-  defstruct [:id, :data]
+  defstruct [:id, :data, :relay]
 
   defmacro __using__(_) do
     quote do
@@ -9,14 +9,21 @@ defmodule Core.Event do
     end
   end
 
+  @env Mix.env()
+
   @doc """
   Creates a new Event.t with the corresponding `data`.
   """
-  def new(%_{} = data) do
-    # `relay` / tracing information would go here
+  def new(%ev_mod{} = data) do
+    relay = Process.get(:helix_event_relay)
+
+    if is_nil(relay),
+      do: Logger.warning("No relay found for #{inspect(ev_mod)}")
+
     %__MODULE__{
       id: "random_id",
-      data: data
+      data: data,
+      relay: Process.get(:helix_event_relay)
     }
   end
 
