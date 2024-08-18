@@ -5,6 +5,7 @@ defmodule Webserver.Request do
 
   defstruct [
     :id,
+    :x_request_id,
     :cowboy_request,
     :cowboy_return,
     :conveyor,
