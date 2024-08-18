@@ -1,8 +1,6 @@
 defmodule Lobby.Endpoint.User.LoginTest do
   use Test.WebCase, async: true
   alias HELL.Utils
-  alias Core.Crypto
-  alias Lobby.Endpoint.User.Register, as: Endpoint
 
   @path "/user/login"
 
@@ -38,7 +36,7 @@ defmodule Lobby.Endpoint.User.LoginTest do
       password = "s3cr3t"
 
       hashed_password = Core.Crypto.Password.generate_hash!(password)
-      user = Setup.lobby_user(password: hashed_password)
+      Setup.lobby_user(password: hashed_password)
       DB.commit()
 
       # I can't login with the wrong email

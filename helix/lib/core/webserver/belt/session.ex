@@ -3,6 +3,7 @@ defmodule Core.Webserver.Belt.Session do
 
   # TODO: Maybe convert the session and session.data maps in proper structs
 
+  alias Webserver.Conveyor
   alias Core.Crypto
   alias Game.Services, as: Svc
   alias Feeb.DB
@@ -65,7 +66,7 @@ defmodule Core.Webserver.Belt.Session do
            data: session_data
          }}
 
-      {:error, reason} = error ->
+      {:error, _reason} = error ->
         error
     end
   end

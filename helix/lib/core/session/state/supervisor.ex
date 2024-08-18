@@ -3,17 +3,25 @@ defmodule Core.Session.State.Supervisor do
 
   alias Core.Session.State
 
-  def start_link do
+  def start_link(_) do
     Supervisor.start_link(__MODULE__, [], name: __MODULE__)
   end
 
   def init(_) do
     children =
       [
-        worker(State.SSEMapping, [:singleplayer], id: :sse_sp, name: State.SSEMapping.Singleplayer),
-        worker(State.SSEMapping, [:multiplayer], id: :sse_mp, name: State.SSEMapping.Multiplayer)
+        %{
+          id: :sse_sp,
+          start: {State.SSEMapping, :start_link, [:singleplayer]},
+          name: State.SSEMapping.Singleplayer
+        },
+        %{
+          id: :sse_mp,
+          start: {State.SSEMapping, :start_link, [:multiplayer]},
+          name: State.SSEMapping.Multiplayer
+        }
       ]
 
-    supervise(children, strategy: :one_for_one)
+    Supervisor.init(children, strategy: :one_for_one)
   end
 end

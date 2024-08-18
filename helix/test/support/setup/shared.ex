@@ -45,7 +45,7 @@ defmodule Test.Setup.Shared do
     :ok
   end
 
-  def with_lobby_webserver(%{db_context: db_context}) do
+  def with_lobby_webserver(_) do
     Process.put(:test_http_client_base_url, "http://localhost:5000/v1")
     :ok
   end
@@ -53,6 +53,6 @@ defmodule Test.Setup.Shared do
   # Misc
 
   def with_lobby_user(_) do
-    {:ok, %{user: Setup.company()}}
+    {:ok, %{user: Setup.lobby_user()}}
   end
 end

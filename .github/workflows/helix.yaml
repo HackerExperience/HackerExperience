@@ -1,0 +1,81 @@
+name: Helix
+on: [push]
+
+env:
+  MIX_ENV: test
+  HELIX_TEST_DATA_DIR: tmp/helix_test
+
+jobs:
+  tests:
+    runs-on: ubuntu-24.04
+
+    defaults:
+      run:
+        working-directory: ./helix
+
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v4
+
+      - name: Setup backend environment
+        uses: erlef/setup-beam@v1
+        with:
+          version-file: .tool-versions
+          version-type: strict
+
+      - name: Setup database directories
+        run: mkdir -p tmp/helix_test/{lobby,singleplayer,multiplayer}
+
+      - name: Restore build cache
+        uses: actions/cache@v4
+        id: mix_cache
+        with:
+          path: |
+            helix/deps
+            helix/_build
+            helix/priv/native
+          key: ${{ runner.os }}-mix-${{ hashFiles('helix/mix.lock') }}-${{ hashFiles('helix/native/**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-mix-${{ hashFiles('helix/mix.lock') }}-${{ hashFiles('helix/native/**/Cargo.lock') }}
+
+      - name: Install Elixir Dependencies
+        if: steps.mix_cache.outputs.cache-hit != 'true'
+        run: |
+          mix local.rebar --force
+          mix local.hex --force
+          mix deps.get
+          mix deps.compile
+
+      # This is the equivalent of `apt-get install <packages>` but with built-in cache. Note it may
+      # not work well with packages that have pre/post installation scripts
+      - name: Install OS dependencies
+        uses: awalsh128/cache-apt-pkgs-action@v1
+        with:
+          packages: yq
+          version: 1.0
+
+      - name: Compile app
+        run: mix compile --warnings-as-errors
+
+      - name: Check formatting
+        run: mix format --check-formatted
+
+      - name: Validate feebdb_schemas.json is up-to-date
+        run: mix feeb_db.list_schemas && git diff --exit-code --no-ext-diff
+
+      - name: Test app
+        run: mix test
+
+      # Uncomment below once repository is public (so we can use coveralls.io)
+      # - name: Test app
+      #   run: mix coveralls.github
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # NOTE: I'm unsure about `Uncache Helix`. I'll leave it uncommented (cached) for a while and
+      # see whether it causes any problems. For a more robust CI, we may want a separate
+      # "pre-release" build which performs a full build, but for the vast majority of CI checks we
+      # don't need such strict requirements.
+      # # Force a full Helix compilation on every CI run.
+      # - name: Uncache Helix
+      #   run: rm -rf _build/{dev,test}/lib/helix

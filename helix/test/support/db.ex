@@ -1,5 +1,5 @@
 defmodule Test.DB do
-  alias Feeb.DB.{Config, Repo}
+  alias Feeb.DB.{Config}
 
   def on_start do
     # Don't have the Feeb.DB boot running in parallel to what we are doing here
@@ -45,8 +45,8 @@ defmodule Test.DB do
 
   defp delete_all_dbs do
     path = test_dbs_path()
-    # TODO: Make this configurable please
-    true = String.starts_with?(path, "/he2_test")
+    false = String.contains?(path, "*")
+    false = String.contains?(path, " ")
 
     "#{path}/**/*.{db,db-shm,db-wal}"
     |> Path.wildcard()

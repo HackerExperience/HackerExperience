@@ -6,12 +6,13 @@ defmodule Test.HTTPClient do
   @default_base_url "http://localhost:5000/v1"
 
   def post(endpoint_or_url, body \\ %{}, opts \\ [])
-  def get(endpoint_or_url, params \\ %{}, opts \\ [])
 
   def post(partial_url, body, opts) do
     [body: body |> :json.encode() |> to_string(), method: :post]
     |> do_process_request(partial_url, opts)
   end
+
+  def get(endpoint_or_url, params \\ %{}, opts \\ [])
 
   def get(partial_url, params, opts) do
     [params: params, method: :get, retry: false]

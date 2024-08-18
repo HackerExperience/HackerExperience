@@ -8,8 +8,6 @@ defmodule Core.Session.State.SSEMapping do
 
   use GenServer
 
-  @ets_table_name :sse_mapping
-
   # Public API
 
   def subscribe(player_eid, session_id, pid) when is_binary(session_id) and is_pid(pid) do

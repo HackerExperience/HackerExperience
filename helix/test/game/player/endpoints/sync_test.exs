@@ -8,7 +8,7 @@ defmodule Game.Endpoint.Player.SyncTest do
   setup [:with_game_db, :with_game_webserver]
 
   describe "Player.Sync request" do
-    test "creates the player on first sync", %{shard_id: shard_id} = ctx do
+    test "creates the player on first sync", %{shard_id: shard_id} do
       # There are no players with this `external_id`
       external_id = Random.uuid()
       refute Svc.Player.fetch(by_external_id: external_id)
@@ -87,8 +87,8 @@ defmodule Game.Endpoint.Player.SyncTest do
     end)
 
     # TODO: I might be able to reduce this if I eagerly load every module on startup first
-    # TODO: Check how long I should wait
-    :timer.sleep(100)
+    # TODO: Find a work-around that doesn't involve this kind of waiting
+    :timer.sleep(300)
   end
 
   defp make_sse_request_sync(jwt, shard_id) do
