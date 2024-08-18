@@ -4,6 +4,7 @@ defmodule Game.Endpoint.Player.Sync do
   require Logger
   alias Game.Services, as: Svc
   alias Core.Session.State.SSEMapping
+  alias Game.Events.Player.IndexRequested, as: IndexRequestedEvent
 
   @behaviour Webserver.Endpoint.Behaviour
 
@@ -58,7 +59,10 @@ defmodule Game.Endpoint.Player.Sync do
   def handle_request(request, _params, _context, session) do
     # TODO: Logging (needs prior logging infra)
     SSEMapping.subscribe(session.data.external_id, session.id, self())
-    {:ok, request}
+
+    event = IndexRequestedEvent.new()
+
+    {:ok, %{request | events: [event]}}
   end
 
   def render_response(request, _data, _session) do
