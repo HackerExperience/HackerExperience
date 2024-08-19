@@ -15,7 +15,7 @@ defmodule Webserver.Supervisor do
       |> Enum.map(&webserver_spec/1)
 
     # Block webserver from starting until all Helix modules are loaded
-    Helix.Application.wait_until_all_modules_are_loaded()
+    Helix.Application.wait_until_helix_modules_are_loaded()
     Logger.info("Webservers started")
 
     Logger.add_translator({Webserver.RanchTranslator, :translate})
