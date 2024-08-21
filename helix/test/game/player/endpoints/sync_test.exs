@@ -72,8 +72,36 @@ defmodule Game.Endpoint.Player.SyncTest do
     end
   end
 
-  # TODO: Consider possibility of directly using curl for this particular endpoint
-  # (including an E2E test)
+  describe "Player.Sync request (E2E with curl)" do
+    test "client receives pushed events", %{shard_id: shard_id} = ctx do
+      player = Setup.player()
+      DB.commit()
+
+      jwt = U.jwt_token(uid: player.external_id)
+
+      # TODO: URL/port logic should be in a shared module
+      port = if ctx.db_context == :singleplayer, do: 5001, else: 5002
+
+      cmd =
+        "curl -s -H 'Content-Type: application/json' -H 'test-game-shard-id: #{shard_id}' -N " <>
+          "http://localhost:#{port}/v1/player/sync?token=#{jwt}"
+
+      port = Port.open({:spawn, cmd}, [:binary, :use_stdio])
+
+      receive do
+        {^port, {:data, sse_payload}} ->
+          data =
+            sse_payload
+            |> String.slice(6..-1//1)
+            |> String.replace("\n\n", "")
+            |> :json.decode()
+
+          # Below will be replaced by the actual index once I implement it
+          assert %{"foo" => "bar"} == data
+      end
+    end
+  end
+
   defp make_sse_request_async(jwt, shard_id) do
     http_client_base_url = Process.get(:test_http_client_base_url)
     x_request_id = Random.uuid()

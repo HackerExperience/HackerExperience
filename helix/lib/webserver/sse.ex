@@ -1,5 +1,9 @@
 defmodule Webserver.SSE do
-  def info({:send_event, event}, req, state) do
+  def send_message(pid, payload) do
+    send(pid, {:push_event, payload})
+  end
+
+  def info({:push_event, event}, req, state) do
     data = "data: #{event}\n\n"
     :ok = :cowboy_req.stream_body(data, :nofin, req)
     # TODO: Check if hibernating the SSE process is something worth doing

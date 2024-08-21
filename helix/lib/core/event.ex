@@ -11,6 +11,10 @@ defmodule Core.Event do
 
   @env Mix.env()
 
+  @native_triggers [
+    Core.Event.Publishable
+  ]
+
   @doc """
   Creates a new Event.t with the corresponding `data`.
   """
@@ -45,8 +49,10 @@ defmodule Core.Event do
   defp get_handlers(event) do
     custom_handlers = apply(event.data.__struct__, :handlers, [event.data, event])
 
-    # TODO: These will include a lookup for Publishable, Notificable, Loggable etc
-    native_handlers = []
+    native_handlers =
+      @native_triggers
+      |> Enum.map(fn trigger_mod -> trigger_mod.probe(event) end)
+      |> Enum.reject(&is_nil/1)
 
     custom_handlers ++ native_handlers ++ test_handler(@env)
   end

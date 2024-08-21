@@ -49,18 +49,24 @@ defmodule Game.Endpoint.Player.Sync do
   def get_context(request, _, %{data: %{type: :authenticated}} = session) do
     case SSEMapping.is_subscribed?(session.data.external_id, session.id) do
       false ->
-        {:ok, request}
+        # NOTE: `session` in `get_context` may not be the same `session` in `handle_request`.
+        # If the session is originally `type=unauthenticated`, then the `new_session` defined above
+        # (which is the `session` here) will exist only in _this_ function. By design, there is no
+        # way for a request to replace the session during the request processing. That's why we
+        # are returning `new_session` in the `context`, so it can be used by `handle_request`.
+        {:ok, %{request | context: %{session: session}}}
 
       true ->
         {:error, %{request | response: {422, :already_subscribed}}}
     end
   end
 
-  def handle_request(request, _params, _context, session) do
+  # See comment in `get_context/3` to understand why `session` is handled by the `context`.
+  def handle_request(request, _params, %{session: session}, _unreliable_session) do
     # TODO: Logging (needs prior logging infra)
     SSEMapping.subscribe(session.data.external_id, session.id, self())
 
-    event = IndexRequestedEvent.new()
+    event = IndexRequestedEvent.new(session.data.player_id)
 
     {:ok, %{request | events: [event]}}
   end
