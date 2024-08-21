@@ -24,7 +24,7 @@ defmodule Lobby.Endpoint.User.LoginTest do
       assert alg == {:jose_jws_alg_hmac, :HS256}
 
       # Claims are correct
-      assert claims["u_id"] == user.external_id
+      assert claims["uid"] == user.external_id
 
       # TODO: Properly test iat/exp once I figure out a proper value for them
       assert claims["exp"]
