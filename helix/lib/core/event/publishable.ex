@@ -25,7 +25,11 @@ defmodule Core.Event.Publishable do
           :json.encode(data) |> to_string()
       end
 
+    # We need Universe DB access for `get_pids_to_publish`
+    begin_universe_connection()
     pids_to_publish = get_pids_to_publish(whom_to_publish)
+    # TODO: Consider a different API for read-only DB connections that don't need to commit
+    DB.commit()
 
     # TODO: Send asynchronously
     Enum.each(pids_to_publish, fn pid ->
@@ -36,10 +40,6 @@ defmodule Core.Event.Publishable do
   end
 
   defp get_pids_to_publish(whom_to_publish) do
-    # We need Universe DB access for `get_pid_for_player` and `get_pid_for_server`
-    # TODO: Where/when/how to close the connection?
-    begin_universe_connection()
-
     whom_to_publish
     |> Enum.reduce([], fn
       {:player, player_id}, acc when is_integer(player_id) ->

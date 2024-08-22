@@ -110,6 +110,11 @@ defmodule Core.Event do
         # do require retrying. These tasks do not use regular Core.Events, but instead implement a
         # custom Job processing queue which support retrying.
 
+        # TODO: Here might be a good place to close DB connections if 1) something goes bad and 2)
+        # the event had an open connection in the meantime. However, I might want a more robut and
+        # generic solution, perhaps with the usage of monitors.
+        # DB.close_if_open()
+
         acc_events
     end
   end
