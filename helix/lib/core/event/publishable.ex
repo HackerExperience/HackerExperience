@@ -31,10 +31,10 @@ defmodule Core.Event.Publishable do
     # TODO: Consider a different API for read-only DB connections that don't need to commit
     DB.commit()
 
-    # TODO: Send asynchronously
-    Enum.each(pids_to_publish, fn pid ->
-      Webserver.SSE.send_message(pid, raw_payload)
-    end)
+    # For each pid, send the `raw_payload`
+    pids_to_publish
+    |> Task.async_stream(fn pid -> Webserver.SSE.send_message(pid, raw_payload) end)
+    |> Stream.run()
 
     :ok
   end
