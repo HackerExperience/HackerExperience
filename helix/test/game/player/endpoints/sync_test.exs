@@ -98,6 +98,9 @@ defmodule Game.Endpoint.Player.SyncTest do
 
           # Below will be replaced by the actual index once I implement it
           assert %{"foo" => "bar"} == data
+      after
+        5000 ->
+          raise "No output from curl"
       end
     end
   end
