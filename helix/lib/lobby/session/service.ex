@@ -12,7 +12,7 @@ defmodule Lobby.Services.Session do
       %{
         iat: ts_now,
         exp: ts_now + 86_400 * 7,
-        u_id: user.external_id
+        uid: user.external_id
       }
       |> Crypto.JWT.create!()
 

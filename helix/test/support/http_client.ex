@@ -25,6 +25,7 @@ defmodule Test.HTTPClient do
     |> Req.new()
     |> add_default_headers()
     |> add_shard_header(partial_url, opts)
+    |> add_x_request_id_header(opts)
     |> Req.Request.run_request()
     |> parse_response()
   end
@@ -40,6 +41,16 @@ defmodule Test.HTTPClient do
       if is_lobby_request(partial_url), do: "test-lobby-shard-id", else: "test-game-shard-id"
 
     put_header(req, header_name, "#{Keyword.fetch!(opts, :shard_id)}")
+  end
+
+  defp add_x_request_id_header(req, opts) do
+    case Keyword.get(opts, :x_request_id, nil) do
+      x_request_id when is_binary(x_request_id) ->
+        put_header(req, "x-request-id", x_request_id)
+
+      nil ->
+        req
+    end
   end
 
   # defp maybe_add_events_header(req, opts) do

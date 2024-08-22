@@ -72,10 +72,42 @@ defmodule Game.Endpoint.Player.SyncTest do
     end
   end
 
-  # TODO: Consider possibility of directly using curl for this particular endpoint
-  # (including an E2E test)
+  describe "Player.Sync request (E2E with curl)" do
+    test "client receives pushed events", %{shard_id: shard_id} = ctx do
+      player = Setup.player()
+      DB.commit()
+
+      jwt = U.jwt_token(uid: player.external_id)
+
+      # TODO: URL/port logic should be in a shared module
+      port = if ctx.db_context == :singleplayer, do: 5001, else: 5002
+
+      cmd =
+        "curl -s -H 'Content-Type: application/json' -H 'test-game-shard-id: #{shard_id}' -N " <>
+          "http://localhost:#{port}/v1/player/sync?token=#{jwt}"
+
+      port = Port.open({:spawn, cmd}, [:binary, :use_stdio])
+
+      receive do
+        {^port, {:data, sse_payload}} ->
+          data =
+            sse_payload
+            |> String.slice(6..-1//1)
+            |> String.replace("\n\n", "")
+            |> :json.decode()
+
+          # Below will be replaced by the actual index once I implement it
+          assert %{"foo" => "bar"} == data
+      after
+        5000 ->
+          raise "No output from curl"
+      end
+    end
+  end
+
   defp make_sse_request_async(jwt, shard_id) do
     http_client_base_url = Process.get(:test_http_client_base_url)
+    x_request_id = Random.uuid()
 
     spawn(fn ->
       # Inherit process environment needed by test utils
@@ -83,16 +115,19 @@ defmodule Game.Endpoint.Player.SyncTest do
 
       # We need to run the request in another thread because, since it's an SSE request,
       # it will block indefinitely.
-      make_sse_request_sync(jwt, shard_id)
+      make_sse_request_sync(jwt, shard_id, x_request_id)
     end)
 
-    # TODO: I might be able to reduce this if I eagerly load every module on startup first
-    # TODO: Find a work-around that doesn't involve this kind of waiting
-    :timer.sleep(300)
+    # This is a hack for the async nature of SSE requests. A successful SSE request will block
+    # indefinitely. For these tests, we want the test to proceed once we know the SSE connection has
+    # been established. We know that's the case once the outgoing events generated within the Sync
+    # request are emitted and fully processed, which is what `wait_events` ensures! As a result,
+    # once `wait_events/1` returns, we know the SSE process is ready and we can proceed testing.
+    wait_events(x_request_id: x_request_id)
   end
 
-  defp make_sse_request_sync(jwt, shard_id) do
+  defp make_sse_request_sync(jwt, shard_id, x_request_id \\ nil) do
     params = %{token: jwt}
-    get(@path, params, shard_id: shard_id)
+    get(@path, params, shard_id: shard_id, x_request_id: x_request_id)
   end
 end

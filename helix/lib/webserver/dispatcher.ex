@@ -2,6 +2,7 @@ defmodule Webserver.Dispatcher do
   require Logger
   use Webserver.Conveyor.Belt
   alias Webserver.{Conveyor, Endpoint, Hooks, Request}
+  alias Core.Event
 
   @behaviour :cowboy_handler
   @env Mix.env()
@@ -16,6 +17,16 @@ defmodule Webserver.Dispatcher do
     spawn(fn -> log_request(duration, request) end)
 
     result
+  end
+
+  def info({ref, {:event_result, :ok}}, req, state) when is_reference(ref) do
+    # Message received from the Event.emit/1 task
+    {:ok, req, state}
+  end
+
+  def info({:DOWN, _ref, :process, _, _status}, req, state) do
+    # TODO: A possible improvement is checking `ref` is the same `ref` as above
+    {:ok, req, state}
   end
 
   def info(event, req, %{dispatcher: :sse} = state) do
@@ -56,7 +67,7 @@ defmodule Webserver.Dispatcher do
          {:ok, req} <- Hooks.on_handle_request_ok(req),
          # store_events!(req.events),
          # DB.commit(),
-         # emit_events!(req),
+         emit_events(req),
          result = req.result,
          {:ok, req} <- endpoint.render_response(req, result, session) do
       Endpoint.render_response(req, endpoint)
@@ -107,4 +118,26 @@ defmodule Webserver.Dispatcher do
   defp get_duration(d) when d < 10_000, do: "#{Float.round(d / 1000, 2)}ms"
   defp get_duration(d) when d < 100_000, do: "#{Float.round(d / 1000, 1)}ms"
   defp get_duration(d), do: "#{trunc(d / 1000)}ms"
+
+  defp emit_events(%{events: []}), do: :ok
+
+  defp emit_events(%{events: events} = req) when is_list(events) do
+    # TODO: Find a way to synchronously wait events to finish executing (for tests)
+
+    # TODO: Find a way to concentrate in a single module "dirty" state like this
+    helix_universe_shard_id = req.session.shard_id
+    helix_universe = Process.get(:helix_universe)
+
+    # TODO: Test how the async process handles the parent request dying. This doesn't happen in the
+    # SSE request because, in that case, the process lives indefinitely (see `:start_sse` above)
+    Task.Supervisor.async_nolink(
+      {:via, PartitionSupervisor, {Helix.TaskSupervisor, self()}},
+      fn ->
+        Process.put(:helix_universe, helix_universe)
+        Process.put(:helix_universe_shard_id, helix_universe_shard_id)
+
+        {:event_result, Event.emit(events)}
+      end
+    )
+  end
 end

@@ -1,6 +1,7 @@
 defmodule Webserver.Supervisor do
   @moduledoc false
   use Supervisor
+  require Logger
   alias Webserver.Config
 
   def start_link(_) do
@@ -8,12 +9,14 @@ defmodule Webserver.Supervisor do
   end
 
   def init(_) do
-    load_hooks_modules()
-
     children =
       Config.list_webservers()
       |> Enum.map(&Config.get_webserver_config/1)
       |> Enum.map(&webserver_spec/1)
+
+    # Block webserver from starting until all Helix modules are loaded
+    Helix.Application.wait_until_helix_modules_are_loaded()
+    Logger.info("Webservers started")
 
     Logger.add_translator({Webserver.RanchTranslator, :translate})
     Supervisor.init(children, strategy: :one_for_one)
@@ -64,15 +67,5 @@ defmodule Webserver.Supervisor do
   defp create_dispatch_table(config) do
     dispatch = :cowboy_router.compile([{:_, config.routes}])
     :persistent_term.put(config.dispatch_table, dispatch)
-  end
-
-  defp load_hooks_modules do
-    # This ensures that the Hooks module for each Webserver is loaded. This is required because
-    # these modules are called based on the return of `Kernel.function_exported?/3`, which does not
-    # load the module in case it is not loaded.
-    Config.list_webservers()
-    |> Enum.map(&Config.get_webserver_config/1)
-    |> Enum.map(& &1.hooks_module)
-    |> Enum.map(&Code.ensure_loaded/1)
   end
 end

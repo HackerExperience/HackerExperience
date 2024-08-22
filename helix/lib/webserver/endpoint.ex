@@ -30,6 +30,9 @@ defmodule Webserver.Endpoint do
   def render_response(%{conveyor: conveyor, response: response} = request, endpoint) do
     {status_code, response_payload} = parse_response(response)
 
+    # TODO: Add `metadata` entry (as sibling of `data`)
+    # TODO: Include the `request_id` and `x_request_id` in a metadata entry
+
     # Ensures that the outgoing message adheres to the API contract
     enforce_output_spec!(endpoint, status_code, response_payload)
 

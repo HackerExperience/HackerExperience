@@ -17,6 +17,7 @@ defmodule Game.Webserver do
       Webserver.Belt.ReadBody,
       Webserver.Belt.ParseRequestParams,
       Core.Webserver.Belt.Session,
+      Core.Webserver.Belt.SetEventRelay,
       Webserver.Dispatcher,
       Webserver.Belt.SendResponse
     ]

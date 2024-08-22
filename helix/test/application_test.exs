@@ -12,5 +12,13 @@ defmodule Helix.ApplicationTest do
       assert Enum.find(children, fn {mod, _, _, _} -> mod == Game.Webserver.Multiplayer end)
       assert Enum.count(children) == 3
     end
+
+    test "Elixir modules were eagerly loaded on startup" do
+      # See `Helix.Application.wait_until_helix_modules_are_loaded/1` for context
+      assert Code.loaded?(Game.Webserver.Hooks)
+      assert Code.loaded?(Lobby.Webserver.Hooks)
+      assert Code.loaded?(Core.Event.Publishable)
+      assert Code.loaded?(Game.Events.Player.IndexRequested.Publishable)
+    end
   end
 end

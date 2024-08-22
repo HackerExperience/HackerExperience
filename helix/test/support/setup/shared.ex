@@ -1,4 +1,8 @@
 defmodule Test.Setup.Shared do
+  @moduledoc """
+  These functions are imported in every test module.
+  """
+
   alias Test.Setup
   alias Feeb.DB
 
@@ -49,6 +53,10 @@ defmodule Test.Setup.Shared do
     Process.put(:test_http_client_base_url, "http://localhost:5000/v1")
     :ok
   end
+
+  # Events
+
+  defdelegate wait_events(opts), to: Test.Event
 
   # Misc
 
