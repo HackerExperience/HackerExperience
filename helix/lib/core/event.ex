@@ -1,4 +1,31 @@
 defmodule Core.Event do
+  @moduledoc """
+  The Helix Event infrastructure
+
+  Helix is heavily event-driven, and this module (and namespace) powers the event system.
+
+  ### Key principles and ideas
+
+  1. Events are realiable
+
+  There should be no "unreliable IO" happening in an event, especially network IO. DB access is
+  okay, since it does not go over a network.
+
+  If you need to perform network IO, or anything that may fail in reality and thus require retrying,
+  use the Core.Jobs API (to be implemented).
+
+  2. Events are ephemeral and execute only once
+
+  In the scenario where an event fails to execute, we don't do any sort of retries. That's on
+  purpose, given the nature of Helix events. Such events rarely fail, and when they do, retrying
+  will almost always reproduce the exact same error. Transient errors due to network or disk IO are
+  non-existent or unlikely (see point #1 above)
+
+  Once an event is executed (or has failed), it is gone. Everything that should happen as a result
+  of that event, should have happened during its execution, based on native triggers and custom
+  handlers. A record is left stating that an event happened, but for the sole purpose of debugging.
+  """
+
   require Logger
 
   defstruct [:id, :data, :relay]
@@ -31,6 +58,13 @@ defmodule Core.Event do
     }
   end
 
+  @doc """
+  Entrypoint function that will emit the given events.
+
+  For each event, it will iterate over them *synchronously* and *orderly*, emiting one after the
+  other. This function will recurse untill all events are emitted, including the ones that were
+  emitted as a result of the original input.
+  """
   def emit([]), do: :ok
 
   def emit(events) when is_list(events) do

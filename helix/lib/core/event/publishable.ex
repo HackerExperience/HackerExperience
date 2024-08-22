@@ -10,6 +10,12 @@ defmodule Core.Event.Publishable do
     end
   end
 
+  @doc """
+  Entrypoint of the Publishable handler.
+
+  Based on the Publishable implementation by the event module, it will push the corresponding
+  payload to the SSE connection(s).
+  """
   @impl Core.Event.Handler.Behaviour
   def on_event(%ev_mod{}, ev) do
     publishable_mod = get_publishable_mod(ev_mod)
