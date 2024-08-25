@@ -36,6 +36,9 @@ defmodule Mix.Tasks.Openapi.GenerateSchemas do
   end
 
   defp setup_env(target_dir) do
+    # We need every Helix module loaded so we can dynamically find events
+    Helix.Application.eagerly_load_helix_modules()
+
     File.mkdir_p!(target_dir)
   end
 
