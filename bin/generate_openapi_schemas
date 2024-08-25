@@ -21,6 +21,12 @@ generate_elm_types_for_game_api() {
         --server '{"sp": "http://localhost:4001", "mp": "http://localhost:4002"}'
 }
 
+generate_elm_types_for_events_api() {
+    npx elm-open-api $OPENAPI_PATH/events.yaml \
+        --module-name API.Events \
+        --output-dir $ELM_OUTPUT_DIR
+}
+
 # Always use script dirname as starting point
 cd "$(dirname "$0")"
 
@@ -32,3 +38,6 @@ cd "$(dirname "$0")"
 
 # Generate Elm types for the Game API
 (cd ../hexOS && generate_elm_types_for_game_api)
+
+# Generate Elm types for the Events API
+(cd ../hexOS && generate_elm_types_for_events_api)
