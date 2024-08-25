@@ -90,14 +90,15 @@ defmodule Game.Endpoint.Player.SyncTest do
 
       receive do
         {^port, {:data, sse_payload}} ->
-          data =
+          event =
             sse_payload
             |> String.slice(6..-1//1)
             |> String.replace("\n\n", "")
             |> :json.decode()
+            |> Utils.Map.atomify_keys()
 
-          # Below will be replaced by the actual index once I implement it
-          assert %{"foo" => "bar"} == data
+          assert event.name == "index_requested"
+          assert event.data == %{foo: "bar"}
       after
         5000 ->
           raise "No output from curl"

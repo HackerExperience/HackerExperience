@@ -3,6 +3,8 @@ defmodule Game.Events.Player.IndexRequested do
 
   defstruct [:player_id]
 
+  @name :index_requested
+
   def new(player_id) do
     %__MODULE__{player_id: player_id}
     |> Event.new()
@@ -14,6 +16,15 @@ defmodule Game.Events.Player.IndexRequested do
 
   defmodule Publishable do
     use Core.Event.Publishable
+
+    def spec do
+      selection(
+        schema(%{
+          foo: binary()
+        }),
+        [:foo]
+      )
+    end
 
     def generate_payload(_ev) do
       {:ok, %{foo: "bar"}}

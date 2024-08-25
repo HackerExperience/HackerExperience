@@ -21,5 +21,9 @@ defmodule Core.Event.Publishable.Behaviour do
               {:ok, payload :: map()}
               | :noreply
 
+  # Defines the outgoing contract an event should adhere to. This contract is used by the OpenAPI
+  # generator to automatically generate the JSON decoders in the frontend.
+  @callback spec() :: map()
+
   @optional_callbacks generate_payload: 2
 end
