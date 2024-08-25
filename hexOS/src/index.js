@@ -24,11 +24,6 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   // TODO: Describe token auth and why we have a token only for SSE
-  // TODO: Temporary placeholder until we fully integrate with the Elm side
-  const token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3MjQ2MzM2NjgsImlhdCI6MTcyNDAyODg2OCwidWlkIjoiYWEwOGY2YmQtNzI2Yy00OWYxLWFmNTMtMjk4N2U1ODU1MzQ4In0.eaKKXVQXepMyJvOCaFg-u19_hkZMrjPf8YUSKSBimxo"
-
-  console.log(app.ports)
-
   app.ports.eventStart.subscribe(function(token) {
     // TODO: `url` itself should come from the Elm side
     const url = `http://localhost:4001/v1/player/sync?token=${token}`
