@@ -1,6 +1,8 @@
 module Boot exposing (..)
 
+import Event exposing (Event)
 import UI exposing (UI, cl, col, id, row, style, text)
+import Utils
 
 
 
@@ -9,6 +11,8 @@ import UI exposing (UI, cl, col, id, row, style, text)
 
 type Msg
     = ProceedToGame
+    | EstablishSSEConnection
+    | OnEventReceived Event
     | NoOp
 
 
@@ -20,9 +24,11 @@ type alias Model =
 -- Model
 
 
-initialModel : String -> Model
-initialModel token =
-    { token = token }
+init : String -> ( Model, Cmd Msg )
+init token =
+    ( { token = token }
+    , Utils.msgToCmd EstablishSSEConnection
+    )
 
 
 
@@ -32,10 +38,25 @@ initialModel token =
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
+        -- Intercepted by `Main`
         ProceedToGame ->
             ( model, Cmd.none )
 
+        -- Intercepted by `Main`
+        EstablishSSEConnection ->
+            ( model, Cmd.none )
+
+        OnEventReceived event ->
+            updateEvent model event
+
         NoOp ->
+            ( model, Cmd.none )
+
+
+updateEvent : Model -> Event -> ( Model, Cmd Msg )
+updateEvent model event =
+    case event of
+        Event.IndexRequested { foo } ->
             ( model, Cmd.none )
 
 

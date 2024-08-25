@@ -7,12 +7,14 @@ import Browser.Navigation as Nav
 import Core.Debounce as Debounce
 import Debounce exposing (Debounce)
 import Dict exposing (Dict)
+import Event exposing (Event)
 import Html exposing (Html)
 import Json.Decode as JD
 import Login
 import OS
 import Process
 import Random
+import Result
 import Task
 import UI exposing (UI)
 import UUID exposing (Seeds, UUID)
@@ -32,7 +34,8 @@ type Msg
     | OSMsg OS.Msg
     | LoginMsg Login.Msg
     | BootMsg Boot.Msg
-    | OnEventReceived String
+    | OnRawEventReceived String
+    | OnEventReceived (Result JD.Error Event)
 
 
 type alias GameModel =
@@ -70,7 +73,10 @@ type alias Flags =
 -- Port (TODO)
 
 
-port eventReader : (String -> msg) -> Sub msg
+port eventStart : String -> Cmd msg
+
+
+port eventSubscriber : (String -> msg) -> Sub msg
 
 
 
@@ -134,7 +140,11 @@ update msg model =
         LoginState loginModel ->
             case msg of
                 LoginMsg (Login.ProceedToBoot token) ->
-                    ( { model | state = BootState (Boot.initialModel token) }, Cmd.none )
+                    let
+                        ( bootModel, bootCmd ) =
+                            Boot.init token
+                    in
+                    ( { model | state = BootState bootModel }, Cmd.map BootMsg bootCmd )
 
                 LoginMsg subMsg ->
                     let
@@ -145,13 +155,6 @@ update msg model =
                     , Cmd.batch [ Cmd.map LoginMsg loginCmd ]
                     )
 
-                OnEventReceived ev ->
-                    let
-                        _ =
-                            Debug.log "Got event:" ev
-                    in
-                    ( model, Cmd.none )
-
                 _ ->
                     ( model, Cmd.none )
 
@@ -161,10 +164,32 @@ update msg model =
                     -- ( { model | state = GameState (Boot.initialModel token) }, Cmd.none )
                     ( model, Cmd.none )
 
+                BootMsg Boot.EstablishSSEConnection ->
+                    ( model, eventStart bootModel.token )
+
                 BootMsg subMsg ->
                     let
                         ( newBootModel, bootCmd ) =
                             Boot.update subMsg bootModel
+                    in
+                    ( { model | state = BootState newBootModel }
+                    , Cmd.batch [ Cmd.map BootMsg bootCmd ]
+                    )
+
+                OnRawEventReceived rawEvent ->
+                    let
+                        eventResult =
+                            Event.processReceivedEvent rawEvent
+
+                        _ =
+                            Debug.log "Event result" eventResult
+                    in
+                    ( model, Utils.msgToCmd (OnEventReceived eventResult) )
+
+                OnEventReceived (Ok event) ->
+                    let
+                        ( newBootModel, bootCmd ) =
+                            Boot.update (Boot.OnEventReceived event) bootModel
                     in
                     ( { model | state = BootState newBootModel }
                     , Cmd.batch [ Cmd.map BootMsg bootCmd ]
@@ -225,11 +250,10 @@ update msg model =
                 BootMsg _ ->
                     ( model, Cmd.none )
 
+                OnRawEventReceived ev ->
+                    ( model, Cmd.none )
+
                 OnEventReceived ev ->
-                    let
-                        _ =
-                            Debug.log "Got event:" ev
-                    in
                     ( model, Cmd.none )
 
         InstallState ->
@@ -291,4 +315,4 @@ subscriptions model =
                 ]
 
         _ ->
-            eventReader OnEventReceived
+            eventSubscriber OnRawEventReceived

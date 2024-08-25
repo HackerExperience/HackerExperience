@@ -33,7 +33,7 @@ type alias Model =
 
 initialModel : Model
 initialModel =
-    { email = "", password = "" }
+    { email = "renato@renato.com", password = "renato" }
 
 
 
@@ -43,6 +43,10 @@ initialModel =
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
+        -- Intercepted by `Main`
+        ProceedToBoot _ ->
+            ( model, Cmd.none )
+
         SetEmail value ->
             ( { model | email = value }, Cmd.none )
 
@@ -52,12 +56,9 @@ update msg model =
         OnFormSubmit ->
             let
                 task =
-                    LobbyAPI.login "renato@renato.com" "renato"
+                    LobbyAPI.login model.email model.password
             in
             ( model, Task.attempt OnLoginResponse task )
-
-        ProceedToBoot _ ->
-            ( model, Cmd.none )
 
         OnLoginResponse (Ok { token }) ->
             ( model, Utils.msgToCmd <| ProceedToBoot token )
