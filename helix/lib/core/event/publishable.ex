@@ -85,5 +85,5 @@ defmodule Core.Event.Publishable do
     end
   end
 
-  defp get_publishable_mod(ev_mod), do: Module.concat(ev_mod, Publishable)
+  def get_publishable_mod(ev_mod), do: Module.concat(ev_mod, Publishable)
 end

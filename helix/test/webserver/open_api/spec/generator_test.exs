@@ -88,6 +88,24 @@ defmodule Webserver.OpenApi.Spec.GeneratorTest do
     end
   end
 
+  describe "generate/1 for the Events spec" do
+    setup do
+      spec = Core.Event.Publishable.Spec.spec()
+      {:ok, %{spec: spec}}
+    end
+
+    test "includes the event schemas", %{spec: spec} do
+      assert %{components: %{schemas: schemas}} = Generator.generate(spec)
+
+      # Grab a few random schemas and make sure they have the correct definition
+      index_requested = Map.fetch!(schemas, "index_requested")
+
+      assert index_requested.type == :object
+      assert index_requested.required == [:foo]
+      assert index_requested.properties[:foo] == %{type: :string}
+    end
+  end
+
   describe "normalize_helix_spec/1" do
     test "normalizes the endpoint id" do
       endpoint_1 = test_spec_endpoint()
@@ -138,6 +156,7 @@ defmodule Webserver.OpenApi.Spec.GeneratorTest do
     endpoints = Map.new([test_spec_endpoint()])
 
     %{
+      type: :webserver_request,
       title: Keyword.get(opts, :title, "TestAPI"),
       version: Keyword.get(opts, :version, "1.0.0"),
       endpoints: Keyword.get(opts, :endpoints, endpoints),

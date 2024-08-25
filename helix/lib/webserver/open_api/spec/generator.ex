@@ -22,6 +22,9 @@ defmodule Webserver.OpenApi.Spec.Generator do
     }
   end
 
+  # Paths are not used the by Event Spec
+  defp generate_paths(%{type: :events}), do: %{}
+
   defp generate_paths(%{endpoints: endpoints}) do
     endpoints
     |> Enum.group_by(fn {_, %{path: path}} -> path end)
@@ -60,6 +63,9 @@ defmodule Webserver.OpenApi.Spec.Generator do
     }
   end
 
+  # Request bodies are not used by the Event spec
+  defp generate_request_bodies(%{type: :events}), do: %{}
+
   defp generate_request_bodies(%{endpoints: endpoints}) do
     Enum.map(endpoints, fn {{_endpoint, _method}, entry} ->
       request_body_name = entry.request_body
@@ -86,6 +92,9 @@ defmodule Webserver.OpenApi.Spec.Generator do
     end)
     |> Map.new()
   end
+
+  # Responses are not used by the Event spec
+  defp generate_responses(%{type: :events}), do: %{}
 
   defp generate_responses(%{endpoints: endpoints, default_responses: default_responses}) do
     Enum.reduce(endpoints, default_responses, fn {{_endpoint, _method}, entry}, acc ->
@@ -122,7 +131,23 @@ defmodule Webserver.OpenApi.Spec.Generator do
     end)
   end
 
-  defp generate_schemas(%{endpoints: endpoints, default_schemas: default_schemas}) do
+  defp generate_schemas(%{type: :events, endpoints: events}) do
+    Enum.reduce(events, %{}, fn {event_mod, entry}, acc ->
+      publishable_mod = Core.Event.Publishable.get_publishable_mod(event_mod)
+      spec = apply(publishable_mod, :spec, [])
+      build_schema(spec, "#{entry.id}", acc)
+    end)
+    |> Enum.map(fn {schema_name, schema_entries} ->
+      {schema_name, schema_definition_to_oas31_format(schema_entries)}
+    end)
+    |> Map.new()
+  end
+
+  defp generate_schemas(%{
+         type: :webserver_request,
+         endpoints: endpoints,
+         default_schemas: default_schemas
+       }) do
     Enum.reduce(endpoints, %{}, fn {{endpoint, _method}, entry}, acc ->
       # TODO: DRY name logic (used elsewhere too)
       input_schema_name = "#{entry.id}Input"
@@ -244,7 +269,7 @@ defmodule Webserver.OpenApi.Spec.Generator do
   @doc """
   Public for testing.
   """
-  def normalize_helix_spec(helix_spec) do
+  def normalize_helix_spec(%{type: :webserver_request} = helix_spec) do
     endpoints =
       helix_spec.endpoints
       |> Enum.map(fn {{endpoint, method}, entry} ->
@@ -261,6 +286,17 @@ defmodule Webserver.OpenApi.Spec.Generator do
       |> Map.new()
 
     %{helix_spec | endpoints: endpoints}
+  end
+
+  def normalize_helix_spec(%{type: :events} = helix_spec) do
+    events =
+      helix_spec.endpoints
+      |> Enum.map(fn event_module ->
+        id = get_event_id(event_module)
+        {event_module, %{id: id}}
+      end)
+
+    %{helix_spec | endpoints: events}
   end
 
   defp normalize_id(entry, id),
@@ -290,6 +326,10 @@ defmodule Webserver.OpenApi.Spec.Generator do
   defp get_endpoint_id(_, endpoint) do
     [_, _ | rest] = Module.split(endpoint)
     Enum.join(rest)
+  end
+
+  defp get_event_id(event) do
+    apply(event, :get_name, [])
   end
 
   defp get_request_body(%{request_body: name}, _), do: name

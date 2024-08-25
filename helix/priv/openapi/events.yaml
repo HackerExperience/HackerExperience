@@ -1,0 +1,17 @@
+info:
+  version: 1.0.0
+  description: nil
+  title: Events API
+components:
+  responses: {}
+  schemas:
+    index_requested:
+      type: object
+      required:
+        - foo
+      properties:
+        foo:
+          type: string
+  requestBodies: {}
+openapi: 3.1.0
+paths: {}
