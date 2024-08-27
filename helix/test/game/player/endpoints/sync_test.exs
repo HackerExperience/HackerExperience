@@ -12,6 +12,7 @@ defmodule Game.Endpoint.Player.SyncTest do
       # There are no players with this `external_id`
       external_id = Random.uuid()
       refute Svc.Player.fetch(by_external_id: external_id)
+      with_random_autoincrement()
       DB.commit()
 
       jwt = U.jwt_token(uid: external_id)
