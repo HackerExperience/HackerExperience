@@ -3,6 +3,8 @@ defmodule Test.Setup.Player do
   alias Game.Player
 
   def new(opts \\ []) do
+    # TODO: Should I also create the corresponding entity here?
+
     opts
     |> params()
     |> Player.new()
@@ -11,6 +13,7 @@ defmodule Test.Setup.Player do
 
   def params(opts \\ []) do
     %{
+      id: Kw.get(opts, :id, Random.int()),
       external_id: Kw.get(opts, :external_id, Random.uuid())
     }
   end

@@ -1,1 +1,1 @@
-{"lobby":["Elixir.Lobby.User"],"game":["Elixir.Game.Player"]}
+{"lobby":["Elixir.Lobby.User"],"game":["Elixir.Game.Player","Elixir.Game.Entity"]}

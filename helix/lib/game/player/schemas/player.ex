@@ -5,12 +5,11 @@ defmodule Game.Player do
   @table :players
 
   @schema [
-    {:id, {:integer, :autoincrement}},
+    # `players.id` is not auto-incrementing. It is defined by `entities.id`.
+    {:id, :integer},
     {:external_id, :uuid},
     {:inserted_at, {:datetime_utc, [precision: :millisecond], mod: :inserted_at}}
   ]
-
-  @derived_fields [:id]
 
   def new(params) do
     params

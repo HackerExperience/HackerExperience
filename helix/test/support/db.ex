@@ -52,11 +52,11 @@ defmodule Test.DB do
   end
 
   @doc """
-  Assumes the caller wants a random autoincrement on both Player and Server. This function is
+  Assumes the caller wants a random autoincrement on both Entity and Server. This function is
   automatically imported on every test case (via `Test.Setup.Shared`).
   """
   def with_random_autoincrement do
-    random_autoincrement(Game.Player)
+    random_autoincrement(Game.Entity)
     # random_autoincrement(Game.Server)
   end
 

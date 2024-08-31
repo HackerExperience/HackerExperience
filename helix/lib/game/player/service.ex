@@ -1,5 +1,6 @@
 defmodule Game.Services.Player do
   alias Feeb.DB
+  alias Game.Services, as: Svc
   alias Game.Player
 
   @doc """
@@ -9,7 +10,8 @@ defmodule Game.Services.Player do
   - Creates the `player` shard (identified by `player.id`)
   """
   def setup(external_id) when is_binary(external_id) do
-    with {:ok, player} <- insert_player(%{external_id: external_id}) do
+    with {:ok, entity} <- Svc.Entity.create(:player),
+         {:ok, player} <- insert_player(%{id: entity.id, external_id: external_id}) do
       DB.with_context(fn ->
         player_db_path = DB.Repo.get_path(:player, player.id)
         false = File.exists?(player_db_path)
