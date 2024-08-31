@@ -16,6 +16,9 @@ config :feebdb,
     multiplayer: %{
       shard_type: :global,
       domains: [:game]
+    },
+    player: %{
+      shard_type: :dedicated
     }
   },
   is_test_mode: true
