@@ -1,4 +1,5 @@
 defmodule Test.DB do
+  alias Feeb.DB
   alias Feeb.DB.{Config}
 
   def on_start do
@@ -36,12 +37,28 @@ defmodule Test.DB do
   def props_path, do: "#{Config.data_dir()}/db_props"
   def test_dbs_path, do: "#{Config.data_dir()}"
 
-  # def random_autoincrement(schema) do
-  #   table = schema.__table__()
-  #   rand = :rand.uniform() |> Kernel.*(1_000_000) |> trunc()
-  #   Feeb.DB.raw!("insert into #{table} (id) values (#{rand})")
-  #   Feeb.DB.raw!("delete from #{table} where id = #{rand}")
-  # end
+  @doc """
+  Inserts a dummy entry into `schema` which will force it to have a random-like autoincrement.
+  Particularly useful when creating Players and Servers, which have their own dedicated-but-global
+  shard. Usually, if your test will create Player or Server shards, you most likely want to use this
+  function.
+  """
+  def random_autoincrement(schema) do
+    table = schema.__table__()
+    rand = :rand.uniform() |> Kernel.*(1_000_000_000) |> trunc()
+    DB.raw!("insert into #{table} (id) values (#{rand})")
+    # NOTE: One would feel compeled to delete the newly inserted entry. However, deleting it will
+    # cause SQLite to fallback the autoincrement counter to 1, defeating the purpose of the function
+  end
+
+  @doc """
+  Assumes the caller wants a random autoincrement on both Player and Server. This function is
+  automatically imported on every test case (via `Test.Setup.Shared`).
+  """
+  def with_random_autoincrement do
+    random_autoincrement(Game.Player)
+    # random_autoincrement(Game.Server)
+  end
 
   defp delete_all_dbs do
     path = test_dbs_path()

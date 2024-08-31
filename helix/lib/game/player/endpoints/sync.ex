@@ -28,7 +28,7 @@ defmodule Game.Endpoint.Player.Sync do
   def get_context(request, params, %{data: %{type: :unauthenticated}} = session) do
     # We are dealing with the very first login from that user. We need to create the
     # player entry first and then proceed with the Sync request
-    case Svc.Player.create(%{external_id: session.data.external_id}) do
+    case Svc.Player.setup(session.data.external_id) do
       {:ok, player} ->
         # TODO: DRY this (with that Session module?)
         session_data = %{

@@ -14,5 +14,8 @@ config :feebdb,
     multiplayer: %{
       shard_type: :global,
       domains: [:game]
+    },
+    player: %{
+      shard_type: :dedicated
     }
   }

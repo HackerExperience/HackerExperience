@@ -20,12 +20,13 @@ defmodule Mix.Tasks.Openapi.GenerateSchemasTest do
       GenerateSchemas.run(["--target-dir", @tmp_dir])
 
       # Both json and yaml files were created for the GameAPI and LobbyAPI
-      assert ["game.json", "game.yaml", "lobby.json", "lobby.yaml"] ==
+      assert ["events.json", "events.yaml", "game.json", "game.yaml", "lobby.json", "lobby.yaml"] ==
                @tmp_dir |> File.ls!() |> Enum.sort()
 
       # JSON file is decodeable and appears to be correct for both GameAPI and LobbyAPI
       assert_spec("lobby.json", "Lobby API")
       assert_spec("game.json", "Game API")
+      assert_spec("events.json", "Events API")
     end
   end
 

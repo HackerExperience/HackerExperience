@@ -4,6 +4,7 @@ defmodule Lobby.Webserver.Spec do
   """
   def spec do
     %{
+      type: :webserver_request,
       title: "Lobby API",
       version: "1.0.0",
       endpoints: endpoints(),

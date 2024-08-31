@@ -4,48 +4,47 @@ defmodule Game.Services.PlayerTest do
 
   setup [:with_game_db]
 
-  describe "create/1" do
+  describe "setup/1" do
     test "creates the player" do
-      params = Setup.Player.params()
-      assert {:ok, player} = Svc.Player.create(params)
-      assert player.external_id == params.external_id
+      with_random_autoincrement()
+      external_id = Random.uuid()
+      assert {:ok, player} = Svc.Player.setup(external_id)
+      assert player.external_id == external_id
     end
 
     test "auto-increments the player id" do
-      assert {:ok, player_1} = Svc.Player.create(Setup.Player.params())
-      assert {:ok, player_2} = Svc.Player.create(Setup.Player.params())
-      assert {:ok, player_3} = Svc.Player.create(Setup.Player.params())
+      with_random_autoincrement()
+      assert {:ok, player_1} = Svc.Player.setup(Random.uuid())
+      assert {:ok, player_2} = Svc.Player.setup(Random.uuid())
+      assert {:ok, player_3} = Svc.Player.setup(Random.uuid())
 
-      assert player_1.id == 1
-      assert player_2.id == 2
-      assert player_3.id == 3
+      assert player_2.id == player_1.id + 1
+      assert player_3.id == player_1.id + 2
     end
 
     @tag capture_log: true
     test "fails if the external_id is already registered" do
-      params = Setup.Player.params()
-      assert {:ok, _player} = Svc.Player.create(params)
-      assert {:error, reason} = Svc.Player.create(params)
+      external_id = Random.uuid()
+      assert {:ok, _player} = Svc.Player.setup(external_id)
+      assert {:error, reason} = Svc.Player.setup(external_id)
       assert reason == "UNIQUE constraint failed: players.external_id"
     end
 
     test "fails if the external_id is invalid" do
       %{message: reason} =
         assert_raise(RuntimeError, fn ->
-          Svc.Player.create(%{external_id: "not_an_uuid"})
+          Svc.Player.setup("not_an_uuid")
         end)
 
       assert_raise(FunctionClauseError, fn ->
-        Svc.Player.create(%{external_id: 50})
+        Svc.Player.setup(50)
+      end)
+
+      assert_raise(FunctionClauseError, fn ->
+        Svc.Player.setup(nil)
       end)
 
       assert reason =~ "Invalid UUID value"
-    end
-
-    test "fails if the external_id is not set" do
-      assert {:error, reason} = Svc.Player.create(%{external_id: nil})
-      assert reason =~ "Cast error"
-      assert reason =~ "external_id: :invalid_input"
     end
   end
 

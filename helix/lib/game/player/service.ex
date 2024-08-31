@@ -2,10 +2,27 @@ defmodule Game.Services.Player do
   alias Feeb.DB
   alias Game.Player
 
-  # Operations
+  @doc """
+  Creates a new player.
 
-  # TODO: Where/how do I create the player DB?
-  def create(params) do
+  - Inserts the player in the `universe.players` table.
+  - Creates the `player` shard (identified by `player.id`)
+  """
+  def setup(external_id) when is_binary(external_id) do
+    with {:ok, player} <- insert_player(%{external_id: external_id}) do
+      DB.with_context(fn ->
+        player_db_path = DB.Repo.get_path(:player, player.id)
+        false = File.exists?(player_db_path)
+
+        DB.begin(:player, player.id, :write)
+        DB.commit()
+      end)
+
+      {:ok, player}
+    end
+  end
+
+  defp insert_player(params) do
     params
     |> Player.new()
     |> DB.insert()

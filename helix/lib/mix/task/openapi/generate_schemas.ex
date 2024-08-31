@@ -32,9 +32,13 @@ defmodule Mix.Tasks.Openapi.GenerateSchemas do
 
     generate_openapi_spec_file(:lobby, target_dir)
     generate_openapi_spec_file(:game, target_dir)
+    generate_openapi_spec_file(:events, target_dir)
   end
 
   defp setup_env(target_dir) do
+    # We need every Helix module loaded so we can dynamically find events
+    Helix.Application.eagerly_load_helix_modules()
+
     File.mkdir_p!(target_dir)
   end
 
@@ -48,6 +52,12 @@ defmodule Mix.Tasks.Openapi.GenerateSchemas do
     Game.Webserver.spec()
     |> SpecGenerator.generate()
     |> write_spec(:game, target_dir)
+  end
+
+  defp generate_openapi_spec_file(:events, target_dir) do
+    Core.Event.Publishable.Spec.spec()
+    |> SpecGenerator.generate()
+    |> write_spec(:events, target_dir)
   end
 
   defp write_spec(spec, name, target_dir) do

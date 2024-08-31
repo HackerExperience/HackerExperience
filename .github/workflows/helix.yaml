@@ -24,7 +24,7 @@ jobs:
           version-type: strict
 
       - name: Setup database directories
-        run: mkdir -p tmp/helix_test/{lobby,singleplayer,multiplayer}
+        run: mkdir -p tmp/helix_test/{lobby,singleplayer,multiplayer,player}
 
       - name: Restore build cache
         uses: actions/cache@v4

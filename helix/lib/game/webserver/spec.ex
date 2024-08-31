@@ -4,6 +4,7 @@ defmodule Game.Webserver.Spec do
   """
   def spec do
     %{
+      type: :webserver_request,
       title: "Game API",
       version: "1.0.0",
       endpoints: endpoints(),

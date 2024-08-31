@@ -36,6 +36,8 @@ defmodule Test.Setup.Shared do
     :ok
   end
 
+  defdelegate with_random_autoincrement, to: Test.DB
+
   # Webserver
 
   def with_game_webserver(%{db_context: db_context}) do

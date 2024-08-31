@@ -50,8 +50,10 @@ defmodule Helix.Application do
     end
   end
 
-  # See doc at `wait_until_helix_modules_are_loaded`
-  defp eagerly_load_helix_modules do
+  @doc """
+  Loads every Helix Elixir module. See additinal context at `wait_until_helix_modules_are_loaded/1`.
+  """
+  def eagerly_load_helix_modules do
     {time, _} =
       :timer.tc(fn ->
         :helix

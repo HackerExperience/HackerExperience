@@ -6,6 +6,8 @@ defmodule Core.Event.Publishable do
 
   defmacro __using__(_) do
     quote do
+      use Core.Spec
+
       @behaviour Core.Event.Publishable.Behaviour
     end
   end
@@ -20,15 +22,22 @@ defmodule Core.Event.Publishable do
   def on_event(%ev_mod{}, ev) do
     publishable_mod = get_publishable_mod(ev_mod)
 
+    event_name = apply(ev_mod, :get_name, [])
     whom_to_publish = apply(publishable_mod, :whom_to_publish, [ev])
+    data = apply(publishable_mod, :generate_payload, [ev])
 
-    payload = apply(publishable_mod, :generate_payload, [ev])
+    # TODO: Enforce `raw_data` adheres to the contract
 
     # TODO
     raw_payload =
-      case payload do
-        {:ok, data} ->
-          :json.encode(data) |> to_string()
+      case data do
+        {:ok, raw_data} ->
+          %{
+            data: raw_data,
+            name: event_name
+          }
+          |> :json.encode()
+          |> to_string()
       end
 
     # We need Universe DB access for `get_pids_to_publish`
@@ -76,5 +85,5 @@ defmodule Core.Event.Publishable do
     end
   end
 
-  defp get_publishable_mod(ev_mod), do: Module.concat(ev_mod, Publishable)
+  def get_publishable_mod(ev_mod), do: Module.concat(ev_mod, Publishable)
 end
