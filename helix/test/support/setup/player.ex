@@ -3,13 +3,19 @@ defmodule Test.Setup.Player do
   alias Game.Player
 
   def new(opts \\ []) do
-    # TODO: Should I also create the corresponding entity here?
+    entity = S.Entity.new!()
 
-    opts
-    |> params()
-    |> Player.new()
-    |> DB.insert!()
+    player =
+      [id: entity.id]
+      |> Keyword.merge(opts)
+      |> params()
+      |> Player.new()
+      |> DB.insert!()
+
+    {player, %{entity: entity}}
   end
+
+  def new!(opts \\ []), do: opts |> new() |> elem(0)
 
   def params(opts \\ []) do
     %{

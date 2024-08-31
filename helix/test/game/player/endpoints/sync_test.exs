@@ -24,7 +24,7 @@ defmodule Game.Endpoint.Player.SyncTest do
     end
 
     test "when player already exists, subscribes to SSE", %{shard_id: shard_id} do
-      player = Setup.player()
+      player = Setup.player!()
       DB.commit()
 
       jwt = U.jwt_token(uid: player.external_id)
@@ -39,7 +39,7 @@ defmodule Game.Endpoint.Player.SyncTest do
     end
 
     test "allows player to subscribe to SSE twice with different sessions", %{shard_id: shard_id} do
-      player = Setup.player()
+      player = Setup.player!()
       DB.commit()
 
       ts_now = Utils.DateTime.ts_now()
@@ -59,7 +59,7 @@ defmodule Game.Endpoint.Player.SyncTest do
     end
 
     test "doesn't allow player to subscribe to SSE twice with same session", %{shard_id: shard_id} do
-      player = Setup.player()
+      player = Setup.player!()
       DB.commit()
 
       jwt = U.jwt_token(uid: player.external_id)
@@ -75,7 +75,7 @@ defmodule Game.Endpoint.Player.SyncTest do
 
   describe "Player.Sync request (E2E with curl)" do
     test "client receives pushed events", %{shard_id: shard_id} = ctx do
-      player = Setup.player()
+      player = Setup.player!()
       DB.commit()
 
       jwt = U.jwt_token(uid: player.external_id)

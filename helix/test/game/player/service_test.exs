@@ -60,24 +60,24 @@ defmodule Game.Services.PlayerTest do
 
   describe "fetch/2 - by_id" do
     test "returns the player when it exists" do
-      player = Setup.player()
+      player = Setup.player!()
       assert player == Svc.Player.fetch(by_id: player.id)
     end
 
     test "returns nil when player doesn't exist" do
-      player = Setup.player()
+      player = Setup.player!()
       refute Svc.Player.fetch(by_id: player.id + 1)
     end
   end
 
   describe "fetch/2 - by_external_id" do
     test "returns the player when it exists" do
-      player = Setup.player()
+      player = Setup.player!()
       assert player == Svc.Player.fetch(by_external_id: player.external_id)
     end
 
     test "returns nil when player doesn't exist" do
-      Setup.player()
+      Setup.player!()
       refute Svc.Player.fetch(by_external_id: Random.uuid())
     end
   end
