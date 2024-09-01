@@ -5,8 +5,9 @@ defmodule Game.Services.PlayerTest do
   setup [:with_game_db]
 
   describe "setup/1" do
+    setup [:with_random_autoincrement]
+
     test "creates the player and the entity" do
-      with_random_autoincrement()
       external_id = Random.uuid()
       assert {:ok, player} = Svc.Player.setup(external_id)
       assert player.external_id == external_id
@@ -23,7 +24,6 @@ defmodule Game.Services.PlayerTest do
     end
 
     test "auto-increments the player id" do
-      with_random_autoincrement()
       assert {:ok, player_1} = Svc.Player.setup(Random.uuid())
       assert {:ok, player_2} = Svc.Player.setup(Random.uuid())
       assert {:ok, player_3} = Svc.Player.setup(Random.uuid())

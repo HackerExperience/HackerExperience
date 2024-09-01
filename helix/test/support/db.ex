@@ -43,21 +43,21 @@ defmodule Test.DB do
   shard. Usually, if your test will create Player or Server shards, you most likely want to use this
   function.
   """
-  def random_autoincrement(schema) do
+  def random_autoincrement(schema, field \\ "id") do
     table = schema.__table__()
     rand = :rand.uniform() |> Kernel.*(1_000_000_000) |> trunc()
-    DB.raw!("insert into #{table} (id) values (#{rand})")
+    DB.raw!("insert into #{table} (#{field}) values (#{rand})")
     # NOTE: One would feel compeled to delete the newly inserted entry. However, deleting it will
     # cause SQLite to fallback the autoincrement counter to 1, defeating the purpose of the function
   end
 
   @doc """
-  Assumes the caller wants a random autoincrement on both Entity and Server. This function is
-  automatically imported on every test case (via `Test.Setup.Shared`).
+  Assumes the caller wants a random autoincrement on both Entity and ServerMapping. This function
+  is automatically imported on every test case (via `Test.Setup.Shared`).
   """
-  def with_random_autoincrement do
+  def with_random_autoincrement(_opts \\ []) do
     random_autoincrement(Game.Entity)
-    # random_autoincrement(Game.Server)
+    random_autoincrement(Game.ServerMapping, "server_id")
   end
 
   defp delete_all_dbs do

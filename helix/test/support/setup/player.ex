@@ -5,6 +5,8 @@ defmodule Test.Setup.Player do
   def new(opts \\ []) do
     entity = S.Entity.new!()
 
+    # TODO: This is not creating the player shard, so it isn't 100% correct
+
     player =
       [id: entity.id]
       |> Keyword.merge(opts)

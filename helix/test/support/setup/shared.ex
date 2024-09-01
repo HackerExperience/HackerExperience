@@ -36,7 +36,7 @@ defmodule Test.Setup.Shared do
     :ok
   end
 
-  defdelegate with_random_autoincrement, to: Test.DB
+  defdelegate with_random_autoincrement(opts \\ []), to: Test.DB
 
   # Webserver
 
