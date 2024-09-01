@@ -18,6 +18,19 @@ defmodule Game.Services.Server do
     end
   end
 
+  # Queries
+
+  @doc """
+  """
+  def fetch(filter_params, opts \\ []) do
+    filters = [
+      by_server_id: {:one, {:server_mappings, :fetch}},
+      list_by_entity_id: {:all, {:server_mappings, :list_by_entity_id}}
+    ]
+
+    Core.Fetch.query(filter_params, opts, filters)
+  end
+
   defp insert_mapping(entity_id) do
     %{entity_id: entity_id}
     |> ServerMapping.new()

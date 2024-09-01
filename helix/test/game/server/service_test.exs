@@ -27,4 +27,33 @@ defmodule Game.Services.ServerTest do
       # TODO: Query S.meta and other seed data
     end
   end
+
+  describe "fetch/2 - by_server_id" do
+    test "returns the mapping when it exists" do
+      mapping = Setup.server!()
+      assert mapping == Svc.Server.fetch(by_server_id: mapping.server_id)
+    end
+
+    test "returns nil when requested server_id is not found" do
+      Setup.server!()
+      refute Svc.Server.fetch(by_server_id: Random.int())
+    end
+  end
+
+  describe "fetch/2 - list_by_entity_id" do
+    test "returns corresponding mapping when they exist" do
+      entity = Setup.entity!()
+
+      mapping_1 = Setup.server!(entity: entity)
+      mapping_2 = Setup.server!(entity: entity)
+      _other_mapping = Setup.server!()
+
+      mappings = Svc.Server.fetch(list_by_entity_id: entity.id)
+      assert Enum.count(mappings) == 2
+      assert db_mapping_1 = Enum.find(mappings, &(&1.server_id == mapping_1.server_id))
+      assert db_mapping_2 = Enum.find(mappings, &(&1.server_id == mapping_2.server_id))
+      assert db_mapping_1.entity_id == entity.id
+      assert db_mapping_2.entity_id == entity.id
+    end
+  end
 end

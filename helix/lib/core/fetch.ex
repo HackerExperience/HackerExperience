@@ -49,6 +49,9 @@ defmodule Core.Fetch do
   defp execute_callback({:one, query_id}, _acc, value),
     do: DB.one(query_id, value)
 
+  defp execute_callback({:all, query_id}, _acc, value),
+    do: DB.all(query_id, value)
+
   defp execute_callback(fun, acc, value) when is_function(fun) do
     case :erlang.fun_info(fun)[:arity] do
       1 -> fun.(value)

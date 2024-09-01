@@ -16,3 +16,5 @@ RETURNING *;
 -- :__fetch
 SELECT * FROM server_mappings WHERE server_id = ?;
 
+-- :list_by_entity_id
+SELECT * FROM server_mappings WHERE entity_id = ?;

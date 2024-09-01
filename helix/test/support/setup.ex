@@ -16,6 +16,8 @@ defmodule Test.Setup do
   defdelegate entity!(opts \\ []), to: S.Entity, as: :new!
   defdelegate player(opts \\ []), to: S.Player, as: :new
   defdelegate player!(opts \\ []), to: S.Player, as: :new!
+  defdelegate server(opts \\ []), to: S.Server, as: :new
+  defdelegate server!(opts \\ []), to: S.Server, as: :new!
 
   # Lobby
   defdelegate lobby_user(opts \\ []), to: S.Lobby.User, as: :new
