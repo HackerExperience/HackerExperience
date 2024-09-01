@@ -19,6 +19,9 @@ config :feebdb,
     },
     player: %{
       shard_type: :dedicated
+    },
+    server: %{
+      shard_type: :dedicated
     }
   },
   is_test_mode: true

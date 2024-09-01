@@ -6,11 +6,14 @@ defmodule Game.Services.Player do
   @doc """
   Creates a new player.
 
+  - Creates an Entity linked to the Player.
+  - Creates a server for the Entity.
   - Inserts the player in the `universe.players` table.
   - Creates the `player` shard (identified by `player.id`)
   """
   def setup(external_id) when is_binary(external_id) do
     with {:ok, entity} <- Svc.Entity.create(:player),
+         {:ok, _} <- Svc.Server.setup(entity),
          {:ok, player} <- insert_player(%{id: entity.id, external_id: external_id}) do
       DB.with_context(fn ->
         player_db_path = DB.Repo.get_path(:player, player.id)
