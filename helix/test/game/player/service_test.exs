@@ -89,4 +89,19 @@ defmodule Game.Services.PlayerTest do
       refute Svc.Player.fetch(by_external_id: Random.uuid())
     end
   end
+
+  describe "fetch!/2" do
+    test "raises if no results were found" do
+      uuid = Random.uuid()
+
+      %{message: error} =
+        assert_raise RuntimeError, fn ->
+          Svc.Player.fetch!(by_external_id: uuid)
+        end
+
+      assert error =~ "Expected some result"
+      assert error =~ "by_external_id: \"#{uuid}"
+      assert error =~ "got `nil`"
+    end
+  end
 end

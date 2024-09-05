@@ -50,4 +50,10 @@ defmodule Game.Services.Player do
 
     Core.Fetch.query(filter_params, opts, filters)
   end
+
+  def fetch!(filter_params, opts \\ []) do
+    filter_params
+    |> fetch(opts)
+    |> Core.Fetch.assert_non_empty_result!(filter_params, opts)
+  end
 end
