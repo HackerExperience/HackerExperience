@@ -42,11 +42,11 @@ defmodule Game.Services.ServerTest do
 
   describe "fetch/2 - list_by_entity_id" do
     test "returns corresponding mapping when they exist" do
-      entity = Setup.entity!()
+      entity = Setup.entity_lite!()
 
-      mapping_1 = Setup.server!(entity: entity)
-      mapping_2 = Setup.server!(entity: entity)
-      _other_mapping = Setup.server!()
+      mapping_1 = Setup.server_lite!(entity: entity)
+      mapping_2 = Setup.server_lite!(entity: entity)
+      _other_mapping = Setup.server_lite!()
 
       mappings = Svc.Server.fetch(list_by_entity_id: entity.id)
       assert Enum.count(mappings) == 2

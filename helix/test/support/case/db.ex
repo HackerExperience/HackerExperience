@@ -13,6 +13,9 @@ defmodule Test.DBCase do
       alias Test.Setup
       alias Test.Utils, as: U
       alias Feeb.DB
+
+      # Common Core/Game aliases
+      alias Game.Services, as: Svc
     end
   end
 
@@ -38,9 +41,7 @@ defmodule Test.DBCase do
   defp default_db_context(%{file: file}) do
     cond do
       file =~ "/test/lobby" -> :lobby
-      file =~ "/test/game" -> Enum.random([:singleplayer, :multiplayer])
-      file =~ "/test/core" -> Enum.random([:singleplayer, :multiplayer])
-      :else -> raise "TODO db context at Test.DBCase"
+      true -> Enum.random([:singleplayer, :multiplayer])
     end
   end
 end
