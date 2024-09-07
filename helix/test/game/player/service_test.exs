@@ -17,9 +17,7 @@ defmodule Game.Services.PlayerTest do
 
       # We can find the entity with the same id
       entity = DB.one({:entities, :fetch}, player.id)
-      assert entity.is_player
-      refute entity.is_npc
-      refute entity.is_clan
+      assert entity.type == :player
       assert entity.inserted_at
     end
 

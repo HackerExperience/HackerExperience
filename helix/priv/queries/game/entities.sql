@@ -4,9 +4,9 @@
 
 -- :__insert
 INSERT INTO entities
-  (is_player, is_npc, is_clan, inserted_at)
+  (type, inserted_at)
 VALUES
-  (?, ?, ?, ?)
+  (?, ?)
 RETURNING *;
 
 --------------------------------------------------------------------------------

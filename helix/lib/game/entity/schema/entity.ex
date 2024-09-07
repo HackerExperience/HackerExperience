@@ -4,11 +4,11 @@ defmodule Game.Entity do
   @context :game
   @table :entities
 
+  @entity_types [:player, :npc, :clan]
+
   @schema [
     {:id, {:integer, :autoincrement}},
-    {:is_player, :boolean},
-    {:is_npc, :boolean},
-    {:is_clan, :boolean},
+    {:type, {:enum, values: @entity_types}},
     {:inserted_at, {:datetime_utc, [precision: :millisecond], mod: :inserted_at}}
   ]
 

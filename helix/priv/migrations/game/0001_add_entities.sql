@@ -1,8 +1,6 @@
 CREATE TABLE entities (
   id INTEGER PRIMARY KEY,
-  is_player INTEGER,
-  is_npc INTEGER,
-  is_clan INTEGER,
+  type TEXT NOT NULL,
   inserted_at TEXT
 ) STRICT;
 

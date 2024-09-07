@@ -8,14 +8,7 @@ defmodule Game.Services.Entity do
   This function should be handled by the specialized layer (Player/NPC/Clan).
   """
   def create(entity_type) when entity_type in [:player, :npc, :clan] do
-    {is_player, is_npc, is_clan} =
-      case entity_type do
-        :player -> {true, false, false}
-        :npc -> {false, true, false}
-        :clan -> {false, false, true}
-      end
-
-    %{is_player: is_player, is_npc: is_npc, is_clan: is_clan}
+    %{type: entity_type}
     |> Entity.new()
     |> DB.insert()
   end

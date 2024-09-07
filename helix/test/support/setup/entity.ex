@@ -7,10 +7,8 @@ defmodule Test.Setup.Entity do
   creating a Player Entity, we will simply call Setup.player/1.
   """
   def new(opts \\ []) do
-    true = opts[:type] in [nil, :player, :npc, :clan]
-
-    cond do
-      opts[:type] in [nil, :player] ->
+    case params(opts).type do
+      :player ->
         S.player()
     end
   end
@@ -33,12 +31,8 @@ defmodule Test.Setup.Entity do
   def params(opts \\ []) do
     true = opts[:type] in [nil, :player, :npc, :clan]
 
-    # TODO: Refactor entity to have an `entity_type` entry (enum of [:player, :npc, :clan])
-    # instead of these 3 boolean columns
     %{
-      is_player: Kw.get(opts, :type, :player) == :player,
-      is_npc: Kw.get(opts, :type, :player) == :npc,
-      is_clan: Kw.get(opts, :type, :player) == :clan
+      type: Kw.get(opts, :type, :player)
     }
   end
 end
