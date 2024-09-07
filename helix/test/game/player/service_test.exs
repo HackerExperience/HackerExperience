@@ -24,9 +24,9 @@ defmodule Game.Services.PlayerTest do
     test "creates an initial server for the player" do
       assert {:ok, player} = Svc.Player.setup(Random.uuid())
 
-      # We can find a ServerMapping entry for this entity
-      assert [mapping] = Svc.Server.fetch(list_by_entity_id: player.id)
-      assert mapping.entity_id == player.id
+      # We can find a Server entry for this entity
+      assert [server] = Svc.Server.fetch(list_by_entity_id: player.id)
+      assert server.entity_id == player.id
     end
 
     test "auto-increments the player id" do

@@ -1,16 +1,16 @@
-defmodule Game.ServerMapping do
+defmodule Game.Server do
   use Feeb.DB.Schema
 
   @context :game
-  @table :server_mappings
+  @table :servers
 
   @schema [
-    {:server_id, {:integer, :autoincrement}},
+    {:id, {:integer, :autoincrement}},
     {:entity_id, :integer},
     {:inserted_at, {:datetime_utc, [precision: :millisecond], mod: :inserted_at}}
   ]
 
-  @derived_fields [:server_id]
+  @derived_fields [:id]
 
   def new(params) do
     params

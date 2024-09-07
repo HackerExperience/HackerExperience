@@ -3,7 +3,7 @@
 --------------------------------------------------------------------------------
 
 -- :__insert
-INSERT INTO server_mappings
+INSERT INTO servers
   (entity_id, inserted_at)
 VALUES
   (?, ?)
@@ -13,8 +13,5 @@ RETURNING *;
 ----------------------------------- SELECTS ------------------------------------
 --------------------------------------------------------------------------------
 
--- :__fetch
-SELECT * FROM server_mappings WHERE server_id = ?;
-
 -- :list_by_entity_id
-SELECT * FROM server_mappings WHERE entity_id = ?;
+SELECT * FROM servers WHERE entity_id = ?;

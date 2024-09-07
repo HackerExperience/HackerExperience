@@ -1,6 +1,6 @@
 defmodule Test.Setup.Server do
   use Test.Setup
-  alias Game.ServerMapping
+  alias Game.Server
 
   @doc """
   Creates a full Server entry, and makes sure all related data is created, as well as the
@@ -28,8 +28,8 @@ defmodule Test.Setup.Server do
     server =
       [entity_id: related.entity.id]
       |> Keyword.merge(opts)
-      |> mapping_params()
-      |> ServerMapping.new()
+      |> params()
+      |> Server.new()
       |> DB.insert!()
 
     %{server: server}
@@ -39,7 +39,7 @@ defmodule Test.Setup.Server do
   def new!(opts \\ []), do: opts |> new() |> Map.fetch!(:server)
   def new_lite!(opts \\ []), do: opts |> new_lite() |> Map.fetch!(:server)
 
-  def mapping_params(opts \\ []) do
+  def params(opts \\ []) do
     %{entity_id: Kw.fetch!(opts, :entity_id)}
   end
 

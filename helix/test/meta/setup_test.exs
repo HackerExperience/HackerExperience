@@ -11,7 +11,7 @@ defmodule Test.SetupTest do
 
       # Shards were created
       assert_player_shard(player.id)
-      assert_server_shard(server.server_id)
+      assert_server_shard(server.id)
     end
   end
 
@@ -36,7 +36,7 @@ defmodule Test.SetupTest do
 
       # Shards were created
       assert_player_shard(player.id)
-      assert_server_shard(server.server_id)
+      assert_server_shard(server.id)
     end
   end
 
@@ -63,7 +63,7 @@ defmodule Test.SetupTest do
 
       # Shards were created
       assert_player_shard(player.id)
-      assert_server_shard(server.server_id)
+      assert_server_shard(server.id)
     end
 
     test "respects the `entity`/`entity_id` opt" do
@@ -84,7 +84,7 @@ defmodule Test.SetupTest do
 
       # No shards were created
       refute_player_shard(player.id)
-      refute_server_shard(server.server_id)
+      refute_server_shard(server.id)
     end
 
     test "respects the `entity`/`entity_id` opt" do
