@@ -1,6 +1,8 @@
 defmodule Core do
   alias Feeb.DB
 
+  # TODO: Consider a more specific API, like `begin_universe/1` and `begin_player/2`
+
   def begin_context(:universe, access_type) do
     universe = Process.get(:helix_universe) || raise "Universe not set"
     shard_id = Process.get(:helix_universe_shard_id) || raise "Universe shard not set"

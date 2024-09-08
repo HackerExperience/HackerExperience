@@ -101,8 +101,8 @@ defmodule Webserver.OpenApi.Spec.GeneratorTest do
       index_requested = Map.fetch!(schemas, "index_requested")
 
       assert index_requested.type == :object
-      assert index_requested.required == [:foo]
-      assert index_requested.properties[:foo] == %{type: :string}
+      assert index_requested.required == [:player]
+      assert index_requested.properties[:player] == %{"$ref" => "#/components/schemas/IdxPlayer"}
     end
   end
 

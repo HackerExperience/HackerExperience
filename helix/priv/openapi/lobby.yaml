@@ -51,21 +51,6 @@ components:
             properties:
               data:
                 $ref: '#/components/schemas/UserRegisterOutput'
-  requestBodies:
-    UserLoginRequest:
-      description: TODO description
-      required: true
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/UserLoginInput'
-    UserRegisterRequest:
-      description: TODO description
-      required: true
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/UserRegisterInput'
   schemas:
     GenericBadRequest:
       type: object
@@ -122,6 +107,21 @@ components:
       properties:
         id:
           type: string
+  requestBodies:
+    UserLoginRequest:
+      description: TODO description
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/UserLoginInput'
+    UserRegisterRequest:
+      description: TODO description
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/UserRegisterInput'
 openapi: 3.1.0
 paths:
   /v1/user/login:

@@ -1,14 +1,18 @@
-module API.Events.Types exposing (IndexRequested)
+module API.Events.Types exposing (IdxPlayer, IndexRequested)
 
 {-|
 
 
 ## Aliases
 
-@docs IndexRequested
+@docs IdxPlayer, IndexRequested
 
 -}
 
 
 type alias IndexRequested =
-    { foo : String }
+    { player : IdxPlayer }
+
+
+type alias IdxPlayer =
+    { mainframe_id : Int }

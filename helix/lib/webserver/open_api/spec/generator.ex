@@ -261,6 +261,7 @@ defmodule Webserver.OpenApi.Spec.Generator do
 
   defp type_from_predicate("is_binary()"), do: :string
   defp type_from_predicate("is_boolean()"), do: :boolean
+  defp type_from_predicate("is_integer()"), do: :integer
 
   ##############################################################################
   # Normalization

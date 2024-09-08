@@ -99,7 +99,7 @@ defmodule Game.Endpoint.Player.SyncTest do
             |> Utils.Map.atomify_keys()
 
           assert event.name == "index_requested"
-          assert event.data == %{foo: "bar"}
+          assert Map.has_key?(event.data, :player)
       after
         5000 ->
           raise "No output from curl"
