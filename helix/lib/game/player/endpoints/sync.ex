@@ -1,12 +1,13 @@
 defmodule Game.Endpoint.Player.Sync do
-  use Webserver.Endpoint
-  use Core.Spec
+  @behaviour Webserver.Endpoint.Behaviour
+
+  use Norm
+  import Core.Spec
   require Logger
+
   alias Game.Services, as: Svc
   alias Core.Session.State.SSEMapping
   alias Game.Events.Player.IndexRequested, as: IndexRequestedEvent
-
-  @behaviour Webserver.Endpoint.Behaviour
 
   def input_spec do
     selection(

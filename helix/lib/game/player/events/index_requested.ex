@@ -1,5 +1,5 @@
 defmodule Game.Events.Player.IndexRequested do
-  use Core.Event
+  use Core.Event.Definition
   alias Game.Index
   alias Game.Services, as: Svc
 
@@ -15,7 +15,7 @@ defmodule Game.Events.Player.IndexRequested do
   def handlers(_, _), do: []
 
   defmodule Publishable do
-    use Core.Event.Publishable
+    use Core.Event.Publishable.Definition
 
     def spec do
       selection(

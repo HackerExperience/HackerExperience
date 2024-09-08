@@ -1,5 +1,6 @@
 defmodule Core.Event.Handler.Test do
-  use Core.Event.Handler
+  @behaviour Core.Event.Handler.Behaviour
+
   require Logger
 
   @table :processed_events

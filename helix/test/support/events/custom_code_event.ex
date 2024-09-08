@@ -4,7 +4,7 @@ defmodule Test.CustomCodeEvent do
   event and its handler.
   """
 
-  use Core.Event
+  use Core.Event.Definition
 
   defstruct [:callback]
 

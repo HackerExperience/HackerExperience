@@ -1,16 +1,9 @@
 defmodule Core.Event.Publishable do
-  use Core.Event.Handler
+  @behaviour Core.Event.Handler.Behaviour
+
   alias Feeb.DB
   alias Core.Session.State.SSEMapping
   alias Game.Services, as: Svc
-
-  defmacro __using__(_) do
-    quote do
-      use Core.Spec
-
-      @behaviour Core.Event.Publishable.Behaviour
-    end
-  end
 
   @doc """
   Entrypoint of the Publishable handler.
