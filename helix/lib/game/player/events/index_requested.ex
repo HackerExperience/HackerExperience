@@ -12,9 +12,7 @@ defmodule Game.Events.Player.IndexRequested do
     |> Event.new()
   end
 
-  def handlers(_data, _event) do
-    [Game.Handlers.Player]
-  end
+  def handlers(_, _), do: []
 
   defmodule Publishable do
     use Core.Event.Publishable
