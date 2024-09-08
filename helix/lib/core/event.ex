@@ -144,9 +144,10 @@ defmodule Core.Event do
       exception ->
         # If one of the events fail to execute, log the error but keep processing the other events
         event_mod = "#{inspect(event.data.__struct__)}"
-        str_exception = "\n\n#{inspect(exception, limit: :infinity)}\n"
+        str_exception = "\n\n    #{inspect(exception)}\n"
+        stacktrace = Exception.format_stacktrace(__STACKTRACE__)
 
-        "Failed to execute event #{event_mod} on #{handler_mod}: #{str_exception}"
+        "Failed to execute event #{event_mod} on #{handler_mod}: #{str_exception}\n#{stacktrace}"
         |> Logger.error()
 
         # Note: in the scenario where an event fails to execute, we don't do any sort of retries.

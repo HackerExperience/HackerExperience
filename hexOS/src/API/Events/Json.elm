@@ -1,6 +1,6 @@
 module API.Events.Json exposing
-    ( encodeIndexRequested
-    , decodeIndexRequested
+    ( encodeIdxPlayer, encodeIndexRequested
+    , decodeIdxPlayer, decodeIndexRequested
     )
 
 {-|
@@ -8,12 +8,12 @@ module API.Events.Json exposing
 
 ## Encoders
 
-@docs encodeIndexRequested
+@docs encodeIdxPlayer, encodeIndexRequested
 
 
 ## Decoders
 
-@docs decodeIndexRequested
+@docs decodeIdxPlayer, decodeIndexRequested
 
 -}
 
@@ -26,14 +26,27 @@ import OpenApi.Common
 decodeIndexRequested : Json.Decode.Decoder API.Events.Types.IndexRequested
 decodeIndexRequested =
     Json.Decode.succeed
-        (\foo -> { foo = foo })
+        (\player -> { player = player })
         |> OpenApi.Common.jsonDecodeAndMap
             (Json.Decode.field
-                "foo"
-                Json.Decode.string
+                "player"
+                decodeIdxPlayer
             )
 
 
 encodeIndexRequested : API.Events.Types.IndexRequested -> Json.Encode.Value
 encodeIndexRequested rec =
-    Json.Encode.object [ ( "foo", Json.Encode.string rec.foo ) ]
+    Json.Encode.object [ ( "player", encodeIdxPlayer rec.player ) ]
+
+
+decodeIdxPlayer : Json.Decode.Decoder API.Events.Types.IdxPlayer
+decodeIdxPlayer =
+    Json.Decode.succeed
+        (\mainframe_id -> { mainframe_id = mainframe_id })
+        |> OpenApi.Common.jsonDecodeAndMap
+            (Json.Decode.field "mainframe_id" Json.Decode.int)
+
+
+encodeIdxPlayer : API.Events.Types.IdxPlayer -> Json.Encode.Value
+encodeIdxPlayer rec =
+    Json.Encode.object [ ( "mainframe_id", Json.Encode.int rec.mainframe_id ) ]

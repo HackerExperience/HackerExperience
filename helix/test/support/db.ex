@@ -1,6 +1,7 @@
 defmodule Test.DB do
   alias Feeb.DB
   alias Feeb.DB.{Config}
+  alias Test.Setup
 
   def on_start do
     # Don't have the Feeb.DB boot running in parallel to what we are doing here
@@ -38,26 +39,21 @@ defmodule Test.DB do
   def test_dbs_path, do: "#{Config.data_dir()}"
 
   @doc """
-  Inserts a dummy entry into `schema` which will force it to have a random-like autoincrement.
+  Assumes the caller wants a random autoincrement on both Entity and Server. This function
+  is automatically imported on every test case (via `Test.Setup.Shared`).
+
   Particularly useful when creating Players and Servers, which have their own dedicated-but-global
   shard. Usually, if your test will create Player or Server shards, you most likely want to use this
   function.
   """
-  def random_autoincrement(schema) do
-    table = schema.__table__()
+  def with_random_autoincrement(_opts \\ []) do
+    %{entity: %{id: entity_id}, server: %{id: server_id}} = Setup.server_lite()
     rand = :rand.uniform() |> Kernel.*(1_000_000_000) |> trunc()
-    DB.raw!("insert into #{table} (id) values (#{rand})")
-    # NOTE: One would feel compeled to delete the newly inserted entry. However, deleting it will
-    # cause SQLite to fallback the autoincrement counter to 1, defeating the purpose of the function
-  end
 
-  @doc """
-  Assumes the caller wants a random autoincrement on both Player and Server. This function is
-  automatically imported on every test case (via `Test.Setup.Shared`).
-  """
-  def with_random_autoincrement do
-    random_autoincrement(Game.Player)
-    # random_autoincrement(Game.Server)
+    DB.raw!("PRAGMA defer_foreign_keys=1")
+    DB.raw!("UPDATE players SET id = '#{rand}' WHERE id = '#{entity_id}'")
+    DB.raw!("UPDATE entities SET id = '#{rand}' WHERE id = '#{entity_id}'")
+    DB.raw!("UPDATE servers SET id = '#{rand}', entity_id = '#{rand}' WHERE id = '#{server_id}'")
   end
 
   defp delete_all_dbs do

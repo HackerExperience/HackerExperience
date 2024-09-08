@@ -1,5 +1,7 @@
 defmodule Game.Events.Player.IndexRequested do
   use Core.Event
+  alias Game.Index
+  alias Game.Services, as: Svc
 
   defstruct [:player_id]
 
@@ -20,14 +22,25 @@ defmodule Game.Events.Player.IndexRequested do
     def spec do
       selection(
         schema(%{
-          foo: binary()
+          player: Index.Player.output_spec()
         }),
-        [:foo]
+        [:player]
       )
     end
 
-    def generate_payload(_ev) do
-      {:ok, %{foo: "bar"}}
+    def generate_payload(%{data: %{player_id: player_id}}) do
+      # TODO: DB context should be automatically handled by Core.Event (and the default behavior can
+      # be overriden by the specific event implementation). Similar to how it works with Endpoints.
+      Core.with_context(:universe, :read, fn ->
+        player = Svc.Player.fetch!(by_id: player_id)
+
+        payload =
+          %{
+            player: Index.Player.index(player)
+          }
+
+        {:ok, payload}
+      end)
     end
 
     def whom_to_publish(%{data: %{player_id: player_id}}) do

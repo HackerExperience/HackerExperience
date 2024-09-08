@@ -9,4 +9,5 @@ defmodule Core.Spec do
   end
 
   def binary, do: spec(is_binary())
+  def integer, do: spec(is_integer())
 end

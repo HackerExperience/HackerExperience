@@ -56,7 +56,11 @@ update msg model =
 updateEvent : Model -> Event -> ( Model, Cmd Msg )
 updateEvent model event =
     case event of
-        Event.IndexRequested { foo } ->
+        Event.IndexRequested { player } ->
+            let
+                _ =
+                    Debug.log "mainframe id" player.mainframe
+            in
             ( model, Cmd.none )
 
 

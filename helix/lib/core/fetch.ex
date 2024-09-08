@@ -32,6 +32,19 @@ defmodule Core.Fetch do
     |> process(include_params, includes)
   end
 
+  @doc """
+  Function used to implement the equivalent of `fetch!/2`. Will raise an error if no rows were
+  returned, when at least one was expected to be found.
+  """
+  def assert_non_empty_result!(result, filter_params, opts) when result in [nil, []] do
+    # NOTE: At least for now, I'm keeping `[]` here as possible result of empty list; but I see
+    # myself moving away from this pattern in the future and making Core.Fetch exclusive for single
+    # row retrieval. Maybe we could create a similar Core.List API meant for collections?
+    raise "Expected some result for #{inspect(filter_params)} (opts #{inspect(opts)}); got `nil`"
+  end
+
+  def assert_non_empty_result!(valid_result, _, _), do: valid_result
+
   defp process(acc, params, functions) do
     Enum.reduce(params, acc, fn
       {fun_name, value}, acc ->
@@ -48,6 +61,9 @@ defmodule Core.Fetch do
 
   defp execute_callback({:one, query_id}, _acc, value),
     do: DB.one(query_id, value)
+
+  defp execute_callback({:all, query_id}, _acc, value),
+    do: DB.all(query_id, value)
 
   defp execute_callback(fun, acc, value) when is_function(fun) do
     case :erlang.fun_info(fun)[:arity] do
