@@ -17,11 +17,21 @@ config :feebdb,
       shard_type: :global,
       domains: [:game]
     },
-    player: %{
-      shard_type: :dedicated
+    sp_player: %{
+      shard_type: :dedicated,
+      domains: [:player]
     },
-    server: %{
-      shard_type: :dedicated
+    mp_player: %{
+      shard_type: :dedicated,
+      domains: [:player]
+    },
+    sp_server: %{
+      shard_type: :dedicated,
+      domains: [:server]
+    },
+    mp_server: %{
+      shard_type: :dedicated,
+      domains: [:server]
     }
   },
   is_test_mode: true

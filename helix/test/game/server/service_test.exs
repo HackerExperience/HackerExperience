@@ -18,11 +18,11 @@ defmodule Game.Services.ServerTest do
       assert server == DB.one({:servers, :fetch}, server.id)
 
       # Server shard was created
-      server_db_path = DB.Repo.get_path(:server, server.id)
+      server_db_path = DB.Repo.get_path(Core.get_server_context(), server.id)
       assert File.exists?(server_db_path)
 
       # We can connect to the newly created Server shard
-      DB.begin(:server, server.id, :write)
+      Core.begin_context(:server, server.id, :write)
 
       # TODO: Query S.meta and other seed data
     end

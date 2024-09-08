@@ -97,22 +97,22 @@ defmodule Test.SetupTest do
   end
 
   defp assert_player_shard(player_id) do
-    player_db_path = DB.Repo.get_path(:player, player_id)
+    player_db_path = DB.Repo.get_path(Core.get_player_context(), player_id)
     assert File.exists?(player_db_path)
   end
 
   defp refute_player_shard(player_id) do
-    player_db_path = DB.Repo.get_path(:player, player_id)
+    player_db_path = DB.Repo.get_path(Core.get_player_context(), player_id)
     refute File.exists?(player_db_path)
   end
 
   defp assert_server_shard(server_id) do
-    server_db_path = DB.Repo.get_path(:server, server_id)
+    server_db_path = DB.Repo.get_path(Core.get_server_context(), server_id)
     assert File.exists?(server_db_path)
   end
 
   defp refute_server_shard(server_id) do
-    server_db_path = DB.Repo.get_path(:server, server_id)
+    server_db_path = DB.Repo.get_path(Core.get_server_context(), server_id)
     refute File.exists?(server_db_path)
   end
 end

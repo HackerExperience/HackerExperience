@@ -5,10 +5,10 @@ defmodule Game.Services.Server do
   def setup(%Entity{id: entity_id}) do
     with {:ok, %{id: server_id} = server} <- insert_server(entity_id) do
       DB.with_context(fn ->
-        server_db_path = DB.Repo.get_path(:server, server_id)
+        server_db_path = DB.Repo.get_path(Core.get_server_context(), server_id)
         false = File.exists?(server_db_path)
 
-        DB.begin(:server, server_id, :write)
+        Core.begin_context(:server, server_id, :write)
         # TODO: Insert seed server data here, including S_meta
         DB.commit()
       end)

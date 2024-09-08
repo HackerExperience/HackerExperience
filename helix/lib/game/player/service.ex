@@ -16,10 +16,10 @@ defmodule Game.Services.Player do
          {:ok, _} <- Svc.Server.setup(entity),
          {:ok, player} <- insert_player(%{id: entity.id, external_id: external_id}) do
       DB.with_context(fn ->
-        player_db_path = DB.Repo.get_path(:player, player.id)
+        player_db_path = DB.Repo.get_path(Core.get_player_context(), player.id)
         false = File.exists?(player_db_path)
 
-        DB.begin(:player, player.id, :write)
+        Core.begin_context(:player, player.id, :write)
         DB.commit()
       end)
 
