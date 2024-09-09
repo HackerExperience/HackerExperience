@@ -66,11 +66,8 @@ jobs:
       - name: Test app
         run: mix test
 
-      # TODO: I'm thinking of moving this check to its own workflow (with Dialyzer, once I add it)
       - name: Check for transitive compilation dependencies
         run: mix xref graph --label compile-connected --fail-above 0
-        env:
-          MIX_ENV: dev
 
       # Uncomment below once repository is public (so we can use coveralls.io)
       # - name: Test app

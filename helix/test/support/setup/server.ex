@@ -1,5 +1,5 @@
 defmodule Test.Setup.Server do
-  use Test.Setup
+  use Test.Setup.Definition
   alias Game.Server
 
   @doc """

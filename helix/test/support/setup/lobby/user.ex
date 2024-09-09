@@ -1,5 +1,5 @@
 defmodule Test.Setup.Lobby.User do
-  use Test.Setup
+  use Test.Setup.Definition
   alias Lobby.User
 
   def new(opts \\ []) do

@@ -1,5 +1,5 @@
 defmodule Test.Utils.Token do
-  use Test.Utils
+  use Test.Setup.Definition
   alias Core.Crypto
 
   def generate(opts \\ []) do
