@@ -1,5 +1,5 @@
 defmodule Test.Setup.Entity do
-  use Test.Setup
+  use Test.Setup.Definition
 
   @doc """
   Creates a full Entity object, alongside all related data (including shards). Ultimately, the

@@ -1,5 +1,5 @@
 defmodule Game.Events.Player.IndexRequested do
-  use Core.Event
+  use Core.Event.Definition
   alias Game.Index
   alias Game.Services, as: Svc
 
@@ -12,12 +12,10 @@ defmodule Game.Events.Player.IndexRequested do
     |> Event.new()
   end
 
-  def handlers(_data, _event) do
-    [Game.Handlers.Player]
-  end
+  def handlers(_, _), do: []
 
   defmodule Publishable do
-    use Core.Event.Publishable
+    use Core.Event.Publishable.Definition
 
     def spec do
       selection(
@@ -29,18 +27,14 @@ defmodule Game.Events.Player.IndexRequested do
     end
 
     def generate_payload(%{data: %{player_id: player_id}}) do
-      # TODO: DB context should be automatically handled by Core.Event (and the default behavior can
-      # be overriden by the specific event implementation). Similar to how it works with Endpoints.
-      Core.with_context(:universe, :read, fn ->
-        player = Svc.Player.fetch!(by_id: player_id)
+      player = Svc.Player.fetch!(by_id: player_id)
 
-        payload =
-          %{
-            player: Index.Player.index(player)
-          }
+      payload =
+        %{
+          player: Index.Player.index(player)
+        }
 
-        {:ok, payload}
-      end)
+      {:ok, payload}
     end
 
     def whom_to_publish(%{data: %{player_id: player_id}}) do

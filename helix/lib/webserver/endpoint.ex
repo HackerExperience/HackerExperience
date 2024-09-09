@@ -1,14 +1,9 @@
 defmodule Webserver.Endpoint do
-  use Core.Spec
+  use Norm
+  import Core.Spec
   require Logger
   alias HELL.Utils
   alias Webserver.Conveyor
-
-  defmacro __using__(_) do
-    quote do
-      # No-op for now
-    end
-  end
 
   def validate_input(request, endpoint, raw_params) do
     case Norm.conform(raw_params, endpoint.input_spec()) do

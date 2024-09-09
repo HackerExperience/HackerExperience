@@ -1,5 +1,5 @@
 defmodule Test.Setup.Player do
-  use Test.Setup
+  use Test.Setup.Definition
   alias Game.{Entity, Player}
   alias Game.Services, as: Svc
 

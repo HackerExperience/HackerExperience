@@ -66,6 +66,9 @@ jobs:
       - name: Test app
         run: mix test
 
+      - name: Check for transitive compilation dependencies
+        run: mix xref graph --label compile-connected --fail-above 0
+
       # Uncomment below once repository is public (so we can use coveralls.io)
       # - name: Test app
       #   run: mix coveralls.github

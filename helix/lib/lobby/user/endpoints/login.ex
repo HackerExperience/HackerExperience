@@ -1,14 +1,14 @@
 defmodule Lobby.Endpoint.User.Login do
-  use Core.Spec
-  use Webserver.Endpoint
+  @behaviour Webserver.Endpoint.Behaviour
+
+  use Norm
+  import Core.Spec
   require Logger
 
   alias Feeb.DB
   alias Lobby.User
   alias Lobby.Services, as: Svc
   alias Core.Crypto
-
-  @behaviour Webserver.Endpoint.Behaviour
 
   def input_spec do
     selection(

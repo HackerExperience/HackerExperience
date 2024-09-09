@@ -1,5 +1,6 @@
 defmodule Game.Index.Player do
-  use Core.Spec
+  use Norm
+  import Core.Spec
   alias Game.Services, as: Svc
 
   @type index ::

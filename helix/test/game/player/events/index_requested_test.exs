@@ -8,7 +8,6 @@ defmodule Game.Events.Player.IndexRequestedTest do
   describe "Publishable.generate_payload/1" do
     test "generates the correct payload" do
       %{entity: entity, player: player} = Setup.server()
-      DB.commit()
 
       # Generate the event payload
       event = IndexRequested.new(entity.id)
@@ -18,7 +17,6 @@ defmodule Game.Events.Player.IndexRequestedTest do
       assert Map.has_key?(payload, :player)
 
       # The Player Index has the expected data
-      Core.begin_context(:universe, :read)
       assert payload.player == player |> Index.Player.index() |> Index.Player.render_index()
     end
   end

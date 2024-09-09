@@ -1,16 +1,9 @@
 defmodule Core.Event.Publishable do
-  use Core.Event.Handler
+  @behaviour Core.Event.Handler.Behaviour
+
   alias Feeb.DB
   alias Core.Session.State.SSEMapping
   alias Game.Services, as: Svc
-
-  defmacro __using__(_) do
-    quote do
-      use Core.Spec
-
-      @behaviour Core.Event.Publishable.Behaviour
-    end
-  end
 
   @doc """
   Entrypoint of the Publishable handler.
@@ -40,9 +33,11 @@ defmodule Core.Event.Publishable do
           |> to_string()
       end
 
-    # We need Universe DB access for `get_pids_to_publish`
-    begin_universe_connection()
     pids_to_publish = get_pids_to_publish(whom_to_publish)
+
+    # We are COMMITing the transaction now, so it can be re-used by other requests/events without
+    # having to wait for the payload to be published. As a result, we will `:skip` when
+    # `teardown_db_on_success/2` is called.
     # TODO: Consider a different API for read-only DB connections that don't need to commit
     DB.commit()
 
@@ -53,6 +48,13 @@ defmodule Core.Event.Publishable do
 
     :ok
   end
+
+  @doc """
+  On (successful) teardown, instruct Core.Event to do nothing. We already committed the transaction
+  ourselves in the `on-event/2` block.
+  """
+  @impl Core.Event.Handler.Behaviour
+  def teardown_db_on_success(_, _), do: :skip
 
   defp get_pids_to_publish(whom_to_publish) do
     whom_to_publish
@@ -66,12 +68,6 @@ defmodule Core.Event.Publishable do
   defp get_pid_for_player(player_id) when is_integer(player_id) do
     %{external_id: player_eid} = Svc.Player.fetch(by_id: player_id)
     SSEMapping.get_player_subscriptions(player_eid)
-  end
-
-  defp begin_universe_connection do
-    universe = Process.get(:helix_universe)
-    shard_id = Process.get(:helix_universe_shard_id)
-    DB.begin(universe, shard_id, :read)
   end
 
   @doc """

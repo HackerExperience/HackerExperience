@@ -27,33 +27,19 @@ defmodule Core.Event do
   """
 
   require Logger
+  alias Feeb.DB
 
   defstruct [:id, :data, :relay]
-
-  defmacro __using__(_) do
-    quote do
-      alias Core.Event
-
-      @before_compile unquote(__MODULE__)
-    end
-  end
-
-  defmacro __before_compile__(_) do
-    quote do
-      @name || raise "You must specify the event name via @name"
-
-      @doc """
-      Returns the event name
-      """
-      def get_name, do: @name
-    end
-  end
 
   @env Mix.env()
 
   @native_triggers [
-    Core.Event.Publishable
+    :"Elixir.Core.Event.Publishable"
   ]
+
+  @default_behaviour_on_prepare_db {:universe, :read}
+  @default_behaviour_teardown_db_on_success :commit
+  @default_behaviour_teardown_db_on_failure :rollback
 
   @doc """
   Creates a new Event.t with the corresponding `data`.
@@ -86,7 +72,18 @@ defmodule Core.Event do
       event
       |> get_handlers()
       |> Enum.reduce(acc, fn handler_mod, acc_events ->
-        do_emit(event, handler_mod, acc_events)
+        # Before dispatching to the handler, `prepare_db/2` will start a transaction, unless
+        # instructed otherwise via the `on_prepare_db/2` behaviour callback.
+        prepare_db(handler_mod, event)
+
+        # Dispatch the event to the handler
+        {result, new_acc_events} = do_emit(handler_mod, event, acc_events)
+
+        # After the event has been processed, teardown the DB transaction. By default, will COMMIT
+        # on success and ROLLBACK on failure, but the default behaviour can be changed based on the
+        # `teardown_db_on_success/2` and `teardown_db_on_failure/2` callbacks.
+        teardown_db(result, handler_mod, event)
+        new_acc_events
       end)
     end)
     # Emit any events that were created and returned by the handlers themselves
@@ -107,17 +104,19 @@ defmodule Core.Event do
   defp test_handler(:test), do: [Core.Event.Handler.Test]
   defp test_handler(_), do: []
 
-  defp do_emit(event, handler_mod, acc_events) do
+  @spec do_emit(module(), event :: map(), [event :: map()]) ::
+          {:ok | :error, [event :: map()]}
+  defp do_emit(handler_mod, event, acc_events) do
     try do
       case apply(handler_mod, :on_event, [event.data, event]) do
         :ok ->
-          acc_events
+          {:ok, acc_events}
 
         {:ok, ok_events} when is_list(ok_events) ->
-          acc_events ++ ok_events
+          {:ok, acc_events ++ ok_events}
 
         {:ok, %__MODULE__{} = ok_event} ->
-          acc_events ++ [ok_event]
+          {:ok, acc_events ++ [ok_event]}
 
         :error ->
           on_emit_error(acc_events, {[], nil}, {event, handler_mod})
@@ -163,12 +162,34 @@ defmodule Core.Event do
         # generic solution, perhaps with the usage of monitors.
         # DB.close_if_open()
 
-        acc_events
+        {:error, acc_events}
+    end
+  end
+
+  defp prepare_db(handler_mod, event) do
+    case on_prepare_db_behaviour(handler_mod, event) do
+      {:universe, access_type} -> Core.begin_context(:universe, access_type)
+      :skip -> :ok
+    end
+  end
+
+  defp teardown_db(:ok, handler_mod, event) do
+    case teardown_db_on_success_behaviour(handler_mod, event) do
+      :commit -> DB.commit()
+      :skip -> :ok
+    end
+  end
+
+  defp teardown_db(:error, handler_mod, event) do
+    case teardown_db_on_failure_behaviour(handler_mod, event) do
+      # TODO: Actually roll back
+      :rollback -> :ok
+      :skip -> :ok
     end
   end
 
   defp on_emit_error(acc_events, {error_events, error_details}, event_context) do
-    acc_events ++ error_events ++ rollback_event(event_context, error_details)
+    {:error, acc_events ++ error_events ++ rollback_event(event_context, error_details)}
   end
 
   defp rollback_event({event, handler_mod}, error_details) do
@@ -176,7 +197,32 @@ defmodule Core.Event do
       apply(handler_mod, :on_rollback, [event.data, event, error_details])
     else
       # Event does not implement custom rollback callbacks so we just perform a no-op
+      # With "managed DB", Maybe I DB.rollback here?
       []
+    end
+  end
+
+  defp on_prepare_db_behaviour(handler_mod, event) do
+    if function_exported?(handler_mod, :on_prepare_db, 2) do
+      handler_mod.on_prepare_db(event.data, event)
+    else
+      @default_behaviour_on_prepare_db
+    end
+  end
+
+  defp teardown_db_on_success_behaviour(handler_mod, event) do
+    if function_exported?(handler_mod, :teardown_db_on_success, 2) do
+      handler_mod.teardown_db_on_success(event.data, event)
+    else
+      @default_behaviour_teardown_db_on_success
+    end
+  end
+
+  defp teardown_db_on_failure_behaviour(handler_mod, event) do
+    if function_exported?(handler_mod, :teardown_db_on_failure, 2) do
+      handler_mod.teardown_db_on_failure(event.data, event)
+    else
+      @default_behaviour_teardown_db_on_failure
     end
   end
 end
