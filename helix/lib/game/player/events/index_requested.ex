@@ -27,9 +27,6 @@ defmodule Game.Events.Player.IndexRequested do
     end
 
     def generate_payload(%{data: %{player_id: player_id}}) do
-      # TODO: DB context should be automatically handled by Core.Event (and the default behavior can
-      # be overriden by the specific event implementation). Similar to how it works with Endpoints.
-      # Core.with_context(:universe, :read, fn ->
       player = Svc.Player.fetch!(by_id: player_id)
 
       payload =
@@ -38,7 +35,6 @@ defmodule Game.Events.Player.IndexRequested do
         }
 
       {:ok, payload}
-      # end)
     end
 
     def whom_to_publish(%{data: %{player_id: player_id}}) do
