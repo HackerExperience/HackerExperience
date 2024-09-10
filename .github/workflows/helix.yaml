@@ -16,6 +16,8 @@ jobs:
     steps:
       - name: Check out repository code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Setup backend environment
         uses: erlef/setup-beam@v1
@@ -26,7 +28,7 @@ jobs:
       - name: Setup database directories
         run: mkdir -p tmp/helix_test/{lobby,singleplayer,multiplayer,sp_player,mp_player,sp_server,mp_server}
 
-      - name: Restore build cache
+      - name: Restore deps cache
         uses: actions/cache@v4
         id: mix_cache
         with:
@@ -46,6 +48,25 @@ jobs:
           mix deps.get
           mix deps.compile
 
+      - name: "Get current commit hash"
+        run: echo "CURRENT_COMMIT_HASH=$(git log -1 --format=%h)" >> $GITHUB_ENV
+
+      - name: "Get previous commit hash"
+        run: echo "PREV_COMMIT_HASH=$(git log -2 --format=%h | tail -n +2)" >> $GITHUB_ENV
+
+      - name: Restore Helix build cache
+        uses: actions/cache@v4
+        id: helix_cache
+        with:
+          path: |
+            helix/_build/test/lib/helix
+          key: ${{ runner.os }}-${{ github.ref }}-${{ env.PREV_COMMIT_HASH }}
+          restore-keys: |
+            ${{ runner.os }}-${{ github.ref }}
+
+      - name: Compile app
+        run: mix compile --warnings-as-errors
+
       # This is the equivalent of `apt-get install <packages>` but with built-in cache. Note it may
       # not work well with packages that have pre/post installation scripts
       - name: Install OS dependencies
@@ -60,6 +81,7 @@ jobs:
       - name: Check formatting
         run: mix format --check-formatted
 
+      # TODO: Consider moving this to `linters`. It does a force-compilation (and doesn't need to happen in TEST, albeit harmless)
       - name: Validate feebdb_schemas.json is up-to-date
         run: mix feeb_db.list_schemas && git diff --exit-code --no-ext-diff
 
@@ -82,3 +104,12 @@ jobs:
       # # Force a full Helix compilation on every CI run.
       # - name: Uncache Helix
       #   run: rm -rf _build/{dev,test}/lib/helix
+
+      # Now the next commit we push to the PR will use this cached entry as starting point
+      # Note it uses the cache/save action, so it will not attempt a restore
+      - name: Cache the build for this commit
+        uses: actions/cache/save@v4
+        id: new_helix_cache
+        with:
+          path: helix/_build/test/lib/helix
+          key: ${{ runner.os }}-${{ github.ref }}-${{ env.CURRENT_COMMIT_HASH }}
