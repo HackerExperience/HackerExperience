@@ -1,13 +1,13 @@
 name: Helix
 on: [push]
 
-env:
-  MIX_ENV: test
-  HELIX_TEST_DATA_DIR: tmp/helix_test
-
 jobs:
   tests:
     runs-on: ubuntu-24.04
+
+    env:
+      MIX_ENV: test
+      HELIX_TEST_DATA_DIR: tmp/helix_test
 
     defaults:
       run:
