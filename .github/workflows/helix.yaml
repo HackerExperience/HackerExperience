@@ -20,7 +20,7 @@ jobs:
       - name: Setup backend environment
         uses: erlef/setup-beam@v1
         with:
-          version-file: .tool-versions
+          version-file: helix/.tool-versions
           version-type: strict
 
       - name: Setup database directories
