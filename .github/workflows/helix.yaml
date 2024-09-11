@@ -37,8 +37,6 @@ jobs:
             helix/_build
             helix/priv/native
           key: ${{ runner.os }}-mix-${{ hashFiles('helix/mix.lock') }}-${{ hashFiles('helix/native/**/Cargo.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-mix-${{ hashFiles('helix/mix.lock') }}-${{ hashFiles('helix/native/**/Cargo.lock') }}
 
       - name: Install Elixir Dependencies
         if: steps.mix_cache.outputs.cache-hit != 'true'
