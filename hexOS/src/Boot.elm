@@ -1,6 +1,7 @@
 module Boot exposing (..)
 
 import Event exposing (Event)
+import Game.Universe
 import UI exposing (UI, cl, col, id, row, style, text)
 import Utils
 
@@ -10,7 +11,7 @@ import Utils
 
 
 type Msg
-    = ProceedToGame
+    = ProceedToGame Game.Universe.Model
     | EstablishSSEConnection
     | OnEventReceived Event
     | NoOp
@@ -39,7 +40,7 @@ update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         -- Intercepted by `Main`
-        ProceedToGame ->
+        ProceedToGame _ ->
             ( model, Cmd.none )
 
         -- Intercepted by `Main`
@@ -58,10 +59,10 @@ updateEvent model event =
     case event of
         Event.IndexRequested { player } ->
             let
-                _ =
-                    Debug.log "mainframe id" player.mainframe
+                spModel =
+                    Game.Universe.init player.mainframe_id
             in
-            ( model, Cmd.none )
+            ( model, Utils.msgToCmd <| ProceedToGame spModel )
 
 
 

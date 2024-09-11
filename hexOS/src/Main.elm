@@ -8,6 +8,8 @@ import Core.Debounce as Debounce
 import Debounce exposing (Debounce)
 import Dict exposing (Dict)
 import Event exposing (Event)
+import Game
+import Game.Universe
 import Html exposing (Html)
 import Json.Decode as JD
 import Login
@@ -31,6 +33,8 @@ type Msg
       -- | ResizedViewportDebouncing Debounce.Msg
     | BrowserMouseUp
     | BrowserVisibilityChanged Browser.Events.Visibility
+    | GameMsg Game.Msg
+      -- Note: nao existe OSMsg aqui; somente em GameMsg OsMsg
     | OSMsg OS.Msg
     | LoginMsg Login.Msg
     | BootMsg Boot.Msg
@@ -38,20 +42,17 @@ type Msg
     | OnEventReceived (Result JD.Error Event)
 
 
-type alias GameModel =
-    { os : OS.Model }
-
-
 type State
     = LoginState Login.Model
     | BootState Boot.Model
-    | GameState GameModel
+    | GameState Game.Model
     | InstallState
     | ErrorState
 
 
 type alias Model =
     { seeds : Seeds
+    , flags : Flags
     , state : State
 
     -- , resizeDebouncer : Debounce ( Int, Int )
@@ -120,6 +121,7 @@ init flags url navKey =
                 (Random.initialSeed flags.randomSeed4)
     in
     ( { seeds = firstSeeds
+      , flags = flags
       , state = LoginState Login.initialModel
 
       -- , resizeDebouncer = Debounce.init
@@ -160,9 +162,20 @@ update msg model =
 
         BootState bootModel ->
             case msg of
-                BootMsg Boot.ProceedToGame ->
-                    -- ( { model | state = GameState (Boot.initialModel token) }, Cmd.none )
-                    ( model, Cmd.none )
+                BootMsg (Boot.ProceedToGame spModel) ->
+                    let
+                        -- TODO: OS handling is at game (right?)
+                        ( osModel, osCmd ) =
+                            OS.init ( model.flags.viewportX, model.flags.viewportY )
+
+                        ( gameModel, playCmd ) =
+                            Game.init spModel osModel
+                    in
+                    ( { model | state = GameState gameModel }
+                    , Cmd.batch
+                        [ Cmd.map GameMsg playCmd
+                        ]
+                    )
 
                 BootMsg Boot.EstablishSSEConnection ->
                     ( model, eventStart bootModel.token )
@@ -236,13 +249,17 @@ update msg model =
                 --     in
                 --     ( { model | resizeDebouncer = debounce }, cmd )
                 OSMsg subMsg ->
-                    let
-                        ( osModel, osCmd ) =
-                            OS.update subMsg gameModel.os
-                    in
-                    ( { model | state = GameState { os = osModel } }
-                    , Cmd.batch [ Cmd.map OSMsg osCmd ]
-                    )
+                    -- let
+                    --     ( osModel, osCmd ) =
+                    --         OS.update subMsg gameModel.os
+                    -- in
+                    -- ( { model | state = GameState { os = osModel } }
+                    -- , Cmd.batch [ Cmd.map OSMsg osCmd ]
+                    -- )
+                    ( model, Cmd.none )
+
+                GameMsg subMsg ->
+                    ( model, Cmd.none )
 
                 LoginMsg _ ->
                     ( model, Cmd.none )
@@ -284,6 +301,12 @@ view model =
             in
             { title = title, body = List.map (Html.map OSMsg) body }
 
+        -- GameState gameModel ->
+        --     let
+        --         { title, body } =
+        --             Game.documentView gameModel
+        --     in
+        --     { title = title, body = List.map (Html.map OSMsg) body }
         BootState bootModel ->
             let
                 { title, body } =
