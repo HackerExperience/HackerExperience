@@ -164,7 +164,6 @@ update msg model =
             case msg of
                 BootMsg (Boot.ProceedToGame spModel) ->
                     let
-                        -- TODO: OS handling is at game (right?)
                         ( osModel, osCmd ) =
                             OS.init ( model.flags.viewportX, model.flags.viewportY )
 
@@ -174,6 +173,7 @@ update msg model =
                     ( { model | state = GameState gameModel }
                     , Cmd.batch
                         [ Cmd.map GameMsg playCmd
+                        , Cmd.map OSMsg osCmd
                         ]
                     )
 
@@ -249,14 +249,15 @@ update msg model =
                 --     in
                 --     ( { model | resizeDebouncer = debounce }, cmd )
                 OSMsg subMsg ->
-                    -- let
-                    --     ( osModel, osCmd ) =
-                    --         OS.update subMsg gameModel.os
-                    -- in
-                    -- ( { model | state = GameState { os = osModel } }
-                    -- , Cmd.batch [ Cmd.map OSMsg osCmd ]
-                    -- )
-                    ( model, Cmd.none )
+                    -- NOTE: I'm attempting to keep Game and OS separate and independent of one
+                    -- another. Let's see how it goes...
+                    let
+                        ( osModel, osCmd ) =
+                            OS.update subMsg gameModel.os
+                    in
+                    ( { model | state = GameState { gameModel | os = osModel } }
+                    , Cmd.batch [ Cmd.map OSMsg osCmd ]
+                    )
 
                 GameMsg subMsg ->
                     ( model, Cmd.none )
@@ -294,25 +295,20 @@ view model =
             in
             { title = title, body = List.map (Html.map LoginMsg) body }
 
-        GameState gameModel ->
-            let
-                { title, body } =
-                    OS.documentView gameModel.os
-            in
-            { title = title, body = List.map (Html.map OSMsg) body }
-
-        -- GameState gameModel ->
-        --     let
-        --         { title, body } =
-        --             Game.documentView gameModel
-        --     in
-        --     { title = title, body = List.map (Html.map OSMsg) body }
         BootState bootModel ->
             let
                 { title, body } =
                     Boot.documentView bootModel
             in
             { title = title, body = List.map (Html.map BootMsg) body }
+
+        GameState gameModel ->
+            -- View in the GameState is entirely controlled by the OS
+            let
+                { title, body } =
+                    OS.documentView gameModel.os
+            in
+            { title = title, body = List.map (Html.map OSMsg) body }
 
         _ ->
             { title = "UNHANdled", body = [] }

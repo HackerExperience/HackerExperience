@@ -1,8 +1,8 @@
 module Game exposing (..)
 
+import Game.Universe
 import OS
 import UI exposing (UI)
-import Game.Universe
 
 
 
@@ -41,17 +41,3 @@ update msg model =
     case msg of
         NoOp ->
             ( model, Cmd.none )
-
-
-
--- View
-
-
-documentView : Model -> UI.Document Msg
-documentView model =
-    { title = "Hacker Experience (play)", body = view model }
-
-
-view : Model -> List (UI Msg)
-view model =
-    []
