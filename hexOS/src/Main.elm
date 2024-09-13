@@ -18,6 +18,7 @@ import Process
 import Random
 import Result
 import Task
+import TimeTravel.Browser as TimeTravel exposing (defaultConfig)
 import UI exposing (UI)
 import UUID exposing (Seeds, UUID)
 import Url exposing (Url)
@@ -84,9 +85,17 @@ port eventSubscriber : (String -> msg) -> Sub msg
 -- Main
 
 
+{-| NOTE: I'll experiment developing with `elm-time-travel` debugger instead of the official one.
+For prod, we need to replace `TimeTravel.application` with `Browser.application`.
+
 main : Program Flags Model Msg
+
+-}
 main =
-    Browser.application
+    -- Browser.application
+    TimeTravel.application Debug.toString
+        Debug.toString
+        defaultConfig
         { init = init
         , view = view
         , update = update
