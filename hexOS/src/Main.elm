@@ -8,6 +8,8 @@ import Core.Debounce as Debounce
 import Debounce exposing (Debounce)
 import Dict exposing (Dict)
 import Event exposing (Event)
+import Game
+import Game.Universe
 import Html exposing (Html)
 import Json.Decode as JD
 import Login
@@ -16,6 +18,7 @@ import Process
 import Random
 import Result
 import Task
+import TimeTravel.Browser as TimeTravel exposing (defaultConfig)
 import UI exposing (UI)
 import UUID exposing (Seeds, UUID)
 import Url exposing (Url)
@@ -31,6 +34,8 @@ type Msg
       -- | ResizedViewportDebouncing Debounce.Msg
     | BrowserMouseUp
     | BrowserVisibilityChanged Browser.Events.Visibility
+    | GameMsg Game.Msg
+      -- Note: nao existe OSMsg aqui; somente em GameMsg OsMsg
     | OSMsg OS.Msg
     | LoginMsg Login.Msg
     | BootMsg Boot.Msg
@@ -38,20 +43,17 @@ type Msg
     | OnEventReceived (Result JD.Error Event)
 
 
-type alias GameModel =
-    { os : OS.Model }
-
-
 type State
     = LoginState Login.Model
     | BootState Boot.Model
-    | GameState GameModel
+    | GameState Game.Model
     | InstallState
     | ErrorState
 
 
 type alias Model =
     { seeds : Seeds
+    , flags : Flags
     , state : State
 
     -- , resizeDebouncer : Debounce ( Int, Int )
@@ -83,9 +85,17 @@ port eventSubscriber : (String -> msg) -> Sub msg
 -- Main
 
 
+{-| NOTE: I'll experiment developing with `elm-time-travel` debugger instead of the official one.
+For prod, we need to replace `TimeTravel.application` with `Browser.application`.
+
 main : Program Flags Model Msg
+
+-}
 main =
-    Browser.application
+    -- Browser.application
+    TimeTravel.application Debug.toString
+        Debug.toString
+        defaultConfig
         { init = init
         , view = view
         , update = update
@@ -120,6 +130,7 @@ init flags url navKey =
                 (Random.initialSeed flags.randomSeed4)
     in
     ( { seeds = firstSeeds
+      , flags = flags
       , state = LoginState Login.initialModel
 
       -- , resizeDebouncer = Debounce.init
@@ -160,9 +171,20 @@ update msg model =
 
         BootState bootModel ->
             case msg of
-                BootMsg Boot.ProceedToGame ->
-                    -- ( { model | state = GameState (Boot.initialModel token) }, Cmd.none )
-                    ( model, Cmd.none )
+                BootMsg (Boot.ProceedToGame spModel) ->
+                    let
+                        ( osModel, osCmd ) =
+                            OS.init ( model.flags.viewportX, model.flags.viewportY )
+
+                        ( gameModel, playCmd ) =
+                            Game.init spModel osModel
+                    in
+                    ( { model | state = GameState gameModel }
+                    , Cmd.batch
+                        [ Cmd.map GameMsg playCmd
+                        , Cmd.map OSMsg osCmd
+                        ]
+                    )
 
                 BootMsg Boot.EstablishSSEConnection ->
                     ( model, eventStart bootModel.token )
@@ -236,13 +258,18 @@ update msg model =
                 --     in
                 --     ( { model | resizeDebouncer = debounce }, cmd )
                 OSMsg subMsg ->
+                    -- NOTE: I'm attempting to keep Game and OS separate and independent of one
+                    -- another. Let's see how it goes...
                     let
                         ( osModel, osCmd ) =
                             OS.update subMsg gameModel.os
                     in
-                    ( { model | state = GameState { os = osModel } }
+                    ( { model | state = GameState { gameModel | os = osModel } }
                     , Cmd.batch [ Cmd.map OSMsg osCmd ]
                     )
+
+                GameMsg subMsg ->
+                    ( model, Cmd.none )
 
                 LoginMsg _ ->
                     ( model, Cmd.none )
@@ -277,19 +304,20 @@ view model =
             in
             { title = title, body = List.map (Html.map LoginMsg) body }
 
-        GameState gameModel ->
-            let
-                { title, body } =
-                    OS.documentView gameModel.os
-            in
-            { title = title, body = List.map (Html.map OSMsg) body }
-
         BootState bootModel ->
             let
                 { title, body } =
                     Boot.documentView bootModel
             in
             { title = title, body = List.map (Html.map BootMsg) body }
+
+        GameState gameModel ->
+            -- View in the GameState is entirely controlled by the OS
+            let
+                { title, body } =
+                    OS.documentView gameModel.os
+            in
+            { title = title, body = List.map (Html.map OSMsg) body }
 
         _ ->
             { title = "UNHANdled", body = [] }

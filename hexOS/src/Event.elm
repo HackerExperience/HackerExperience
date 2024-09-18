@@ -6,6 +6,10 @@ import Json.Decode as JD
 import Result
 
 
+
+-- TODO: Where do I scope the Universe? In the Event type itself?
+
+
 type Event
     = IndexRequested Events.IndexRequested
 
