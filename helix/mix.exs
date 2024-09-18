@@ -21,7 +21,8 @@ defmodule Helix.MixProject do
         "coveralls.cobertura": :test,
         # Must be run in `:test` to include all possible schemas
         "db.schema.list": :test
-      ]
+      ],
+      dialyzer: [plt_add_apps: [:mix]]
     ]
   end
 
@@ -53,6 +54,7 @@ defmodule Helix.MixProject do
       {:feebdb, github: "renatomassaro/feebdb", branch: "main"},
       {:jose, "~> 1.11"},
       {:norm, "~> 0.13"},
+      {:dialyxir, "~> 1.4", only: [:dev], runtime: false},
       {:mox, "~> 1.1", only: :test},
       {:excoveralls, "~> 0.18.2", only: :test},
       {:req, "~> 0.4.8", only: :test}

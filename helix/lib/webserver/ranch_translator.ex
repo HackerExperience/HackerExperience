@@ -14,5 +14,5 @@ defmodule Webserver.RanchTranslator do
     do: :none
 
   defp translate_ranch(prefix_msg, reason, stack),
-    do: {:ok, [prefix_msg | Exception.format(:error, reason, stack)]}
+    do: {:ok, [prefix_msg, Exception.format(:error, reason, stack)]}
 end

@@ -12,13 +12,11 @@ defmodule Core.Session.State.Supervisor do
       [
         %{
           id: :sse_sp,
-          start: {State.SSEMapping, :start_link, [:singleplayer]},
-          name: State.SSEMapping.Singleplayer
+          start: {State.SSEMapping, :start_link, [:singleplayer]}
         },
         %{
           id: :sse_mp,
-          start: {State.SSEMapping, :start_link, [:multiplayer]},
-          name: State.SSEMapping.Multiplayer
+          start: {State.SSEMapping, :start_link, [:multiplayer]}
         }
       ]
 

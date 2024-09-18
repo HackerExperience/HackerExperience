@@ -11,5 +11,5 @@ defmodule Webserver.Conveyor.Belt do
   # TODO
   @type conveyor :: map()
 
-  @callback call(request(), conveyor(), params :: map() | nil) :: request()
+  @callback call(request(), conveyor(), opts :: keyword()) :: request()
 end

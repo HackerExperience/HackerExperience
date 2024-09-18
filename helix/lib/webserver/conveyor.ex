@@ -23,9 +23,9 @@ defmodule Webserver.Conveyor do
     Enum.reduce_while(belts, request, fn belt, request_acc ->
       {belt_module, belt_params} =
         case belt do
-          {mod, params} -> {mod, params}
-          {mod} -> {mod, nil}
-          mod -> {mod, nil}
+          {mod, params} when is_list(params) -> {mod, params}
+          {mod} -> {mod, []}
+          mod -> {mod, []}
         end
 
       prev_conveyor = request_acc.conveyor || new()
@@ -80,7 +80,7 @@ defmodule Webserver.Conveyor do
          {belt_module, belt_params}
        ) do
     belt_entry =
-      if is_nil(belt_params) do
+      if belt_params == [] do
         belt_module
       else
         {belt_module, belt_params}
