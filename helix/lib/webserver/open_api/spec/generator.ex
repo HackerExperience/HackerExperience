@@ -234,12 +234,8 @@ defmodule Webserver.OpenApi.Spec.Generator do
             acc
         end
 
-      if is_nil(type) do
-        {iacc, child_schemas}
-      else
-        entry = %{type: type, required: name in required}
-        {Map.put(iacc, name, entry), child_schemas}
-      end
+      entry = %{type: type, required: name in required}
+      {Map.put(iacc, name, entry), child_schemas}
     end)
   end
 

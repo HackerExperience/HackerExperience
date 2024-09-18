@@ -98,11 +98,14 @@ defmodule Core.Event do
       |> Enum.map(fn trigger_mod -> trigger_mod.probe(event) end)
       |> Enum.reject(&is_nil/1)
 
-    custom_handlers ++ native_handlers ++ test_handler(@env)
+    custom_handlers ++ native_handlers ++ test_handler()
   end
 
-  defp test_handler(:test), do: [Core.Event.Handler.Test]
-  defp test_handler(_), do: []
+  if @env == :test do
+    defp test_handler, do: [Core.Event.Handler.Test]
+  else
+    defp test_handler, do: []
+  end
 
   @spec do_emit(module(), event :: map(), [event :: map()]) ::
           {:ok | :error, [event :: map()]}

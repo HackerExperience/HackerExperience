@@ -3,9 +3,10 @@ defmodule Core.Crypto.JWT do
 
   # TODO: Add to env
   @jwk %{
-    "kty" => "oct",
-    "k" => :jose_base64url.encode("todo key goes here move to config")
-  }
+         "kty" => "oct",
+         "k" => :jose_base64url.encode("todo key goes here move to config")
+       }
+       |> JOSE.JWK.from_map()
 
   @jws %{
     "alg" => @alg

@@ -21,7 +21,8 @@ defmodule Helix.MixProject do
         "coveralls.cobertura": :test,
         # Must be run in `:test` to include all possible schemas
         "db.schema.list": :test
-      ]
+      ],
+      dialyzer: [plt_add_apps: [:mix]]
     ]
   end
 

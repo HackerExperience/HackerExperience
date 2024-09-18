@@ -26,7 +26,7 @@ defmodule Webserver.Belt.ReadBody do
 
       true ->
         try do
-          {:ok, raw_body, new_cowboy_request} = read_request_body(cowboy_request, @env)
+          {:ok, raw_body, new_cowboy_request} = read_request_body(cowboy_request)
           raw_params = if raw_body == "", do: %{}, else: :json.decode(raw_body)
           %{request | raw_params: raw_params, cowboy_request: new_cowboy_request}
         rescue
@@ -37,9 +37,11 @@ defmodule Webserver.Belt.ReadBody do
     end
   end
 
-  defp read_request_body(%{headers: %{"test-body-mock" => raw_body}} = cowboy_request, :test),
-    do: {:ok, raw_body, cowboy_request}
+  if @env == :test do
+    defp read_request_body(%{headers: %{"test-body-mock" => raw_body}} = cowboy_request),
+      do: {:ok, raw_body, cowboy_request}
+  end
 
-  defp read_request_body(cowboy_request, _),
+  defp read_request_body(cowboy_request),
     do: Vaqueiro.read_req_body(cowboy_request)
 end

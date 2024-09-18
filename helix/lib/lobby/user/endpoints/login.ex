@@ -61,9 +61,10 @@ defmodule Lobby.Endpoint.User.Login do
       {:ok, jwt} ->
         {:ok, %{request | result: %{jwt: jwt}}}
 
-      {:error, reason} ->
-        Logger.error("Failed to create session: #{inspect(reason)}")
-        {:error, %{request | response: {500, "error_creating_session"}}}
+        # TODO: Add the "error" block when Svc.Session can return an error
+        # {:error, reason} ->
+        #   Logger.error("Failed to create session: #{inspect(reason)}")
+        #   {:error, %{request | response: {500, "error_creating_session"}}}
     end
   end
 

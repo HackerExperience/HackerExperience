@@ -16,8 +16,8 @@ defmodule Lobby.Webserver.Belt.HandleCors do
     req = :cowboy_req.set_resp_header("Vary", "Origin", req)
 
     if req.method == "OPTIONS" do
-      _cowboy_request = :cowboy_req.reply(200, %{}, "", req)
-      %{conveyor | halt?: true}
+      conveyor = %{conveyor | halt?: true, response_status: 200}
+      %{request | cowboy_request: req, conveyor: conveyor}
     else
       %{request | cowboy_request: req}
     end

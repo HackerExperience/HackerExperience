@@ -16,10 +16,10 @@ defmodule Webserver.Vaqueiro do
   defp read_req_body(req, opts, length, acc) when length >= 0 do
     case :cowboy_req.read_body(req, opts) do
       {:ok, data, req} ->
-        {:ok, IO.iodata_to_binary([acc | data]), req}
+        {:ok, IO.iodata_to_binary([acc, data]), req}
 
       {:more, data, req} ->
-        read_req_body(req, opts, length - byte_size(data), [acc | data])
+        read_req_body(req, opts, length - byte_size(data), [acc, data])
     end
   end
 

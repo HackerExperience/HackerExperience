@@ -24,8 +24,8 @@ defmodule Core.Webserver.Belt.Session do
       {:ok, session} ->
         %{request | session: session}
 
-      {:error, reason} when is_binary(reason) ->
-        Conveyor.halt_with_response(request, conveyor, 400, reason)
+      {:error, reason} when is_binary(reason) or is_atom(reason) ->
+        Conveyor.halt_with_response(request, conveyor, 400, "#{reason}")
     end
   end
 
@@ -75,24 +75,26 @@ defmodule Core.Webserver.Belt.Session do
     raise "TODO"
   end
 
-  defp get_shard_id_for_universe(%{universe: :lobby} = request) do
-    if @env != :test, do: 1, else: get_shard_id_for_test(request, "test-lobby-shard-id")
-  end
+  if @env == :test do
+    defp get_shard_id_for_universe(%{universe: :lobby} = request),
+      do: get_shard_id_for_test(request, "test-lobby-shard-id")
 
-  defp get_shard_id_for_universe(%{universe: universe} = request)
-       when universe in [:singleplayer, :multiplayer] do
-    if @env != :test, do: 1, else: get_shard_id_for_test(request, "test-game-shard-id")
-  end
+    defp get_shard_id_for_universe(%{universe: u} = req) when u in [:singleplayer, :multiplayer],
+      do: get_shard_id_for_test(req, "test-game-shard-id")
 
-  defp get_shard_id_for_test(request, header_name) do
-    # Each test runs their own shard, which should be defined in the following header
-    case Map.get(request.cowboy_request.headers, header_name) do
-      raw_shard_id when is_binary(raw_shard_id) ->
-        String.to_integer(raw_shard_id)
+    defp get_shard_id_for_test(request, header_name) do
+      # Each test runs their own shard, which should be defined in the following header
+      case Map.get(request.cowboy_request.headers, header_name) do
+        raw_shard_id when is_binary(raw_shard_id) ->
+          String.to_integer(raw_shard_id)
 
-      nil ->
-        raise "Missing `#{header_name}` header"
+        nil ->
+          raise "Missing `#{header_name}` header"
+      end
     end
+  else
+    defp get_shard_id_for_universe(%{universe: u}) when u in [:lobby, :singleplayer, :multiplayer],
+      do: 1
   end
 
   defp parse_jwt(nil), do: {:error, :missing_token}
