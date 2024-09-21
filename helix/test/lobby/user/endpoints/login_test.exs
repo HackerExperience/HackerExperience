@@ -1,6 +1,5 @@
 defmodule Lobby.Endpoint.User.LoginTest do
   use Test.WebCase, async: true
-  alias HELL.Utils
 
   @path "/user/login"
 
@@ -78,6 +77,6 @@ defmodule Lobby.Endpoint.User.LoginTest do
       email: "foo@bar.com",
       password: "abc123"
     }
-    |> Utils.Map.stringify_keys()
+    |> Renatils.Map.stringify_keys()
   end
 end

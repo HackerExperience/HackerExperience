@@ -2,13 +2,12 @@ defmodule Webserver.Endpoint do
   use Norm
   import Core.Spec
   require Logger
-  alias HELL.Utils
   alias Webserver.Conveyor
 
   def validate_input(request, endpoint, raw_params) do
     case Norm.conform(raw_params, endpoint.input_spec()) do
       {:ok, parsed_params} ->
-        {:ok, %{request | parsed_params: Utils.Map.safe_atomify_keys(parsed_params)}}
+        {:ok, %{request | parsed_params: Renatils.Map.safe_atomify_keys(parsed_params)}}
 
       {:error, spec_error} ->
         # TODO: Proper formatting of error

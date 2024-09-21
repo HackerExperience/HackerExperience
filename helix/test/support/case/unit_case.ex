@@ -13,7 +13,7 @@ defmodule Test.UnitCase do
       # import Test.Finders
       # import Test.Utils
 
-      alias HELL.{Random, Utils}
+      alias Renatils.Random
       alias Test.Setup
       alias Test.Utils, as: U
     end

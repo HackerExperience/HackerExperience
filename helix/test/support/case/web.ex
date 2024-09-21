@@ -11,7 +11,7 @@ defmodule Test.WebCase do
       import Test.Web
 
       alias Feeb.DB
-      alias HELL.{Random, Utils}
+      alias Renatils.Random
       alias Test.Setup
       alias Test.Utils, as: U
 

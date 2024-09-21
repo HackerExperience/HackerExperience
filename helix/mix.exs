@@ -54,6 +54,7 @@ defmodule Helix.MixProject do
       {:feebdb, github: "renatomassaro/feebdb", branch: "main"},
       {:jose, "~> 1.11"},
       {:norm, "~> 0.13"},
+      {:renatils, path: "../../renatils"},
       {:dialyxir, "~> 1.4", only: [:dev], runtime: false},
       {:mox, "~> 1.1", only: :test},
       {:excoveralls, "~> 0.18.2", only: :test},
