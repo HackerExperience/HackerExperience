@@ -1,6 +1,5 @@
 defmodule Test.HTTPClient do
   import Req.Request, only: [put_header: 3]
-  alias HELL.Utils
 
   # TODO
   @default_base_url "http://localhost:5000/v1"
@@ -63,7 +62,7 @@ defmodule Test.HTTPClient do
   #   do: %{status: status, raw_body: "", body: nil, data: nil, error: nil} |> wrap_response(status)
 
   defp parse_response({_, %Req.Response{status: status, body: raw_body}}) when is_map(raw_body) do
-    body = Utils.Map.atomify_keys(raw_body)
+    body = Renatils.Map.atomify_keys(raw_body)
 
     %{
       status: status,

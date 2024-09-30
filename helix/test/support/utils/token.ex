@@ -3,7 +3,7 @@ defmodule Test.Utils.Token do
   alias Core.Crypto
 
   def generate(opts \\ []) do
-    ts_now = Utils.DateTime.ts_now()
+    ts_now = Renatils.DateTime.ts_now()
 
     %{
       uid: Kw.get(opts, :uid, Random.uuid()),

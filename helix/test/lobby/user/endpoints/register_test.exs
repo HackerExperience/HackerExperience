@@ -88,7 +88,7 @@ defmodule Lobby.Endpoint.User.RegisterTest do
       password: Keyword.get(opts, :password, "abc123"),
       email: Keyword.get(opts, :email, "foo@bar.com")
     }
-    |> Utils.Map.stringify_keys()
+    |> Renatils.Map.stringify_keys()
   end
 
   defp valid_params(opts \\ []) do

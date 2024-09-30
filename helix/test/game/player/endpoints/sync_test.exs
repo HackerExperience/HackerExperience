@@ -1,6 +1,5 @@
 defmodule Game.Endpoint.Player.SyncTest do
   use Test.WebCase, async: true
-  alias HELL.Utils
   alias Core.Session.State.SSEMapping
 
   @path "/player/sync"
@@ -42,7 +41,7 @@ defmodule Game.Endpoint.Player.SyncTest do
       player = Setup.player!()
       DB.commit()
 
-      ts_now = Utils.DateTime.ts_now()
+      ts_now = Renatils.DateTime.ts_now()
 
       jwt_1 = U.jwt_token(uid: player.external_id, iat: ts_now - 10)
       jwt_2 = U.jwt_token(uid: player.external_id, iat: ts_now - 20)
@@ -96,7 +95,7 @@ defmodule Game.Endpoint.Player.SyncTest do
             |> String.slice(6..-1//1)
             |> String.replace("\n\n", "")
             |> :json.decode()
-            |> Utils.Map.atomify_keys()
+            |> Renatils.Map.atomify_keys()
 
           assert event.name == "index_requested"
           assert Map.has_key?(event.data, :player)

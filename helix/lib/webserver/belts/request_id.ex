@@ -1,6 +1,5 @@
 defmodule Webserver.Belt.RequestId do
   use Webserver.Conveyor.Belt
-  alias HELL.Utils
 
   def call(request, _, _) do
     request_id = gen_request_id()
@@ -16,7 +15,7 @@ defmodule Webserver.Belt.RequestId do
   defp get_x_request_id(cowboy_request) do
     case Map.get(cowboy_request.headers, "x-request-id") do
       x_request_id when is_binary(x_request_id) ->
-        if Utils.UUID.is_valid?(x_request_id) do
+        if Renatils.UUID.is_valid?(x_request_id) do
           x_request_id
         end
 

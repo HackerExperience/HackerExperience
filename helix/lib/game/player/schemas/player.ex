@@ -19,7 +19,7 @@ defmodule Game.Player do
   end
 
   defmodule Validator do
-    def validate_external_id(v) when is_binary(v), do: Utils.UUID.is_valid?(v)
+    def validate_external_id(v) when is_binary(v), do: Renatils.UUID.is_valid?(v)
     def validate_external_id(_), do: false
   end
 end

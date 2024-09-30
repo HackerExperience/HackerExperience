@@ -5,7 +5,7 @@ defmodule Test.Setup.Definition do
       alias Test.Setup, as: S
       alias Test.Utils, as: U
       alias Feeb.DB
-      alias HELL.{Random, Utils}
+      alias Renatils.Random
       alias Game.Services, as: Svc
     end
   end
