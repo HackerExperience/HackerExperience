@@ -24,3 +24,8 @@ dist-ssr
 *.sw?
 
 elm-stuff
+
+# Simulated modules (generated from `tests/setup.sh`)
+src/OpenApi/SimulatedCommon.elm
+src/API/Lobby/SimulatedApi.elm
+src/API/SimulatedLobby.elm
