@@ -11,6 +11,7 @@ generate_elm_types_for_lobby_api() {
     npx elm-open-api $OPENAPI_PATH/lobby.yaml \
         --module-name API.Lobby \
         --output-dir $ELM_OUTPUT_DIR \
+        --effect-types task \
         --server '{}'
 }
 
@@ -18,12 +19,14 @@ generate_elm_types_for_game_api() {
     npx elm-open-api $OPENAPI_PATH/game.yaml \
         --module-name API.Game \
         --output-dir $ELM_OUTPUT_DIR \
+        --effect-types task \
         --server '{"sp": "http://localhost:4001", "mp": "http://localhost:4002"}'
 }
 
 generate_elm_types_for_events_api() {
     npx elm-open-api $OPENAPI_PATH/events.yaml \
         --module-name API.Events \
+        --effect-types task \
         --output-dir $ELM_OUTPUT_DIR
 }
 
