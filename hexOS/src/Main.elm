@@ -1,4 +1,4 @@
-port module Main exposing (main)
+port module Main exposing (Flags, Msg(..), init, main, update, view, wrapInit, wrapUpdate)
 
 import Boot
 import Browser
@@ -7,6 +7,7 @@ import Browser.Navigation as Nav
 import Core.Debounce as Debounce
 import Debounce exposing (Debounce)
 import Dict exposing (Dict)
+import Effect exposing (Effect)
 import Event exposing (Event)
 import Game
 import Game.Universe
@@ -51,10 +52,13 @@ type State
     | ErrorState
 
 
-type alias Model =
+{-| `navkey` is a "variable" to the Model in order for it to work with elm-program-test.
+-}
+type alias Model navkey =
     { seeds : Seeds
     , flags : Flags
     , state : State
+    , navKey : navkey
 
     -- , resizeDebouncer : Debounce ( Int, Int )
     }
@@ -96,9 +100,9 @@ main =
     TimeTravel.application Debug.toString
         Debug.toString
         defaultConfig
-        { init = init
+        { init = wrapInit
         , view = view
-        , update = update
+        , update = wrapUpdate
         , subscriptions = subscriptions
         , onUrlRequest = ClickedLink
         , onUrlChange = ChangedUrl
@@ -109,7 +113,19 @@ main =
 -- Model
 
 
-init : Flags -> Url -> Nav.Key -> ( Model, Cmd Msg )
+wrapInit : Flags -> Url -> navkey -> ( Model navkey, Cmd Msg )
+wrapInit flags url navKey =
+    let
+        ( model, effects ) =
+            init flags url navKey
+
+        ( newSeeds, cmds ) =
+            Effect.apply ( model.seeds, effects )
+    in
+    ( { model | seeds = newSeeds }, cmds )
+
+
+init : Flags -> Url -> navkey -> ( Model navkey, Effect Msg )
 init flags url navKey =
     let
         -- route =
@@ -132,12 +148,14 @@ init flags url navKey =
     ( { seeds = firstSeeds
       , flags = flags
       , state = LoginState Login.initialModel
+      , navKey = navKey
 
       -- , resizeDebouncer = Debounce.init
       }
-    , Cmd.batch
-        [ Cmd.map OSMsg osCmd
-        ]
+      -- , Cmd.batch
+      --     [ Cmd.map OSMsg osCmd
+      --     ]
+    , Effect.none
     )
 
 
@@ -145,17 +163,31 @@ init flags url navKey =
 -- Update
 
 
-update : Msg -> Model -> ( Model, Cmd Msg )
+wrapUpdate : Msg -> Model navkey -> ( Model navkey, Cmd Msg )
+wrapUpdate msg model =
+    let
+        ( newModel, effects ) =
+            update msg model
+
+        ( newSeeds, cmds ) =
+            Effect.apply ( newModel.seeds, effects )
+    in
+    ( { newModel | seeds = newSeeds }, cmds )
+
+
+update : Msg -> Model navkey -> ( Model navkey, Effect Msg )
 update msg model =
     case model.state of
         LoginState loginModel ->
             case msg of
                 LoginMsg (Login.ProceedToBoot token) ->
+                    -- TODO: Next up: refactor Boot
                     let
                         ( bootModel, bootCmd ) =
                             Boot.init token
                     in
-                    ( { model | state = BootState bootModel }, Cmd.map BootMsg bootCmd )
+                    -- ( { model | state = BootState bootModel }, Cmd.map BootMsg bootCmd )
+                    ( { model | state = BootState bootModel }, Effect.none )
 
                 LoginMsg subMsg ->
                     let
@@ -163,138 +195,142 @@ update msg model =
                             Login.update subMsg loginModel
                     in
                     ( { model | state = LoginState newLoginModel }
-                    , Cmd.batch [ Cmd.map LoginMsg loginCmd ]
+                    , Effect.batch [ Effect.map LoginMsg loginCmd ]
                     )
 
                 _ ->
-                    ( model, Cmd.none )
+                    ( model, Effect.none )
 
-        BootState bootModel ->
-            case msg of
-                BootMsg (Boot.ProceedToGame spModel) ->
-                    let
-                        ( osModel, osCmd ) =
-                            OS.init ( model.flags.viewportX, model.flags.viewportY )
-
-                        ( gameModel, playCmd ) =
-                            Game.init spModel osModel
-                    in
-                    ( { model | state = GameState gameModel }
-                    , Cmd.batch
-                        [ Cmd.map GameMsg playCmd
-                        , Cmd.map OSMsg osCmd
-                        ]
-                    )
-
-                BootMsg Boot.EstablishSSEConnection ->
-                    ( model, eventStart bootModel.token )
-
-                BootMsg subMsg ->
-                    let
-                        ( newBootModel, bootCmd ) =
-                            Boot.update subMsg bootModel
-                    in
-                    ( { model | state = BootState newBootModel }
-                    , Cmd.batch [ Cmd.map BootMsg bootCmd ]
-                    )
-
-                OnRawEventReceived rawEvent ->
-                    let
-                        eventResult =
-                            Event.processReceivedEvent rawEvent
-
-                        _ =
-                            Debug.log "Event result" eventResult
-                    in
-                    ( model, Utils.msgToCmd (OnEventReceived eventResult) )
-
-                OnEventReceived (Ok event) ->
-                    let
-                        ( newBootModel, bootCmd ) =
-                            Boot.update (Boot.OnEventReceived event) bootModel
-                    in
-                    ( { model | state = BootState newBootModel }
-                    , Cmd.batch [ Cmd.map BootMsg bootCmd ]
-                    )
-
-                _ ->
-                    ( model, Cmd.none )
-
-        GameState gameModel ->
-            case msg of
-                ClickedLink urlRequest ->
-                    ( model, Cmd.none )
-
-                ChangedUrl url ->
-                    ( model, Cmd.none )
-
-                BrowserVisibilityChanged _ ->
-                    -- We may do more things in the future
-                    ( model, Utils.msgToCmd (OSMsg OS.BrowserVisibilityChanged) )
-
-                BrowserMouseUp ->
-                    ( model, Utils.msgToCmd (OSMsg OS.StopDrag) )
-
-                -- BrowserResizedViewport v ->
-                --     let
-                --         debounceConfig =
-                --             Debounce.after 100 ResizedViewportDebouncing
-                --         ( debounce, cmd ) =
-                --             Debounce.push debounceConfig v model.resizeDebouncer
-                --     in
-                --     ( { model | resizeDebouncer = debounce }, cmd )
-                -- ResizedViewportDebounced ( w, h ) ->
-                --     ( { model | os = OS.updateViewport model.os ( w, h ) }, Cmd.none )
-                -- ResizedViewportDebouncing msg_ ->
-                --     let
-                --         debounceConfig =
-                --             Debounce.after 100 ResizedViewportDebouncing
-                --         ( debounce, cmd ) =
-                --             Debounce.update
-                --                 debounceConfig
-                --                 (Debounce.takeLast (Debounce.save ResizedViewportDebounced))
-                --                 msg_
-                --                 model.resizeDebouncer
-                --     in
-                --     ( { model | resizeDebouncer = debounce }, cmd )
-                OSMsg subMsg ->
-                    -- NOTE: I'm attempting to keep Game and OS separate and independent of one
-                    -- another. Let's see how it goes...
-                    let
-                        ( osModel, osCmd ) =
-                            OS.update subMsg gameModel.os
-                    in
-                    ( { model | state = GameState { gameModel | os = osModel } }
-                    , Cmd.batch [ Cmd.map OSMsg osCmd ]
-                    )
-
-                GameMsg subMsg ->
-                    ( model, Cmd.none )
-
-                LoginMsg _ ->
-                    ( model, Cmd.none )
-
-                BootMsg _ ->
-                    ( model, Cmd.none )
-
-                OnRawEventReceived ev ->
-                    ( model, Cmd.none )
-
-                OnEventReceived ev ->
-                    ( model, Cmd.none )
-
-        InstallState ->
-            ( model, Cmd.none )
-
-        ErrorState ->
-            ( model, Cmd.none )
+        _ ->
+            ( model, Effect.none )
 
 
 
+-- update2 : Msg -> Model -> ( Model, Cmd Msg )
+-- update2 msg model =
+--     case model.state of
+--         LoginState loginModel ->
+--             case msg of
+--                 LoginMsg (Login.ProceedToBoot token) ->
+--                     let
+--                         ( bootModel, bootCmd ) =
+--                             Boot.init token
+--                     in
+--                     ( { model | state = BootState bootModel }, Cmd.map BootMsg bootCmd )
+--                 LoginMsg subMsg ->
+--                     let
+--                         ( newLoginModel, loginCmd ) =
+--                             Login.update subMsg loginModel
+--                     in
+--                     ( { model | state = LoginState newLoginModel }
+--                     , Cmd.batch [ Cmd.map LoginMsg loginCmd ]
+--                     )
+--                 _ ->
+--                     ( model, Cmd.none )
+--         BootState bootModel ->
+--             case msg of
+--                 BootMsg (Boot.ProceedToGame spModel) ->
+--                     let
+--                         ( osModel, osCmd ) =
+--                             OS.init ( model.flags.viewportX, model.flags.viewportY )
+--                         ( gameModel, playCmd ) =
+--                             Game.init spModel osModel
+--                     in
+--                     ( { model | state = GameState gameModel }
+--                     , Cmd.batch
+--                         [ Cmd.map GameMsg playCmd
+--                         , Cmd.map OSMsg osCmd
+--                         ]
+--                     )
+--                 BootMsg Boot.EstablishSSEConnection ->
+--                     ( model, eventStart bootModel.token )
+--                 BootMsg subMsg ->
+--                     let
+--                         ( newBootModel, bootCmd ) =
+--                             Boot.update subMsg bootModel
+--                     in
+--                     ( { model | state = BootState newBootModel }
+--                     , Cmd.batch [ Cmd.map BootMsg bootCmd ]
+--                     )
+--                 OnRawEventReceived rawEvent ->
+--                     let
+--                         eventResult =
+--                             Event.processReceivedEvent rawEvent
+--                         _ =
+--                             Debug.log "Event result" eventResult
+--                     in
+--                     ( model, Utils.msgToCmd (OnEventReceived eventResult) )
+--                 OnEventReceived (Ok event) ->
+--                     let
+--                         ( newBootModel, bootCmd ) =
+--                             Boot.update (Boot.OnEventReceived event) bootModel
+--                     in
+--                     ( { model | state = BootState newBootModel }
+--                     , Cmd.batch [ Cmd.map BootMsg bootCmd ]
+--                     )
+--                 _ ->
+--                     ( model, Cmd.none )
+--         GameState gameModel ->
+--             case msg of
+--                 ClickedLink urlRequest ->
+--                     ( model, Cmd.none )
+--                 ChangedUrl url ->
+--                     ( model, Cmd.none )
+--                 BrowserVisibilityChanged _ ->
+--                     -- We may do more things in the future
+--                     ( model, Utils.msgToCmd (OSMsg OS.BrowserVisibilityChanged) )
+--                 BrowserMouseUp ->
+--                     ( model, Utils.msgToCmd (OSMsg OS.StopDrag) )
+--                 -- BrowserResizedViewport v ->
+--                 --     let
+--                 --         debounceConfig =
+--                 --             Debounce.after 100 ResizedViewportDebouncing
+--                 --         ( debounce, cmd ) =
+--                 --             Debounce.push debounceConfig v model.resizeDebouncer
+--                 --     in
+--                 --     ( { model | resizeDebouncer = debounce }, cmd )
+--                 -- ResizedViewportDebounced ( w, h ) ->
+--                 --     ( { model | os = OS.updateViewport model.os ( w, h ) }, Cmd.none )
+--                 -- ResizedViewportDebouncing msg_ ->
+--                 --     let
+--                 --         debounceConfig =
+--                 --             Debounce.after 100 ResizedViewportDebouncing
+--                 --         ( debounce, cmd ) =
+--                 --             Debounce.update
+--                 --                 debounceConfig
+--                 --                 (Debounce.takeLast (Debounce.save ResizedViewportDebounced))
+--                 --                 msg_
+--                 --                 model.resizeDebouncer
+--                 --     in
+--                 --     ( { model | resizeDebouncer = debounce }, cmd )
+--                 OSMsg subMsg ->
+--                     -- NOTE: I'm attempting to keep Game and OS separate and independent of one
+--                     -- another. Let's see how it goes...
+--                     let
+--                         ( osModel, osCmd ) =
+--                             OS.update subMsg gameModel.os
+--                     in
+--                     ( { model | state = GameState { gameModel | os = osModel } }
+--                     , Cmd.batch [ Cmd.map OSMsg osCmd ]
+--                     )
+--                 GameMsg subMsg ->
+--                     ( model, Cmd.none )
+--                 LoginMsg _ ->
+--                     ( model, Cmd.none )
+--                 BootMsg _ ->
+--                     ( model, Cmd.none )
+--                 OnRawEventReceived ev ->
+--                     ( model, Cmd.none )
+--                 OnEventReceived ev ->
+--                     ( model, Cmd.none )
+--         InstallState ->
+--             ( model, Cmd.none )
+--         ErrorState ->
+--             ( model, Cmd.none )
 -- View
 
 
-view : Model -> UI.Document Msg
+view : Model navkey -> UI.Document Msg
 view model =
     case model.state of
         LoginState loginModel ->
@@ -327,7 +363,7 @@ view model =
 -- Subscriptions
 
 
-subscriptions : Model -> Sub Msg
+subscriptions : Model navkey -> Sub Msg
 subscriptions model =
     case model.state of
         GameState gameModel ->

@@ -1,6 +1,8 @@
 module Login exposing (..)
 
 import API.Lobby as LobbyAPI
+import API.Types
+import Effect exposing (Effect)
 import Task
 import UI exposing (UI, cl, col, id, row, style, text)
 import UI.Button
@@ -18,7 +20,7 @@ type Msg
     | SetPassword String
     | OnFormSubmit
     | ProceedToBoot String
-    | OnLoginResponse (Result (LobbyAPI.Error LobbyAPI.LoginError) LobbyAPI.LoginResponse)
+    | OnLoginResponse API.Types.LobbyLoginResult
 
 
 type alias Model =
@@ -40,34 +42,34 @@ initialModel =
 -- Update
 
 
-update : Msg -> Model -> ( Model, Cmd Msg )
+update : Msg -> Model -> ( Model, Effect Msg )
 update msg model =
     case msg of
         -- Intercepted by `Main`
         ProceedToBoot _ ->
-            ( model, Cmd.none )
+            ( model, Effect.none )
 
         SetEmail value ->
-            ( { model | email = value }, Cmd.none )
+            ( { model | email = value }, Effect.none )
 
         SetPassword value ->
-            ( { model | password = value }, Cmd.none )
+            ( { model | password = value }, Effect.none )
 
         OnFormSubmit ->
             let
-                task =
-                    LobbyAPI.login model.email model.password
+                config =
+                    LobbyAPI.loginConfig model.email model.password
             in
-            ( model, Task.attempt OnLoginResponse task )
+            ( model, Effect.lobbyLogin OnLoginResponse config )
 
         OnLoginResponse (Ok { token }) ->
-            ( model, Utils.msgToCmd <| ProceedToBoot token )
+            ( model, Effect.msgToCmd <| ProceedToBoot token )
 
-        OnLoginResponse (Err (LobbyAPI.AppError _)) ->
-            ( model, Cmd.none )
+        OnLoginResponse (Err (API.Types.AppError _)) ->
+            ( model, Effect.none )
 
-        OnLoginResponse (Err LobbyAPI.InternalError) ->
-            ( model, Cmd.none )
+        OnLoginResponse (Err API.Types.InternalError) ->
+            ( model, Effect.none )
 
 
 
