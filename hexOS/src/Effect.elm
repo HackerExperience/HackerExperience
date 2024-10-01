@@ -4,6 +4,7 @@ module Effect exposing (..)
 
 import API.Lobby as LobbyAPI
 import API.Types exposing (InputConfig)
+import Ports
 import Task exposing (Task)
 import UUID exposing (Seeds)
 import Utils
@@ -14,6 +15,7 @@ type Effect msg
     | Batch (List (Effect msg))
     | APIRequest (APIRequestEnum msg)
     | MsgToCmd msg
+    | StartSSESubscription String
 
 
 type APIRequestEnum msg
@@ -39,6 +41,9 @@ apply ( seeds, effect ) =
 
         MsgToCmd msg ->
             ( seeds, Utils.msgToCmd msg )
+
+        StartSSESubscription token ->
+            ( seeds, Ports.eventStart token )
 
 
 applyApiRequest : APIRequestEnum msg -> Seeds -> ( Seeds, Cmd msg )
@@ -68,14 +73,23 @@ batch =
     Batch
 
 
-lobbyLogin : (API.Types.LobbyLoginResult -> msg) -> InputConfig API.Types.LobbyLoginBody -> Effect msg
-lobbyLogin msg config =
-    APIRequest (LobbyLogin msg config)
-
-
 msgToCmd : msg -> Effect msg
 msgToCmd msg =
     MsgToCmd msg
+
+
+sseStart : String -> Effect msg
+sseStart token =
+    StartSSESubscription token
+
+
+
+-- Effects > API Requests
+
+
+lobbyLogin : (API.Types.LobbyLoginResult -> msg) -> InputConfig API.Types.LobbyLoginBody -> Effect msg
+lobbyLogin msg config =
+    APIRequest (LobbyLogin msg config)
 
 
 
@@ -98,3 +112,6 @@ map toMsg effect =
             case apiRequestType of
                 LobbyLogin msg body ->
                     APIRequest (LobbyLogin (\result -> toMsg (msg result)) body)
+
+        StartSSESubscription token ->
+            StartSSESubscription token

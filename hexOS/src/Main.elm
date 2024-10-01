@@ -1,4 +1,4 @@
-port module Main exposing (Flags, Msg(..), init, main, update, view, wrapInit, wrapUpdate)
+module Main exposing (Flags, Msg(..), init, main, update, view, wrapInit, wrapUpdate)
 
 import Boot
 import Browser
@@ -15,6 +15,7 @@ import Html exposing (Html)
 import Json.Decode as JD
 import Login
 import OS
+import Ports
 import Process
 import Random
 import Result
@@ -73,16 +74,6 @@ type alias Flags =
     , viewportX : Int
     , viewportY : Int
     }
-
-
-
--- Port (TODO)
-
-
-port eventStart : String -> Cmd msg
-
-
-port eventSubscriber : (String -> msg) -> Sub msg
 
 
 
@@ -181,13 +172,11 @@ update msg model =
         LoginState loginModel ->
             case msg of
                 LoginMsg (Login.ProceedToBoot token) ->
-                    -- TODO: Next up: refactor Boot
                     let
                         ( bootModel, bootCmd ) =
                             Boot.init token
                     in
-                    -- ( { model | state = BootState bootModel }, Cmd.map BootMsg bootCmd )
-                    ( { model | state = BootState bootModel }, Effect.none )
+                    ( { model | state = BootState bootModel }, Effect.map BootMsg bootCmd )
 
                 LoginMsg subMsg ->
                     let
@@ -196,6 +185,57 @@ update msg model =
                     in
                     ( { model | state = LoginState newLoginModel }
                     , Effect.batch [ Effect.map LoginMsg loginCmd ]
+                    )
+
+                _ ->
+                    ( model, Effect.none )
+
+        BootState bootModel ->
+            case msg of
+                BootMsg (Boot.ProceedToGame spModel) ->
+                    -- let
+                    --     ( osModel, osCmd ) =
+                    --         OS.init ( model.flags.viewportX, model.flags.viewportY )
+                    --     ( gameModel, playCmd ) =
+                    --         Game.init spModel osModel
+                    -- in
+                    -- ( { model | state = GameState gameModel }
+                    -- , Cmd.batch
+                    --     [ Cmd.map GameMsg playCmd
+                    --     , Cmd.map OSMsg osCmd
+                    --     ]
+                    -- )
+                    ( model, Effect.none )
+
+                BootMsg Boot.EstablishSSEConnection ->
+                    ( model, Effect.sseStart bootModel.token )
+
+                BootMsg subMsg ->
+                    let
+                        ( newBootModel, bootCmd ) =
+                            Boot.update subMsg bootModel
+                    in
+                    ( { model | state = BootState newBootModel }
+                    , Effect.batch [ Effect.map BootMsg bootCmd ]
+                    )
+
+                OnRawEventReceived rawEvent ->
+                    let
+                        eventResult =
+                            Event.processReceivedEvent rawEvent
+
+                        _ =
+                            Debug.log "Event result" eventResult
+                    in
+                    ( model, Effect.msgToCmd (OnEventReceived eventResult) )
+
+                OnEventReceived (Ok event) ->
+                    let
+                        ( newBootModel, bootCmd ) =
+                            Boot.update (Boot.OnEventReceived event) bootModel
+                    in
+                    ( { model | state = BootState newBootModel }
+                    , Effect.batch [ Effect.map BootMsg bootCmd ]
                     )
 
                 _ ->
@@ -379,4 +419,4 @@ subscriptions model =
                 ]
 
         _ ->
-            eventSubscriber OnRawEventReceived
+            Ports.eventSubscriber OnRawEventReceived
