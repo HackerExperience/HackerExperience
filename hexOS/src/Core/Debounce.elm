@@ -11,6 +11,6 @@ after time msg =
     }
 
 
-save : (v -> msg) -> v ->  Cmd msg
+save : (v -> msg) -> v -> Cmd msg
 save msg v =
     Task.perform msg (Task.succeed v)
