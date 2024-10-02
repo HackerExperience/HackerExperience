@@ -1,4 +1,4 @@
-module Main exposing (Flags, Msg(..), init, main, update, view, wrapInit, wrapUpdate)
+module Main exposing (Flags, Model, Msg(..), init, main, update, view, wrapInit, wrapUpdate)
 
 import Boot
 import Browser
