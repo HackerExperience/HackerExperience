@@ -6,7 +6,10 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "format": "elm-format src tests --validate",
+    "test": "./tests/setup.sh && elm-test",
+    "elm-review": "elm-review"
   },
   "devDependencies": {
     "elm-format": "^0.8.7",

@@ -1,0 +1,98 @@
+name: HexOS
+on: [push]
+
+jobs:
+  tests:
+    runs-on: ubuntu-24.04
+
+    defaults:
+      run:
+        working-directory: ./hexOS
+
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v4
+
+      - name: Cache node_modules
+        id: node_modules_cache
+        uses: actions/cache@v4
+        with:
+          path: hexOS/node_modules
+          key: hexos-node_modules-${{ hashFiles('hexOS/package-lock.json') }}
+
+      # ~/.elm contains downloaded dependencies and tools
+      - name: Cache ~/.elm
+        uses: actions/cache@v4
+        with:
+          path: ~/.elm
+          key: hexos-elm-${{ hashFiles('hexOS/elm.json', 'hexOS/review/elm.json') }}
+
+      - name: npm ci
+        if: steps.node_modules_cache.outputs.cache-hit != 'true'
+        run: npm ci
+
+      - name: Run tests
+        run: npm run test
+
+  linters:
+    runs-on: ubuntu-24.04
+
+    defaults:
+      run:
+        working-directory: ./hexOS
+
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v4
+
+      - name: Cache node_modules
+        id: node_modules_cache
+        uses: actions/cache@v4
+        with:
+          path: hexOS/node_modules
+          key: hexos-node_modules-${{ hashFiles('hexOS/package-lock.json') }}
+
+      - name: Cache ~/.elm
+        uses: actions/cache@v4
+        with:
+          path: ~/.elm
+          key: hexos-elm-${{ hashFiles('hexOS/elm.json', 'hexOS/review/elm.json') }}
+
+      - name: npm ci
+        if: steps.node_modules_cache.outputs.cache-hit != 'true'
+        run: npm ci
+
+      - name: Run elm-format
+        run: npm run format
+
+  build:
+    runs-on: ubuntu-24.04
+
+    defaults:
+      run:
+        working-directory: ./hexOS
+
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v4
+
+      - name: Cache node_modules
+        id: node_modules_cache
+        uses: actions/cache@v4
+        with:
+          path: hexOS/node_modules
+          key: hexos-node_modules-${{ hashFiles('hexOS/package-lock.json') }}
+
+      - name: Cache ~/.elm
+        uses: actions/cache@v4
+        with:
+          path: ~/.elm
+          key: hexos-elm-${{ hashFiles('hexOS/elm.json', 'hexOS/review/elm.json') }}
+
+      - name: npm ci
+        if: steps.node_modules_cache.outputs.cache-hit != 'true'
+        run: npm ci
+
+      # TODO: Make sure it compiles with correct/expected production values
+      - name: Build binary
+        run: npm run build
