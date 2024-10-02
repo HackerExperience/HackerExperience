@@ -9,10 +9,8 @@
 
 set -euo pipefail
 
-cd ../
-
 if [ ! -f "elm.json" ]; then
-    echo "Wrong dir" && exit 1
+    echo "Wrong dir; please run this script from hexOS root" && exit 1
 fi
 
 insert_import() {
