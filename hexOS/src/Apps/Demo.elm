@@ -2,6 +2,7 @@ module Apps.Demo exposing (..)
 
 import Apps.Manifest as App
 import Apps.Popups.ConfirmationDialog as ConfirmationDialog
+import Effect exposing (Effect)
 import OS.AppID exposing (AppID)
 import OS.Bus
 import UI exposing (UI, cl, col, id, row, text)
@@ -77,19 +78,19 @@ viewCounter model =
 -- Update
 
 
-update : Msg -> Model -> ( Model, Cmd Msg )
+update : Msg -> Model -> ( Model, Effect Msg )
 update msg model =
     case msg of
         IncrementCount ->
-            ( { model | count = model.count + 1 }, Cmd.none )
+            ( { model | count = model.count + 1 }, Effect.none )
 
         DecrementCount ->
-            ( { model | count = model.count - 1 }, Cmd.none )
+            ( { model | count = model.count - 1 }, Effect.none )
 
-        -- TODO: Maybe change update signature to be (model, Cmd Msg, [ OS.Bus.Action ])?
+        -- TODO: Maybe change update signature to be (model, Effect Msg, [ OS.Bus.Action ])?
         OpenBlockingPopup ->
             ( model
-            , Utils.msgToCmd
+            , Effect.msgToCmd
                 (ToOS <|
                     OS.Bus.RequestOpenApp
                         App.PopupConfirmationDialog
@@ -99,7 +100,7 @@ update msg model =
 
         OpenSingletonPopup ->
             ( model
-            , Utils.msgToCmd
+            , Effect.msgToCmd
                 (ToOS <|
                     OS.Bus.RequestOpenApp
                         App.PopupDemoSingleton
@@ -108,10 +109,10 @@ update msg model =
             )
 
         ToOS bus ->
-            ( model, Cmd.none )
+            ( model, Effect.none )
 
         FromConfirmationDialog _ _ ->
-            ( model, Cmd.none )
+            ( model, Effect.none )
 
 
 
@@ -133,10 +134,10 @@ willOpen window =
     OS.Bus.OpenApp App.DemoApp Nothing
 
 
-didOpen : WM.WindowInfo -> ( Model, Cmd Msg )
+didOpen : WM.WindowInfo -> ( Model, Effect Msg )
 didOpen { appId } =
     ( { appId = appId, count = 0 }
-    , Cmd.none
+    , Effect.none
     )
 
 
@@ -168,16 +169,16 @@ didOpenChild :
     Model
     -> ( App.Manifest, AppID )
     -> WM.WindowInfo
-    -> ( Model, Cmd Msg, OS.Bus.Action )
+    -> ( Model, Effect Msg, OS.Bus.Action )
 didOpenChild model _ _ =
-    ( model, Cmd.none, OS.Bus.NoOp )
+    ( model, Effect.none, OS.Bus.NoOp )
 
 
 didCloseChild :
     Model
     -> ( App.Manifest, AppID )
     -> WM.Window
-    -> ( Model, Cmd Msg, OS.Bus.Action )
+    -> ( Model, Effect Msg, OS.Bus.Action )
 didCloseChild model _ _ =
     -- TODO: Make defaults for these
-    ( model, Cmd.none, OS.Bus.NoOp )
+    ( model, Effect.none, OS.Bus.NoOp )

@@ -1,6 +1,7 @@
 module Apps.Popups.DemoSingleton exposing (..)
 
 import Apps.Manifest as App
+import Effect exposing (Effect)
 import OS.AppID exposing (AppID)
 import OS.Bus
 import UI exposing (UI, cl, col, id, row, text)
@@ -32,12 +33,12 @@ view model =
 -- Update
 
 
-update : Msg -> Model -> ( Model, Cmd Msg )
+update : Msg -> Model -> ( Model, Effect Msg )
 update msg model =
     case msg of
         ToApp _ _ _ ->
             -- Here we can return OS error msg
-            ( model, Cmd.none )
+            ( model, Effect.none )
 
 
 
@@ -59,9 +60,9 @@ willOpen window =
     OS.Bus.OpenApp App.PopupDemoSingleton window.parent
 
 
-didOpen : WM.WindowInfo -> ( Model, Cmd Msg )
+didOpen : WM.WindowInfo -> ( Model, Effect Msg )
 didOpen _ =
-    ( {}, Cmd.none )
+    ( {}, Effect.none )
 
 
 willClose : AppID -> Model -> WM.Window -> OS.Bus.Action

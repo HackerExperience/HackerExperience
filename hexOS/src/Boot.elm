@@ -1,5 +1,6 @@
 module Boot exposing (..)
 
+import Effect exposing (Effect)
 import Event exposing (Event)
 import Game.Universe
 import UI exposing (UI, cl, col, id, row, style, text)
@@ -25,10 +26,10 @@ type alias Model =
 -- Model
 
 
-init : String -> ( Model, Cmd Msg )
+init : String -> ( Model, Effect Msg )
 init token =
     ( { token = token }
-    , Utils.msgToCmd EstablishSSEConnection
+    , Effect.msgToCmd EstablishSSEConnection
     )
 
 
@@ -36,25 +37,25 @@ init token =
 -- Update
 
 
-update : Msg -> Model -> ( Model, Cmd Msg )
+update : Msg -> Model -> ( Model, Effect Msg )
 update msg model =
     case msg of
         -- Intercepted by `Main`
         ProceedToGame _ ->
-            ( model, Cmd.none )
+            ( model, Effect.none )
 
         -- Intercepted by `Main`
         EstablishSSEConnection ->
-            ( model, Cmd.none )
+            ( model, Effect.none )
 
         OnEventReceived event ->
             updateEvent model event
 
         NoOp ->
-            ( model, Cmd.none )
+            ( model, Effect.none )
 
 
-updateEvent : Model -> Event -> ( Model, Cmd Msg )
+updateEvent : Model -> Event -> ( Model, Effect Msg )
 updateEvent model event =
     case event of
         Event.IndexRequested { player } ->
@@ -62,7 +63,7 @@ updateEvent model event =
                 spModel =
                     Game.Universe.init player.mainframe_id
             in
-            ( model, Utils.msgToCmd <| ProceedToGame spModel )
+            ( model, Effect.msgToCmd <| ProceedToGame spModel )
 
 
 

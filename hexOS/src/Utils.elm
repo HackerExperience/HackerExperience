@@ -1,7 +1,7 @@
 module Utils exposing (..)
 
-import Task
 import Process
+import Task
 
 
 msgToCmd : msg -> Cmd msg

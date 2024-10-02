@@ -1,50 +1,40 @@
 module API.Lobby exposing (..)
 
 import API.Lobby.Api as Api
-import API.Lobby.Types as Types
+import API.Lobby.Types as LobbyTypes
+import API.Types as Types exposing (Error(..), InputConfig, LobbyLoginError(..), LobbyRegisterError(..))
+import Http exposing (Body, Expect, Header)
 import OpenApi.Common
 import Task exposing (Task)
 
 
-type Error a
-    = AppError a
-    | InternalError
+lobbyServer : String
+lobbyServer =
+    -- TODO
+    "http://localhost:4000"
 
 
-type LoginError
-    = Unauthorized
+loginConfig : String -> String -> InputConfig Types.LobbyLoginBody
+loginConfig email password =
+    { server = lobbyServer, body = { email = email, password = password } }
 
 
-type alias LoginResponse =
-    Types.UserLoginOutput
-
-
-login :
-    String
-    -> String
-    -> Task (Error LoginError) LoginResponse
-login email password =
-    let
-        config =
-            { server = "http://localhost:4000"
-            , body = { email = email, password = password }
-            }
-    in
+loginTask config =
     Api.userLoginTask config
         |> mapResponse genericDataMapper
         |> mapError
             (\apiError ->
                 case apiError of
-                    LegitimateError (Types.UserLogin_400 _) ->
+                    LegitimateError (LobbyTypes.UserLogin_400 _) ->
                         InternalError
 
-                    LegitimateError (Types.UserLogin_401 _) ->
-                        AppError Unauthorized
+                    LegitimateError (LobbyTypes.UserLogin_401 _) ->
+                        AppError LobbyLoginUnauthorized
 
-                    LegitimateError (Types.UserLogin_422 { error }) ->
+                    LegitimateError (LobbyTypes.UserLogin_422 { error }) ->
                         case error.msg of
                             "bad_password" ->
-                                AppError Unauthorized
+                                AppError LobbyLoginUnauthorized
 
                             _ ->
                                 InternalError

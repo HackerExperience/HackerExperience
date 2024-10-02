@@ -1,5 +1,6 @@
 module Game exposing (..)
 
+import Effect exposing (Effect)
 import Game.Universe
 import OS
 import UI exposing (UI)
@@ -23,12 +24,12 @@ type alias Model =
 -- Model
 
 
-init : Game.Universe.Model -> OS.Model -> ( Model, Cmd Msg )
+init : Game.Universe.Model -> OS.Model -> ( Model, Effect Msg )
 init mpModel osModel =
     ( { mp = mpModel
       , os = osModel
       }
-    , Cmd.none
+    , Effect.none
     )
 
 
@@ -36,8 +37,8 @@ init mpModel osModel =
 -- Update
 
 
-update : Msg -> Model -> ( Model, Cmd Msg )
+update : Msg -> Model -> ( Model, Effect Msg )
 update msg model =
     case msg of
         NoOp ->
-            ( model, Cmd.none )
+            ( model, Effect.none )
