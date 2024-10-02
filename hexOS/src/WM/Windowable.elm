@@ -7,6 +7,7 @@ import Apps.Manifest as App
 import Apps.Popups.ConfirmationDialog as ConfirmationDialog
 import Apps.Popups.DemoSingleton as DemoSingleton
 import Apps.Types as Apps
+import Effect exposing (Effect)
 import OS.AppID exposing (AppID)
 import OS.Bus
 import Utils
@@ -56,7 +57,7 @@ didOpen :
     App.Manifest
     -> AppID
     -> WM.WindowInfo
-    -> ( Apps.Model, Cmd Apps.Msg )
+    -> ( Apps.Model, Effect Apps.Msg )
 didOpen app appId windowInfo =
     let
         wrapMe appModel appMsg didOpenFn =
@@ -64,12 +65,12 @@ didOpen app appId windowInfo =
                 ( iModel, iCmd ) =
                     didOpenFn windowInfo
             in
-            ( appModel iModel, Cmd.map (appMsg appId) iCmd )
+            ( appModel iModel, Effect.map (appMsg appId) iCmd )
     in
     case app of
         App.InvalidApp ->
             ( Apps.InvalidModel
-            , Utils.msgToCmd Apps.InvalidMsg
+            , Effect.msgToCmd Apps.InvalidMsg
             )
 
         App.DemoApp ->
@@ -96,7 +97,7 @@ didOpenChild :
     -> Apps.Model
     -> ( App.Manifest, AppID )
     -> WM.WindowInfo
-    -> ( Apps.Model, Cmd Apps.Msg, OS.Bus.Action )
+    -> ( Apps.Model, Effect Apps.Msg, OS.Bus.Action )
 didOpenChild parentId parentModel childInfo windowInfo =
     let
         wrapMe toAppModel toAppMsg didOpenChildFn =
@@ -104,11 +105,11 @@ didOpenChild parentId parentModel childInfo windowInfo =
                 ( iModel, iCmd, action ) =
                     didOpenChildFn childInfo windowInfo
             in
-            ( toAppModel iModel, Cmd.map (toAppMsg parentId) iCmd, action )
+            ( toAppModel iModel, Effect.map (toAppMsg parentId) iCmd, action )
     in
     case parentModel of
         Apps.InvalidModel ->
-            ( Apps.InvalidModel, Cmd.none, OS.Bus.NoOp )
+            ( Apps.InvalidModel, Effect.none, OS.Bus.NoOp )
 
         Apps.DemoModel model ->
             wrapMe
@@ -119,10 +120,10 @@ didOpenChild parentId parentModel childInfo windowInfo =
         -- Default. All patterns below could be a catch-all, but we need to have an
         -- "extractModel" function for the first parameter
         Apps.PopupConfirmationDialogModel model ->
-            ( Apps.PopupConfirmationDialogModel model, Cmd.none, OS.Bus.NoOp )
+            ( Apps.PopupConfirmationDialogModel model, Effect.none, OS.Bus.NoOp )
 
         Apps.PopupDemoSingletonModel model ->
-            ( Apps.PopupDemoSingletonModel model, Cmd.none, OS.Bus.NoOp )
+            ( Apps.PopupDemoSingletonModel model, Effect.none, OS.Bus.NoOp )
 
 
 willClose : WM.Window -> Apps.Model -> OS.Bus.Action
@@ -147,7 +148,7 @@ didCloseChild :
     -> Apps.Model
     -> ( App.Manifest, AppID )
     -> WM.Window
-    -> ( Apps.Model, Cmd Apps.Msg, OS.Bus.Action )
+    -> ( Apps.Model, Effect Apps.Msg, OS.Bus.Action )
 didCloseChild parentId parentModel childInfo parentWindow =
     let
         wrapMe toAppModel toAppMsg didCloseChildFn =
@@ -155,11 +156,11 @@ didCloseChild parentId parentModel childInfo parentWindow =
                 ( iModel, iCmd, action ) =
                     didCloseChildFn childInfo parentWindow
             in
-            ( toAppModel iModel, Cmd.map (toAppMsg parentId) iCmd, action )
+            ( toAppModel iModel, Effect.map (toAppMsg parentId) iCmd, action )
     in
     case parentModel of
         Apps.InvalidModel ->
-            ( Apps.InvalidModel, Cmd.none, OS.Bus.NoOp )
+            ( Apps.InvalidModel, Effect.none, OS.Bus.NoOp )
 
         Apps.DemoModel model ->
             wrapMe
@@ -170,10 +171,10 @@ didCloseChild parentId parentModel childInfo parentWindow =
         -- Default. All patterns below could be a catch-all, but we need to have an
         -- "extractModel" function for the first parameter
         Apps.PopupConfirmationDialogModel model ->
-            ( Apps.PopupConfirmationDialogModel model, Cmd.none, OS.Bus.NoOp )
+            ( Apps.PopupConfirmationDialogModel model, Effect.none, OS.Bus.NoOp )
 
         Apps.PopupDemoSingletonModel model ->
-            ( Apps.PopupDemoSingletonModel model, Cmd.none, OS.Bus.NoOp )
+            ( Apps.PopupDemoSingletonModel model, Effect.none, OS.Bus.NoOp )
 
 
 willFocus : App.Manifest -> AppID -> WM.Window -> OS.Bus.Action

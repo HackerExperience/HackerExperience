@@ -14,7 +14,7 @@ type Effect msg
     = None
     | Batch (List (Effect msg))
     | APIRequest (APIRequestEnum msg)
-    | MsgToCmd msg
+    | MsgToCmd Float msg
     | StartSSESubscription String
 
 
@@ -39,8 +39,13 @@ apply ( seeds, effect ) =
         APIRequest requestType ->
             applyApiRequest requestType seeds
 
-        MsgToCmd msg ->
-            ( seeds, Utils.msgToCmd msg )
+        MsgToCmd delay msg ->
+            -- TODO: maybe remove Utils call and implement `msgToCmd[WithDelay]` here, directly
+            if delay == 0.0 then
+                ( seeds, Utils.msgToCmd msg )
+
+            else
+                ( seeds, Utils.msgToCmdWithDelay delay msg )
 
         StartSSESubscription token ->
             ( seeds, Ports.eventStart token )
@@ -75,7 +80,12 @@ batch =
 
 msgToCmd : msg -> Effect msg
 msgToCmd msg =
-    MsgToCmd msg
+    MsgToCmd 0.0 msg
+
+
+msgToCmdWithDelay : Float -> msg -> Effect msg
+msgToCmdWithDelay delay msg =
+    MsgToCmd delay msg
 
 
 sseStart : String -> Effect msg
@@ -105,8 +115,8 @@ map toMsg effect =
         Batch effects ->
             Batch (List.map (map toMsg) effects)
 
-        MsgToCmd msg ->
-            MsgToCmd (toMsg msg)
+        MsgToCmd delay msg ->
+            MsgToCmd delay (toMsg msg)
 
         APIRequest apiRequestType ->
             case apiRequestType of

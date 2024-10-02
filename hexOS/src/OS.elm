@@ -6,6 +6,7 @@ import Apps.Popups.ConfirmationDialog as ConfirmationDialog
 import Apps.Popups.DemoSingleton as DemoSingleton
 import Apps.Types as Apps
 import Dict exposing (Dict)
+import Effect exposing (Effect)
 import Html exposing (Html)
 import Html.Events as HE
 import Json.Decode as JD
@@ -55,7 +56,7 @@ type alias AppConfig =
 -- Model
 
 
-init : WM.XY -> ( Model, Cmd Msg )
+init : WM.XY -> ( Model, Effect Msg )
 init viewport =
     let
         wmModel =
@@ -65,7 +66,7 @@ init viewport =
       , appModels = Dict.empty
       , appConfigs = Dict.empty
       }
-    , Cmd.none
+    , Effect.none
     )
 
 
@@ -95,12 +96,12 @@ updateViewport model viewport =
 -- Update
 
 
-update : Msg -> Model -> ( Model, Cmd Msg )
+update : Msg -> Model -> ( Model, Effect Msg )
 update msg model =
     case msg of
         -- Performs
         PerformAction OS.Bus.NoOp ->
-            ( model, Cmd.none )
+            ( model, Effect.none )
 
         PerformAction (OS.Bus.RequestOpenApp app parentInfo) ->
             performRequestOpen model app parentInfo
@@ -155,8 +156,8 @@ update msg model =
 performActionOnApp :
     Model
     -> AppID
-    -> (Model -> AppID -> ( Model, Cmd Msg ))
-    -> ( Model, Cmd Msg )
+    -> (Model -> AppID -> ( Model, Effect Msg ))
+    -> ( Model, Effect Msg )
 performActionOnApp model appId fun =
     case WM.windowExists model.wm appId of
         True ->
@@ -164,14 +165,14 @@ performActionOnApp model appId fun =
 
         -- TODO: Display OSErrorPopup when this happens
         False ->
-            ( model, Cmd.none )
+            ( model, Effect.none )
 
 
 performRequestOpen :
     Model
     -> App.Manifest
     -> Maybe WM.ParentInfo
-    -> ( Model, Cmd Msg )
+    -> ( Model, Effect Msg )
 performRequestOpen model app parentInfo =
     let
         appId =
@@ -223,10 +224,10 @@ performRequestOpen model app parentInfo =
                 _ ->
                     action
     in
-    ( model, Utils.msgToCmd (PerformAction finalAction) )
+    ( model, Effect.msgToCmd (PerformAction finalAction) )
 
 
-performRequestClose : Model -> AppID -> ( Model, Cmd Msg )
+performRequestClose : Model -> AppID -> ( Model, Effect Msg )
 performRequestClose model appId =
     let
         window =
@@ -251,10 +252,10 @@ performRequestClose model appId =
                 otherAction ->
                     otherAction
     in
-    ( model, Utils.msgToCmd (PerformAction action) )
+    ( model, Effect.msgToCmd (PerformAction action) )
 
 
-performRequestCloseChildren : Model -> AppID -> ( Model, Cmd Msg )
+performRequestCloseChildren : Model -> AppID -> ( Model, Effect Msg )
 performRequestCloseChildren model parentId =
     let
         parentWindow =
@@ -279,7 +280,7 @@ performRequestCloseChildren model parentId =
                 _ ->
                     unifiedAction
     in
-    ( model, Utils.msgToCmd (PerformAction action) )
+    ( model, Effect.msgToCmd (PerformAction action) )
 
 
 
@@ -313,7 +314,7 @@ requestCloseChild model ( _, childId ) onReject =
             Stop baseAction
 
 
-performRequestFocus : Model -> AppID -> ( Model, Cmd Msg )
+performRequestFocus : Model -> AppID -> ( Model, Effect Msg )
 performRequestFocus model appId =
     let
         window =
@@ -322,14 +323,14 @@ performRequestFocus model appId =
         action =
             WM.Windowable.willFocus window.app appId window
     in
-    ( model, Utils.msgToCmd (PerformAction action) )
+    ( model, Effect.msgToCmd (PerformAction action) )
 
 
 performOpenApp :
     Model
     -> App.Manifest
     -> Maybe WM.ParentInfo
-    -> ( Model, Cmd Msg )
+    -> ( Model, Effect Msg )
 performOpenApp model app parentInfo =
     let
         appId =
@@ -356,10 +357,10 @@ performOpenApp model app parentInfo =
                                 ( app, appId )
                                 windowInfo
                     in
-                    ( Just parentModel_, Cmd.map AppMsg parentCmd_, parentAction_ )
+                    ( Just parentModel_, Effect.map AppMsg parentCmd_, parentAction_ )
 
                 Nothing ->
-                    ( Nothing, Cmd.none, OS.Bus.NoOp )
+                    ( Nothing, Effect.none, OS.Bus.NoOp )
 
         newWm =
             WM.registerApp model.wm app appId windowConfig parentInfo
@@ -372,14 +373,14 @@ performOpenApp model app parentInfo =
             case windowConfig.misc of
                 Just { vibrateOnOpen } ->
                     if vibrateOnOpen then
-                        Utils.msgToCmdWithDelay 1000.0
+                        Effect.msgToCmdWithDelay 1000.0
                             (PerformAction <| OS.Bus.UnvibrateApp appId)
 
                     else
-                        Cmd.none
+                        Effect.none
 
                 Nothing ->
-                    Cmd.none
+                    Effect.none
 
         appConfig =
             { appType = app }
@@ -392,14 +393,14 @@ performOpenApp model app parentInfo =
         , appConfigs = newAppConfigs
         , wm = newWm
       }
-    , Cmd.batch
+    , Effect.batch
         [ osCmd
         , parentCmd
         ]
     )
 
 
-performCloseApp : Model -> AppID -> ( Model, Cmd Msg )
+performCloseApp : Model -> AppID -> ( Model, Effect Msg )
 performCloseApp model appId =
     let
         -- TODO: Implement didClose if we need to do in-app clean-up
@@ -419,10 +420,10 @@ performCloseApp model appId =
                                 ( window.app, appId )
                                 window
                     in
-                    ( Just parentModel_, Cmd.map AppMsg parentCmd_, parentAction_ )
+                    ( Just parentModel_, Effect.map AppMsg parentCmd_, parentAction_ )
 
                 Nothing ->
-                    ( Nothing, Cmd.none, OS.Bus.NoOp )
+                    ( Nothing, Effect.none, OS.Bus.NoOp )
 
         linkedChildren =
             WM.getLinkedChildren model.wm appId
@@ -467,72 +468,72 @@ maybeRemoveChildrenConfigs linkedChildren appConfigs =
         linkedChildren
 
 
-performFocusApp : Model -> AppID -> ( Model, Cmd Msg )
+performFocusApp : Model -> AppID -> ( Model, Effect Msg )
 performFocusApp model appId =
-    ( { model | wm = WM.focusApp model.wm appId }, Cmd.none )
+    ( { model | wm = WM.focusApp model.wm appId }, Effect.none )
 
 
-performFocusVibrateApp : Model -> AppID -> ( Model, Cmd Msg )
+performFocusVibrateApp : Model -> AppID -> ( Model, Effect Msg )
 performFocusVibrateApp model appId =
     let
         -- TODO: Also zIndex + 1 the parent popup
         -- TODO: Move to util
         cmd =
-            Utils.msgToCmdWithDelay 1000.0 (PerformAction <| OS.Bus.UnvibrateApp appId)
+            Effect.msgToCmdWithDelay 1000.0 (PerformAction <| OS.Bus.UnvibrateApp appId)
     in
     ( { model | wm = WM.focusVibrateApp model.wm appId }, cmd )
 
 
-performUnvibrateApp : Model -> AppID -> ( Model, Cmd Msg )
+performUnvibrateApp : Model -> AppID -> ( Model, Effect Msg )
 performUnvibrateApp model appId =
-    ( { model | wm = WM.unvibrateApp model.wm appId }, Cmd.none )
+    ( { model | wm = WM.unvibrateApp model.wm appId }, Effect.none )
 
 
 
 -- Update > Drag
 
 
-startDrag : WM.X -> WM.Y -> Model -> AppID -> ( Model, Cmd Msg )
+startDrag : WM.X -> WM.Y -> Model -> AppID -> ( Model, Effect Msg )
 startDrag x y model appId =
-    ( { model | wm = WM.startDrag model.wm appId x y }, Cmd.none )
+    ( { model | wm = WM.startDrag model.wm appId x y }, Effect.none )
 
 
-applyDrag : Model -> WM.X -> WM.Y -> ( Model, Cmd Msg )
+applyDrag : Model -> WM.X -> WM.Y -> ( Model, Effect Msg )
 applyDrag model x y =
-    ( { model | wm = WM.applyDrag model.wm x y }, Cmd.none )
+    ( { model | wm = WM.applyDrag model.wm x y }, Effect.none )
 
 
-stopDrag : Model -> ( Model, Cmd Msg )
+stopDrag : Model -> ( Model, Effect Msg )
 stopDrag model =
-    ( { model | wm = WM.stopDrag model.wm }, Cmd.none )
+    ( { model | wm = WM.stopDrag model.wm }, Effect.none )
 
 
 
 -- Update > Browser Events
 
 
-updateVisibilityChanged : Model -> ( Model, Cmd Msg )
+updateVisibilityChanged : Model -> ( Model, Effect Msg )
 updateVisibilityChanged model =
     case WM.isDragging model.wm of
         True ->
-            ( { model | wm = WM.stopDrag model.wm }, Cmd.none )
+            ( { model | wm = WM.stopDrag model.wm }, Effect.none )
 
         False ->
-            ( model, Cmd.none )
+            ( model, Effect.none )
 
 
 
 -- Update > Apps
 
 
-dispatchUpdateApp : Model -> Apps.Msg -> ( Model, Cmd Msg )
+dispatchUpdateApp : Model -> Apps.Msg -> ( Model, Effect Msg )
 dispatchUpdateApp model appMsg =
     case appMsg of
         Apps.InvalidMsg ->
-            ( model, Cmd.none )
+            ( model, Effect.none )
 
         Apps.DemoMsg appId (Demo.ToOS busAction) ->
-            ( model, Utils.msgToCmd (PerformAction busAction) )
+            ( model, Effect.msgToCmd (PerformAction busAction) )
 
         Apps.DemoMsg appId subMsg ->
             case getAppModel model.appModels appId of
@@ -547,7 +548,7 @@ dispatchUpdateApp model appMsg =
                         Demo.update
 
                 _ ->
-                    ( model, Cmd.none )
+                    ( model, Effect.none )
 
         -- Popups
         Apps.PopupConfirmationDialogMsg popupId (ConfirmationDialog.ToApp appId app action) ->
@@ -566,14 +567,14 @@ dispatchUpdateApp model appMsg =
                             -- OS error window re. unhandled app type
                             PerformAction OS.Bus.NoOp
             in
-            ( model, Utils.msgToCmd newAppMsg )
+            ( model, Effect.msgToCmd newAppMsg )
 
         Apps.PopupDemoSingletonMsg popupId (DemoSingleton.ToApp appId app action) ->
             let
                 newAppMsg =
                     PerformAction OS.Bus.NoOp
             in
-            ( model, Utils.msgToCmd newAppMsg )
+            ( model, Effect.msgToCmd newAppMsg )
 
 
 updateApp :
@@ -583,20 +584,20 @@ updateApp :
     -> appMsg
     -> (appModel -> Apps.Model)
     -> (AppID -> appMsg -> Apps.Msg)
-    -> (appMsg -> appModel -> ( appModel, Cmd appMsg ))
-    -> ( Model, Cmd Msg )
+    -> (appMsg -> appModel -> ( appModel, Effect appMsg ))
+    -> ( Model, Effect Msg )
 updateApp model appId appModel appMsg toAppModel toAppMsg updateFn =
     let
         ( newAppModel, appCmd ) =
             updateFn appMsg appModel
 
         midCmd =
-            Cmd.map (toAppMsg appId) appCmd
+            Effect.map (toAppMsg appId) appCmd
 
         newAppModels =
             Dict.insert appId (toAppModel newAppModel) model.appModels
     in
-    ( { model | appModels = newAppModels }, Cmd.batch [ Cmd.map AppMsg midCmd ] )
+    ( { model | appModels = newAppModels }, Effect.batch [ Effect.map AppMsg midCmd ] )
 
 
 maybeUpdateParentModel : Maybe WM.ParentInfo -> Maybe Apps.Model -> AppModels -> AppModels

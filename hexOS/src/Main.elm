@@ -193,19 +193,19 @@ update msg model =
         BootState bootModel ->
             case msg of
                 BootMsg (Boot.ProceedToGame spModel) ->
-                    -- let
-                    --     ( osModel, osCmd ) =
-                    --         OS.init ( model.flags.viewportX, model.flags.viewportY )
-                    --     ( gameModel, playCmd ) =
-                    --         Game.init spModel osModel
-                    -- in
-                    -- ( { model | state = GameState gameModel }
-                    -- , Cmd.batch
-                    --     [ Cmd.map GameMsg playCmd
-                    --     , Cmd.map OSMsg osCmd
-                    --     ]
-                    -- )
-                    ( model, Effect.none )
+                    let
+                        ( osModel, osCmd ) =
+                            OS.init ( model.flags.viewportX, model.flags.viewportY )
+
+                        ( gameModel, playCmd ) =
+                            Game.init spModel osModel
+                    in
+                    ( { model | state = GameState gameModel }
+                    , Effect.batch
+                        [ Effect.map GameMsg playCmd
+                        , Effect.map OSMsg osCmd
+                        ]
+                    )
 
                 BootMsg Boot.EstablishSSEConnection ->
                     ( model, Effect.sseStart bootModel.token )
@@ -241,132 +241,77 @@ update msg model =
                 _ ->
                     ( model, Effect.none )
 
-        _ ->
+        GameState gameModel ->
+            case msg of
+                ClickedLink urlRequest ->
+                    ( model, Effect.none )
+
+                ChangedUrl url ->
+                    ( model, Effect.none )
+
+                BrowserVisibilityChanged _ ->
+                    -- We may do more things in the future
+                    ( model, Effect.msgToCmd (OSMsg OS.BrowserVisibilityChanged) )
+
+                BrowserMouseUp ->
+                    ( model, Effect.msgToCmd (OSMsg OS.StopDrag) )
+
+                -- BrowserResizedViewport v ->
+                --     let
+                --         debounceConfig =
+                --             Debounce.after 100 ResizedViewportDebouncing
+                --         ( debounce, cmd ) =
+                --             Debounce.push debounceConfig v model.resizeDebouncer
+                --     in
+                --     ( { model | resizeDebouncer = debounce }, cmd )
+                -- ResizedViewportDebounced ( w, h ) ->
+                --     ( { model | os = OS.updateViewport model.os ( w, h ) }, Cmd.none )
+                -- ResizedViewportDebouncing msg_ ->
+                --     let
+                --         debounceConfig =
+                --             Debounce.after 100 ResizedViewportDebouncing
+                --         ( debounce, cmd ) =
+                --             Debounce.update
+                --                 debounceConfig
+                --                 (Debounce.takeLast (Debounce.save ResizedViewportDebounced))
+                --                 msg_
+                --                 model.resizeDebouncer
+                --     in
+                --     ( { model | resizeDebouncer = debounce }, cmd )
+                OSMsg subMsg ->
+                    -- NOTE: I'm attempting to keep Game and OS separate and independent of one
+                    -- another. Let's see how it goes...
+                    let
+                        ( osModel, osCmd ) =
+                            OS.update subMsg gameModel.os
+                    in
+                    ( { model | state = GameState { gameModel | os = osModel } }
+                    , Effect.batch [ Effect.map OSMsg osCmd ]
+                    )
+
+                GameMsg subMsg ->
+                    ( model, Effect.none )
+
+                LoginMsg _ ->
+                    ( model, Effect.none )
+
+                BootMsg _ ->
+                    ( model, Effect.none )
+
+                OnRawEventReceived ev ->
+                    ( model, Effect.none )
+
+                OnEventReceived ev ->
+                    ( model, Effect.none )
+
+        InstallState ->
+            ( model, Effect.none )
+
+        ErrorState ->
             ( model, Effect.none )
 
 
 
--- update2 : Msg -> Model -> ( Model, Cmd Msg )
--- update2 msg model =
---     case model.state of
---         LoginState loginModel ->
---             case msg of
---                 LoginMsg (Login.ProceedToBoot token) ->
---                     let
---                         ( bootModel, bootCmd ) =
---                             Boot.init token
---                     in
---                     ( { model | state = BootState bootModel }, Cmd.map BootMsg bootCmd )
---                 LoginMsg subMsg ->
---                     let
---                         ( newLoginModel, loginCmd ) =
---                             Login.update subMsg loginModel
---                     in
---                     ( { model | state = LoginState newLoginModel }
---                     , Cmd.batch [ Cmd.map LoginMsg loginCmd ]
---                     )
---                 _ ->
---                     ( model, Cmd.none )
---         BootState bootModel ->
---             case msg of
---                 BootMsg (Boot.ProceedToGame spModel) ->
---                     let
---                         ( osModel, osCmd ) =
---                             OS.init ( model.flags.viewportX, model.flags.viewportY )
---                         ( gameModel, playCmd ) =
---                             Game.init spModel osModel
---                     in
---                     ( { model | state = GameState gameModel }
---                     , Cmd.batch
---                         [ Cmd.map GameMsg playCmd
---                         , Cmd.map OSMsg osCmd
---                         ]
---                     )
---                 BootMsg Boot.EstablishSSEConnection ->
---                     ( model, eventStart bootModel.token )
---                 BootMsg subMsg ->
---                     let
---                         ( newBootModel, bootCmd ) =
---                             Boot.update subMsg bootModel
---                     in
---                     ( { model | state = BootState newBootModel }
---                     , Cmd.batch [ Cmd.map BootMsg bootCmd ]
---                     )
---                 OnRawEventReceived rawEvent ->
---                     let
---                         eventResult =
---                             Event.processReceivedEvent rawEvent
---                         _ =
---                             Debug.log "Event result" eventResult
---                     in
---                     ( model, Utils.msgToCmd (OnEventReceived eventResult) )
---                 OnEventReceived (Ok event) ->
---                     let
---                         ( newBootModel, bootCmd ) =
---                             Boot.update (Boot.OnEventReceived event) bootModel
---                     in
---                     ( { model | state = BootState newBootModel }
---                     , Cmd.batch [ Cmd.map BootMsg bootCmd ]
---                     )
---                 _ ->
---                     ( model, Cmd.none )
---         GameState gameModel ->
---             case msg of
---                 ClickedLink urlRequest ->
---                     ( model, Cmd.none )
---                 ChangedUrl url ->
---                     ( model, Cmd.none )
---                 BrowserVisibilityChanged _ ->
---                     -- We may do more things in the future
---                     ( model, Utils.msgToCmd (OSMsg OS.BrowserVisibilityChanged) )
---                 BrowserMouseUp ->
---                     ( model, Utils.msgToCmd (OSMsg OS.StopDrag) )
---                 -- BrowserResizedViewport v ->
---                 --     let
---                 --         debounceConfig =
---                 --             Debounce.after 100 ResizedViewportDebouncing
---                 --         ( debounce, cmd ) =
---                 --             Debounce.push debounceConfig v model.resizeDebouncer
---                 --     in
---                 --     ( { model | resizeDebouncer = debounce }, cmd )
---                 -- ResizedViewportDebounced ( w, h ) ->
---                 --     ( { model | os = OS.updateViewport model.os ( w, h ) }, Cmd.none )
---                 -- ResizedViewportDebouncing msg_ ->
---                 --     let
---                 --         debounceConfig =
---                 --             Debounce.after 100 ResizedViewportDebouncing
---                 --         ( debounce, cmd ) =
---                 --             Debounce.update
---                 --                 debounceConfig
---                 --                 (Debounce.takeLast (Debounce.save ResizedViewportDebounced))
---                 --                 msg_
---                 --                 model.resizeDebouncer
---                 --     in
---                 --     ( { model | resizeDebouncer = debounce }, cmd )
---                 OSMsg subMsg ->
---                     -- NOTE: I'm attempting to keep Game and OS separate and independent of one
---                     -- another. Let's see how it goes...
---                     let
---                         ( osModel, osCmd ) =
---                             OS.update subMsg gameModel.os
---                     in
---                     ( { model | state = GameState { gameModel | os = osModel } }
---                     , Cmd.batch [ Cmd.map OSMsg osCmd ]
---                     )
---                 GameMsg subMsg ->
---                     ( model, Cmd.none )
---                 LoginMsg _ ->
---                     ( model, Cmd.none )
---                 BootMsg _ ->
---                     ( model, Cmd.none )
---                 OnRawEventReceived ev ->
---                     ( model, Cmd.none )
---                 OnEventReceived ev ->
---                     ( model, Cmd.none )
---         InstallState ->
---             ( model, Cmd.none )
---         ErrorState ->
---             ( model, Cmd.none )
 -- View
 
 
