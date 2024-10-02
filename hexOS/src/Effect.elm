@@ -16,6 +16,7 @@ type Effect msg
     | APIRequest (APIRequestEnum msg)
     | MsgToCmd Float msg
     | StartSSESubscription String
+    | DebouncedCmd (Cmd msg)
 
 
 type APIRequestEnum msg
@@ -49,6 +50,10 @@ apply ( seeds, effect ) =
 
         StartSSESubscription token ->
             ( seeds, Ports.eventStart token )
+
+        -- The `elm-debounce` library always returns a Cmd. We are merely wrapping it into an Effect
+        DebouncedCmd cmd ->
+            ( seeds, cmd )
 
 
 applyApiRequest : APIRequestEnum msg -> Seeds -> ( Seeds, Cmd msg )
@@ -93,6 +98,11 @@ sseStart token =
     StartSSESubscription token
 
 
+debouncedCmd : Cmd msg -> Effect msg
+debouncedCmd cmd =
+    DebouncedCmd cmd
+
+
 
 -- Effects > API Requests
 
@@ -125,3 +135,6 @@ map toMsg effect =
 
         StartSSESubscription token ->
             StartSSESubscription token
+
+        DebouncedCmd cmd ->
+            DebouncedCmd (Cmd.map toMsg cmd)

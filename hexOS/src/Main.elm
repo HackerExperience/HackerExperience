@@ -31,9 +31,9 @@ import WM
 type Msg
     = ClickedLink Browser.UrlRequest
     | ChangedUrl Url
-      -- | BrowserResizedViewport ( Int, Int )
-      -- | ResizedViewportDebounced ( Int, Int )
-      -- | ResizedViewportDebouncing Debounce.Msg
+    | BrowserResizedViewport ( Int, Int )
+    | ResizedViewportDebounced ( Int, Int )
+    | ResizedViewportDebouncing Debounce.Msg
     | BrowserMouseUp
     | BrowserVisibilityChanged Browser.Events.Visibility
     | GameMsg Game.Msg
@@ -60,8 +60,7 @@ type alias Model navkey =
     , flags : Flags
     , state : State
     , navKey : navkey
-
-    -- , resizeDebouncer : Debounce ( Int, Int )
+    , resizeDebouncer : Debounce ( Int, Int )
     }
 
 
@@ -140,8 +139,7 @@ init flags url navKey =
       , flags = flags
       , state = LoginState Login.initialModel
       , navKey = navKey
-
-      -- , resizeDebouncer = Debounce.init
+      , resizeDebouncer = Debounce.init
       }
       -- , Cmd.batch
       --     [ Cmd.map OSMsg osCmd
@@ -256,28 +254,37 @@ update msg model =
                 BrowserMouseUp ->
                     ( model, Effect.msgToCmd (OSMsg OS.StopDrag) )
 
-                -- BrowserResizedViewport v ->
-                --     let
-                --         debounceConfig =
-                --             Debounce.after 100 ResizedViewportDebouncing
-                --         ( debounce, cmd ) =
-                --             Debounce.push debounceConfig v model.resizeDebouncer
-                --     in
-                --     ( { model | resizeDebouncer = debounce }, cmd )
-                -- ResizedViewportDebounced ( w, h ) ->
-                --     ( { model | os = OS.updateViewport model.os ( w, h ) }, Cmd.none )
-                -- ResizedViewportDebouncing msg_ ->
-                --     let
-                --         debounceConfig =
-                --             Debounce.after 100 ResizedViewportDebouncing
-                --         ( debounce, cmd ) =
-                --             Debounce.update
-                --                 debounceConfig
-                --                 (Debounce.takeLast (Debounce.save ResizedViewportDebounced))
-                --                 msg_
-                --                 model.resizeDebouncer
-                --     in
-                --     ( { model | resizeDebouncer = debounce }, cmd )
+                BrowserResizedViewport v ->
+                    let
+                        debounceConfig =
+                            Debounce.after 100 ResizedViewportDebouncing
+
+                        ( debounce, cmd ) =
+                            Debounce.push debounceConfig v model.resizeDebouncer
+                    in
+                    ( { model | resizeDebouncer = debounce }, Effect.debouncedCmd cmd )
+
+                ResizedViewportDebouncing msg_ ->
+                    let
+                        debounceConfig =
+                            Debounce.after 100 ResizedViewportDebouncing
+
+                        ( debounce, cmd ) =
+                            Debounce.update
+                                debounceConfig
+                                (Debounce.takeLast (Debounce.save ResizedViewportDebounced))
+                                msg_
+                                model.resizeDebouncer
+                    in
+                    ( { model | resizeDebouncer = debounce }, Effect.debouncedCmd cmd )
+
+                ResizedViewportDebounced ( w, h ) ->
+                    let
+                        osModel =
+                            OS.updateViewport gameModel.os ( w, h )
+                    in
+                    ( { model | state = GameState { gameModel | os = osModel } }, Effect.none )
+
                 OSMsg subMsg ->
                     -- NOTE: I'm attempting to keep Game and OS separate and independent of one
                     -- another. Let's see how it goes...
@@ -353,8 +360,8 @@ subscriptions model =
     case model.state of
         GameState gameModel ->
             Sub.batch
-                [ -- Browser.Events.onResize (\w h -> BrowserResizedViewport ( w, h ))
-                  Browser.Events.onVisibilityChange BrowserVisibilityChanged
+                [ Browser.Events.onResize (\w h -> BrowserResizedViewport ( w, h ))
+                , Browser.Events.onVisibilityChange BrowserVisibilityChanged
                 , case WM.isDragging gameModel.os.wm of
                     True ->
                         Browser.Events.onMouseUp (JD.succeed BrowserMouseUp)
