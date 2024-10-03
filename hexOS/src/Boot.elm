@@ -42,9 +42,8 @@ update msg model =
         ProceedToGame _ ->
             ( model, Effect.none )
 
-        -- Intercepted by `Main`
         EstablishSSEConnection ->
-            ( model, Effect.none )
+            ( model, Effect.sseStart model.token )
 
         OnEventReceived event ->
             updateEvent model event

@@ -192,9 +192,6 @@ update msg model =
                         ]
                     )
 
-                BootMsg Boot.EstablishSSEConnection ->
-                    ( model, Effect.sseStart bootModel.token )
-
                 BootMsg subMsg ->
                     let
                         ( newBootModel, bootCmd ) =
