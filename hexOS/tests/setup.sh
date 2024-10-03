@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Why this file exists? Well, we use elm-program-test for thorough testing and we often need some
 # modules to be changed slightly for them to be "mocked" via the "SimulatedEffects pattern".
