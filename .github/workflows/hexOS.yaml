@@ -65,6 +65,9 @@ jobs:
       - name: Run elm-format
         run: npm run format
 
+      - name: Run elm-review
+        run: npm run elm-review
+
   build:
     runs-on: ubuntu-24.04
 
