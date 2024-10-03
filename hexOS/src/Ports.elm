@@ -4,7 +4,11 @@ port module Ports exposing
     )
 
 
-port eventStart : String -> Cmd msg
+import Json.Encode as JE
+import Json.Decode as JD
 
 
-port eventSubscriber : (String -> msg) -> Sub msg
+port eventStart : JD.Value -> Cmd msg
+
+
+port eventSubscriber : (JE.Value -> msg) -> Sub msg

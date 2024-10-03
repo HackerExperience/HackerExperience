@@ -34,7 +34,7 @@ type Msg
     | OSMsg OS.Msg
     | LoginMsg Login.Msg
     | BootMsg Boot.Msg
-    | OnRawEventReceived String
+    | OnRawEventReceived JD.Value
     | OnEventReceived (Result JD.Error Event)
 
 

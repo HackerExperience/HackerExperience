@@ -16,16 +16,19 @@ import NoConfusingPrefixOperator
 import NoDebug.Log
 import NoDebug.TodoOrToString
 import NoDeprecated
+import NoDuplicatePorts
 import NoExposingEverything
 import NoImportingEverything
 import NoLeftPizza
 import NoMissingTypeAnnotation
 import NoMissingTypeAnnotationInLetIn
 import NoMissingTypeExpose
+import NoModuleOnExposedNames
 import NoPrematureLetComputation
 import NoRedundantConcat
 import NoRedundantCons
 import NoSimpleLetBody
+import NoUnsafePorts
 import NoUnused.CustomTypeConstructorArgs
 import NoUnused.CustomTypeConstructors
 import NoUnused.Dependencies
@@ -33,6 +36,7 @@ import NoUnused.Exports
 import NoUnused.Parameters
 import NoUnused.Patterns
 import NoUnused.Variables
+import NoUnusedPorts
 import Review.Rule as Rule exposing (Rule)
 import Simplify
 
@@ -82,6 +86,10 @@ config =
     , NoRedundantConcat.rule
     , NoRedundantCons.rule
     , NoLeftPizza.rule NoLeftPizza.Redundant
+    , NoModuleOnExposedNames.rule
+    , NoUnsafePorts.rule NoUnsafePorts.onlyIncomingPorts
+    , NoUnusedPorts.rule
+    , NoDuplicatePorts.rule
     ]
 
 
