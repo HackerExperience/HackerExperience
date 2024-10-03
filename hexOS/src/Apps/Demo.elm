@@ -5,10 +5,9 @@ import Apps.Popups.ConfirmationDialog as ConfirmationDialog
 import Effect exposing (Effect)
 import OS.AppID exposing (AppID)
 import OS.Bus
-import UI exposing (UI, cl, col, id, row, text)
+import UI exposing (UI, cl, row, text)
 import UI.Button
 import UI.Icon
-import Utils
 import WM
 
 
@@ -40,7 +39,7 @@ view model =
 
 
 viewLaunchers : Model -> UI Msg
-viewLaunchers model =
+viewLaunchers _ =
     UI.col []
         [ UI.Icon.iAdd (Just "Open Contact")
             |> UI.Button.fromIcon
@@ -108,7 +107,7 @@ update msg model =
                 )
             )
 
-        ToOS bus ->
+        ToOS _ ->
             ( model, Effect.none )
 
         FromConfirmationDialog _ _ ->
@@ -130,7 +129,7 @@ getWindowConfig _ =
 
 
 willOpen : WM.WindowInfo -> OS.Bus.Action
-willOpen window =
+willOpen _ =
     OS.Bus.OpenApp App.DemoApp Nothing
 
 
@@ -151,7 +150,7 @@ willClose appId _ _ =
 
 
 willFocus : AppID -> WM.Window -> OS.Bus.Action
-willFocus appId window =
+willFocus appId _ =
     OS.Bus.FocusApp appId
 
 
@@ -161,7 +160,7 @@ willFocus appId window =
 
 
 willOpenChild : Model -> App.Manifest -> WM.Window -> WM.WindowInfo -> OS.Bus.Action
-willOpenChild model child parentWindow _ =
+willOpenChild _ child parentWindow _ =
     OS.Bus.OpenApp child <| Just ( App.DemoApp, parentWindow.appId )
 
 

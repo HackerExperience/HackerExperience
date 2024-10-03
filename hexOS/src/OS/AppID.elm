@@ -1,4 +1,4 @@
-module OS.AppID exposing (..)
+module OS.AppID exposing (AppID)
 
 
 type alias AppID =

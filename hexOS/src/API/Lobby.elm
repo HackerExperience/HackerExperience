@@ -2,8 +2,12 @@ module API.Lobby exposing (..)
 
 import API.Lobby.Api as Api
 import API.Lobby.Types as LobbyTypes
-import API.Types as Types exposing (Error(..), InputConfig, LobbyLoginError(..), LobbyRegisterError(..))
-import Http exposing (Body, Expect, Header)
+import API.Types as Types
+    exposing
+        ( Error(..)
+        , InputConfig
+        , LobbyLoginError(..)
+        )
 import OpenApi.Common
 import Task exposing (Task)
 
@@ -19,6 +23,7 @@ loginConfig email password =
     { server = lobbyServer, body = { email = email, password = password } }
 
 
+loginTask : InputConfig Types.LobbyLoginBody -> Task (Error LobbyLoginError) LobbyTypes.UserLoginOutput
 loginTask config =
     Api.userLoginTask config
         |> mapResponse genericDataMapper
@@ -46,7 +51,7 @@ loginTask config =
 
 mapResponse : (a -> b) -> Task e a -> Task e b
 mapResponse mapper =
-    Task.andThen (\resp -> Task.succeed (mapper resp))
+    Task.map (\resp -> mapper resp)
 
 
 genericDataMapper : { b | data : a } -> a
@@ -56,14 +61,14 @@ genericDataMapper =
 
 mapError : (PrivateErrType a -> Error b) -> Task (OpenApi.Common.Error a x) r -> Task (Error b) r
 mapError mapper =
-    Task.onError
+    Task.mapError
         (\apiError ->
             case apiError of
                 OpenApi.Common.KnownBadStatus _ appError ->
-                    Task.fail <| mapper (LegitimateError appError)
+                    mapper (LegitimateError appError)
 
                 _ ->
-                    Task.fail <| mapper UnexpectedError
+                    mapper UnexpectedError
         )
 
 

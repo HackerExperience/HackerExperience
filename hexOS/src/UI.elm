@@ -1,9 +1,8 @@
 module UI exposing (..)
 
-import Browser exposing (Document)
+import Browser
 import Html as H exposing (Html)
 import Html.Attributes as HA
-import Html.Events as HE
 import Html.Keyed as Keyed
 import Html.Lazy as Lazy
 
@@ -54,7 +53,7 @@ div attrs children =
 link : List (Attribute msg) -> List (Html msg) -> String -> Html msg
 link attrs child url =
     H.a
-        ([ cl "ui-link", HA.href url ] ++ attrs)
+        (cl "ui-link" :: HA.href url :: attrs)
         child
 
 

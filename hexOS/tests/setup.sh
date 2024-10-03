@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Why this file exists? Well, we use elm-program-test for thorough testing and we often need some
 # modules to be changed slightly for them to be "mocked" via the "SimulatedEffects pattern".
@@ -69,6 +69,7 @@ setup_simulated_spec() {
     add_SimulatedCommon $TARGET_FILE
     remove_moduleHttp $TARGET_FILE
     remove_moduleOpenApiCommon $TARGET_FILE
+    remove_moduleTask $TARGET_FILE
 
     # Replace Task.Task with SimulatedTask
     sed -i 's/Task\.Task/SimulatedTask/' $TARGET_FILE

@@ -1,9 +1,13 @@
-module Game exposing (..)
+module Game exposing
+    ( Model
+    , Msg(..)
+    , init
+      -- , update
+    )
 
 import Effect exposing (Effect)
 import Game.Universe
 import OS
-import UI exposing (UI)
 
 
 
@@ -35,10 +39,8 @@ init mpModel osModel =
 
 
 -- Update
-
-
-update : Msg -> Model -> ( Model, Effect Msg )
-update msg model =
-    case msg of
-        NoOp ->
-            ( model, Effect.none )
+-- update : Msg -> Model -> ( Model, Effect Msg )
+-- update msg model =
+--     case msg of
+--         NoOp ->
+--             ( model, Effect.none )

@@ -1,14 +1,17 @@
-module Login exposing (..)
+module Login exposing
+    ( Model
+    , Msg(..)
+    , documentView
+    , initialModel
+    , update
+    )
 
 import API.Lobby as LobbyAPI
 import API.Types
 import Effect exposing (Effect)
-import Task
-import UI exposing (UI, cl, col, id, row, style, text)
+import UI exposing (UI, cl, col, row, text)
 import UI.Button
-import UI.Icon
 import UI.TextInput
-import Utils
 
 
 

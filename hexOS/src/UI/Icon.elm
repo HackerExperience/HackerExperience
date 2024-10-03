@@ -1,7 +1,6 @@
 module UI.Icon exposing (..)
 
-import Html as H exposing (Html)
-import Html.Attributes as HA
+import Html as H
 import Html.Events as HE
 import UI exposing (UI, cl)
 
@@ -65,7 +64,7 @@ toUI icon =
 
 
 toUIMSOutline : Icon msg -> UI msg
-toUIMSOutline (Icon { hint, glyph } { spin, onClick }) =
+toUIMSOutline (Icon { glyph } { onClick }) =
     H.span
         [ cl "ui-icon material-symbols-outlined"
         , maybeAddClickHandler onClick
@@ -74,10 +73,10 @@ toUIMSOutline (Icon { hint, glyph } { spin, onClick }) =
 
 
 toUIFABrands : Icon msg -> UI msg
-toUIFABrands (Icon { hint, glyph } { spin }) =
+toUIFABrands (Icon { glyph } _) =
     H.i
         [ cl "ui-icon fab"
-        , cl <| "fa-" ++ glyph
+        , "fa-" ++ glyph |> cl
         ]
         []
 

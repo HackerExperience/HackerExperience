@@ -1,4 +1,11 @@
-module OS exposing (..)
+module OS exposing
+    ( Model
+    , Msg(..)
+    , documentView
+    , init
+    , update
+    , updateViewport
+    )
 
 import Apps.Demo as Demo
 import Apps.Manifest as App
@@ -7,19 +14,16 @@ import Apps.Popups.DemoSingleton as DemoSingleton
 import Apps.Types as Apps
 import Dict exposing (Dict)
 import Effect exposing (Effect)
-import Html exposing (Html)
+import Html
 import Html.Events as HE
 import Json.Decode as JD
 import List.Extra as List exposing (Step(..))
 import Maybe.Extra as Maybe
 import OS.AppID exposing (AppID)
 import OS.Bus
-import Process
-import Task
 import UI exposing (UI, cl, col, id, row, style, text)
 import UI.Button
 import UI.Icon
-import Utils
 import WM
 import WM.Windowable
 
@@ -159,13 +163,12 @@ performActionOnApp :
     -> (Model -> AppID -> ( Model, Effect Msg ))
     -> ( Model, Effect Msg )
 performActionOnApp model appId fun =
-    case WM.windowExists model.wm appId of
-        True ->
-            fun model appId
-
+    if WM.windowExists model.wm appId then
+        fun model appId
         -- TODO: Display OSErrorPopup when this happens
-        False ->
-            ( model, Effect.none )
+
+    else
+        ( model, Effect.none )
 
 
 performRequestOpen :
@@ -209,12 +212,11 @@ performRequestOpen model app parentInfo =
                     False
 
         action =
-            case isParentActionBlocking of
-                True ->
-                    Maybe.withDefault OS.Bus.NoOp parentAction
+            if isParentActionBlocking then
+                Maybe.withDefault OS.Bus.NoOp parentAction
 
-                False ->
-                    WM.Windowable.willOpen app windowInfo
+            else
+                WM.Windowable.willOpen app windowInfo
 
         finalAction =
             case action of
@@ -258,9 +260,6 @@ performRequestClose model appId =
 performRequestCloseChildren : Model -> AppID -> ( Model, Effect Msg )
 performRequestCloseChildren model parentId =
     let
-        parentWindow =
-            WM.getWindow model.wm.windows parentId
-
         children =
             WM.getLinkedChildren model.wm parentId
 
@@ -342,13 +341,14 @@ performOpenApp model app parentInfo =
         windowConfig =
             WM.Windowable.getWindowConfig windowInfo
 
-        ( initialAppModel, appMsg ) =
+        -- TODO: Handle appMsg__
+        ( initialAppModel, appMsg__ ) =
             WM.Windowable.didOpen app appId windowInfo
 
-        -- TODO: Handle parentAction
-        ( parentModel, parentCmd, parentAction ) =
+        -- TODO: Handle parentAction__
+        ( parentModel, parentCmd, parentAction__ ) =
             case parentInfo of
-                Just ( parentApp, parentId ) ->
+                Just ( _, parentId ) ->
                     let
                         ( parentModel_, parentCmd_, parentAction_ ) =
                             WM.Windowable.didOpenChild
@@ -408,10 +408,10 @@ performCloseApp model appId =
             WM.getWindow model.wm.windows appId
 
         -- TODO: Handle parentAction
-        ( parentModel, parentCmd, parentAction ) =
+        ( parentModel, parentCmd, parentAction__ ) =
             -- When the window we are closing is a child, notify the parent
             case window.parent of
-                Just ( parentApp, parentId ) ->
+                Just ( _, parentId ) ->
                     let
                         ( parentModel_, parentCmd_, parentAction_ ) =
                             WM.Windowable.didCloseChild
@@ -477,7 +477,6 @@ performFocusVibrateApp : Model -> AppID -> ( Model, Effect Msg )
 performFocusVibrateApp model appId =
     let
         -- TODO: Also zIndex + 1 the parent popup
-        -- TODO: Move to util
         cmd =
             Effect.msgToCmdWithDelay 1000.0 (PerformAction <| OS.Bus.UnvibrateApp appId)
     in
@@ -514,12 +513,11 @@ stopDrag model =
 
 updateVisibilityChanged : Model -> ( Model, Effect Msg )
 updateVisibilityChanged model =
-    case WM.isDragging model.wm of
-        True ->
-            ( { model | wm = WM.stopDrag model.wm }, Effect.none )
+    if WM.isDragging model.wm then
+        ( { model | wm = WM.stopDrag model.wm }, Effect.none )
 
-        False ->
-            ( model, Effect.none )
+    else
+        ( model, Effect.none )
 
 
 
@@ -532,7 +530,7 @@ dispatchUpdateApp model appMsg =
         Apps.InvalidMsg ->
             ( model, Effect.none )
 
-        Apps.DemoMsg appId (Demo.ToOS busAction) ->
+        Apps.DemoMsg _ (Demo.ToOS busAction) ->
             ( model, Effect.msgToCmd (PerformAction busAction) )
 
         Apps.DemoMsg appId subMsg ->
@@ -569,7 +567,7 @@ dispatchUpdateApp model appMsg =
             in
             ( model, Effect.msgToCmd newAppMsg )
 
-        Apps.PopupDemoSingletonMsg popupId (DemoSingleton.ToApp appId app action) ->
+        Apps.PopupDemoSingletonMsg _ (DemoSingleton.ToApp _ _ _) ->
             let
                 newAppMsg =
                     PerformAction OS.Bus.NoOp
@@ -633,7 +631,7 @@ view model =
 
 
 viewTopBar : Model -> UI Msg
-viewTopBar model =
+viewTopBar _ =
     row [ id "os-top" ] [ text "top" ]
 
 
@@ -649,22 +647,21 @@ wmView model =
 
 viewWindow : Model -> AppID -> WM.Window -> List (UI Msg) -> List (UI Msg)
 viewWindow model appId window acc =
-    case window.isVisible of
-        True ->
-            let
-                appModel =
-                    getAppModel model.appModels appId
+    if window.isVisible then
+        let
+            appModel =
+                getAppModel model.appModels appId
 
-                windowContent =
-                    Html.map AppMsg <| renderWindowContent appId window appModel
+            windowContent =
+                Html.map AppMsg <| renderWindowContent appId window appModel
 
-                renderedWindow =
-                    renderWindow model.wm appId window windowContent
-            in
-            renderedWindow :: acc
+            renderedWindow =
+                renderWindow model.wm appId window windowContent
+        in
+        renderedWindow :: acc
 
-        False ->
-            acc
+    else
+        acc
 
 
 renderWindow : WM.Model -> AppID -> WM.Window -> UI Msg -> UI Msg
@@ -686,12 +683,11 @@ renderWindow wm appId window renderedContent =
         , style "z-index" (String.fromInt window.zIndex)
         , addFocusedWindowClass isFocused isBlocked
         , addFocusEvent isFocused isBlocked appId
-        , case window.isVibrating of
-            True ->
-                cl "os-w-vibrating"
+        , if window.isVibrating then
+            cl "os-w-vibrating"
 
-            False ->
-                UI.emptyAttr
+          else
+            UI.emptyAttr
         ]
         [ renderWindowTitle appId window (WM.isDraggingApp wm appId)
         , renderedContent
@@ -740,13 +736,12 @@ renderWindowTitle appId window isDragging =
     row
         [ cl "os-w-header"
         , UI.noSelect
-        , case isDragging of
-            True ->
-                -- TODO: Consider data attribute instead
-                cl "os-w-title-dragging"
+        , if isDragging then
+            -- TODO: Consider data attribute instead
+            cl "os-w-title-dragging"
 
-            False ->
-                UI.emptyAttr
+          else
+            UI.emptyAttr
         , onMouseDownEvent appId
         , HE.onMouseUp StopDrag
         ]
@@ -758,13 +753,11 @@ renderWindowTitle appId window isDragging =
 stopPropagation : String -> UI.Attribute Msg
 stopPropagation event =
     HE.stopPropagationOn event
-        (JD.map (\msg -> ( msg, True ))
-            (JD.succeed <| PerformAction OS.Bus.NoOp)
-        )
+        (JD.succeed <| (\msg -> ( msg, True )) (PerformAction OS.Bus.NoOp))
 
 
 renderWindowContent : AppID -> WM.Window -> Apps.Model -> UI Apps.Msg
-renderWindowContent appId window appModel =
+renderWindowContent appId _ appModel =
     case appModel of
         Apps.InvalidModel ->
             UI.emptyEl
@@ -776,7 +769,7 @@ renderWindowContent appId window appModel =
             Html.map (Apps.PopupConfirmationDialogMsg appId) <| ConfirmationDialog.view model
 
         Apps.PopupDemoSingletonModel model ->
-            Html.map (Apps.PopupDemoSingletonMsg appId) <| DemoSingleton.view model
+            Html.map (Apps.PopupDemoSingletonMsg appId) (DemoSingleton.view model)
 
 
 onMouseDownEvent : AppID -> UI.Attribute Msg
@@ -789,15 +782,14 @@ onMouseDownEvent appId =
 
 maybeAddGlobalMouseMoveEvent : WM.Model -> UI.Attribute Msg
 maybeAddGlobalMouseMoveEvent wm =
-    case WM.isDragging wm of
-        True ->
-            HE.on "mousemove" <|
-                JD.map2 (\x y -> Drag x y)
-                    (JD.field "clientX" JD.float)
-                    (JD.field "clientY" JD.float)
+    if WM.isDragging wm then
+        HE.on "mousemove" <|
+            JD.map2 (\x y -> Drag x y)
+                (JD.field "clientX" JD.float)
+                (JD.field "clientY" JD.float)
 
-        False ->
-            UI.emptyAttr
+    else
+        UI.emptyAttr
 
 
 addFocusedWindowClass : Bool -> Bool -> UI.Attribute Msg
@@ -819,7 +811,7 @@ addFocusEvent isFocused isBlocked appId =
 
 
 viewDock : Model -> UI Msg
-viewDock model =
+viewDock _ =
     row [ id "os-dock" ]
         [ row [ cl "os-dock-launch-tmp" ]
             [ UI.Icon.iAdd (Just "Launch Demo")

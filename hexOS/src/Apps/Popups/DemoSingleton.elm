@@ -4,10 +4,7 @@ import Apps.Manifest as App
 import Effect exposing (Effect)
 import OS.AppID exposing (AppID)
 import OS.Bus
-import UI exposing (UI, cl, col, id, row, text)
-import UI.Button
-import UI.Icon
-import Utils
+import UI exposing (UI, text)
 import WM
 
 
@@ -25,7 +22,7 @@ type alias Model =
 
 
 view : Model -> UI Msg
-view model =
+view _ =
     text "oi"
 
 

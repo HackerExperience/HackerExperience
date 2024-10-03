@@ -1,6 +1,6 @@
 module UI.Input.Search exposing (..)
 
-import UI exposing (UI, cl, row)
+import UI exposing (UI, row)
 import UI.Icon
 import UI.TextInput
 

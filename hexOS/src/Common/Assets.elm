@@ -1,4 +1,4 @@
-module Common.Assets exposing (..)
+module Common.Assets exposing (logoUrl)
 
 
 logoUrl : String
