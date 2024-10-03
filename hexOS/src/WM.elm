@@ -1,4 +1,33 @@
-module WM exposing (..)
+module WM exposing
+    ( Model
+    , ParentInfo
+    , Window
+    , WindowConfig
+    , WindowInfo
+    , X
+    , XY
+    , Y
+    , applyDrag
+    , createWindowInfo
+    , deregisterApp
+    , dummyWindowConfig
+    , focusApp
+    , focusVibrateApp
+    , getLinkedChildren
+    , getWindow
+    , hasLinkedChildren
+    , init
+    , isDragging
+    , isDraggingApp
+    , isFocusedApp
+    , registerApp
+    , startDrag
+    , stopDrag
+    , unvibrateApp
+    , updateViewport
+    , willOpenApp
+    , windowExists
+    )
 
 {-| WM eh meio que uma model pura, enquanto que
 OS gerencia as Msgs/Updates etc. Tentar fazer assim (mas tudo bem se nao rolar)
@@ -10,8 +39,6 @@ import List.Extra as List
 import Maybe.Extra as Maybe
 import OS.AppID exposing (AppID)
 import OS.Bus
-import Set exposing (Set)
-import UI exposing (UI, cl, col, row, text)
 
 
 type alias Model =
@@ -84,10 +111,6 @@ type alias ParentInfo =
     ( App.Manifest, AppID )
 
 
-type alias PopupInfo =
-    { isBlocking : Bool }
-
-
 type alias WindowConfig =
     { lenX : X
     , lenY : Y
@@ -155,12 +178,11 @@ restrictWindowsViewport model =
                             clamp minY maxY window.posY
 
                         newWindow =
-                            case window.posX /= newX || window.posY /= newY of
-                                True ->
-                                    { window | posX = newX, posY = newY }
+                            if window.posX /= newX || window.posY /= newY then
+                                { window | posX = newX, posY = newY }
 
-                                False ->
-                                    window
+                            else
+                                window
                     in
                     Dict.insert appId newWindow acc
                 )
@@ -186,7 +208,7 @@ getViewportLimits model lenX lenY =
 maybeInsertParentChildren : Window -> Maybe ParentInfo -> Windows -> Windows
 maybeInsertParentChildren childWindow parentInfo windows =
     case parentInfo of
-        Just ( parentApp, parentId ) ->
+        Just ( _, parentId ) ->
             let
                 ( popup, popupId ) =
                     ( childWindow.app, childWindow.appId )
@@ -228,22 +250,20 @@ maybeRemoveParentChild childWindow windows =
 
 maybeBlockWindow : Window -> Window -> Window
 maybeBlockWindow child parent =
-    case isPopupBlocking child.app of
-        True ->
-            { parent | blockedByApp = Just child.appId }
+    if isPopupBlocking child.app then
+        { parent | blockedByApp = Just child.appId }
 
-        False ->
-            parent
+    else
+        parent
 
 
 maybeUnblockWindow : Window -> Window -> Window
 maybeUnblockWindow child parent =
-    case isPopupBlocking child.app of
-        True ->
-            { parent | blockedByApp = Nothing }
+    if isPopupBlocking child.app then
+        { parent | blockedByApp = Nothing }
 
-        False ->
-            parent
+    else
+        parent
 
 
 
@@ -268,9 +288,10 @@ createWindowInfo app appId parentInfo =
     }
 
 
-hasBlockingPopups : Window -> Maybe ( App.Manifest, AppID )
-hasBlockingPopups { children } =
-    List.find (\( popup, popupId ) -> isPopupBlocking popup) children
+
+-- hasBlockingPopups : Window -> Maybe ( App.Manifest, AppID )
+-- hasBlockingPopups { children } =
+--     List.find (\( popup, _ ) -> isPopupBlocking popup) children
 
 
 isPopupBlocking : App.Manifest -> Bool
@@ -285,12 +306,14 @@ isPopupBlocking popup =
 
 windowExists : Model -> AppID -> Bool
 windowExists { windows } appId =
-    Maybe.isJust <| Dict.get appId windows
+    Dict.get appId windows
+        |> Maybe.isJust
 
 
 hasLinkedChildren : Model -> AppID -> Bool
 hasLinkedChildren model appId =
-    not <| List.isEmpty (getLinkedChildren model appId)
+    List.isEmpty (getLinkedChildren model appId)
+        |> not
 
 
 {-| Returns all children that are linked to the parent (closes with parent)
@@ -298,7 +321,7 @@ hasLinkedChildren model appId =
 getLinkedChildren : Model -> AppID -> List ( App.Manifest, AppID )
 getLinkedChildren model appId =
     List.filter
-        (\( childApp, childId ) ->
+        (\( _, childId ) ->
             case (getWindow model.windows childId).childBehavior of
                 Just behavior ->
                     behavior.closeWithParent
@@ -421,7 +444,8 @@ createWindow model app appId config parentInfo =
         childBehavior =
             case parentInfo of
                 Just _ ->
-                    Just <| Maybe.withDefault defaultChildBehavior config.childBehavior
+                    Maybe.withDefault defaultChildBehavior config.childBehavior
+                        |> Just
 
                 Nothing ->
                     Nothing
@@ -460,18 +484,16 @@ willOpenApp :
     -> Maybe ParentInfo
     -> OS.Bus.Action
     -> OS.Bus.Action
-willOpenApp model app windowConfig parentInfo openAction =
+willOpenApp model app _ parentInfo openAction =
     case parentInfo of
         Just ( _, parentId ) ->
             let
-                isSingleton =
-                    case windowConfig.childBehavior of
-                        Just behavior ->
-                            behavior.isSingleton
-
-                        Nothing ->
-                            True
-
+                -- isSingleton =
+                --     case windowConfig.childBehavior of
+                --         Just behavior ->
+                --             behavior.isSingleton
+                --         Nothing ->
+                --             True
                 parentChildren =
                     (getWindow model.windows parentId).children
             in
@@ -553,7 +575,7 @@ deregisterApp model appId =
                 Nothing ->
                     Nothing
     in
-    { model | windows = newWindows, focusedWindow = newFocusedWindow }
+    { model | windows = newWindows, dragging = newDragging, focusedWindow = newFocusedWindow }
 
 
 focusApp : Model -> AppID -> Model

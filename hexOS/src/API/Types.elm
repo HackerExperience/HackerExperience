@@ -42,7 +42,7 @@ type alias LobbyLoginResult =
 
 
 type LobbyRegisterError
-    = LobbyuRegisterUnauthorized
+    = LobbyRegisterUnauthorized
 
 
 type alias LobbyRegisterResponse =

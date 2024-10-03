@@ -1,4 +1,7 @@
-port module Ports exposing (..)
+port module Ports exposing
+    ( eventStart
+    , eventSubscriber
+    )
 
 
 port eventStart : String -> Cmd msg

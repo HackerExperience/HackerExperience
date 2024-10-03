@@ -2,7 +2,7 @@ module Program exposing (..)
 
 import Effect exposing (Effect)
 import Main
-import ProgramTest exposing (..)
+import ProgramTest as PT exposing (ProgramTest)
 import Simulator
 
 
@@ -20,13 +20,13 @@ defaultFlags =
 
 program : ProgramTest (Main.Model ()) Main.Msg (Effect Main.Msg)
 program =
-    ProgramTest.createApplication
+    PT.createApplication
         { init = Main.init
         , update = Main.update
         , view = Main.view
         , onUrlRequest = Main.ClickedLink
         , onUrlChange = Main.ChangedUrl
         }
-        |> ProgramTest.withBaseUrl "https://localhost:8080"
-        |> ProgramTest.withSimulatedEffects Simulator.simulateEffect
-        |> ProgramTest.start defaultFlags
+        |> PT.withBaseUrl "https://localhost:8080"
+        |> PT.withSimulatedEffects Simulator.simulateEffect
+        |> PT.start defaultFlags

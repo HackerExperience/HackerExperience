@@ -1,9 +1,11 @@
-module Event exposing (..)
+module Event exposing
+    ( Event(..)
+    , processReceivedEvent
+    )
 
 import API.Events.Json as Events
 import API.Events.Types as Events
 import Json.Decode as JD
-import Result
 
 
 
@@ -42,5 +44,4 @@ dataDecoder eventName =
                 _ ->
                     JD.fail "Invalid event"
     in
-    JD.map (\data -> data)
-        (JD.field "data" innerDataDecoder)
+    JD.field "data" innerDataDecoder

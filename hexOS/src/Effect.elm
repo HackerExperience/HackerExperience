@@ -5,7 +5,7 @@ module Effect exposing (..)
 import API.Lobby as LobbyAPI
 import API.Types exposing (InputConfig)
 import Ports
-import Task exposing (Task)
+import Task
 import UUID exposing (Seeds)
 import Utils
 

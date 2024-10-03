@@ -16,7 +16,10 @@
             "jfmengels/elm-review-documentation": "2.0.4",
             "jfmengels/elm-review-simplify": "2.1.5",
             "jfmengels/elm-review-unused": "1.2.3",
-            "stil4m/elm-syntax": "7.3.6"
+            "stil4m/elm-syntax": "7.3.6",
+            "truqu/elm-review-noleftpizza": "2.0.1",
+            "truqu/elm-review-noredundantconcat": "1.0.1",
+            "truqu/elm-review-noredundantcons": "1.0.1"
         },
         "indirect": {
             "elm/bytes": "1.0.8",

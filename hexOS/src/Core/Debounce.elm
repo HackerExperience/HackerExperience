@@ -1,6 +1,6 @@
-module Core.Debounce exposing (..)
+module Core.Debounce exposing (after, save)
 
-import Debounce exposing (Debounce)
+import Debounce
 import Task
 
 

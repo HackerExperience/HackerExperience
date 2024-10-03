@@ -1,6 +1,6 @@
 module UI.TextInput exposing (..)
 
-import Html as H exposing (Html)
+import Html as H
 import Html.Attributes as HA
 import Html.Events as HE
 import UI exposing (UI, cl)
@@ -86,7 +86,7 @@ defaultOpts =
 
 
 toUI : Input msg -> UI msg
-toUI ((Input props { icon }) as input) =
+toUI ((Input _ { icon }) as input) =
     let
         inputRow =
             case icon of
@@ -106,7 +106,7 @@ toUI ((Input props { icon }) as input) =
 
 
 inputUI : Input msg -> UI msg
-inputUI (Input { label, value, kind } { icon, onChange, onBlur, placeholder, problem }) =
+inputUI (Input { label, value, kind } { onChange, onBlur, placeholder, problem }) =
     H.input
         [ cl "ui-input-text"
         , HA.type_ kind

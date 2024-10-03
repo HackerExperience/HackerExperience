@@ -1,10 +1,9 @@
-module Boot exposing (..)
+module Boot exposing (Model, Msg(..), documentView, init, update)
 
 import Effect exposing (Effect)
 import Event exposing (Event)
 import Game.Universe
-import UI exposing (UI, cl, col, id, row, style, text)
-import Utils
+import UI exposing (UI, cl, col, row, text)
 
 
 
@@ -15,7 +14,6 @@ type Msg
     = ProceedToGame Game.Universe.Model
     | EstablishSSEConnection
     | OnEventReceived Event
-    | NoOp
 
 
 type alias Model =
@@ -51,9 +49,6 @@ update msg model =
         OnEventReceived event ->
             updateEvent model event
 
-        NoOp ->
-            ( model, Effect.none )
-
 
 updateEvent : Model -> Event -> ( Model, Effect Msg )
 updateEvent model event =
@@ -76,7 +71,7 @@ documentView model =
 
 
 view : Model -> List (UI Msg)
-view model =
+view _ =
     [ col [ cl "p-boot-root" ]
         [ row [] [ text "Booting" ] ]
     ]

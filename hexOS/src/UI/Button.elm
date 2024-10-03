@@ -1,6 +1,6 @@
 module UI.Button exposing (..)
 
-import Html as H exposing (Html)
+import Html as H
 import Html.Attributes as HA
 import Html.Events as HE
 import UI exposing (UI, cl)
@@ -53,7 +53,7 @@ toUI : Config msg -> UI msg
 toUI (Config props ({ onClick } as opts)) =
     H.button
         [ cl "ui-button"
-        , cl <| getStyleClass opts.style
+        , getStyleClass opts.style |> cl
         , case opts.customClass of
             Just customClass ->
                 cl customClass

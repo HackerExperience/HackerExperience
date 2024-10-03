@@ -1,4 +1,13 @@
-module WM.Windowable exposing (..)
+module WM.Windowable exposing
+    ( didCloseChild
+    , didOpen
+    , didOpenChild
+    , getWindowConfig
+    , willClose
+    , willFocus
+    , willOpen
+    , willOpenChild
+    )
 
 -- Maybe rename to OS.dispatcher? or something like that
 
@@ -10,7 +19,6 @@ import Apps.Types as Apps
 import Effect exposing (Effect)
 import OS.AppID exposing (AppID)
 import OS.Bus
-import Utils
 import WM
 
 

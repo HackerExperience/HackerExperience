@@ -1,4 +1,4 @@
-module OS.Bus exposing (..)
+module OS.Bus exposing (Action(..), ParentInfo)
 
 import Apps.Manifest as App
 import OS.AppID exposing (AppID)

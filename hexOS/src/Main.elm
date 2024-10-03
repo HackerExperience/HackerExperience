@@ -1,30 +1,23 @@
-module Main exposing (Flags, Model, Msg(..), init, main, update, view, wrapInit, wrapUpdate)
+module Main exposing (Flags, Model, Msg(..), init, main, update, view)
 
 import Boot
 import Browser
 import Browser.Events
-import Browser.Navigation as Nav
 import Core.Debounce as Debounce
 import Debounce exposing (Debounce)
-import Dict exposing (Dict)
 import Effect exposing (Effect)
 import Event exposing (Event)
 import Game
-import Game.Universe
-import Html exposing (Html)
+import Html
 import Json.Decode as JD
 import Login
 import OS
 import Ports
-import Process
 import Random
-import Result
-import Task
 import TimeTravel.Browser as TimeTravel exposing (defaultConfig)
-import UI exposing (UI)
-import UUID exposing (Seeds, UUID)
+import UI
+import UUID exposing (Seeds)
 import Url exposing (Url)
-import Utils
 import WM
 
 
@@ -116,18 +109,12 @@ wrapInit flags url navKey =
 
 
 init : Flags -> Url -> navkey -> ( Model navkey, Effect Msg )
-init flags url navKey =
+init flags _ navKey =
     let
         -- route =
         --     Route.fromUrl url
-        credentials =
-            Just "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3MDk3NTMxNDgsImFfaWQiOiJhZmY1YWIwYi1mZmRiLTQ2ODgtOWY0Zi0zMzExNjZjZDM2YTgiLCJjX2lkIjoiYWZmNWFiMGItZmZkYi00Njg4LTlmNGYtMzMxMTY2Y2QzNmE4IiwiaWF0IjoxNzA5MTQ4MzQ4fQ.lGPrwspZAkMRfA-xsvt0RNoesigGNh9qDbC3SpMbqWQ"
-
         -- ( osModel, osCmd ) =
         --     OS.init ( flags.viewportX, flags.viewportY )
-        osCmd =
-            Cmd.none
-
         firstSeeds =
             Seeds
                 (Random.initialSeed flags.randomSeed1)
@@ -221,9 +208,6 @@ update msg model =
                     let
                         eventResult =
                             Event.processReceivedEvent rawEvent
-
-                        _ =
-                            Debug.log "Event result" eventResult
                     in
                     ( model, Effect.msgToCmd (OnEventReceived eventResult) )
 
@@ -241,10 +225,10 @@ update msg model =
 
         GameState gameModel ->
             case msg of
-                ClickedLink urlRequest ->
+                ClickedLink _ ->
                     ( model, Effect.none )
 
-                ChangedUrl url ->
+                ChangedUrl _ ->
                     ( model, Effect.none )
 
                 BrowserVisibilityChanged _ ->
@@ -296,7 +280,7 @@ update msg model =
                     , Effect.batch [ Effect.map OSMsg osCmd ]
                     )
 
-                GameMsg subMsg ->
+                GameMsg _ ->
                     ( model, Effect.none )
 
                 LoginMsg _ ->
@@ -305,10 +289,10 @@ update msg model =
                 BootMsg _ ->
                     ( model, Effect.none )
 
-                OnRawEventReceived ev ->
+                OnRawEventReceived _ ->
                     ( model, Effect.none )
 
-                OnEventReceived ev ->
+                OnEventReceived _ ->
                     ( model, Effect.none )
 
         InstallState ->
@@ -362,12 +346,11 @@ subscriptions model =
             Sub.batch
                 [ Browser.Events.onResize (\w h -> BrowserResizedViewport ( w, h ))
                 , Browser.Events.onVisibilityChange BrowserVisibilityChanged
-                , case WM.isDragging gameModel.os.wm of
-                    True ->
-                        Browser.Events.onMouseUp (JD.succeed BrowserMouseUp)
+                , if WM.isDragging gameModel.os.wm then
+                    Browser.Events.onMouseUp (JD.succeed BrowserMouseUp)
 
-                    False ->
-                        Sub.none
+                  else
+                    Sub.none
                 ]
 
         _ ->

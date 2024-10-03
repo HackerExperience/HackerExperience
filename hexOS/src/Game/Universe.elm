@@ -1,4 +1,7 @@
-module Game.Universe exposing (..)
+module Game.Universe exposing
+    ( Model
+    , init
+    )
 
 -- Types
 
