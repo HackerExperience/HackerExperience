@@ -29,3 +29,5 @@ elm-stuff
 src/OpenApi/SimulatedCommon.elm
 src/API/Lobby/SimulatedApi.elm
 src/API/SimulatedLobby.elm
+
+review/suppressed

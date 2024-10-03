@@ -109,7 +109,7 @@ wrapInit flags url navKey =
 
 
 init : Flags -> Url -> navkey -> ( Model navkey, Effect Msg )
-init flags _ navKey =
+init flags url__ navKey =
     let
         -- route =
         --     Route.fromUrl url

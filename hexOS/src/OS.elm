@@ -345,12 +345,12 @@ performOpenApp model app parentInfo =
         windowConfig =
             WM.Windowable.getWindowConfig windowInfo
 
-        -- TODO: Handle appMsg (2nd element)
-        ( initialAppModel, _ ) =
+        -- TODO: Handle appMsg__
+        ( initialAppModel, appMsg__ ) =
             WM.Windowable.didOpen app appId windowInfo
 
-        -- TODO: Handle parentAction (3rd element)
-        ( parentModel, parentCmd, _ ) =
+        -- TODO: Handle parentAction__
+        ( parentModel, parentCmd, parentAction__ ) =
             case parentInfo of
                 Just ( _, parentId ) ->
                     let
@@ -411,8 +411,8 @@ performCloseApp model appId =
         window =
             WM.getWindow model.wm.windows appId
 
-        -- TODO: Handle parentAction (third parameter)
-        ( parentModel, parentCmd, _ ) =
+        -- TODO: Handle parentAction
+        ( parentModel, parentCmd, parentAction__ ) =
             -- When the window we are closing is a child, notify the parent
             case window.parent of
                 Just ( _, parentId ) ->

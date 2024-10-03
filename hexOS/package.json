@@ -9,7 +9,8 @@
     "preview": "vite preview",
     "format": "elm-format src tests --validate",
     "test": "./tests/setup.sh && elm-test",
-    "elm-review": "elm-review"
+    "elm-review:ci": "./review/run_ci.sh",
+    "elm-review:dev": "./review/run_dev.sh"
   },
   "devDependencies": {
     "elm-format": "^0.8.7",
