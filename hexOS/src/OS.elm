@@ -316,11 +316,9 @@ requestCloseChild model ( _, childId ) onReject =
 performRequestFocus : Model -> AppID -> ( Model, Effect Msg )
 performRequestFocus model appId =
     let
-        window : WM.Window
         window =
             WM.getWindow model.wm.windows appId
 
-        action : OS.Bus.Action
         action =
             WM.Windowable.willFocus window.app appId window
     in
@@ -334,11 +332,9 @@ performOpenApp :
     -> ( Model, Effect Msg )
 performOpenApp model app parentInfo =
     let
-        appId : AppID
         appId =
             model.wm.nextAppId
 
-        windowInfo : WM.WindowInfo
         windowInfo =
             WM.createWindowInfo app appId parentInfo
 
@@ -481,8 +477,6 @@ performFocusVibrateApp : Model -> AppID -> ( Model, Effect Msg )
 performFocusVibrateApp model appId =
     let
         -- TODO: Also zIndex + 1 the parent popup
-        -- TODO: Move to util
-        cmd : Effect Msg
         cmd =
             Effect.msgToCmdWithDelay 1000.0 (PerformAction <| OS.Bus.UnvibrateApp appId)
     in
