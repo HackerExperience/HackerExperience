@@ -87,7 +87,7 @@ config =
     , NoRedundantCons.rule
     , NoLeftPizza.rule NoLeftPizza.Redundant
     , NoModuleOnExposedNames.rule
-    , NoUnsafePorts.rule NoUnsafePorts.onlyIncomingPorts
+    , NoUnsafePorts.rule NoUnsafePorts.any
     , NoUnusedPorts.rule
     , NoDuplicatePorts.rule
     ]
