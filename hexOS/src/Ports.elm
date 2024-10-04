@@ -3,9 +3,8 @@ port module Ports exposing
     , eventSubscriber
     )
 
-
-import Json.Encode as JE
 import Json.Decode as JD
+import Json.Encode as JE
 
 
 port eventStart : JD.Value -> Cmd msg
