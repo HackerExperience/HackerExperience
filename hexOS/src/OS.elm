@@ -8,6 +8,7 @@ module OS exposing
     )
 
 import Apps.Demo as Demo
+import Apps.LogViewer as LogViewer
 import Apps.Manifest as App
 import Apps.Popups.ConfirmationDialog as ConfirmationDialog
 import Apps.Popups.DemoSingleton as DemoSingleton
@@ -532,6 +533,22 @@ dispatchUpdateApp model appMsg =
         Apps.InvalidMsg ->
             ( model, Effect.none )
 
+        Apps.LogViewerMsg _ (LogViewer.ToOS busAction) ->
+            ( model, Effect.msgToCmd (PerformAction busAction) )
+
+        -- Apps.LogViewerMsg appId subMsg ->
+        --     case getAppModel model.appModels appId of
+        --         Apps.LogViewerModel appModel ->
+        --             updateApp
+        --                 model
+        --                 appId
+        --                 appModel
+        --                 subMsg
+        --                 Apps.LogViewerModel
+        --                 Apps.LogViewerMsg
+        --                 LogViewer.update
+        --         _ ->
+        --             ( model, Effect.none )
         Apps.DemoMsg _ (Demo.ToOS busAction) ->
             ( model, Effect.msgToCmd (PerformAction busAction) )
 
@@ -764,6 +781,9 @@ renderWindowContent appId _ appModel =
         Apps.InvalidModel ->
             UI.emptyEl
 
+        Apps.LogViewerModel model ->
+            Html.map (Apps.LogViewerMsg appId) <| LogViewer.view model
+
         Apps.DemoModel model ->
             Html.map (Apps.DemoMsg appId) <| Demo.view model
 
@@ -819,6 +839,10 @@ viewDock _ =
             [ UI.Icon.iAdd (Just "Launch Demo")
                 |> UI.Button.fromIcon
                 |> UI.Button.withOnClick (PerformAction (OS.Bus.RequestOpenApp App.DemoApp Nothing))
+                |> UI.Button.toUI
+            , UI.Icon.iAdd (Just "Log Viewer")
+                |> UI.Button.fromIcon
+                |> UI.Button.withOnClick (PerformAction (OS.Bus.RequestOpenApp App.LogViewerApp Nothing))
                 |> UI.Button.toUI
             ]
         ]

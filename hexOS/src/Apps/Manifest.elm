@@ -3,6 +3,7 @@ module Apps.Manifest exposing (..)
 
 type Manifest
     = InvalidApp
+    | LogViewerApp
     | DemoApp
       -- Popups
     | PopupConfirmationDialog
