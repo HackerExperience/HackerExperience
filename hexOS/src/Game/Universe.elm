@@ -1,21 +1,35 @@
 module Game.Universe exposing
     ( Model
+    , Universe(..)
     , init
     )
+
+-- I'd rather IndexRequested type to be in API.Types (or even Event.Types or whatever)
+
+import API.Events.Types as EventTypes
+
+
 
 -- Types
 
 
+type Universe
+    = Singleplayer
+    | Multiplayer
+
+
 type alias Model =
-    { mainframeID : Int }
+    { universe : Universe
+    , mainframeID : Int
+    }
 
 
 
 -- Model
 
 
-{-| TODO: The input here is probably the PlayerIndex ev payload
--}
-init : Int -> Model
-init mainframeID =
-    { mainframeID = mainframeID }
+init : Universe -> EventTypes.IndexRequested -> Model
+init universe index =
+    { universe = universe
+    , mainframeID = index.player.mainframe_id
+    }

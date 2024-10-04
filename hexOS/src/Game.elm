@@ -6,7 +6,7 @@ module Game exposing
     )
 
 import Effect exposing (Effect)
-import Game.Universe
+import Game.Universe as Universe exposing (Universe(..))
 import OS
 
 
@@ -19,8 +19,10 @@ type Msg
 
 
 type alias Model =
-    { mp : Game.Universe.Model
+    { sp : Universe.Model
+    , mp : Universe.Model
     , os : OS.Model
+    , currentUniverse : Universe
     }
 
 
@@ -28,10 +30,12 @@ type alias Model =
 -- Model
 
 
-init : Game.Universe.Model -> OS.Model -> ( Model, Effect Msg )
-init mpModel osModel =
-    ( { mp = mpModel
+init : Universe -> Universe.Model -> Universe.Model -> OS.Model -> ( Model, Effect Msg )
+init currentUniverse spModel mpModel osModel =
+    ( { sp = spModel
+      , mp = mpModel
       , os = osModel
+      , currentUniverse = currentUniverse
       }
     , Effect.none
     )

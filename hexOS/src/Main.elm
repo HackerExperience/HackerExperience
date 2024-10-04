@@ -8,6 +8,7 @@ import Debounce exposing (Debounce)
 import Effect exposing (Effect)
 import Event exposing (Event)
 import Game
+import Game.Universe
 import Html
 import Json.Decode as JD
 import Login
@@ -30,7 +31,6 @@ type Msg
     | BrowserMouseUp
     | BrowserVisibilityChanged Browser.Events.Visibility
     | GameMsg Game.Msg
-      -- Note: nao existe OSMsg aqui; somente em GameMsg OsMsg
     | OSMsg OS.Msg
     | LoginMsg Login.Msg
     | BootMsg Boot.Msg
@@ -179,11 +179,16 @@ update msg model =
             case msg of
                 BootMsg (Boot.ProceedToGame spModel) ->
                     let
-                        ( osModel, osCmd ) =
-                            OS.init ( model.flags.viewportX, model.flags.viewportY )
+                        -- TODO
+                        currentUniverse =
+                            Game.Universe.Singleplayer
 
+                        ( osModel, osCmd ) =
+                            OS.init currentUniverse ( model.flags.viewportX, model.flags.viewportY )
+
+                        -- TODO: For now, we are considering sp == mp
                         ( gameModel, playCmd ) =
-                            Game.init spModel osModel
+                            Game.init currentUniverse spModel spModel osModel
                     in
                     ( { model | state = GameState gameModel }
                     , Effect.batch
@@ -324,7 +329,7 @@ view model =
             -- View in the GameState is entirely controlled by the OS
             let
                 { title, body } =
-                    OS.documentView gameModel.os
+                    OS.documentView gameModel
             in
             { title = title, body = List.map (Html.map OSMsg) body }
 

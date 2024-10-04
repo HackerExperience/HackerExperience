@@ -15,6 +15,7 @@ import Apps.Popups.DemoSingleton as DemoSingleton
 import Apps.Types as Apps
 import Dict exposing (Dict)
 import Effect exposing (Effect)
+import Game.Universe as Universe exposing (Universe)
 import Html
 import Html.Events as HE
 import Json.Decode as JD
@@ -42,6 +43,7 @@ type alias Model =
     { wm : WM.Model
     , appModels : AppModels
     , appConfigs : AppConfigs
+    , currentUniverse : Universe
     }
 
 
@@ -63,8 +65,8 @@ type alias AppConfig =
 -- Model
 
 
-init : WM.XY -> ( Model, Effect Msg )
-init viewport =
+init : Universe -> WM.XY -> ( Model, Effect Msg )
+init currentUniverse viewport =
     let
         wmModel =
             WM.init viewport
@@ -72,6 +74,7 @@ init viewport =
     ( { wm = wmModel
       , appModels = Dict.empty
       , appConfigs = Dict.empty
+      , currentUniverse = currentUniverse
       }
     , Effect.none
     )
@@ -631,20 +634,30 @@ maybeUpdateParentModel parentInfo parentModel appModels =
 -- View
 
 
-documentView : Model -> UI.Document Msg
-documentView model =
-    { title = "", body = view model }
+{-| TODO: If this is the final contract, then find a way to use Game.Model directly here
+-}
+type alias SuperModel =
+    { sp : Universe.Model
+    , mp : Universe.Model
+    , os : Model
+    , currentUniverse : Universe
+    }
 
 
-view : Model -> List (UI Msg)
-view model =
+documentView : SuperModel -> UI.Document Msg
+documentView superModel =
+    { title = "", body = view superModel }
+
+
+view : SuperModel -> List (UI Msg)
+view superModel =
     [ col
         [ id "hexOS"
-        , maybeAddGlobalMouseMoveEvent model.wm
+        , maybeAddGlobalMouseMoveEvent superModel.os.wm
         ]
-        [ viewTopBar model
-        , wmView model
-        , viewDock model
+        [ viewTopBar superModel.os
+        , wmView superModel
+        , viewDock superModel.os
         ]
     ]
 
@@ -654,28 +667,30 @@ viewTopBar _ =
     row [ id "os-top" ] [ text "top" ]
 
 
-wmView : Model -> UI Msg
-wmView model =
+wmView : SuperModel -> UI Msg
+wmView superModel =
     let
         windowsNodes =
-            Dict.foldl (viewWindow model) [] model.wm.windows
+            Dict.foldl (viewWindow superModel) [] superModel.os.wm.windows
     in
     UI.div [ id "os-wm" ]
         windowsNodes
 
 
-viewWindow : Model -> AppID -> WM.Window -> List (UI Msg) -> List (UI Msg)
-viewWindow model appId window acc =
+viewWindow : SuperModel -> AppID -> WM.Window -> List (UI Msg) -> List (UI Msg)
+viewWindow superModel appId window acc =
     if window.isVisible then
         let
             appModel =
-                getAppModel model.appModels appId
+                getAppModel superModel.os.appModels appId
+
+            -- TODO: Here, I should grab either sp/mp depending on superModel.currentUniverse
 
             windowContent =
-                Html.map AppMsg <| renderWindowContent appId window appModel
+                Html.map AppMsg <| renderWindowContent appId window appModel superModel.sp
 
             renderedWindow =
-                renderWindow model.wm appId window windowContent
+                renderWindow superModel.os.wm appId window windowContent
         in
         renderedWindow :: acc
 
@@ -775,14 +790,14 @@ stopPropagation event =
         (JD.succeed <| (\msg -> ( msg, True )) (PerformAction OS.Bus.NoOp))
 
 
-renderWindowContent : AppID -> WM.Window -> Apps.Model -> UI Apps.Msg
-renderWindowContent appId _ appModel =
+renderWindowContent : AppID -> WM.Window -> Apps.Model -> Universe.Model -> UI Apps.Msg
+renderWindowContent appId _ appModel universe =
     case appModel of
         Apps.InvalidModel ->
             UI.emptyEl
 
         Apps.LogViewerModel model ->
-            Html.map (Apps.LogViewerMsg appId) <| LogViewer.view model
+            Html.map (Apps.LogViewerMsg appId) <| LogViewer.view model universe
 
         Apps.DemoModel model ->
             Html.map (Apps.DemoMsg appId) <| Demo.view model
