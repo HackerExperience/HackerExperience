@@ -48,6 +48,8 @@ type alias AppModels =
     Dict AppID Apps.Model
 
 
+{-| Deprecated; try to remove AppConfigs
+-}
 type alias AppConfigs =
     Dict AppID AppConfig
 
@@ -674,7 +676,7 @@ renderWindow wm appId window renderedContent =
             Maybe.isJust window.blockedByApp
     in
     col
-        [ UI.id <| "app-" ++ String.fromInt appId
+        [ id <| "app-" ++ String.fromInt appId
         , cl "os-w"
         , style "left" (String.fromInt window.posX ++ "px")
         , style "top" (String.fromInt window.posY ++ "px")

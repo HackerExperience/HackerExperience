@@ -13,5 +13,6 @@ fi
 # Replace all unused variables with double underscores with a single underscore
 # Example: appMsg__ gets replaced with _
 find src/ -type f -name "*.elm" | xargs -I {} sed -Ei 's/[a-z][a-zA-Z0-9_]*__/_/g' {}
+find tests/ -type f -name "*.elm" | xargs -I {} sed -Ei 's/[a-z][a-zA-Z0-9_]*__/_/g' {}
 
 ./node_modules/.bin/elm-review

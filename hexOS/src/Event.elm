@@ -21,9 +21,9 @@ type Event
 -- defined in API.Events.Types is present in this file twice
 
 
-processReceivedEvent : String -> Result JD.Error Event
+processReceivedEvent : JD.Value -> Result JD.Error Event
 processReceivedEvent rawEvent =
-    JD.decodeString eventDecoder rawEvent
+    JD.decodeValue eventDecoder rawEvent
 
 
 eventDecoder : JD.Decoder Event

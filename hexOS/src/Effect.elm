@@ -4,6 +4,7 @@ module Effect exposing (..)
 
 import API.Lobby as LobbyAPI
 import API.Types exposing (InputConfig)
+import Json.Encode as JE
 import Ports
 import Task
 import UUID exposing (Seeds)
@@ -49,7 +50,7 @@ apply ( seeds, effect ) =
                 ( seeds, Utils.msgToCmdWithDelay delay msg )
 
         StartSSESubscription token ->
-            ( seeds, Ports.eventStart token )
+            ( seeds, Ports.eventStart (JE.string token) )
 
         -- The `elm-debounce` library always returns a Cmd. We are merely wrapping it into an Effect
         DebouncedCmd cmd ->

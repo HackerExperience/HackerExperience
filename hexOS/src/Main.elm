@@ -34,7 +34,7 @@ type Msg
     | OSMsg OS.Msg
     | LoginMsg Login.Msg
     | BootMsg Boot.Msg
-    | OnRawEventReceived String
+    | OnRawEventReceived JD.Value
     | OnEventReceived (Result JD.Error Event)
 
 
@@ -191,9 +191,6 @@ update msg model =
                         , Effect.map OSMsg osCmd
                         ]
                     )
-
-                BootMsg Boot.EstablishSSEConnection ->
-                    ( model, Effect.sseStart bootModel.token )
 
                 BootMsg subMsg ->
                     let

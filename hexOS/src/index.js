@@ -32,7 +32,7 @@ document.addEventListener("DOMContentLoaded", () => {
     sse.addEventListener("message", (e) => {
       console.log("Got event!")
       console.log(e)
-      app.ports.eventSubscriber.send(e.data)
+      app.ports.eventSubscriber.send(JSON.parse(e.data))
     })
   })
 
