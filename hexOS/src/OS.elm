@@ -48,6 +48,8 @@ type alias AppModels =
     Dict AppID Apps.Model
 
 
+{-| Deprecated; try to remove AppConfigs
+-}
 type alias AppConfigs =
     Dict AppID AppConfig
 
