@@ -6,7 +6,7 @@ module Game exposing
     )
 
 import Effect exposing (Effect)
-import Game.Universe as Universe exposing (Universe(..))
+import Game.Universe as Universe exposing (Universe)
 import OS
 
 

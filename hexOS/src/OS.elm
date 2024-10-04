@@ -65,11 +65,11 @@ type alias AppConfig =
 -- Model
 
 
-init : Universe -> WM.XY -> ( Model, Effect Msg )
-init currentUniverse viewport =
+init : Universe -> WM.SessionID -> WM.XY -> ( Model, Effect Msg )
+init currentUniverse sessionId viewport =
     let
         wmModel =
-            WM.init viewport
+            WM.init sessionId viewport
     in
     ( { wm = wmModel
       , appModels = Dict.empty
@@ -369,7 +369,7 @@ performOpenApp model app parentInfo =
                     ( Nothing, Effect.none, OS.Bus.NoOp )
 
         newWm =
-            WM.registerApp model.wm app appId windowConfig parentInfo
+            WM.registerApp model.wm model.currentUniverse app appId windowConfig parentInfo
 
         newAppModels =
             Dict.insert appId initialAppModel model.appModels
@@ -679,13 +679,12 @@ wmView superModel =
 
 viewWindow : SuperModel -> AppID -> WM.Window -> List (UI Msg) -> List (UI Msg)
 viewWindow superModel appId window acc =
-    if window.isVisible then
+    if shouldRenderWindow superModel.os window then
         let
             appModel =
                 getAppModel superModel.os.appModels appId
 
             -- TODO: Here, I should grab either sp/mp depending on superModel.currentUniverse
-
             windowContent =
                 Html.map AppMsg <| renderWindowContent appId window appModel superModel.sp
 
@@ -696,6 +695,18 @@ viewWindow superModel appId window acc =
 
     else
         acc
+
+
+{-| A window should be rendered if:
+
+1.  It is registered to the same Universe the OS is using; and
+2.  It is registered to the same Server the WM is using; and
+3.  It has the `isVisible` flag set to True (it's not minimized).
+
+-}
+shouldRenderWindow : Model -> WM.Window -> Bool
+shouldRenderWindow { wm, currentUniverse } window =
+    window.isVisible && window.universe == currentUniverse && window.sessionCID == wm.currentSession
 
 
 renderWindow : WM.Model -> AppID -> WM.Window -> UI Msg -> UI Msg

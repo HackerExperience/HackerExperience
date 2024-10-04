@@ -183,8 +183,14 @@ update msg model =
                         currentUniverse =
                             Game.Universe.Singleplayer
 
+                        wmSessionId =
+                            WM.toSessionId spModel.mainframeID
+
                         ( osModel, osCmd ) =
-                            OS.init currentUniverse ( model.flags.viewportX, model.flags.viewportY )
+                            OS.init
+                                currentUniverse
+                                wmSessionId
+                                ( model.flags.viewportX, model.flags.viewportY )
 
                         -- TODO: For now, we are considering sp == mp
                         ( gameModel, playCmd ) =

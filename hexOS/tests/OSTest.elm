@@ -5,6 +5,7 @@ import Apps.Types as Apps
 import Dict
 import Effect
 import Expect as E exposing (Expectation)
+import Game.Universe as Universe
 import OS exposing (Msg(..))
 import OS.AppID exposing (AppID)
 import OS.Bus as Bus
@@ -322,7 +323,7 @@ osInitialModel : OS.Model
 osInitialModel =
     let
         ( model, _ ) =
-            OS.init ( 1024, 1024 )
+            OS.init Universe.Singleplayer (WM.toSessionId 1) ( 1024, 1024 )
     in
     model
 
