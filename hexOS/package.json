@@ -10,9 +10,11 @@
     "format": "elm-format src tests --validate",
     "test": "./tests/setup.sh && elm-test-rs",
     "elm-review:ci": "./review/run_ci.sh",
-    "elm-review:dev": "./review/run_dev.sh"
+    "elm-review:dev": "./review/run_dev.sh",
+    "coverage": "elm-coverage"
   },
   "devDependencies": {
+    "elm-coverage": "^0.4.1",
     "elm-format": "^0.8.7",
     "elm-json": "^0.2.13",
     "elm-open-api": "^0.6.1",
