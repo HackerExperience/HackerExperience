@@ -41,7 +41,7 @@ type Msg
 type State
     = LoginState Login.Model
     | BootState Boot.Model
-    | GameState Game.Model
+    | GameState Game.State OS.Model
     | InstallState
     | ErrorState
 
@@ -194,9 +194,9 @@ update msg model =
 
                         -- TODO: For now, we are considering sp == mp
                         ( gameModel, playCmd ) =
-                            Game.init currentUniverse spModel spModel osModel
+                            Game.init currentUniverse spModel spModel
                     in
-                    ( { model | state = GameState gameModel }
+                    ( { model | state = GameState gameModel osModel }
                     , Effect.batch
                         [ Effect.map GameMsg playCmd
                         , Effect.map OSMsg osCmd
@@ -231,7 +231,7 @@ update msg model =
                 _ ->
                     ( model, Effect.none )
 
-        GameState gameModel ->
+        GameState gameModel osModel ->
             case msg of
                 ClickedLink _ ->
                     ( model, Effect.none )
@@ -272,19 +272,19 @@ update msg model =
 
                 ResizedViewportDebounced ( w, h ) ->
                     let
-                        osModel =
-                            OS.updateViewport gameModel.os ( w, h )
+                        newOsModel =
+                            OS.updateViewport osModel ( w, h )
                     in
-                    ( { model | state = GameState { gameModel | os = osModel } }, Effect.none )
+                    ( { model | state = GameState gameModel newOsModel }, Effect.none )
 
                 OSMsg subMsg ->
                     -- NOTE: I'm attempting to keep Game and OS separate and independent of one
                     -- another. Let's see how it goes...
                     let
-                        ( osModel, osCmd ) =
-                            OS.update subMsg gameModel.os
+                        ( newOsModel, osCmd ) =
+                            OS.update subMsg osModel
                     in
-                    ( { model | state = GameState { gameModel | os = osModel } }
+                    ( { model | state = GameState gameModel newOsModel }
                     , Effect.batch [ Effect.map OSMsg osCmd ]
                     )
 
@@ -331,11 +331,11 @@ view model =
             in
             { title = title, body = List.map (Html.map BootMsg) body }
 
-        GameState gameModel ->
+        GameState gameModel osModel ->
             -- View in the GameState is entirely controlled by the OS
             let
                 { title, body } =
-                    OS.documentView gameModel
+                    OS.documentView gameModel osModel
             in
             { title = title, body = List.map (Html.map OSMsg) body }
 
@@ -350,11 +350,11 @@ view model =
 subscriptions : Model navkey -> Sub Msg
 subscriptions model =
     case model.state of
-        GameState gameModel ->
+        GameState gameModel__ osModel ->
             Sub.batch
                 [ Browser.Events.onResize (\w h -> BrowserResizedViewport ( w, h ))
                 , Browser.Events.onVisibilityChange BrowserVisibilityChanged
-                , if WM.isDragging gameModel.os.wm then
+                , if WM.isDragging osModel.wm then
                     Browser.Events.onMouseUp (JD.succeed BrowserMouseUp)
 
                   else

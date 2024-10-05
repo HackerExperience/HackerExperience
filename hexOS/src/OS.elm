@@ -1,5 +1,7 @@
 module OS exposing
-    ( Model
+    ( AppConfigs
+    , AppModels
+    , Model
     , Msg(..)
     , documentView
     , init
@@ -15,6 +17,7 @@ import Apps.Popups.DemoSingleton as DemoSingleton
 import Apps.Types as Apps
 import Dict exposing (Dict)
 import Effect exposing (Effect)
+import Game exposing (State)
 import Game.Universe as Universe exposing (Universe)
 import Html
 import Html.Events as HE
@@ -23,28 +26,11 @@ import List.Extra as List exposing (Step(..))
 import Maybe.Extra as Maybe
 import OS.AppID exposing (AppID)
 import OS.Bus
-import UI exposing (UI, cl, col, id, row, style, text)
+import UI exposing (UI, cl, col, div, id, row, style, text)
 import UI.Button
 import UI.Icon
 import WM
 import WM.Windowable
-
-
-type Msg
-    = PerformAction OS.Bus.Action
-    | AppMsg Apps.Msg
-    | StartDrag AppID Float Float
-    | Drag Float Float
-    | StopDrag
-    | BrowserVisibilityChanged
-
-
-type alias Model =
-    { wm : WM.Model
-    , appModels : AppModels
-    , appConfigs : AppConfigs
-    , currentUniverse : Universe
-    }
 
 
 type alias AppModels =
@@ -59,6 +45,23 @@ type alias AppConfigs =
 
 type alias AppConfig =
     { appType : App.Manifest }
+
+
+type alias Model =
+    { wm : WM.Model
+    , appModels : AppModels
+    , appConfigs : AppConfigs
+    , currentUniverse : Universe
+    }
+
+
+type Msg
+    = PerformAction OS.Bus.Action
+    | AppMsg Apps.Msg
+    | StartDrag AppID Float Float
+    | Drag Float Float
+    | StopDrag
+    | BrowserVisibilityChanged
 
 
 
@@ -634,62 +637,48 @@ maybeUpdateParentModel parentInfo parentModel appModels =
 -- View
 
 
-{-| TODO: If this is the final contract, then find a way to use Game.Model directly here
--}
-type alias SuperModel =
-    { sp : Universe.Model
-    , mp : Universe.Model
-    , os : Model
-    , currentUniverse : Universe
-    }
+documentView : Game.State -> Model -> UI.Document Msg
+documentView gameState model =
+    { title = "", body = view gameState model }
 
 
-documentView : SuperModel -> UI.Document Msg
-documentView superModel =
-    { title = "", body = view superModel }
-
-
-view : SuperModel -> List (UI Msg)
-view superModel =
+view : Game.State -> Model -> List (UI Msg)
+view gameState model =
     [ col
         [ id "hexOS"
-        , maybeAddGlobalMouseMoveEvent superModel.os.wm
+        , maybeAddGlobalMouseMoveEvent model.wm
         ]
-        [ viewTopBar superModel.os
-        , wmView superModel
-        , viewDock superModel.os
+        [ wmView gameState model
+        , viewDock model
+
+        -- , Html.map HudMsg <| HUD.view gameState
         ]
     ]
 
 
-viewTopBar : Model -> UI Msg
-viewTopBar _ =
-    row [ id "os-top" ] [ text "top" ]
-
-
-wmView : SuperModel -> UI Msg
-wmView superModel =
+wmView : Game.State -> Model -> UI Msg
+wmView gameState model =
     let
         windowsNodes =
-            Dict.foldl (viewWindow superModel) [] superModel.os.wm.windows
+            Dict.foldl (viewWindow gameState model) [] model.wm.windows
     in
     UI.div [ id "os-wm" ]
         windowsNodes
 
 
-viewWindow : SuperModel -> AppID -> WM.Window -> List (UI Msg) -> List (UI Msg)
-viewWindow superModel appId window acc =
-    if shouldRenderWindow superModel.os window then
+viewWindow : Game.State -> Model -> AppID -> WM.Window -> List (UI Msg) -> List (UI Msg)
+viewWindow gameState model appId window acc =
+    if shouldRenderWindow model window then
         let
             appModel =
-                getAppModel superModel.os.appModels appId
+                getAppModel model.appModels appId
 
-            -- TODO: Here, I should grab either sp/mp depending on superModel.currentUniverse
+            -- TODO: Here, I should grab either sp/mp depending on gameState.currentUniverse
             windowContent =
-                Html.map AppMsg <| renderWindowContent appId window appModel superModel.sp
+                Html.map AppMsg <| renderWindowContent appId window appModel gameState.sp
 
             renderedWindow =
-                renderWindow superModel.os.wm appId window windowContent
+                renderWindow model.wm appId window windowContent
         in
         renderedWindow :: acc
 
