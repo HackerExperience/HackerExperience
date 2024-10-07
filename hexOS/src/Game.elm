@@ -1,8 +1,7 @@
 module Game exposing
-    ( State
-    , Msg(..)
+    ( Msg(..)
+    , State
     , init
-      -- , update
     )
 
 import Effect exposing (Effect)

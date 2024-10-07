@@ -1,6 +1,7 @@
 module HUD exposing
     ( Model
-    , Msg
+    , Msg(..)
+    , addGlobalEvents
     , initialModel
     , update
     , view
@@ -11,6 +12,7 @@ import Game exposing (State)
 import Game.Universe as Universe
 import HUD.ConnectionInfo as CI
 import Html
+import Html.Attributes as HA
 import UI exposing (UI, cl, col, div, id, row, style, text)
 
 
@@ -54,7 +56,12 @@ update msg model =
 -- View
 
 
-view : Game.State -> UI Msg
-view state =
+view : Game.State -> Model -> UI Msg
+view state model =
     row [ id "hud" ]
-        [ Html.map CIMsg <| CI.view state ]
+        [ Html.map CIMsg <| CI.view state model.ci ]
+
+
+addGlobalEvents : Model -> List (UI.Attribute Msg)
+addGlobalEvents model =
+    List.map (HA.map CIMsg) (CI.addGlobalEvents model.ci)

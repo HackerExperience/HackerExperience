@@ -19,7 +19,9 @@ import Dict exposing (Dict)
 import Effect exposing (Effect)
 import Game exposing (State)
 import Game.Universe as Universe exposing (Universe)
+import HUD
 import Html
+import Html.Attributes as HA
 import Html.Events as HE
 import Json.Decode as JD
 import List.Extra as List exposing (Step(..))
@@ -52,6 +54,7 @@ type alias Model =
     , appModels : AppModels
     , appConfigs : AppConfigs
     , currentUniverse : Universe
+    , hud : HUD.Model
     }
 
 
@@ -62,6 +65,7 @@ type Msg
     | Drag Float Float
     | StopDrag
     | BrowserVisibilityChanged
+    | HudMsg HUD.Msg
 
 
 
@@ -78,6 +82,7 @@ init currentUniverse sessionId viewport =
       , appModels = Dict.empty
       , appConfigs = Dict.empty
       , currentUniverse = currentUniverse
+      , hud = HUD.initialModel
       }
     , Effect.none
     )
@@ -158,8 +163,11 @@ update msg model =
         BrowserVisibilityChanged ->
             updateVisibilityChanged model
 
-        AppMsg subMsg_ ->
-            dispatchUpdateApp model subMsg_
+        AppMsg appMsg ->
+            dispatchUpdateApp model appMsg
+
+        HudMsg hudMsg ->
+            updateHud model hudMsg
 
 
 
@@ -634,6 +642,19 @@ maybeUpdateParentModel parentInfo parentModel appModels =
 
 
 
+-- Update > HUD
+
+
+updateHud : Model -> HUD.Msg -> ( Model, Effect Msg )
+updateHud model hudMsg =
+    let
+        ( newHud, hudEffect ) =
+            HUD.update hudMsg model.hud
+    in
+    ( { model | hud = newHud }, Effect.map HudMsg hudEffect )
+
+
+
 -- View
 
 
@@ -645,15 +666,22 @@ documentView gameState model =
 view : Game.State -> Model -> List (UI Msg)
 view gameState model =
     [ col
-        [ id "hexOS"
-        , maybeAddGlobalMouseMoveEvent model.wm
-        ]
+        (id "hexOS" :: addGlobalEvents model)
         [ wmView gameState model
         , viewDock model
-
-        -- , Html.map HudMsg <| HUD.view gameState
+        , Html.map HudMsg <| HUD.view gameState model.hud
         ]
     ]
+
+
+
+-- TODO: Move to another part of this module if this is confirmed to be accurate
+
+
+addGlobalEvents : Model -> List (UI.Attribute Msg)
+addGlobalEvents model =
+    maybeAddGlobalMouseMoveEvent model.wm
+        :: List.map (HA.map HudMsg) (HUD.addGlobalEvents model.hud)
 
 
 wmView : Game.State -> Model -> UI Msg
@@ -662,7 +690,9 @@ wmView gameState model =
         windowsNodes =
             Dict.foldl (viewWindow gameState model) [] model.wm.windows
     in
-    UI.div [ id "os-wm" ]
+    UI.div
+        [ id "os-wm"
+        ]
         windowsNodes
 
 
@@ -674,6 +704,8 @@ viewWindow gameState model appId window acc =
                 getAppModel model.appModels appId
 
             -- TODO: Here, I should grab either sp/mp depending on gameState.currentUniverse
+            -- In fact, it may make sense for each App to implement a "stateFilter", thus letting
+            -- each App decide which data it receives (based on its own needs)
             windowContent =
                 Html.map AppMsg <| renderWindowContent appId window appModel gameState.sp
 
