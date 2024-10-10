@@ -145,6 +145,9 @@ viewServer state model =
             [ cl "hud-ci-server-selector"
             , UI.pointer
             , UI.onClick <| onClickMsg
+
+            -- Don't close the selector on "mousedown". We'll handle that ourselves.
+            , stopPropagation "mousedown"
             ]
             [ arrowText ]
         ]
