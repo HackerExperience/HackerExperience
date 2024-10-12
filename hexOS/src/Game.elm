@@ -1,11 +1,13 @@
 module Game exposing
     ( Msg(..)
     , State
+    , getActiveGateway
+    , getActiveUniverse
     , init
     )
 
 import Effect exposing (Effect)
-import Game.Universe as Universe exposing (Universe)
+import Game.Universe as Universe exposing (Universe(..))
 
 
 
@@ -19,6 +21,8 @@ type Msg
 type alias State =
     { sp : Universe.Model
     , mp : Universe.Model
+
+    -- TODO: rename to `activeUniverse`
     , currentUniverse : Universe
     }
 
@@ -35,6 +39,21 @@ init currentUniverse spModel mpModel =
       }
     , Effect.none
     )
+
+
+getActiveUniverse : State -> Universe.Model
+getActiveUniverse state =
+    case state.currentUniverse of
+        Singleplayer ->
+            state.sp
+
+        Multiplayer ->
+            state.mp
+
+
+getActiveGateway : State -> Int
+getActiveGateway state =
+    (getActiveUniverse state).activeGateway
 
 
 

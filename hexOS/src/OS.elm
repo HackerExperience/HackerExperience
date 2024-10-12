@@ -53,6 +53,8 @@ type alias Model =
     { wm : WM.Model
     , appModels : AppModels
     , appConfigs : AppConfigs
+
+    -- _this_ currentUniverse is deprecated. See if it can be removed (to avoid hvaing two sources of truth)
     , currentUniverse : Universe
     , hud : HUD.Model
     }
@@ -114,8 +116,8 @@ updateViewport model viewport =
 -- Update
 
 
-update : Msg -> Model -> ( Model, Effect Msg )
-update msg model =
+update : Game.State -> Msg -> Model -> ( Model, Effect Msg )
+update state msg model =
     case msg of
         -- Performs
         PerformAction OS.Bus.NoOp ->
@@ -167,7 +169,7 @@ update msg model =
             dispatchUpdateApp model appMsg
 
         HudMsg hudMsg ->
-            updateHud model hudMsg
+            updateHud state model hudMsg
 
 
 
@@ -645,11 +647,11 @@ maybeUpdateParentModel parentInfo parentModel appModels =
 -- Update > HUD
 
 
-updateHud : Model -> HUD.Msg -> ( Model, Effect Msg )
-updateHud model hudMsg =
+updateHud : Game.State -> Model -> HUD.Msg -> ( Model, Effect Msg )
+updateHud state model hudMsg =
     let
         ( newHud, hudEffect ) =
-            HUD.update hudMsg model.hud
+            HUD.update state hudMsg model.hud
     in
     ( { model | hud = newHud }, Effect.map HudMsg hudEffect )
 

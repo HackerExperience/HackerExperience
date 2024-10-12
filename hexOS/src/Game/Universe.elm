@@ -18,9 +18,17 @@ type Universe
     | Multiplayer
 
 
+{-| todo
+-}
+type alias ServerID =
+    Int
+
+
 type alias Model =
     { universe : Universe
-    , mainframeID : Int
+    , mainframeID : ServerID
+    , activeGateway : ServerID
+    , activeEndpoint : Maybe ServerID
     }
 
 
@@ -32,4 +40,6 @@ init : Universe -> EventTypes.IndexRequested -> Model
 init universe index =
     { universe = universe
     , mainframeID = index.player.mainframe_id
+    , activeGateway = index.player.mainframe_id
+    , activeEndpoint = Nothing
     }

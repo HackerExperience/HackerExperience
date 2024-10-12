@@ -282,7 +282,7 @@ update msg model =
                     -- another. Let's see how it goes...
                     let
                         ( newOsModel, osCmd ) =
-                            OS.update subMsg osModel
+                            OS.update gameModel subMsg osModel
                     in
                     ( { model | state = GameState gameModel newOsModel }
                     , Effect.batch [ Effect.map OSMsg osCmd ]

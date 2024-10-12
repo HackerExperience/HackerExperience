@@ -9,7 +9,7 @@ module HUD.ConnectionInfo exposing
 
 import Effect exposing (Effect)
 import Game exposing (State)
-import Game.Universe as Universe
+import Game.Universe as Universe exposing (Universe(..))
 import Html.Events as HE
 import Json.Decode as JD
 import UI exposing (UI, cl, col, div, id, row, style, text)
@@ -32,6 +32,7 @@ type Selector
 type Msg
     = OpenSelector Selector
     | CloseSelector
+    | SwitchGateway Universe Int
     | NoOp
 
 
@@ -48,8 +49,8 @@ initialModel =
 -- Update
 
 
-update : Msg -> Model -> ( Model, Effect Msg )
-update msg model =
+update : Game.State -> Msg -> Model -> ( Model, Effect Msg )
+update state msg model =
     case msg of
         NoOp ->
             ( model, Effect.none )
@@ -59,6 +60,24 @@ update msg model =
 
         CloseSelector ->
             ( { model | selector = NoSelector }, Effect.none )
+
+        SwitchGateway universe gatewayId ->
+            updateSwitchGateway state model universe gatewayId
+
+
+updateSwitchGateway : Game.State -> Model -> Universe -> Int -> ( Model, Effect Msg )
+updateSwitchGateway state model gtwUniverse gatewayId =
+    let
+        -- Always switch, except if the selected gateway is the activeGateway in the activeUniverse
+        shouldSwitch =
+            state.currentUniverse /= gtwUniverse || (Game.getActiveGateway state /= gatewayId)
+    in
+    if shouldSwitch then
+        -- TODO: Figure out a nice way to update the game state from here. How about a Game.Bus?
+        ( model, Effect.none )
+
+    else
+        ( model, Effect.none )
 
 
 
@@ -191,10 +210,34 @@ stopPropagation event =
 
 viewGatewaySelector : Game.State -> Model -> UI Msg
 viewGatewaySelector state model =
-    col []
-        [ text "foo"
-        , div [ UI.onClick (OpenSelector SelectorGateway) ] [ text "click me " ]
-        ]
+    let
+        -- TODO: feed the list of gateways directly from Game.State
+        spGateways =
+            List.foldl (gatewaySelectorEntries state Singleplayer) [] [ 1 ]
+
+        mpGateways =
+            List.foldl (gatewaySelectorEntries state Multiplayer) [] [ 9 ]
+    in
+    col [] <|
+        spGateways
+            ++ mpGateways
+
+
+gatewaySelectorEntries : Game.State -> Universe -> Int -> List (UI Msg) -> List (UI Msg)
+gatewaySelectorEntries state gtwUniverse serverId acc =
+    let
+        onClickMsg =
+            SwitchGateway gtwUniverse serverId
+
+        label =
+            case gtwUniverse of
+                Singleplayer ->
+                    "SP " ++ String.fromInt serverId
+
+                Multiplayer ->
+                    "MP " ++ String.fromInt serverId
+    in
+    [ div [ UI.onClick onClickMsg ] [ text label ] ]
 
 
 addGlobalEvents : Model -> List (UI.Attribute Msg)

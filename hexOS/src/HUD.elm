@@ -41,13 +41,13 @@ initialModel =
 -- Update
 
 
-update : Msg -> Model -> ( Model, Effect Msg )
-update msg model =
+update : Game.State -> Msg -> Model -> ( Model, Effect Msg )
+update state msg model =
     case msg of
         CIMsg ciMsg ->
             let
                 ( newCiModel, effect ) =
-                    CI.update ciMsg model.ci
+                    CI.update state ciMsg model.ci
             in
             ( { model | ci = newCiModel }, Effect.map CIMsg effect )
 
