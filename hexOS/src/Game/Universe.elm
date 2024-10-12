@@ -2,6 +2,7 @@ module Game.Universe exposing
     ( Model
     , Universe(..)
     , init
+    , switchActiveGateway
     )
 
 -- I'd rather IndexRequested type to be in API.Types (or even Event.Types or whatever)
@@ -43,3 +44,8 @@ init universe index =
     , activeGateway = index.player.mainframe_id
     , activeEndpoint = Nothing
     }
+
+
+switchActiveGateway : Int -> Model -> Model
+switchActiveGateway newActiveGatewayId model =
+    { model | activeGateway = newActiveGatewayId }

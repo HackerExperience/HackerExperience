@@ -13,6 +13,7 @@ import Game.Universe as Universe
 import HUD.ConnectionInfo as CI
 import Html
 import Html.Attributes as HA
+import OS.Bus
 import UI exposing (UI, cl, col, div, id, row, style, text)
 
 
@@ -26,6 +27,7 @@ type alias Model =
 
 type Msg
     = CIMsg CI.Msg
+    | ToOS OS.Bus.Action
 
 
 
@@ -50,6 +52,10 @@ update state msg model =
                     CI.update state ciMsg model.ci
             in
             ( { model | ci = newCiModel }, Effect.map CIMsg effect )
+
+        ToOS _ ->
+            -- Handled by parent
+            ( model, Effect.none )
 
 
 

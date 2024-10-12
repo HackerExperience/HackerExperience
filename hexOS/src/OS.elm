@@ -20,6 +20,7 @@ import Effect exposing (Effect)
 import Game exposing (State)
 import Game.Universe as Universe exposing (Universe)
 import HUD
+import HUD.ConnectionInfo
 import Html
 import Html.Attributes as HA
 import Html.Events as HE
@@ -149,6 +150,10 @@ update state msg model =
 
         PerformAction (OS.Bus.UnvibrateApp appId) ->
             performActionOnApp model appId performUnvibrateApp
+
+        PerformAction (OS.Bus.ToGame gameAction) ->
+            -- Handled by parent
+            ( model, Effect.none )
 
         -- Drag
         StartDrag appId x y ->
@@ -649,11 +654,16 @@ maybeUpdateParentModel parentInfo parentModel appModels =
 
 updateHud : Game.State -> Model -> HUD.Msg -> ( Model, Effect Msg )
 updateHud state model hudMsg =
-    let
-        ( newHud, hudEffect ) =
-            HUD.update state hudMsg model.hud
-    in
-    ( { model | hud = newHud }, Effect.map HudMsg hudEffect )
+    case hudMsg of
+        HUD.CIMsg (HUD.ConnectionInfo.ToOS action) ->
+            ( model, Effect.msgToCmd (PerformAction action) )
+
+        _ ->
+            let
+                ( newHud, hudEffect ) =
+                    HUD.update state hudMsg model.hud
+            in
+            ( { model | hud = newHud }, Effect.map HudMsg hudEffect )
 
 
 

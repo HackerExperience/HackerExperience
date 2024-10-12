@@ -8,11 +8,13 @@ import Debounce exposing (Debounce)
 import Effect exposing (Effect)
 import Event exposing (Event)
 import Game
+import Game.Msg as Game
 import Game.Universe
 import Html
 import Json.Decode as JD
 import Login
 import OS
+import OS.Bus
 import Ports
 import Random
 import TimeTravel.Browser as TimeTravel exposing (defaultConfig)
@@ -277,6 +279,9 @@ update msg model =
                     in
                     ( { model | state = GameState gameModel newOsModel }, Effect.none )
 
+                OSMsg (OS.PerformAction (OS.Bus.ToGame action)) ->
+                    ( model, Effect.msgToCmd <| GameMsg (Game.PerformAction action) )
+
                 OSMsg subMsg ->
                     -- NOTE: I'm attempting to keep Game and OS separate and independent of one
                     -- another. Let's see how it goes...
@@ -288,8 +293,14 @@ update msg model =
                     , Effect.batch [ Effect.map OSMsg osCmd ]
                     )
 
-                GameMsg _ ->
-                    ( model, Effect.none )
+                GameMsg gameMsg ->
+                    let
+                        ( newGameModel, gameEffect ) =
+                            Game.update gameMsg gameModel
+                    in
+                    ( { model | state = GameState newGameModel osModel }
+                    , Effect.map GameMsg gameEffect
+                    )
 
                 LoginMsg _ ->
                     ( model, Effect.none )

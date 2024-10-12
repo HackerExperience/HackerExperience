@@ -9,9 +9,11 @@ module HUD.ConnectionInfo exposing
 
 import Effect exposing (Effect)
 import Game exposing (State)
+import Game.Bus as Game
 import Game.Universe as Universe exposing (Universe(..))
 import Html.Events as HE
 import Json.Decode as JD
+import OS.Bus
 import UI exposing (UI, cl, col, div, id, row, style, text)
 
 
@@ -33,6 +35,7 @@ type Msg
     = OpenSelector Selector
     | CloseSelector
     | SwitchGateway Universe Int
+    | ToOS OS.Bus.Action
     | NoOp
 
 
@@ -64,6 +67,10 @@ update state msg model =
         SwitchGateway universe gatewayId ->
             updateSwitchGateway state model universe gatewayId
 
+        ToOS _ ->
+            -- Handled by parent
+            ( model, Effect.none )
+
 
 updateSwitchGateway : Game.State -> Model -> Universe -> Int -> ( Model, Effect Msg )
 updateSwitchGateway state model gtwUniverse gatewayId =
@@ -73,8 +80,7 @@ updateSwitchGateway state model gtwUniverse gatewayId =
             state.currentUniverse /= gtwUniverse || (Game.getActiveGateway state /= gatewayId)
     in
     if shouldSwitch then
-        -- TODO: Figure out a nice way to update the game state from here. How about a Game.Bus?
-        ( model, Effect.none )
+        ( model, Effect.msgToCmd <| ToOS <| OS.Bus.ToGame (Game.SwitchGateway gtwUniverse gatewayId) )
 
     else
         ( model, Effect.none )
