@@ -27,8 +27,7 @@ type alias ServerID =
 
 
 type alias Model =
-    { universe : Universe
-    , mainframeID : ServerID
+    { mainframeID : ServerID
     , activeGateway : ServerID
     , activeEndpoint : Maybe ServerID
     }
@@ -38,10 +37,9 @@ type alias Model =
 -- Model
 
 
-init : Universe -> EventTypes.IndexRequested -> Model
-init universe index =
-    { universe = universe
-    , mainframeID = index.player.mainframe_id
+init : EventTypes.IndexRequested -> Model
+init index =
+    { mainframeID = index.player.mainframe_id
     , activeGateway = index.player.mainframe_id
     , activeEndpoint = Nothing
     }

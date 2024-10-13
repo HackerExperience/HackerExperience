@@ -55,7 +55,7 @@ updateEvent model event =
         Event.IndexRequested index ->
             let
                 spModel =
-                    Universe.init Universe.Singleplayer index
+                    Universe.init index
             in
             ( model, Effect.msgToCmd <| ProceedToGame spModel )
 
