@@ -14,7 +14,7 @@ import Game.Universe as Universe exposing (Universe(..))
 import Html.Events as HE
 import Json.Decode as JD
 import OS.Bus
-import UI exposing (UI, cl, col, div, id, row, style, text)
+import UI exposing (UI, cl, col, div, id, row, text)
 
 
 
@@ -52,7 +52,7 @@ initialModel =
 -- Update
 
 
-update : Game.State -> Msg -> Model -> ( Model, Effect Msg )
+update : State -> Msg -> Model -> ( Model, Effect Msg )
 update state msg model =
     case msg of
         NoOp ->
@@ -72,7 +72,7 @@ update state msg model =
             ( model, Effect.none )
 
 
-updateSwitchGateway : Game.State -> Model -> Universe -> Int -> ( Model, Effect Msg )
+updateSwitchGateway : State -> Model -> Universe -> Int -> ( Model, Effect Msg )
 updateSwitchGateway state model gtwUniverse gatewayId =
     let
         -- Always switch, except if the selected gateway is the activeGateway in the activeUniverse
@@ -93,7 +93,7 @@ updateSwitchGateway state model gtwUniverse gatewayId =
 -- View
 
 
-view : Game.State -> Model -> UI Msg
+view : State -> Model -> UI Msg
 view state model =
     -- TODO: Figure out a better way to identify the top-level and each child (all 3 are important to identify)
     col [ addEvents model ]
@@ -113,7 +113,7 @@ addEvents model =
             UI.emptyAttr
 
 
-viewConnectionInfo : Game.State -> Model -> UI Msg
+viewConnectionInfo : State -> Model -> UI Msg
 viewConnectionInfo state model =
     row [ id "hud-connection-info" ]
         [ viewGatewayArea state model
@@ -122,7 +122,7 @@ viewConnectionInfo state model =
         ]
 
 
-viewGatewayArea : Game.State -> Model -> UI Msg
+viewGatewayArea : State -> Model -> UI Msg
 viewGatewayArea state model =
     row [ cl "hud-ci-gateway-area" ]
         [ viewSideIcons
@@ -150,7 +150,7 @@ viewSideIcons =
         ]
 
 
-viewServer : Game.State -> Model -> UI Msg
+viewServer : State -> Model -> UI Msg
 viewServer state model =
     let
         ( arrowText, onClickMsg ) =
@@ -172,7 +172,7 @@ viewServer state model =
         , div
             [ cl "hud-ci-server-selector"
             , UI.pointer
-            , UI.onClick <| onClickMsg
+            , UI.onClick onClickMsg
 
             -- Don't close the selector on "mousedown". We'll handle that ourselves.
             , stopPropagation "mousedown"
@@ -185,7 +185,7 @@ viewServer state model =
 -- Selector
 
 
-viewSelector : Game.State -> Model -> UI Msg
+viewSelector : State -> Model -> UI Msg
 viewSelector state model =
     case model.selector of
         NoSelector ->
@@ -217,10 +217,10 @@ stopPropagation event =
         (JD.succeed <| (\msg -> ( msg, True )) NoOp)
 
 
-viewGatewaySelector : Game.State -> Model -> UI Msg
-viewGatewaySelector state model =
+viewGatewaySelector : State -> Model -> UI Msg
+viewGatewaySelector state model__ =
     let
-        -- TODO: feed the list of gateways directly from Game.State
+        -- TODO: feed the list of gateways directly from State
         spGateways =
             List.foldl (gatewaySelectorEntries state Singleplayer) [] [ 1 ]
 
@@ -232,8 +232,9 @@ viewGatewaySelector state model =
             ++ mpGateways
 
 
-gatewaySelectorEntries : Game.State -> Universe -> Int -> List (UI Msg) -> List (UI Msg)
-gatewaySelectorEntries state gtwUniverse serverId acc =
+gatewaySelectorEntries : State -> Universe -> Int -> List (UI Msg) -> List (UI Msg)
+gatewaySelectorEntries state__ gtwUniverse serverId acc__ =
+    -- TODO: Use acc
     let
         onClickMsg =
             SwitchGateway gtwUniverse serverId
@@ -263,4 +264,4 @@ addGlobalEvents model =
         -- icon to close a window. Try that out: the experience is not great, and I don't yet have
         -- a solution for this problem.
         _ ->
-            [ HE.on "mousedown" <| JD.succeed <| CloseSelector ]
+            [ HE.on "mousedown" <| JD.succeed CloseSelector ]

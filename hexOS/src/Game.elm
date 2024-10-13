@@ -1,13 +1,12 @@
 module Game exposing
     ( State
     , getActiveGateway
-    , getActiveUniverse
     , init
     , update
     )
 
 import Effect exposing (Effect)
-import Game.Bus as Game exposing (Action(..))
+import Game.Bus exposing (Action(..))
 import Game.Msg exposing (Msg(..))
 import Game.Universe as Universe exposing (Universe(..))
 
@@ -73,8 +72,8 @@ getActiveGateway state =
     (getActiveUniverse state).activeGateway
 
 
-switchActiveGateway : Universe -> Int -> State -> State
-switchActiveGateway universe newActiveGatewayId state =
+switchActiveGateway : Int -> State -> State
+switchActiveGateway newActiveGatewayId state =
     state
         |> getActiveUniverse
         |> Universe.switchActiveGateway newActiveGatewayId
@@ -95,7 +94,7 @@ update msg state =
             ( state, Effect.none )
 
 
-updateAction : State -> Game.Action -> ( State, Effect Msg )
+updateAction : State -> Action -> ( State, Effect Msg )
 updateAction state action =
     case action of
         SwitchGateway universe gatewayId ->
@@ -103,7 +102,7 @@ updateAction state action =
                 newState =
                     state
                         |> switchUniverse universe
-                        |> switchActiveGateway universe gatewayId
+                        |> switchActiveGateway gatewayId
             in
             ( newState, Effect.none )
 

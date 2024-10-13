@@ -18,7 +18,7 @@ import Apps.Types as Apps
 import Dict exposing (Dict)
 import Effect exposing (Effect)
 import Game exposing (State)
-import Game.Universe as Universe exposing (Universe)
+import Game.Universe as Universe
 import HUD
 import HUD.ConnectionInfo
 import Html
@@ -72,8 +72,8 @@ type Msg
 -- Model
 
 
-init : Universe -> WM.SessionID -> WM.XY -> ( Model, Effect Msg )
-init currentUniverse sessionId viewport =
+init : WM.SessionID -> WM.XY -> ( Model, Effect Msg )
+init sessionId viewport =
     let
         wmModel =
             WM.init sessionId viewport
@@ -113,7 +113,7 @@ updateViewport model viewport =
 -- Update
 
 
-update : Game.State -> Msg -> Model -> ( Model, Effect Msg )
+update : State -> Msg -> Model -> ( Model, Effect Msg )
 update state msg model =
     case msg of
         -- Performs
@@ -147,7 +147,7 @@ update state msg model =
         PerformAction (OS.Bus.UnvibrateApp appId) ->
             performActionOnApp model appId performUnvibrateApp
 
-        PerformAction (OS.Bus.ToGame gameAction) ->
+        PerformAction (OS.Bus.ToGame _) ->
             -- Handled by parent
             ( model, Effect.none )
 
@@ -649,7 +649,7 @@ maybeUpdateParentModel parentInfo parentModel appModels =
 -- Update > HUD
 
 
-updateHud : Game.State -> Model -> HUD.Msg -> ( Model, Effect Msg )
+updateHud : State -> Model -> HUD.Msg -> ( Model, Effect Msg )
 updateHud state model hudMsg =
     case hudMsg of
         HUD.CIMsg (HUD.ConnectionInfo.ToOS action) ->
@@ -667,12 +667,12 @@ updateHud state model hudMsg =
 -- View
 
 
-documentView : Game.State -> Model -> UI.Document Msg
+documentView : State -> Model -> UI.Document Msg
 documentView gameState model =
     { title = "", body = view gameState model }
 
 
-view : Game.State -> Model -> List (UI Msg)
+view : State -> Model -> List (UI Msg)
 view gameState model =
     [ col
         (id "hexOS" :: addGlobalEvents model)
@@ -693,19 +693,19 @@ addGlobalEvents model =
         :: List.map (HA.map HudMsg) (HUD.addGlobalEvents model.hud)
 
 
-wmView : Game.State -> Model -> UI Msg
+wmView : State -> Model -> UI Msg
 wmView gameState model =
     let
         windowsNodes =
             Dict.foldl (viewWindow gameState model) [] model.wm.windows
     in
-    UI.div
+    div
         [ id "os-wm"
         ]
         windowsNodes
 
 
-viewWindow : Game.State -> Model -> AppID -> WM.Window -> List (UI Msg) -> List (UI Msg)
+viewWindow : State -> Model -> AppID -> WM.Window -> List (UI Msg) -> List (UI Msg)
 viewWindow state model appId window acc =
     if shouldRenderWindow state model.wm window then
         let
@@ -734,7 +734,7 @@ viewWindow state model appId window acc =
 3.  It has the `isVisible` flag set to True (it's not minimized).
 
 -}
-shouldRenderWindow : Game.State -> WM.Model -> WM.Window -> Bool
+shouldRenderWindow : State -> WM.Model -> WM.Window -> Bool
 shouldRenderWindow state wm window =
     -- TODO: maybe move this function to WM?
     window.isVisible && window.universe == state.currentUniverse && window.sessionCID == wm.currentSession
@@ -779,7 +779,7 @@ windowBlockingOverlay : WM.Window -> UI Msg
 windowBlockingOverlay window =
     case window.blockedByApp of
         Just popupId ->
-            UI.div
+            div
                 [ cl "os-w-app-overlay"
                 , HE.onClick (PerformAction <| OS.Bus.FocusVibrateApp popupId)
                 ]

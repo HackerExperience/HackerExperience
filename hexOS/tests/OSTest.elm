@@ -324,7 +324,7 @@ osInitialModel : OS.Model
 osInitialModel =
     let
         ( model, _ ) =
-            OS.init Universe.Singleplayer (WM.toSessionId 1) ( 1024, 1024 )
+            OS.init (WM.toSessionId 1) ( 1024, 1024 )
     in
     model
 

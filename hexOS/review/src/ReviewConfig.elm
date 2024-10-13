@@ -74,6 +74,7 @@ config =
             [ "src/UI.elm"
             , "src/Utils.elm"
             , "src/Effect.elm"
+            , "src/DevTools/ReviewBypass.elm"
             ]
         -- Below ignored files are WIP and should eventually be fixed (either used or removed)
         |> Rule.ignoreErrorsForFiles [ "src/Common/Assets.elm" ]
@@ -101,6 +102,11 @@ config =
         |> Rule.ignoreErrorsForFiles [ "src/OS/AppID.elm" ]
         -- Below files are wrong and should eventually be fixed
         |> Rule.ignoreErrorsForFiles [ "src/WM.elm" ]
+        -- Below files are outside my control
+        |> Rule.ignoreErrorsForFiles
+            [ "src/API/Game/Types.elm"
+            , "src/API/Lobby/Types.elm"
+            ]
     ]
 
 

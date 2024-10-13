@@ -20,16 +20,10 @@ type Universe
     | Multiplayer
 
 
-{-| todo
--}
-type alias ServerID =
-    Int
-
-
 type alias Model =
-    { mainframeID : ServerID
-    , activeGateway : ServerID
-    , activeEndpoint : Maybe ServerID
+    { mainframeID : Int
+    , activeGateway : Int
+    , activeEndpoint : Maybe Int
     }
 
 

@@ -9,12 +9,11 @@ module HUD exposing
 
 import Effect exposing (Effect)
 import Game exposing (State)
-import Game.Universe as Universe
 import HUD.ConnectionInfo as CI
 import Html
 import Html.Attributes as HA
 import OS.Bus
-import UI exposing (UI, cl, col, div, id, row, style, text)
+import UI exposing (UI, id, row)
 
 
 
@@ -43,7 +42,7 @@ initialModel =
 -- Update
 
 
-update : Game.State -> Msg -> Model -> ( Model, Effect Msg )
+update : State -> Msg -> Model -> ( Model, Effect Msg )
 update state msg model =
     case msg of
         CIMsg ciMsg ->
@@ -62,7 +61,7 @@ update state msg model =
 -- View
 
 
-view : Game.State -> Model -> UI Msg
+view : State -> Model -> UI Msg
 view state model =
     row [ id "hud" ]
         [ Html.map CIMsg <| CI.view state model.ci ]
