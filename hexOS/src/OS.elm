@@ -54,9 +54,6 @@ type alias Model =
     { wm : WM.Model
     , appModels : AppModels
     , appConfigs : AppConfigs
-
-    -- _this_ currentUniverse is deprecated. See if it can be removed (to avoid hvaing two sources of truth)
-    , currentUniverse : Universe
     , hud : HUD.Model
     }
 
@@ -84,7 +81,6 @@ init currentUniverse sessionId viewport =
     ( { wm = wmModel
       , appModels = Dict.empty
       , appConfigs = Dict.empty
-      , currentUniverse = currentUniverse
       , hud = HUD.initialModel
       }
     , Effect.none
@@ -137,7 +133,7 @@ update state msg model =
             performActionOnApp model appId performRequestFocus
 
         PerformAction (OS.Bus.OpenApp app parentInfo) ->
-            performOpenApp model app parentInfo
+            performOpenApp state model app parentInfo
 
         PerformAction (OS.Bus.CloseApp appId) ->
             performActionOnApp model appId performCloseApp
@@ -350,11 +346,12 @@ performRequestFocus model appId =
 
 
 performOpenApp :
-    Model
+    State
+    -> Model
     -> App.Manifest
     -> Maybe WM.ParentInfo
     -> ( Model, Effect Msg )
-performOpenApp model app parentInfo =
+performOpenApp { currentUniverse } model app parentInfo =
     let
         appId =
             model.wm.nextAppId
@@ -387,7 +384,7 @@ performOpenApp model app parentInfo =
                     ( Nothing, Effect.none, OS.Bus.NoOp )
 
         newWm =
-            WM.registerApp model.wm model.currentUniverse app appId windowConfig parentInfo
+            WM.registerApp model.wm currentUniverse app appId windowConfig parentInfo
 
         newAppModels =
             Dict.insert appId initialAppModel model.appModels
@@ -709,8 +706,8 @@ wmView gameState model =
 
 
 viewWindow : Game.State -> Model -> AppID -> WM.Window -> List (UI Msg) -> List (UI Msg)
-viewWindow gameState model appId window acc =
-    if shouldRenderWindow model window then
+viewWindow state model appId window acc =
+    if shouldRenderWindow state model.wm window then
         let
             appModel =
                 getAppModel model.appModels appId
@@ -719,7 +716,7 @@ viewWindow gameState model appId window acc =
             -- In fact, it may make sense for each App to implement a "stateFilter", thus letting
             -- each App decide which data it receives (based on its own needs)
             windowContent =
-                Html.map AppMsg <| renderWindowContent appId window appModel gameState.sp
+                Html.map AppMsg <| renderWindowContent appId window appModel state.sp
 
             renderedWindow =
                 renderWindow model.wm appId window windowContent
@@ -737,9 +734,10 @@ viewWindow gameState model appId window acc =
 3.  It has the `isVisible` flag set to True (it's not minimized).
 
 -}
-shouldRenderWindow : Model -> WM.Window -> Bool
-shouldRenderWindow { wm, currentUniverse } window =
-    window.isVisible && window.universe == currentUniverse && window.sessionCID == wm.currentSession
+shouldRenderWindow : Game.State -> WM.Model -> WM.Window -> Bool
+shouldRenderWindow state wm window =
+    -- TODO: maybe move this function to WM?
+    window.isVisible && window.universe == state.currentUniverse && window.sessionCID == wm.currentSession
 
 
 renderWindow : WM.Model -> AppID -> WM.Window -> UI Msg -> UI Msg

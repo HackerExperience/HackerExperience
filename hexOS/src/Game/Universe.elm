@@ -3,6 +3,7 @@ module Game.Universe exposing
     , Universe(..)
     , init
     , switchActiveGateway
+    , toString
     )
 
 -- I'd rather IndexRequested type to be in API.Types (or even Event.Types or whatever)
@@ -49,3 +50,17 @@ init universe index =
 switchActiveGateway : Int -> Model -> Model
 switchActiveGateway newActiveGatewayId model =
     { model | activeGateway = newActiveGatewayId }
+
+
+
+-- Utils
+
+
+toString : Universe -> String
+toString universe =
+    case universe of
+        Singleplayer ->
+            "singleplayer"
+
+        Multiplayer ->
+            "multiplayer"

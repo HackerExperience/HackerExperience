@@ -78,12 +78,15 @@ updateSwitchGateway state model gtwUniverse gatewayId =
         -- Always switch, except if the selected gateway is the activeGateway in the activeUniverse
         shouldSwitch =
             state.currentUniverse /= gtwUniverse || (Game.getActiveGateway state /= gatewayId)
-    in
-    if shouldSwitch then
-        ( model, Effect.msgToCmd <| ToOS <| OS.Bus.ToGame (Game.SwitchGateway gtwUniverse gatewayId) )
 
-    else
-        ( model, Effect.none )
+        effect =
+            if shouldSwitch then
+                Effect.msgToCmd <| ToOS <| OS.Bus.ToGame (Game.SwitchGateway gtwUniverse gatewayId)
+
+            else
+                Effect.none
+    in
+    ( { model | selector = NoSelector }, effect )
 
 
 
