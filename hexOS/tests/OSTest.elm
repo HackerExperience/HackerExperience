@@ -7,13 +7,12 @@ import Effect
 import Expect as E exposing (Expectation)
 import Game.Universe as Universe
 import OS exposing (Msg(..))
-import OS.AppID exposing (AppID)
 import OS.Bus as Bus
 import Program exposing (program)
 import ProgramTest as PT
-import Test exposing (..)
 import TestHelpers.Expect as E
-import TestHelpers.Game as TGame
+import TestHelpers.Models as TM
+import TestHelpers.Test exposing (Test, describe, test)
 import WM
 
 
@@ -43,14 +42,14 @@ msgPerformActionTests =
                             PerformAction (Bus.RequestOpenApp App.DemoApp Nothing)
 
                         ( newModel, effect ) =
-                            OS.update TGame.state msg osInitialModel
+                            OS.update TM.state msg TM.os
                     in
                     E.batch
                         [ -- Unless told otherwise, RequestOpenApp gets the approval to OpenApp
                           E.effectMsgToCmd effect (PerformAction (Bus.OpenApp App.DemoApp Nothing))
 
                         -- Model remains unchanged
-                        , E.equal osInitialModel newModel
+                        , E.equal TM.os newModel
                         ]
             ]
         , describe "RequestCloseApp"
@@ -58,10 +57,10 @@ msgPerformActionTests =
                 \_ ->
                     let
                         ( initialModel, appId ) =
-                            osModelWithApp osInitialModel
+                            TM.osWithApp TM.os
 
                         ( newModel, effect ) =
-                            OS.update TGame.state (PerformAction (Bus.RequestCloseApp appId)) initialModel
+                            OS.update TM.state (PerformAction (Bus.RequestCloseApp appId)) initialModel
                     in
                     E.batch
                         [ -- Got approval to CloseApp
@@ -76,10 +75,10 @@ msgPerformActionTests =
                 \_ ->
                     let
                         ( initialModel, appId ) =
-                            osModelWithApp osInitialModel
+                            TM.osWithApp TM.os
 
                         ( newModel, effect ) =
-                            OS.update TGame.state (PerformAction (Bus.RequestFocusApp appId)) initialModel
+                            OS.update TM.state (PerformAction (Bus.RequestFocusApp appId)) initialModel
                     in
                     E.batch
                         [ -- Got approval to FocusApp
@@ -97,10 +96,10 @@ msgPerformActionTests =
                             PerformAction (Bus.OpenApp App.DemoApp Nothing)
 
                         appId =
-                            osInitialModel.wm.nextAppId
+                            TM.os.wm.nextAppId
 
                         ( newModel, _ ) =
-                            OS.update TGame.state msg osInitialModel
+                            OS.update TM.state msg TM.os
                     in
                     E.batch
                         [ -- App Model is stored somewhere
@@ -119,17 +118,17 @@ msgPerformActionTests =
                             [ -- This is not meant to be an exhaustive assertion; use WMTest for that
                               E.equal window.appId appId
                             , E.equal window.app App.DemoApp
-                            , E.equal window.zIndex osInitialModel.wm.nextZIndex
+                            , E.equal window.zIndex TM.os.wm.nextZIndex
                             , E.true window.isVisible
                             , E.false window.isPopup
                             , E.nothing window.parent
                             ]
 
                         -- nextAppId is updated
-                        , E.equal newModel.wm.nextAppId <| osInitialModel.wm.nextAppId + 1
+                        , E.equal newModel.wm.nextAppId <| TM.os.wm.nextAppId + 1
 
                         -- nextZIndex is updated
-                        , E.equal newModel.wm.nextZIndex <| osInitialModel.wm.nextZIndex + 1
+                        , E.equal newModel.wm.nextZIndex <| TM.os.wm.nextZIndex + 1
 
                         -- Newly opened window is focused by default
                         , E.equal newModel.wm.focusedWindow <| Just appId
@@ -140,13 +139,13 @@ msgPerformActionTests =
                 \_ ->
                     let
                         ( preModel1, appId1 ) =
-                            osModelWithApp osInitialModel
+                            TM.osWithApp TM.os
 
                         ( initialModel, appId2__ ) =
-                            osModelWithApp preModel1
+                            TM.osWithApp preModel1
 
                         ( newModel, effect ) =
-                            OS.update TGame.state (PerformAction (Bus.CloseApp appId1)) initialModel
+                            OS.update TM.state (PerformAction (Bus.CloseApp appId1)) initialModel
                     in
                     E.batch
                         [ -- Initial model has two apps / windows
@@ -170,10 +169,10 @@ msgPerformActionTests =
                 \_ ->
                     let
                         ( initialModel, appId ) =
-                            osModelWithApp osInitialModel
+                            TM.osWithApp TM.os
 
                         ( newModel, effect ) =
-                            OS.update TGame.state (PerformAction (Bus.CloseApp appId)) initialModel
+                            OS.update TM.state (PerformAction (Bus.CloseApp appId)) initialModel
                     in
                     E.batch
                         [ -- Initially, app 1 was focused. Now it's no longer focused
@@ -187,13 +186,13 @@ msgPerformActionTests =
                 \_ ->
                     let
                         ( preModel1, appId1 ) =
-                            osModelWithApp osInitialModel
+                            TM.osWithApp TM.os
 
                         ( initialModel, appId2 ) =
-                            osModelWithApp preModel1
+                            TM.osWithApp preModel1
 
                         ( newModel, effect ) =
-                            OS.update TGame.state (PerformAction (Bus.FocusApp appId1)) initialModel
+                            OS.update TM.state (PerformAction (Bus.FocusApp appId1)) initialModel
                     in
                     E.batch
                         [ -- Initially, `appId2` window was focused
@@ -215,10 +214,10 @@ msgDragTests =
                 \_ ->
                     let
                         ( initialModel, appId ) =
-                            osModelWithApp osInitialModel
+                            TM.osWithApp TM.os
 
                         ( newModel, effect ) =
-                            OS.update TGame.state (StartDrag appId 50 51) initialModel
+                            OS.update TM.state (StartDrag appId 50 51) initialModel
                     in
                     E.batch
                         [ -- The `wm.dragging` value was set
@@ -247,13 +246,13 @@ msgDragTests =
                 \_ ->
                     let
                         ( initialModel, appId ) =
-                            osModelWithApp osInitialModel
+                            TM.osWithApp TM.os
 
                         ( draggingModel, _ ) =
-                            OS.update TGame.state (StartDrag appId 50 51) initialModel
+                            OS.update TM.state (StartDrag appId 50 51) initialModel
 
                         ( newModel, effect ) =
-                            OS.update TGame.state (Drag 60 66) draggingModel
+                            OS.update TM.state (Drag 60 66) draggingModel
                     in
                     E.batch
                         [ let
@@ -284,13 +283,13 @@ msgDragTests =
                 \_ ->
                     let
                         ( initialModel, appId ) =
-                            osModelWithApp osInitialModel
+                            TM.osWithApp TM.os
 
                         ( draggingModel, _ ) =
-                            OS.update TGame.state (StartDrag appId 50 51) initialModel
+                            OS.update TM.state (StartDrag appId 50 51) initialModel
 
                         ( newModel, effect ) =
-                            OS.update TGame.state StopDrag draggingModel
+                            OS.update TM.state StopDrag draggingModel
                     in
                     E.batch
                         [ -- The draggingModel was dragging
@@ -304,33 +303,13 @@ msgDragTests =
                 \_ ->
                     let
                         ( newModel, effect ) =
-                            OS.update TGame.state StopDrag osInitialModel
+                            OS.update TM.state StopDrag TM.os
                     in
                     E.batch
                         [ -- Nada changed
-                          E.nothing osInitialModel.wm.dragging
+                          E.nothing TM.os.wm.dragging
                         , E.nothing newModel.wm.dragging
                         , E.effectNone effect
                         ]
             ]
         ]
-
-
-
--- Utils
-
-
-osInitialModel : OS.Model
-osInitialModel =
-    let
-        ( model, _ ) =
-            OS.init (WM.toSessionId 1) ( 1024, 1024 )
-    in
-    model
-
-
-osModelWithApp : OS.Model -> ( OS.Model, AppID )
-osModelWithApp model =
-    model
-        |> OS.update TGame.state (PerformAction (Bus.OpenApp App.DemoApp Nothing))
-        |> Tuple.mapSecond (\_ -> model.wm.nextAppId)

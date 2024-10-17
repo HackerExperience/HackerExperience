@@ -1,18 +1,27 @@
 module TestHelpers.Game exposing (..)
 
 import Game exposing (State)
-import Game.Universe as Universe exposing (Universe(..))
-import TestHelpers.Mocks.Events as Mocks
+import Game.Universe exposing (Universe(..))
 
 
-state : State
-state =
-    let
-        index =
-            Mocks.indexRequested
+type alias UniverseInfo =
+    { currentUniverse : Universe
+    , otherUniverse : Universe
+    }
 
-        spModel =
-            Universe.init index
-    in
-    Game.init Singleplayer spModel spModel
-        |> Tuple.first
+
+universeInfo : State -> UniverseInfo
+universeInfo state =
+    { currentUniverse = state.currentUniverse
+    , otherUniverse = otherUniverse state.currentUniverse
+    }
+
+
+otherUniverse : Universe -> Universe
+otherUniverse universe =
+    case universe of
+        Singleplayer ->
+            Multiplayer
+
+        Multiplayer ->
+            Singleplayer
