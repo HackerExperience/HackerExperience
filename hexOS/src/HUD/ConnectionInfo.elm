@@ -1,6 +1,7 @@
 module HUD.ConnectionInfo exposing
     ( Model
     , Msg(..)
+    , Selector(..)
     , addGlobalEvents
     , initialModel
     , update
