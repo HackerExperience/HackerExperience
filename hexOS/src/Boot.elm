@@ -2,7 +2,7 @@ module Boot exposing (Model, Msg(..), documentView, init, update)
 
 import Effect exposing (Effect)
 import Event exposing (Event)
-import Game.Universe
+import Game.Universe as Universe
 import UI exposing (UI, cl, col, row, text)
 
 
@@ -11,7 +11,7 @@ import UI exposing (UI, cl, col, row, text)
 
 
 type Msg
-    = ProceedToGame Game.Universe.Model
+    = ProceedToGame Universe.Model
     | EstablishSSEConnection
     | OnEventReceived Event
 
@@ -52,10 +52,10 @@ update msg model =
 updateEvent : Model -> Event -> ( Model, Effect Msg )
 updateEvent model event =
     case event of
-        Event.IndexRequested { player } ->
+        Event.IndexRequested index ->
             let
                 spModel =
-                    Game.Universe.init player.mainframe_id
+                    Universe.init index
             in
             ( model, Effect.msgToCmd <| ProceedToGame spModel )
 

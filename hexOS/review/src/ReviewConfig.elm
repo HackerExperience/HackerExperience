@@ -25,9 +25,11 @@ import NoMissingTypeAnnotationInLetIn
 import NoMissingTypeExpose
 import NoModuleOnExposedNames
 import NoPrematureLetComputation
+import NoPrimitiveTypeAlias
 import NoRedundantConcat
 import NoRedundantCons
 import NoSimpleLetBody
+import NoUnsafeDivision
 import NoUnsafePorts
 import NoUnused.CustomTypeConstructorArgs
 import NoUnused.CustomTypeConstructors
@@ -39,6 +41,7 @@ import NoUnused.Variables
 import NoUnusedPorts
 import Review.Rule as Rule exposing (Rule)
 import Simplify
+import UseMemoizedLazyLambda
 
 
 config : List Rule
@@ -71,6 +74,7 @@ config =
             [ "src/UI.elm"
             , "src/Utils.elm"
             , "src/Effect.elm"
+            , "src/DevTools/ReviewBypass.elm"
             ]
         -- Below ignored files are WIP and should eventually be fixed (either used or removed)
         |> Rule.ignoreErrorsForFiles [ "src/Common/Assets.elm" ]
@@ -90,6 +94,19 @@ config =
     , NoUnsafePorts.rule NoUnsafePorts.any
     , NoUnusedPorts.rule
     , NoDuplicatePorts.rule
+    , NoUnsafeDivision.rule
+    , UseMemoizedLazyLambda.rule
+        |> Rule.ignoreErrorsForFiles [ "src/UI.elm" ]
+    , NoPrimitiveTypeAlias.rule
+        -- For now I'm okay with AppID being a primitive type alias
+        |> Rule.ignoreErrorsForFiles [ "src/OS/AppID.elm" ]
+        -- Below files are wrong and should eventually be fixed
+        |> Rule.ignoreErrorsForFiles [ "src/WM.elm" ]
+        -- Below files are outside my control
+        |> Rule.ignoreErrorsForFiles
+            [ "src/API/Game/Types.elm"
+            , "src/API/Lobby/Types.elm"
+            ]
     ]
 
 

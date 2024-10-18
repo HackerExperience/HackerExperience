@@ -3,6 +3,7 @@ module UI exposing (..)
 import Browser
 import Html as H exposing (Html)
 import Html.Attributes as HA
+import Html.Events as HE
 import Html.Keyed as Keyed
 import Html.Lazy as Lazy
 
@@ -181,3 +182,17 @@ widthFill =
 noSelect : Attribute msg
 noSelect =
     cl "ui-noselect"
+
+
+pointer : Attribute msg
+pointer =
+    cl "ui-cursor-pointer"
+
+
+
+-- Events (TODO see if that's the API I want to use)
+
+
+onClick : msg -> Attribute msg
+onClick msg =
+    HE.onClick msg

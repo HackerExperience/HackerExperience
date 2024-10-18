@@ -40,6 +40,7 @@
     "test-dependencies": {
         "direct": {
             "avh4/elm-program-test": "4.0.0",
+            "elm-community/random-extra": "3.2.0",
             "elm-explorations/test": "2.1.2"
         },
         "indirect": {

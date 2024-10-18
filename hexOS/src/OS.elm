@@ -1,5 +1,7 @@
 module OS exposing
-    ( Model
+    ( AppConfigs
+    , AppModels
+    , Model
     , Msg(..)
     , documentView
     , init
@@ -8,40 +10,30 @@ module OS exposing
     )
 
 import Apps.Demo as Demo
+import Apps.LogViewer as LogViewer
 import Apps.Manifest as App
 import Apps.Popups.ConfirmationDialog as ConfirmationDialog
 import Apps.Popups.DemoSingleton as DemoSingleton
 import Apps.Types as Apps
 import Dict exposing (Dict)
 import Effect exposing (Effect)
+import Game exposing (State)
+import Game.Universe as Universe
+import HUD
+import HUD.ConnectionInfo
 import Html
+import Html.Attributes as HA
 import Html.Events as HE
 import Json.Decode as JD
 import List.Extra as List exposing (Step(..))
 import Maybe.Extra as Maybe
 import OS.AppID exposing (AppID)
 import OS.Bus
-import UI exposing (UI, cl, col, id, row, style, text)
+import UI exposing (UI, cl, col, div, id, row, style, text)
 import UI.Button
 import UI.Icon
 import WM
 import WM.Windowable
-
-
-type Msg
-    = PerformAction OS.Bus.Action
-    | AppMsg Apps.Msg
-    | StartDrag AppID Float Float
-    | Drag Float Float
-    | StopDrag
-    | BrowserVisibilityChanged
-
-
-type alias Model =
-    { wm : WM.Model
-    , appModels : AppModels
-    , appConfigs : AppConfigs
-    }
 
 
 type alias AppModels =
@@ -58,19 +50,38 @@ type alias AppConfig =
     { appType : App.Manifest }
 
 
+type alias Model =
+    { wm : WM.Model
+    , appModels : AppModels
+    , appConfigs : AppConfigs
+    , hud : HUD.Model
+    }
+
+
+type Msg
+    = PerformAction OS.Bus.Action
+    | AppMsg Apps.Msg
+    | StartDrag AppID Float Float
+    | Drag Float Float
+    | StopDrag
+    | BrowserVisibilityChanged
+    | HudMsg HUD.Msg
+
+
 
 -- Model
 
 
-init : WM.XY -> ( Model, Effect Msg )
-init viewport =
+init : WM.SessionID -> WM.XY -> ( Model, Effect Msg )
+init sessionId viewport =
     let
         wmModel =
-            WM.init viewport
+            WM.init sessionId viewport
     in
     ( { wm = wmModel
       , appModels = Dict.empty
       , appConfigs = Dict.empty
+      , hud = HUD.initialModel
       }
     , Effect.none
     )
@@ -102,8 +113,8 @@ updateViewport model viewport =
 -- Update
 
 
-update : Msg -> Model -> ( Model, Effect Msg )
-update msg model =
+update : State -> Msg -> Model -> ( Model, Effect Msg )
+update state msg model =
     case msg of
         -- Performs
         PerformAction OS.Bus.NoOp ->
@@ -122,7 +133,7 @@ update msg model =
             performActionOnApp model appId performRequestFocus
 
         PerformAction (OS.Bus.OpenApp app parentInfo) ->
-            performOpenApp model app parentInfo
+            performOpenApp state model app parentInfo
 
         PerformAction (OS.Bus.CloseApp appId) ->
             performActionOnApp model appId performCloseApp
@@ -135,6 +146,10 @@ update msg model =
 
         PerformAction (OS.Bus.UnvibrateApp appId) ->
             performActionOnApp model appId performUnvibrateApp
+
+        PerformAction (OS.Bus.ToGame _) ->
+            -- Handled by parent
+            ( model, Effect.none )
 
         -- Drag
         StartDrag appId x y ->
@@ -151,8 +166,11 @@ update msg model =
         BrowserVisibilityChanged ->
             updateVisibilityChanged model
 
-        AppMsg subMsg_ ->
-            dispatchUpdateApp model subMsg_
+        AppMsg appMsg ->
+            dispatchUpdateApp model appMsg
+
+        HudMsg hudMsg ->
+            updateHud state model hudMsg
 
 
 
@@ -328,11 +346,12 @@ performRequestFocus model appId =
 
 
 performOpenApp :
-    Model
+    State
+    -> Model
     -> App.Manifest
     -> Maybe WM.ParentInfo
     -> ( Model, Effect Msg )
-performOpenApp model app parentInfo =
+performOpenApp { currentUniverse } model app parentInfo =
     let
         appId =
             model.wm.nextAppId
@@ -365,7 +384,7 @@ performOpenApp model app parentInfo =
                     ( Nothing, Effect.none, OS.Bus.NoOp )
 
         newWm =
-            WM.registerApp model.wm app appId windowConfig parentInfo
+            WM.registerApp model.wm currentUniverse app appId windowConfig parentInfo
 
         newAppModels =
             Dict.insert appId initialAppModel model.appModels
@@ -532,6 +551,22 @@ dispatchUpdateApp model appMsg =
         Apps.InvalidMsg ->
             ( model, Effect.none )
 
+        Apps.LogViewerMsg _ (LogViewer.ToOS busAction) ->
+            ( model, Effect.msgToCmd (PerformAction busAction) )
+
+        -- Apps.LogViewerMsg appId subMsg ->
+        --     case getAppModel model.appModels appId of
+        --         Apps.LogViewerModel appModel ->
+        --             updateApp
+        --                 model
+        --                 appId
+        --                 appModel
+        --                 subMsg
+        --                 Apps.LogViewerModel
+        --                 Apps.LogViewerMsg
+        --                 LogViewer.update
+        --         _ ->
+        --             ( model, Effect.none )
         Apps.DemoMsg _ (Demo.ToOS busAction) ->
             ( model, Effect.msgToCmd (PerformAction busAction) )
 
@@ -611,51 +646,77 @@ maybeUpdateParentModel parentInfo parentModel appModels =
 
 
 
+-- Update > HUD
+
+
+updateHud : State -> Model -> HUD.Msg -> ( Model, Effect Msg )
+updateHud state model hudMsg =
+    case hudMsg of
+        HUD.CIMsg (HUD.ConnectionInfo.ToOS action) ->
+            ( model, Effect.msgToCmd (PerformAction action) )
+
+        _ ->
+            let
+                ( newHud, hudEffect ) =
+                    HUD.update state hudMsg model.hud
+            in
+            ( { model | hud = newHud }, Effect.map HudMsg hudEffect )
+
+
+
 -- View
 
 
-documentView : Model -> UI.Document Msg
-documentView model =
-    { title = "", body = view model }
+documentView : State -> Model -> UI.Document Msg
+documentView gameState model =
+    { title = "", body = view gameState model }
 
 
-view : Model -> List (UI Msg)
-view model =
+view : State -> Model -> List (UI Msg)
+view gameState model =
     [ col
-        [ id "hexOS"
-        , maybeAddGlobalMouseMoveEvent model.wm
-        ]
-        [ viewTopBar model
-        , wmView model
+        (id "hexOS" :: addGlobalEvents model)
+        [ wmView gameState model
         , viewDock model
+        , Html.map HudMsg <| HUD.view gameState model.hud
         ]
     ]
 
 
-viewTopBar : Model -> UI Msg
-viewTopBar _ =
-    row [ id "os-top" ] [ text "top" ]
+
+-- TODO: Move to another part of this module if this is confirmed to be accurate
 
 
-wmView : Model -> UI Msg
-wmView model =
+addGlobalEvents : Model -> List (UI.Attribute Msg)
+addGlobalEvents model =
+    maybeAddGlobalMouseMoveEvent model.wm
+        :: List.map (HA.map HudMsg) (HUD.addGlobalEvents model.hud)
+
+
+wmView : State -> Model -> UI Msg
+wmView gameState model =
     let
         windowsNodes =
-            Dict.foldl (viewWindow model) [] model.wm.windows
+            Dict.foldl (viewWindow gameState model) [] model.wm.windows
     in
-    UI.div [ id "os-wm" ]
+    div
+        [ id "os-wm"
+        ]
         windowsNodes
 
 
-viewWindow : Model -> AppID -> WM.Window -> List (UI Msg) -> List (UI Msg)
-viewWindow model appId window acc =
-    if window.isVisible then
+viewWindow : State -> Model -> AppID -> WM.Window -> List (UI Msg) -> List (UI Msg)
+viewWindow state model appId window acc =
+    if shouldRenderWindow state model.wm window then
         let
             appModel =
                 getAppModel model.appModels appId
 
+            -- TODO: Here, I should grab either sp/mp depending on gameState.currentUniverse
+            -- In fact, it may make sense for each App to implement a "stateFilter", thus letting
+            -- each App decide which data it receives (based on its own needs)
             windowContent =
-                Html.map AppMsg <| renderWindowContent appId window appModel
+                Html.map AppMsg <| renderWindowContent appId window appModel state.sp
 
             renderedWindow =
                 renderWindow model.wm appId window windowContent
@@ -664,6 +725,19 @@ viewWindow model appId window acc =
 
     else
         acc
+
+
+{-| A window should be rendered if:
+
+1.  It is registered to the same Universe the OS is using; and
+2.  It is registered to the same Server the WM is using; and
+3.  It has the `isVisible` flag set to True (it's not minimized).
+
+-}
+shouldRenderWindow : State -> WM.Model -> WM.Window -> Bool
+shouldRenderWindow state wm window =
+    -- TODO: maybe move this function to WM?
+    window.isVisible && window.universe == state.currentUniverse && window.sessionCID == wm.currentSession
 
 
 renderWindow : WM.Model -> AppID -> WM.Window -> UI Msg -> UI Msg
@@ -705,7 +779,7 @@ windowBlockingOverlay : WM.Window -> UI Msg
 windowBlockingOverlay window =
     case window.blockedByApp of
         Just popupId ->
-            UI.div
+            div
                 [ cl "os-w-app-overlay"
                 , HE.onClick (PerformAction <| OS.Bus.FocusVibrateApp popupId)
                 ]
@@ -758,11 +832,14 @@ stopPropagation event =
         (JD.succeed <| (\msg -> ( msg, True )) (PerformAction OS.Bus.NoOp))
 
 
-renderWindowContent : AppID -> WM.Window -> Apps.Model -> UI Apps.Msg
-renderWindowContent appId _ appModel =
+renderWindowContent : AppID -> WM.Window -> Apps.Model -> Universe.Model -> UI Apps.Msg
+renderWindowContent appId _ appModel universe =
     case appModel of
         Apps.InvalidModel ->
             UI.emptyEl
+
+        Apps.LogViewerModel model ->
+            Html.map (Apps.LogViewerMsg appId) <| LogViewer.view model universe
 
         Apps.DemoModel model ->
             Html.map (Apps.DemoMsg appId) <| Demo.view model
@@ -819,6 +896,10 @@ viewDock _ =
             [ UI.Icon.iAdd (Just "Launch Demo")
                 |> UI.Button.fromIcon
                 |> UI.Button.withOnClick (PerformAction (OS.Bus.RequestOpenApp App.DemoApp Nothing))
+                |> UI.Button.toUI
+            , UI.Icon.iAdd (Just "Log Viewer")
+                |> UI.Button.fromIcon
+                |> UI.Button.withOnClick (PerformAction (OS.Bus.RequestOpenApp App.LogViewerApp Nothing))
                 |> UI.Button.toUI
             ]
         ]

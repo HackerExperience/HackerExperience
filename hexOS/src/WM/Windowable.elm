@@ -12,6 +12,7 @@ module WM.Windowable exposing
 -- Maybe rename to OS.dispatcher? or something like that
 
 import Apps.Demo as Demo
+import Apps.LogViewer as LogViewer
 import Apps.Manifest as App
 import Apps.Popups.ConfirmationDialog as ConfirmationDialog
 import Apps.Popups.DemoSingleton as DemoSingleton
@@ -32,6 +33,9 @@ willOpen app windowInfo =
     case app of
         App.InvalidApp ->
             OS.Bus.NoOp
+
+        App.LogViewerApp ->
+            LogViewer.willOpen windowInfo
 
         App.DemoApp ->
             Demo.willOpen windowInfo
@@ -81,6 +85,12 @@ didOpen app appId windowInfo =
             , Effect.msgToCmd Apps.InvalidMsg
             )
 
+        App.LogViewerApp ->
+            wrapMe
+                Apps.LogViewerModel
+                Apps.LogViewerMsg
+                LogViewer.didOpen
+
         App.DemoApp ->
             wrapMe
                 Apps.DemoModel
@@ -119,6 +129,12 @@ didOpenChild parentId parentModel childInfo windowInfo =
         Apps.InvalidModel ->
             ( Apps.InvalidModel, Effect.none, OS.Bus.NoOp )
 
+        Apps.LogViewerModel model ->
+            wrapMe
+                Apps.LogViewerModel
+                Apps.LogViewerMsg
+                (LogViewer.didOpenChild model)
+
         Apps.DemoModel model ->
             wrapMe
                 Apps.DemoModel
@@ -139,6 +155,9 @@ willClose window appModel =
     case appModel of
         Apps.InvalidModel ->
             OS.Bus.NoOp
+
+        Apps.LogViewerModel model ->
+            LogViewer.willClose window.appId model window
 
         Apps.DemoModel model ->
             Demo.willClose window.appId model window
@@ -170,6 +189,12 @@ didCloseChild parentId parentModel childInfo parentWindow =
         Apps.InvalidModel ->
             ( Apps.InvalidModel, Effect.none, OS.Bus.NoOp )
 
+        Apps.LogViewerModel model ->
+            wrapMe
+                Apps.LogViewerModel
+                Apps.LogViewerMsg
+                (LogViewer.didCloseChild model)
+
         Apps.DemoModel model ->
             wrapMe
                 Apps.DemoModel
@@ -191,6 +216,9 @@ willFocus app appId window =
         App.InvalidApp ->
             OS.Bus.NoOp
 
+        App.LogViewerApp ->
+            LogViewer.willFocus appId window
+
         App.DemoApp ->
             Demo.willFocus appId window
 
@@ -207,6 +235,9 @@ getWindowConfig windowInfo =
     case windowInfo.app of
         App.InvalidApp ->
             WM.dummyWindowConfig
+
+        App.LogViewerApp ->
+            LogViewer.getWindowConfig windowInfo
 
         App.DemoApp ->
             Demo.getWindowConfig windowInfo

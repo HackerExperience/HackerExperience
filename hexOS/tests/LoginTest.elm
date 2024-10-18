@@ -4,7 +4,7 @@ import Effect
 import Expect as E exposing (Expectation)
 import Program exposing (program)
 import ProgramTest as PT
-import Test exposing (..)
+import TestHelpers.Test exposing (Test, describe, test)
 
 
 suite : Test

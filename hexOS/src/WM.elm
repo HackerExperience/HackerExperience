@@ -1,6 +1,7 @@
 module WM exposing
     ( Model
     , ParentInfo
+    , SessionID
     , Window
     , WindowConfig
     , WindowInfo
@@ -23,6 +24,7 @@ module WM exposing
     , registerApp
     , startDrag
     , stopDrag
+    , toSessionId
     , unvibrateApp
     , updateViewport
     , willOpenApp
@@ -35,14 +37,24 @@ OS gerencia as Msgs/Updates etc. Tentar fazer assim (mas tudo bem se nao rolar)
 
 import Apps.Manifest as App
 import Dict exposing (Dict)
+import Game.Universe as Universe exposing (Universe)
 import List.Extra as List
 import Maybe.Extra as Maybe
 import OS.AppID exposing (AppID)
 import OS.Bus
 
 
+type SessionID
+    = SessionID CID
+
+
+type alias CID =
+    Int
+
+
 type alias Model =
     { windows : Windows
+    , currentSession : SessionID
     , focusedWindow : Maybe AppID
     , dragging : Maybe ( AppID, XY, XY )
     , nextAppId : Int
@@ -91,6 +103,8 @@ type alias Window =
     , children : List ( App.Manifest, AppID )
     , blockedByApp : Maybe AppID
     , childBehavior : Maybe ChildBehavior
+    , universe : Universe
+    , sessionCID : SessionID
     }
 
 
@@ -136,9 +150,10 @@ type alias ViewportLimits =
 -- Model
 
 
-init : XY -> Model
-init ( viewportX, viewportY ) =
+init : SessionID -> XY -> Model
+init sessionID ( viewportX, viewportY ) =
     { windows = Dict.empty
+    , currentSession = sessionID
     , focusedWindow = Nothing
     , nextAppId = 1
     , nextZIndex = 1
@@ -150,6 +165,11 @@ init ( viewportX, viewportY ) =
         , dockHeight = 80
         }
     }
+
+
+toSessionId : CID -> SessionID
+toSessionId cid =
+    SessionID cid
 
 
 updateViewport : Model -> ( X, Y ) -> Model
@@ -429,8 +449,8 @@ isFocusedApp model appId =
 -- app
 
 
-createWindow : Model -> App.Manifest -> AppID -> WindowConfig -> Maybe ParentInfo -> Window
-createWindow model app appId config parentInfo =
+createWindow : Model -> Universe -> App.Manifest -> AppID -> WindowConfig -> Maybe ParentInfo -> Window
+createWindow model universe app appId config parentInfo =
     let
         defaultChildBehavior =
             { closeWithParent = True
@@ -468,6 +488,8 @@ createWindow model app appId config parentInfo =
     , children = []
     , blockedByApp = Nothing
     , childBehavior = childBehavior
+    , universe = universe
+    , sessionCID = model.currentSession
     }
 
 
@@ -510,15 +532,16 @@ willOpenApp model app _ parentInfo openAction =
 
 registerApp :
     Model
+    -> Universe
     -> App.Manifest
     -> AppID
     -> WindowConfig
     -> Maybe ParentInfo
     -> Model
-registerApp model app appId windowConfig parentInfo =
+registerApp model universe app appId windowConfig parentInfo =
     let
         window =
-            createWindow model app appId windowConfig parentInfo
+            createWindow model universe app appId windowConfig parentInfo
 
         newWindows =
             Dict.insert appId window model.windows
@@ -668,6 +691,8 @@ dummyWindow =
     , children = []
     , blockedByApp = Nothing
     , childBehavior = Nothing
+    , universe = Universe.Singleplayer
+    , sessionCID = SessionID 0
     }
 
 
