@@ -3,9 +3,13 @@ module TestHelpers.Expect exposing (..)
 import Dict exposing (Dict)
 import Dict.Extra as Dict
 import Effect exposing (Effect)
-import Expect as E exposing (Expectation)
+import Expect as E
 import Maybe.Extra as Maybe
 import TestHelpers.Utils as TU exposing (str)
+
+
+type alias Expectation =
+    E.Expectation
 
 
 
@@ -15,6 +19,20 @@ import TestHelpers.Utils as TU exposing (str)
 batch : List Expectation -> Expectation
 batch expectations =
     E.all (List.map always expectations) ()
+
+
+
+-- Default expectations
+
+
+equal : a -> a -> Expectation
+equal =
+    E.equal
+
+
+notEqual : a -> a -> Expectation
+notEqual =
+    E.notEqual
 
 
 

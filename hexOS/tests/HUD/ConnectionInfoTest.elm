@@ -1,7 +1,6 @@
 module HUD.ConnectionInfoTest exposing (suite)
 
 import Effect
-import Expect as E exposing (Expectation)
 import Game
 import Game.Bus
 import Game.Universe exposing (Universe(..))
@@ -12,14 +11,14 @@ import TestHelpers.Expect as E
 import TestHelpers.Game as TG
 import TestHelpers.Models as TM
 import TestHelpers.Random as TR
-import TestHelpers.Test exposing (Test, describe, fromGenerator, fuzzOnce, test)
+import TestHelpers.Test exposing (Test, describe, fuzzOnce, test, toFuzzer)
 
 
 suite : Test
 suite =
     describe "Msg"
         [ describe "OpenSelector"
-            [ fuzzOnce (fromGenerator TR.hudCiSelector) "opens the selector" <|
+            [ fuzzOnce (toFuzzer TR.hudCiSelector) "opens the selector" <|
                 \selectorToOpen ->
                     let
                         initialModel =
@@ -39,7 +38,7 @@ suite =
                         ]
             ]
         , describe "CloseSelector"
-            [ fuzzOnce (fromGenerator TR.hudCiSelector) "closes the selector" <|
+            [ fuzzOnce (toFuzzer TR.hudCiSelector) "closes the selector" <|
                 \currentlyOpenSelector ->
                     let
                         initialModel =

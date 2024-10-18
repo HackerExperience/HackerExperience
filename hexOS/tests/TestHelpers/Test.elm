@@ -28,6 +28,6 @@ fuzzOnce =
     Test.fuzzWith { runs = 1, distribution = Test.noDistribution }
 
 
-fromGenerator : Generator a -> Fuzzer a
-fromGenerator generator =
+toFuzzer : Generator a -> Fuzzer a
+toFuzzer generator =
     Fuzz.fromGenerator generator

@@ -4,7 +4,6 @@ import Apps.Manifest as App
 import Apps.Types as Apps
 import Dict
 import Effect
-import Expect as E exposing (Expectation)
 import Game.Universe as Universe
 import OS exposing (Msg(..))
 import OS.Bus as Bus

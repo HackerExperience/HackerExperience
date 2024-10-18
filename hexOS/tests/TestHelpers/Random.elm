@@ -20,7 +20,7 @@ serverId =
 
 universeId : Generator Universe
 universeId =
-    R.choice Singleplayer Multiplayer
+    R.oneOf2 Singleplayer Multiplayer
 
 
 universe : Generator Universe.Model

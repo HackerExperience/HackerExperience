@@ -28,6 +28,11 @@ state =
         |> Tuple.first
 
 
+stateWithUniverse : Universe -> State -> State
+stateWithUniverse universe state_ =
+    { state_ | currentUniverse = universe }
+
+
 
 -- OS
 

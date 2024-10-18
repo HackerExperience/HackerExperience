@@ -1,6 +1,8 @@
 module Game exposing
     ( State
     , getActiveGateway
+    , getActiveUniverse
+    , getInactiveUniverse
     , init
     , update
     )
@@ -16,6 +18,8 @@ import Game.Universe as Universe exposing (Universe(..))
 
 
 type alias State =
+    -- TODO: Rethink "Universe" vs "Universe.Model". Sometimes they are both referred to as simply
+    -- "universe" but that won't play well in the long term. Maybe UniverseId?
     { sp : Universe.Model
     , mp : Universe.Model
 
@@ -46,6 +50,16 @@ getActiveUniverse state =
 
         Multiplayer ->
             state.mp
+
+
+getInactiveUniverse : State -> Universe.Model
+getInactiveUniverse state =
+    case state.currentUniverse of
+        Singleplayer ->
+            state.mp
+
+        Multiplayer ->
+            state.sp
 
 
 replaceActiveUniverse : State -> Universe.Model -> State
