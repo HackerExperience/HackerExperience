@@ -18,9 +18,7 @@ defmodule Helix.MixProject do
         "coveralls.detail": :test,
         "coveralls.post": :test,
         "coveralls.html": :test,
-        "coveralls.cobertura": :test,
-        # Must be run in `:test` to include all possible schemas
-        "db.schema.list": :test
+        "coveralls.cobertura": :test
       ],
       dialyzer: [plt_add_apps: [:mix]]
     ]
