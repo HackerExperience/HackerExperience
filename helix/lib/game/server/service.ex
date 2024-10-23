@@ -23,8 +23,15 @@ defmodule Game.Services.Server do
   """
   def fetch(filter_params, opts \\ []) do
     filters = [
-      by_id: {:one, {:servers, :fetch}},
-      list_by_entity_id: {:all, {:servers, :list_by_entity_id}}
+      by_id: {:one, {:servers, :fetch}}
+    ]
+
+    Core.Fetch.query(filter_params, opts, filters)
+  end
+
+  def list(filter_params, opts \\ []) do
+    filters = [
+      by_entity_id: {:all, {:servers, :by_entity_id}}
     ]
 
     Core.Fetch.query(filter_params, opts, filters)

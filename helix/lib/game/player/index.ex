@@ -26,9 +26,8 @@ defmodule Game.Index.Player do
   @spec index(player :: map()) ::
           index
   def index(player) do
-    mainframe =
-      Svc.Server.fetch(list_by_entity_id: player.id)
-      |> List.first()
+    gateways = Svc.Server.list(by_entity_id: player.id)
+    mainframe = List.first(gateways)
 
     %{
       mainframe_id: mainframe.id

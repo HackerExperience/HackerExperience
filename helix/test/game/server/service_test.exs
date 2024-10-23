@@ -40,7 +40,7 @@ defmodule Game.Services.ServerTest do
     end
   end
 
-  describe "fetch/2 - list_by_entity_id" do
+  describe "list/2 - by_entity_id" do
     test "returns corresponding server when they exist" do
       entity = Setup.entity_lite!()
 
@@ -48,7 +48,7 @@ defmodule Game.Services.ServerTest do
       server_2 = Setup.server_lite!(entity: entity)
       _other_server = Setup.server_lite!()
 
-      servers = Svc.Server.fetch(list_by_entity_id: entity.id)
+      servers = Svc.Server.list(by_entity_id: entity.id)
       assert Enum.count(servers) == 2
       assert db_server_1 = Enum.find(servers, &(&1.id == server_1.id))
       assert db_server_2 = Enum.find(servers, &(&1.id == server_2.id))

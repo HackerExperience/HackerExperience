@@ -24,7 +24,7 @@ defmodule Test.SetupTest do
       refute_player_shard(player.id)
 
       # No server entries
-      assert [] == Svc.Server.fetch(list_by_entity_id: entity.id)
+      assert [] == Svc.Server.list(by_entity_id: entity.id)
     end
   end
 
@@ -51,7 +51,7 @@ defmodule Test.SetupTest do
       refute_player_shard(player.id)
 
       # No server entries
-      assert [] == Svc.Server.fetch(list_by_entity_id: entity.id)
+      assert [] == Svc.Server.list(by_entity_id: entity.id)
     end
   end
 

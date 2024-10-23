@@ -40,6 +40,8 @@ defmodule Core.Fetch do
     # NOTE: At least for now, I'm keeping `[]` here as possible result of empty list; but I see
     # myself moving away from this pattern in the future and making Core.Fetch exclusive for single
     # row retrieval. Maybe we could create a similar Core.List API meant for collections?
+    # PS: I have started to differentiate betweent `fetch` and `list` APIs at the Service layer, but
+    # for the time being they are both using `Core.Fetch` internally. Let's see if this holds.
     raise "Expected some result for #{inspect(filter_params)} (opts #{inspect(opts)}); got `nil`"
   end
 
