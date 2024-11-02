@@ -89,13 +89,16 @@ We could send something like this to the UI:
     }
   ]
 }
+
+(PS: format above may be changed for easier parsing on Client side)
+
 Notice we need two external IDs. We can't leak the revision int (otherwise the player will know how many revisions there are). Similarly, we can't leak the int log id, since it will tell how mnay logs there are.
 
 I don't like having a minimum of two external IDs per log entry but I can't think of an alternative solution without leaking internal data.
 
 The above JSON format will have sufficient information for anything the UI needs to do with the data, be it grouping, showing a "history" of revisions etc.
 
-Based on this rethinking of the IDs, we need to change the proposed model too:
+Based on this rethinking of the IDs, we need to change the proposed model to:
 
 S_logs
 [
@@ -134,3 +137,7 @@ If hiding a log entry generates a `log_type=hidden` revision, then LogScanning i
 Could it be more immersive to add log encryption instead? Instead of showing <<HIDDEN LOG>>, we show garbage/encrypted-like text in the UI, telling the user there _is_ a log but it's encrypted.
 
 That's worth considering in the future. It's a problem for whenever I add the hide/encrypt feature, but (and the most important thing at this stage) I don't see either of them affecting the data model being proposed here.
+
+# localhost logged in : should we show this on user login?
+
+There are valid questions here. For now, let's skip this and revisit at a later time.

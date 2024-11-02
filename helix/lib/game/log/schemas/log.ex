@@ -10,18 +10,19 @@ defmodule Game.Log do
   ]
 
   @schema [
-    {:id, {:integer, :autoincrement}},
+    {:id, :integer},
     {:revision_id, :integer},
     {:type, {:enum, values: @log_types}},
     {:data, {:map, keys: :atom}},
-    {:inserted_at, {:datetime_utc, [precision: :millisecond], mod: :inserted_at}}
+    {:inserted_at, {:datetime_utc, [precision: :millisecond], mod: :inserted_at}},
+    {:server_id, {:integer, virtual: :get_server_id}}
   ]
-
-  @derived_fields [:id]
 
   def new(params) do
     params
     |> Schema.cast()
     |> Schema.create()
   end
+
+  def get_server_id(_row, %{shard_id: server_id}), do: server_id
 end
