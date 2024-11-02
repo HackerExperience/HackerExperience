@@ -22,6 +22,8 @@ defmodule Core.Fetch do
   we can run N+1 queries without any kind of worries.
   """
   def query(filter_params, opts, filters_spec, opts_spec \\ []) do
+    filters_spec = normalize_filters_spec(filters_spec)
+
     acc = %{}
 
     includes = Keyword.get(opts_spec, :includes, [])
@@ -61,11 +63,11 @@ defmodule Core.Fetch do
     end)
   end
 
-  defp execute_callback({:one, query_id}, _acc, value),
-    do: DB.one(query_id, value)
+  defp execute_callback({:one, query_id, opts}, _acc, value),
+    do: DB.one(query_id, value, opts)
 
-  defp execute_callback({:all, query_id}, _acc, value),
-    do: DB.all(query_id, value)
+  defp execute_callback({:all, query_id, opts}, _acc, value),
+    do: DB.all(query_id, value, opts)
 
   defp execute_callback(fun, acc, value) when is_function(fun) do
     case :erlang.fun_info(fun)[:arity] do
@@ -80,5 +82,16 @@ defmodule Core.Fetch do
       1 -> fun.(acc)
       arity -> raise "Invalid function arity (#{arity}) on #{__MODULE__} callback"
     end
+  end
+
+  defp normalize_filters_spec(filters_spec) do
+    # Add the `opts` for :all/:one queries when not set
+    Enum.map(filters_spec, fn
+      {name, {:all, query_id, opts}} -> {name, {:all, query_id, opts}}
+      {name, {:all, query_id}} -> {name, {:all, query_id, []}}
+      {name, {:one, query_id, opts}} -> {name, {:one, query_id, opts}}
+      {name, {:one, query_id}} -> {name, {:one, query_id, []}}
+      {name, custom_callback} -> {name, custom_callback}
+    end)
   end
 end
