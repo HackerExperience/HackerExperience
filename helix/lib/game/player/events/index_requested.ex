@@ -31,7 +31,7 @@ defmodule Game.Events.Player.IndexRequested do
 
       payload =
         %{
-          player: Index.Player.index(player)
+          player: player |> Index.Player.index() |> Index.Player.render_index()
         }
 
       {:ok, payload}

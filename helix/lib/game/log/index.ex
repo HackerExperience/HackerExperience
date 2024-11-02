@@ -4,6 +4,17 @@ defmodule Game.Index.Log do
   alias Game.Services, as: Svc
   alias Game.Log
 
+  @type index ::
+          [map]
+
+  @type rendered_index ::
+          [rendered_log]
+
+  @typep rendered_log :: %{
+           id: integer(),
+           revision_id: integer()
+         }
+
   def spec do
     selection(
       schema(%{
@@ -20,6 +31,8 @@ defmodule Game.Index.Log do
 
   This list is ordered: newer logs show up first.
   """
+  @spec index(integer(), integer()) ::
+          index
   def index(entity_id, server_id) do
     # Get all logs that `entity_id` can see in `server_id`
     visible_logs =
@@ -35,8 +48,10 @@ defmodule Game.Index.Log do
     end)
   end
 
-  def render_index(logs) do
-    Enum.map(logs, &render_log/1)
+  @spec render_index(index) ::
+          rendered_index
+  def render_index(index) do
+    Enum.map(index, &render_log/1)
   end
 
   defp render_log(%Log{} = log) do

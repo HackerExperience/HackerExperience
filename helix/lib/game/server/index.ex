@@ -3,6 +3,18 @@ defmodule Game.Index.Server do
   import Core.Spec
   alias Game.Index
 
+  @type gateway_index ::
+          %{
+            id: server_id :: integer(),
+            logs: Index.Log.index()
+          }
+
+  @type rendered_gateway_index ::
+          %{
+            id: server_id :: integer(),
+            logs: Index.Log.rendered_index()
+          }
+
   def gateway_spec do
     selection(
       schema(%{
@@ -14,6 +26,8 @@ defmodule Game.Index.Server do
     )
   end
 
+  @spec gateway_index(term(), term()) ::
+          gateway_index
   def gateway_index(player, server) do
     %{
       id: server.id,
@@ -21,7 +35,12 @@ defmodule Game.Index.Server do
     }
   end
 
-  def render_gateway_index(gateway_index) do
-    gateway_index
+  @spec render_gateway_index(gateway_index) ::
+          rendered_gateway_index
+  def render_gateway_index(index) do
+    %{
+      id: index.id,
+      logs: Index.Log.render_index(index.logs)
+    }
   end
 end

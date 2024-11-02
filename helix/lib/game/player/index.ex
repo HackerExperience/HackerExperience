@@ -7,13 +7,13 @@ defmodule Game.Index.Player do
   @type index ::
           %{
             mainframe_id: server_id :: integer(),
-            gateways: map()
+            gateways: [Index.Server.gateway_index()]
           }
 
   @type rendered_index ::
           %{
             mainframe_id: integer(),
-            gateways: map()
+            gateways: [Index.Server.rendered_gateway_index()]
           }
 
   def output_spec do
