@@ -2,24 +2,28 @@ defmodule Game.Index.Player do
   use Norm
   import Core.Spec
   alias Game.Services, as: Svc
+  alias Game.Index
 
   @type index ::
           %{
-            mainframe_id: server_id :: integer()
+            mainframe_id: server_id :: integer(),
+            gateways: map()
           }
 
   @type rendered_index ::
           %{
-            mainframe_id: integer()
+            mainframe_id: integer(),
+            gateways: map()
           }
 
   def output_spec do
     selection(
       schema(%{
         __openapi_name: "IdxPlayer",
-        mainframe_id: integer()
+        mainframe_id: integer(),
+        gateways: coll_of(Index.Server.gateway_spec())
       }),
-      [:__openapi_name, :mainframe_id]
+      [:mainframe_id, :gateways]
     )
   end
 
@@ -30,7 +34,8 @@ defmodule Game.Index.Player do
     mainframe = List.first(gateways)
 
     %{
-      mainframe_id: mainframe.id
+      mainframe_id: mainframe.id,
+      gateways: Enum.map(gateways, fn server -> Index.Server.gateway_index(player, server) end)
     }
   end
 
@@ -38,7 +43,8 @@ defmodule Game.Index.Player do
           rendered_index
   def render_index(index) do
     %{
-      mainframe_id: index.mainframe_id
+      mainframe_id: index.mainframe_id,
+      gateways: Enum.map(index.gateways, fn idx -> Index.Server.render_gateway_index(idx) end)
     }
   end
 end
