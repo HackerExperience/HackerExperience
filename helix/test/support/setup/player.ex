@@ -15,7 +15,7 @@ defmodule Test.Setup.Player do
     {:ok, player} = Svc.Player.setup(external_id)
 
     entity = Svc.Entity.fetch!(by_id: player.id)
-    [server] = Svc.Server.fetch(list_by_entity_id: entity.id)
+    [server] = Svc.Server.list(by_entity_id: entity.id)
 
     %{player: player, entity: entity, server: server}
   end

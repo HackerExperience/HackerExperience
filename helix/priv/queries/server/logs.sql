@@ -2,16 +2,13 @@
 ----------------------------------- INSERTS ------------------------------------
 --------------------------------------------------------------------------------
 
--- :__insert
-INSERT INTO servers
-  (entity_id, inserted_at)
-VALUES
-  (?, ?)
-RETURNING *;
-
 --------------------------------------------------------------------------------
 ----------------------------------- SELECTS ------------------------------------
 --------------------------------------------------------------------------------
 
--- :by_entity_id
-SELECT * FROM servers WHERE entity_id = ?;
+
+-- :fetch_by_id_and_revision_id
+SELECT * FROM logs WHERE id = ? AND revision_id = ?;
+
+-- :get_last_inserted_id
+SELECT MAX(id) FROM logs LIMIT 1;

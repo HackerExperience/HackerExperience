@@ -25,7 +25,7 @@ defmodule Game.Services.PlayerTest do
       assert {:ok, player} = Svc.Player.setup(Random.uuid())
 
       # We can find a Server entry for this entity
-      assert [server] = Svc.Server.fetch(list_by_entity_id: player.id)
+      assert [server] = Svc.Server.list(by_entity_id: player.id)
       assert server.entity_id == player.id
     end
 

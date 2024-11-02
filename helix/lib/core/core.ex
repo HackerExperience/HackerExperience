@@ -29,32 +29,82 @@ defmodule Core do
     server_ctx(universe)
   end
 
-  # TODO: I'm not yet sure about the with_context/3,4 API...
-  def with_context(:universe, access_type, callback) when access_type in [:read, :write] do
-    # DB.with_context(fn ->
-    begin_context(:universe, access_type)
-    result = callback.()
-    DB.commit()
-    result
-    # end)
+  @doc """
+  Syntactic sugar on top of `DB.with_context/1`:
+  - Invoke `DB.with_context/1`
+  - Begin a transaction in the shard within the correct universe
+  - Commit it
+  - Return the result
+
+  If you don't want to commit, use `DB.with_context/1` directly (or add `with_context_no_commit/3`)
+  """
+  def with_context(:universe, access_type, callback) do
+    DB.with_context(fn ->
+      Core.begin_context(:universe, access_type)
+      result = callback.()
+      DB.commit()
+      result
+    end)
   end
 
-  def with_context(:player, player_id, access_type, callback) when access_type in [:read, :write] do
-    # DB.with_context(fn ->
-    begin_context(:player, player_id, access_type)
-    result = callback.()
-    DB.commit()
-    result
-    # end)
+  def with_context(:server, server_id, access_type, callback) do
+    ctx = DB.LocalState.get_current_context!()
+
+    if ctx.context in [:sp_server, :mp_server] do
+      # Already in `:server` context, so do nothing special. Caller is responsible for COMMITing
+      callback.()
+    else
+      DB.with_context(fn ->
+        Core.begin_context(:server, server_id, access_type)
+        result = callback.()
+        DB.commit()
+        result
+      end)
+    end
   end
 
-  def with_context(:server, server_id, access_type, callback) when access_type in [:read, :write] do
-    # DB.with_context(fn ->
-    begin_context(:server, server_id, access_type)
-    result = callback.()
-    DB.commit()
-    result
-    # end)
+  def with_context(:player, player_id, access_type, callback) do
+    ctx = DB.LocalState.get_current_context!()
+
+    if ctx.context in [:sp_player, :mp_player] do
+      # Already in `:player` context, so do nothing special. Caller is responsible for COMMITing
+      callback.()
+    else
+      DB.with_context(fn ->
+        Core.begin_context(:player, player_id, access_type)
+        result = callback.()
+        DB.commit()
+        result
+      end)
+    end
+  end
+
+  def assert_server_context! do
+    DB.LocalState.get_current_context!().context
+    |> assert_server_context!()
+  end
+
+  def assert_server_context!(ctx) when ctx in [:sp_server, :mp_server], do: :ok
+  def assert_server_context!(ctx), do: raise("Invalid context '#{inspect(ctx)}'; expected Server.")
+
+  def assert_player_context! do
+    DB.LocalState.get_current_context!().context
+    |> assert_player_context!()
+  end
+
+  def assert_player_context!(ctx) when ctx in [:sp_player, :mp_player], do: :ok
+  def assert_player_context!(ctx), do: raise("Invalid context '#{inspect(ctx)}'; expected Player.")
+
+  def get_server_id_from_context! do
+    state = DB.LocalState.get_current_context!()
+    assert_server_context!(state.context)
+    state.shard_id
+  end
+
+  def get_player_id_from_context! do
+    state = DB.LocalState.get_current_context!()
+    assert_player_context!(state.context)
+    state.shard_id
   end
 
   defp player_ctx(:singleplayer), do: :sp_player

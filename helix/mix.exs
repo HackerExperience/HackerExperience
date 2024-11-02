@@ -18,9 +18,7 @@ defmodule Helix.MixProject do
         "coveralls.detail": :test,
         "coveralls.post": :test,
         "coveralls.html": :test,
-        "coveralls.cobertura": :test,
-        # Must be run in `:test` to include all possible schemas
-        "db.schema.list": :test
+        "coveralls.cobertura": :test
       ],
       dialyzer: [plt_add_apps: [:mix]]
     ]
@@ -58,7 +56,8 @@ defmodule Helix.MixProject do
       {:dialyxir, "~> 1.4", only: [:dev], runtime: false},
       {:mox, "~> 1.1", only: :test},
       {:excoveralls, "~> 0.18.2", only: :test},
-      {:req, "~> 0.4.8", only: :test}
+      {:req, "~> 0.4.8", only: :test},
+      {:mix_test_watch, "~> 1.2", only: [:dev, :test], runtime: false}
     ]
   end
 
