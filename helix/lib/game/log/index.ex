@@ -60,7 +60,7 @@ defmodule Game.Index.Log do
     %{
       id: log.id,
       revision_id: log.revision_id,
-      type: log.type
+      type: "#{log.type}"
     }
   end
 end
