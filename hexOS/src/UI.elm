@@ -179,6 +179,11 @@ widthFill =
     cl "ui-width-fill"
 
 
+heightFill : Attribute msg
+heightFill =
+    cl "ui-height-fill"
+
+
 noSelect : Attribute msg
 noSelect =
     cl "ui-noselect"

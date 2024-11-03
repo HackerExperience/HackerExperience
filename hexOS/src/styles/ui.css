@@ -27,6 +27,10 @@ UI
     width: 100%;
 }
 
+.ui-height-fill {
+    height: 100%;
+}
+
 .ui-center-xy {
     margin: 0 auto;
 }

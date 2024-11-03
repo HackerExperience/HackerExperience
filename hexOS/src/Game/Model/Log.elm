@@ -21,12 +21,29 @@ type alias Logs =
 type alias Log =
     { id : LogID
     , revisionId : Int
-    , type_ : String
+    , type_ : LogType
+    , rawText : String
     }
+
+
+type LogType
+    = LocalhostLoggedIn
+    | CustomLog
+    | UnknownLog
 
 
 
 -- Model
+
+
+logsToList : Logs -> List Log
+logsToList logs =
+    OrderedDict.toList logs
+        |> List.map (\( _, log ) -> log)
+
+
+
+-- Model > Parser
 
 
 parse : List EventTypes.IdxLog -> Logs
@@ -37,16 +54,22 @@ parse idxLogs =
 
 parseLog : EventTypes.IdxLog -> Log
 parseLog log =
+    let
+        ( type_, rawText ) =
+            parseLogType log.type_
+    in
     { id = LogID.fromValue log.id
     , revisionId = log.revision_id
-
-    -- TODO: Here I can convert from STring to LogType, however of course it's better to do that
-    -- at the OpenAPI spec level. Investigate if feasible.
-    , type_ = log.type_
+    , type_ = type_
+    , rawText = rawText
     }
 
 
-logsToList : Logs -> List Log
-logsToList logs =
-    OrderedDict.toList logs
-        |> List.map (\( _, log ) -> log)
+parseLogType : String -> ( LogType, String )
+parseLogType strLogType =
+    case strLogType of
+        "localhost_logged_in" ->
+            ( LocalhostLoggedIn, "localhost logged in" )
+
+        _ ->
+            ( UnknownLog, "Unknown log" )

@@ -716,7 +716,7 @@ viewWindow state model appId window acc =
             -- In fact, it may make sense for each App to implement a "stateFilter", thus letting
             -- each App decide which data it receives (based on its own needs)
             windowContent =
-                Html.map AppMsg <| renderWindowContent appId window appModel state.sp
+                Html.map AppMsg <| getWindowInnerContent appId window appModel state.sp
 
             renderedWindow =
                 renderWindow model.wm appId window windowContent
@@ -766,7 +766,7 @@ renderWindow wm appId window renderedContent =
             UI.emptyAttr
         ]
         [ renderWindowTitle appId window (WM.isDraggingApp wm appId)
-        , renderedContent
+        , renderWindowContent renderedContent
         , windowBlockingOverlay window
         ]
 
@@ -826,14 +826,19 @@ renderWindowTitle appId window isDragging =
         ]
 
 
+renderWindowContent : UI Msg -> UI Msg
+renderWindowContent innerContent =
+    col [ cl "os-w-content" ] [ innerContent ]
+
+
 stopPropagation : String -> UI.Attribute Msg
 stopPropagation event =
     HE.stopPropagationOn event
         (JD.succeed <| (\msg -> ( msg, True )) (PerformAction OS.Bus.NoOp))
 
 
-renderWindowContent : AppID -> WM.Window -> Apps.Model -> Game.Model -> UI Apps.Msg
-renderWindowContent appId _ appModel universe =
+getWindowInnerContent : AppID -> WM.Window -> Apps.Model -> Game.Model -> UI Apps.Msg
+getWindowInnerContent appId _ appModel universe =
     case appModel of
         Apps.InvalidModel ->
             UI.emptyEl

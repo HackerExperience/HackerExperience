@@ -4,12 +4,12 @@ import Apps.Manifest as App
 import Effect exposing (Effect)
 import Game.Model as Game
 import Game.Model.Log exposing (Log)
-import Game.Model.LogID as LogID exposing (LogID)
+import Game.Model.LogID exposing (LogID)
 import Game.Model.Server as Server
 import Game.Model.ServerID exposing (ServerID)
 import OS.AppID exposing (AppID)
 import OS.Bus
-import UI exposing (UI, text)
+import UI exposing (UI, cl, col, div, row, text)
 import WM
 
 
@@ -57,8 +57,72 @@ update msg model =
 
 
 view : Model -> Game.Model -> UI Msg
-view model__ game__ =
-    text "hey"
+view model game =
+    col [ cl "app-log-viewer", UI.flexFill ]
+        [ vHeader
+        , vBody model game
+        ]
+
+
+vHeader : UI Msg
+vHeader =
+    row [ cl "a-log-header", UI.centerItems ] [ text "Header" ]
+
+
+vBody : Model -> Game.Model -> UI Msg
+vBody model game =
+    col [ cl "a-log-body", UI.flexGrow, UI.flexFill ]
+        (vLogList model game)
+
+
+{-| TODO: Lazify
+-}
+vLogList : Model -> Game.Model -> List (UI Msg)
+vLogList model game =
+    let
+        logs =
+            filterLogs model game
+    in
+    List.map vLogRow logs
+
+
+
+-- [ row [] [ text "a1" ], row [] [ text "a2" ] ]
+
+
+vLogRow : Log -> UI Msg
+vLogRow log =
+    let
+        date =
+            "26/01/2019"
+
+        time =
+            "19:29:18"
+
+        -- microseconds =
+        --     ".123"
+        vLogRowDateTime =
+            col [ cl "a-log-row-date", UI.centerItems ]
+                [ row [ UI.centerItems, UI.heightFill ] [ text date ]
+                , row [ UI.centerItems, UI.heightFill ]
+                    [ text time
+
+                    -- TODO: Maybe only show microseconds when log is selected?
+                    -- , div [ cl "a-log-row-date-microseconds" ] [ text microseconds ]
+                    ]
+                ]
+
+        vLogRowSeparator =
+            div [ cl "a-log-row-internal-separator" ] []
+
+        vLogRowText =
+            row [ cl "a-log-row-text", UI.centerItems ] [ text log.rawText ]
+    in
+    row [ cl "a-log-row" ]
+        [ vLogRowDateTime
+        , vLogRowSeparator
+        , vLogRowText
+        ]
 
 
 
