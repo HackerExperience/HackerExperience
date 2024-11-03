@@ -67,10 +67,12 @@ defmodule Game.Index.LogTest do
 
       # Rendered index contains log information we need
       assert [log_2, log_1] = rendered_index
-      assert log_2.id == gtw_log_2.id
-      assert log_2.revision_id == gtw_log_2.revision_id
       assert log_1.id == gtw_log_1.id
+      assert log_2.id == gtw_log_2.id
       assert log_1.revision_id == gtw_log_1.revision_id
+      assert log_2.revision_id == gtw_log_2.revision_id
+      assert log_1.type == gtw_log_1.type
+      assert log_2.type == gtw_log_1.type
 
       # Rendered index conforms to the Norm contract
       assert {:ok, _} = Norm.conform(rendered_index, Norm.coll_of(Index.Log.spec()))
