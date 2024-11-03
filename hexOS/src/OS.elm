@@ -737,7 +737,7 @@ viewWindow state model appId window acc =
 shouldRenderWindow : State -> WM.Model -> WM.Window -> Bool
 shouldRenderWindow state wm window =
     -- TODO: maybe move this function to WM?
-    window.isVisible && window.universe == state.currentUniverse && window.sessionCID == wm.currentSession
+    window.isVisible && window.universe == state.currentUniverse && window.sessionID == wm.currentSession
 
 
 renderWindow : WM.Model -> AppID -> WM.Window -> UI Msg -> UI Msg

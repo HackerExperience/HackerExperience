@@ -37,6 +37,7 @@ OS gerencia as Msgs/Updates etc. Tentar fazer assim (mas tudo bem se nao rolar)
 
 import Apps.Manifest as App
 import Dict exposing (Dict)
+import Game.Model.ServerID as ServerID exposing (ServerID)
 import Game.Universe as Universe exposing (Universe)
 import List.Extra as List
 import Maybe.Extra as Maybe
@@ -45,11 +46,7 @@ import OS.Bus
 
 
 type SessionID
-    = SessionID CID
-
-
-type alias CID =
-    Int
+    = SessionID ServerID
 
 
 type alias Model =
@@ -104,7 +101,7 @@ type alias Window =
     , blockedByApp : Maybe AppID
     , childBehavior : Maybe ChildBehavior
     , universe : Universe
-    , sessionCID : SessionID
+    , sessionID : SessionID
     }
 
 
@@ -167,9 +164,9 @@ init sessionID ( viewportX, viewportY ) =
     }
 
 
-toSessionId : CID -> SessionID
-toSessionId cid =
-    SessionID cid
+toSessionId : ServerID -> SessionID
+toSessionId serverId =
+    SessionID serverId
 
 
 updateViewport : Model -> ( X, Y ) -> Model
@@ -489,7 +486,7 @@ createWindow model universe app appId config parentInfo =
     , blockedByApp = Nothing
     , childBehavior = childBehavior
     , universe = universe
-    , sessionCID = model.currentSession
+    , sessionID = model.currentSession
     }
 
 
@@ -692,7 +689,7 @@ dummyWindow =
     , blockedByApp = Nothing
     , childBehavior = Nothing
     , universe = Universe.Singleplayer
-    , sessionCID = SessionID 0
+    , sessionID = SessionID (ServerID.fromValue 0)
     }
 
 

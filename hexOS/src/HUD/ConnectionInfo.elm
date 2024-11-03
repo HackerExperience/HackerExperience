@@ -11,6 +11,7 @@ module HUD.ConnectionInfo exposing
 import Effect exposing (Effect)
 import Game exposing (State)
 import Game.Bus as Game
+import Game.Model.ServerID as ServerID exposing (ServerID)
 import Game.Universe as Universe exposing (Universe(..))
 import Html.Events as HE
 import Json.Decode as JD
@@ -35,7 +36,7 @@ type Selector
 type Msg
     = OpenSelector Selector
     | CloseSelector
-    | SwitchGateway Universe Int
+    | SwitchGateway Universe ServerID
     | ToOS OS.Bus.Action
     | NoOp
 
@@ -73,7 +74,7 @@ update state msg model =
             ( model, Effect.none )
 
 
-updateSwitchGateway : State -> Model -> Universe -> Int -> ( Model, Effect Msg )
+updateSwitchGateway : State -> Model -> Universe -> ServerID -> ( Model, Effect Msg )
 updateSwitchGateway state model gtwUniverse gatewayId =
     let
         -- Always switch, except if the selected gateway is the activeGateway in the activeUniverse
@@ -223,17 +224,17 @@ viewGatewaySelector state model__ =
     let
         -- TODO: feed the list of gateways directly from State
         spGateways =
-            List.foldl (gatewaySelectorEntries state Singleplayer) [] [ 1 ]
+            List.foldl (gatewaySelectorEntries state Singleplayer) [] [ ServerID.fromValue 1 ]
 
         mpGateways =
-            List.foldl (gatewaySelectorEntries state Multiplayer) [] [ 9 ]
+            List.foldl (gatewaySelectorEntries state Multiplayer) [] [ ServerID.fromValue 9 ]
     in
     col [] <|
         spGateways
             ++ mpGateways
 
 
-gatewaySelectorEntries : State -> Universe -> Int -> List (UI Msg) -> List (UI Msg)
+gatewaySelectorEntries : State -> Universe -> ServerID -> List (UI Msg) -> List (UI Msg)
 gatewaySelectorEntries state__ gtwUniverse serverId acc__ =
     -- TODO: Use acc
     let
@@ -243,10 +244,10 @@ gatewaySelectorEntries state__ gtwUniverse serverId acc__ =
         label =
             case gtwUniverse of
                 Singleplayer ->
-                    "SP " ++ String.fromInt serverId
+                    "SP " ++ String.fromInt (ServerID.toValue serverId)
 
                 Multiplayer ->
-                    "MP " ++ String.fromInt serverId
+                    "MP " ++ String.fromInt (ServerID.toValue serverId)
     in
     [ div [ UI.onClick onClickMsg ] [ text label ] ]
 

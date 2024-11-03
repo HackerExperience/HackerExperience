@@ -10,6 +10,7 @@ module Game exposing
 import Effect exposing (Effect)
 import Game.Bus exposing (Action(..))
 import Game.Model as Model exposing (Model)
+import Game.Model.ServerID exposing (ServerID)
 import Game.Msg exposing (Msg(..))
 import Game.Universe exposing (Universe(..))
 
@@ -19,8 +20,6 @@ import Game.Universe exposing (Universe(..))
 
 
 type alias State =
-    -- TODO: Rethink "Universe" vs "Universe.Model". Sometimes they are both referred to as simply
-    -- "universe" but that won't play well in the long term. Maybe UniverseId?
     { sp : Model
     , mp : Model
 
@@ -82,12 +81,12 @@ switchUniverse universe state =
 -- Model > Universe API
 
 
-getActiveGateway : State -> Int
+getActiveGateway : State -> ServerID
 getActiveGateway state =
     (getActiveUniverse state).activeGateway
 
 
-switchActiveGateway : Int -> State -> State
+switchActiveGateway : ServerID -> State -> State
 switchActiveGateway newActiveGatewayId state =
     state
         |> getActiveUniverse

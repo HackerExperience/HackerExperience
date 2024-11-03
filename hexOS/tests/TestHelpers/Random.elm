@@ -2,6 +2,7 @@ module TestHelpers.Random exposing (..)
 
 import Game exposing (State)
 import Game.Model as Game
+import Game.Model.ServerID as ServerID exposing (ServerID)
 import Game.Universe as Universe exposing (Universe(..))
 import HUD.ConnectionInfo as CI
 import Random as R exposing (Generator, int, map, map3, maxInt)
@@ -14,9 +15,10 @@ import TestHelpers.Support.RandomUtils as R
 -- Game
 
 
-serverId : Generator Int
+serverId : Generator ServerID
 serverId =
     int 1 maxInt
+        |> map (\rawId -> ServerID.fromValue rawId)
 
 
 universeId : Generator Universe

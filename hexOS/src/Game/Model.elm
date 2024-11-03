@@ -1,25 +1,18 @@
 module Game.Model exposing
-    ( Gateway
-    , Model
+    ( Model
     , init
     , switchActiveGateway
     )
 
 import API.Events.Types as EventTypes
-import Game.Model.Log exposing (Log)
-import Game.Model.LogID as LogID exposing (LogID)
-
-
-type alias Gateway =
-    { id : Int
-    , logs : List Log
-    }
+import Game.Model.Server as Server exposing (Gateway)
+import Game.Model.ServerID as ServerID exposing (ServerID)
 
 
 type alias Model =
-    { mainframeID : Int
-    , activeGateway : Int
-    , activeEndpoint : Maybe Int
+    { mainframeID : ServerID
+    , activeGateway : ServerID
+    , activeEndpoint : Maybe ServerID
     , gateways : List Gateway
     }
 
@@ -30,33 +23,13 @@ type alias Model =
 
 init : EventTypes.IndexRequested -> Model
 init index =
-    { mainframeID = index.player.mainframe_id
-    , activeGateway = index.player.mainframe_id
+    { mainframeID = ServerID.fromValue index.player.mainframe_id
+    , activeGateway = ServerID.fromValue index.player.mainframe_id
     , activeEndpoint = Nothing
-    , gateways = List.map parseGateway index.player.gateways
+    , gateways = List.map Server.parseGateway index.player.gateways
     }
 
 
-    --
-parseGateway : EventTypes.IdxGateway -> Gateway
-parseGateway gateway =
-    { id = gateway.id
-    , logs = List.map parseLog gateway.logs
-    }
-
-
-parseLog : EventTypes.IdxLog -> Log
-parseLog log =
-    { id = LogID.fromValue log.id
-    , revisionId = log.revision_id
-
-    -- TODO: Here I can convert from STring to LogType, however of course it's better to do that
-    -- at the OpenAPI spec level. Investigate if feasible.
-    , type_ = log.type_
-    }
-
-    ------
-
-switchActiveGateway : Int -> Model -> Model
+switchActiveGateway : ServerID -> Model -> Model
 switchActiveGateway newActiveGatewayId model =
     { model | activeGateway = newActiveGatewayId }
