@@ -1,5 +1,6 @@
 module Game.Model.LogID exposing
     ( LogID
+    , RawLogID
     , fromValue
     , toValue
     )
@@ -9,6 +10,10 @@ module Game.Model.LogID exposing
 
 type LogID
     = LogID Int
+
+
+type alias RawLogID =
+    Int
 
 
 

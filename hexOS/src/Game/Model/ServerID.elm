@@ -1,5 +1,6 @@
 module Game.Model.ServerID exposing
-    ( ServerID
+    ( RawServerID
+    , ServerID
     , fromValue
     , toValue
     )
@@ -12,6 +13,10 @@ module Game.Model.ServerID exposing
 
 type ServerID
     = ServerID Int
+
+
+type alias RawServerID =
+    Int
 
 
 

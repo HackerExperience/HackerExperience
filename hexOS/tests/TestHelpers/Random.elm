@@ -1,5 +1,6 @@
 module TestHelpers.Random exposing (..)
 
+import Dict
 import Game exposing (State)
 import Game.Model as Game
 import Game.Model.ServerID as ServerID exposing (ServerID)
@@ -36,7 +37,7 @@ game =
                 , activeEndpoint = Nothing
 
                 -- TODO
-                , gateways = []
+                , gateways = Dict.empty
                 }
     in
     map genGame serverId

@@ -3,7 +3,9 @@ module Apps.LogViewer exposing (..)
 import Apps.Manifest as App
 import Effect exposing (Effect)
 import Game.Model as Game
-import Game.Model.LogID exposing (LogID)
+import Game.Model.Log exposing (Log)
+import Game.Model.LogID as LogID exposing (LogID)
+import Game.Model.Server as Server
 import Game.Model.ServerID exposing (ServerID)
 import OS.AppID exposing (AppID)
 import OS.Bus
@@ -23,6 +25,20 @@ type alias Model =
     { serverId : ServerID
     , selectedLog : Maybe LogID
     }
+
+
+
+-- Model
+
+
+filterLogs : Model -> Game.Model -> List Log
+filterLogs model game =
+    -- TODO: Currently this is not doing any filtering other than grabbing all logs in the server
+    let
+        server =
+            Game.getGateway game model.serverId
+    in
+    Server.listLogs server
 
 
 
