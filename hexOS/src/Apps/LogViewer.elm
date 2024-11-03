@@ -2,7 +2,7 @@ module Apps.LogViewer exposing (..)
 
 import Apps.Manifest as App
 import Effect exposing (Effect)
-import Game.Universe as Universe
+import Game.Model as Game
 import OS.AppID exposing (AppID)
 import OS.Bus
 import UI exposing (UI, text)
@@ -37,8 +37,8 @@ update msg model =
 -- View
 
 
-view : Model -> Universe.Model -> UI Msg
-view model__ universe__ =
+view : Model -> Game.Model -> UI Msg
+view model__ game__ =
     text "hey"
 
 

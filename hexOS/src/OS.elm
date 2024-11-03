@@ -18,7 +18,7 @@ import Apps.Types as Apps
 import Dict exposing (Dict)
 import Effect exposing (Effect)
 import Game exposing (State)
-import Game.Universe as Universe
+import Game.Model as Game
 import HUD
 import HUD.ConnectionInfo
 import Html
@@ -832,7 +832,7 @@ stopPropagation event =
         (JD.succeed <| (\msg -> ( msg, True )) (PerformAction OS.Bus.NoOp))
 
 
-renderWindowContent : AppID -> WM.Window -> Apps.Model -> Universe.Model -> UI Apps.Msg
+renderWindowContent : AppID -> WM.Window -> Apps.Model -> Game.Model -> UI Apps.Msg
 renderWindowContent appId _ appModel universe =
     case appModel of
         Apps.InvalidModel ->

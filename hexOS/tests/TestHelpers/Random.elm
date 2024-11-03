@@ -1,6 +1,7 @@
 module TestHelpers.Random exposing (..)
 
 import Game exposing (State)
+import Game.Model as Game
 import Game.Universe as Universe exposing (Universe(..))
 import HUD.ConnectionInfo as CI
 import Random as R exposing (Generator, int, map, map3, maxInt)
@@ -23,17 +24,17 @@ universeId =
     R.oneOf2 Singleplayer Multiplayer
 
 
-universe : Generator Universe.Model
-universe =
+game : Generator Game.Model
+game =
     let
-        genUniverse =
+        genGame =
             \gatewayId ->
                 { mainframeID = gatewayId
                 , activeGateway = gatewayId
                 , activeEndpoint = Nothing
                 }
     in
-    map genUniverse serverId
+    map genGame serverId
 
 
 state : Generator State
@@ -46,7 +47,7 @@ state =
                 , currentUniverse = universe_
                 }
     in
-    map3 genState universe universe universeId
+    map3 genState game game universeId
 
 
 
