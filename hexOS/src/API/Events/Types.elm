@@ -1,11 +1,11 @@
-module API.Events.Types exposing (IdxPlayer, IndexRequested)
+module API.Events.Types exposing (IdxGateway, IdxLog, IdxPlayer, IndexRequested)
 
 {-|
 
 
 ## Aliases
 
-@docs IdxPlayer, IndexRequested
+@docs IdxGateway, IdxLog, IdxPlayer, IndexRequested
 
 -}
 
@@ -15,4 +15,12 @@ type alias IndexRequested =
 
 
 type alias IdxPlayer =
-    { mainframe_id : Int }
+    { gateways : List IdxGateway, mainframe_id : Int }
+
+
+type alias IdxLog =
+    { id : Int, revision_id : Int, type_ : String }
+
+
+type alias IdxGateway =
+    { id : Int, logs : List IdxLog }

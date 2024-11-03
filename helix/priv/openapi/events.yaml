@@ -6,11 +6,41 @@ components:
   responses: {}
   requestBodies: {}
   schemas:
+    IdxGateway:
+      type: object
+      required:
+        - logs
+        - id
+      properties:
+        id:
+          type: integer
+        logs:
+          type: array
+          items:
+            $ref: '#/components/schemas/IdxLog'
+    IdxLog:
+      type: object
+      required:
+        - revision_id
+        - type
+        - id
+      properties:
+        id:
+          type: integer
+        type:
+          type: string
+        revision_id:
+          type: integer
     IdxPlayer:
       type: object
       required:
         - mainframe_id
+        - gateways
       properties:
+        gateways:
+          type: array
+          items:
+            $ref: '#/components/schemas/IdxGateway'
         mainframe_id:
           type: integer
     index_requested:
