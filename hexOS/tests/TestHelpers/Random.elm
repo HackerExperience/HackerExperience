@@ -32,6 +32,9 @@ game =
                 { mainframeID = gatewayId
                 , activeGateway = gatewayId
                 , activeEndpoint = Nothing
+
+                -- TODO
+                , gateways = []
                 }
     in
     map genGame serverId

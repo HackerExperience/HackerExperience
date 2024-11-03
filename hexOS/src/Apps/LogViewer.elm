@@ -3,6 +3,7 @@ module Apps.LogViewer exposing (..)
 import Apps.Manifest as App
 import Effect exposing (Effect)
 import Game.Model as Game
+import Game.Model.LogID exposing (LogID)
 import OS.AppID exposing (AppID)
 import OS.Bus
 import UI exposing (UI, text)
@@ -18,7 +19,7 @@ type Msg
 
 
 type alias Model =
-    { selectedLog : Maybe Int
+    { selectedLog : Maybe LogID
     }
 
 
