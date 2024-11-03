@@ -4,6 +4,7 @@ import Apps.Manifest as App
 import Effect exposing (Effect)
 import Game.Model as Game
 import Game.Model.LogID exposing (LogID)
+import Game.Model.ServerID exposing (ServerID)
 import OS.AppID exposing (AppID)
 import OS.Bus
 import UI exposing (UI, text)
@@ -19,7 +20,8 @@ type Msg
 
 
 type alias Model =
-    { selectedLog : Maybe LogID
+    { serverId : ServerID
+    , selectedLog : Maybe LogID
     }
 
 
@@ -63,8 +65,10 @@ willOpen _ =
 
 
 didOpen : WM.WindowInfo -> ( Model, Effect Msg )
-didOpen _ =
-    ( { selectedLog = Nothing }
+didOpen { serverId } =
+    ( { serverId = serverId
+      , selectedLog = Nothing
+      }
     , Effect.none
     )
 

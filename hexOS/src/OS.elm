@@ -202,7 +202,7 @@ performRequestOpen model app parentInfo =
             model.wm.nextAppId
 
         windowInfo =
-            WM.createWindowInfo app appId parentInfo
+            WM.createWindowInfo model.wm.currentSession app appId parentInfo
 
         windowConfig =
             WM.Windowable.getWindowConfig windowInfo
@@ -357,7 +357,7 @@ performOpenApp { currentUniverse } model app parentInfo =
             model.wm.nextAppId
 
         windowInfo =
-            WM.createWindowInfo app appId parentInfo
+            WM.createWindowInfo model.wm.currentSession app appId parentInfo
 
         windowConfig =
             WM.Windowable.getWindowConfig windowInfo

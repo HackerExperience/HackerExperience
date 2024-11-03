@@ -115,6 +115,7 @@ type alias WindowInfo =
     { appId : AppID
     , app : App.Manifest
     , parent : Maybe ParentInfo
+    , serverId : ServerID
     }
 
 
@@ -297,11 +298,12 @@ getWindowSafe windows appId =
     Dict.get appId windows
 
 
-createWindowInfo : App.Manifest -> AppID -> Maybe ParentInfo -> WindowInfo
-createWindowInfo app appId parentInfo =
+createWindowInfo : SessionID -> App.Manifest -> AppID -> Maybe ParentInfo -> WindowInfo
+createWindowInfo (SessionID serverId) app appId parentInfo =
     { appId = appId
     , app = app
     , parent = parentInfo
+    , serverId = serverId
     }
 
 
