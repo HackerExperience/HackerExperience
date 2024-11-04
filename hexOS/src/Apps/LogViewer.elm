@@ -2,10 +2,15 @@ module Apps.LogViewer exposing (..)
 
 import Apps.Manifest as App
 import Effect exposing (Effect)
-import Game.Universe as Universe
+import Game.Model as Game
+import Game.Model.Log exposing (Log)
+import Game.Model.LogID exposing (LogID)
+import Game.Model.Server as Server
+import Game.Model.ServerID exposing (ServerID)
+import Html.Events as HE
 import OS.AppID exposing (AppID)
 import OS.Bus
-import UI exposing (UI, text)
+import UI exposing (UI, cl, col, div, row, text)
 import WM
 
 
@@ -15,11 +20,28 @@ import WM
 
 type Msg
     = ToOS OS.Bus.Action
+    | SelectLog LogID
+    | DeselectLog
 
 
 type alias Model =
-    { selectedLog : Maybe Int
+    { serverId : ServerID
+    , selectedLog : Maybe LogID
     }
+
+
+
+-- Model
+
+
+filterLogs : Model -> Game.Model -> List Log
+filterLogs model game =
+    -- TODO: Currently this is not doing any filtering other than grabbing all logs in the server
+    let
+        server =
+            Game.getGateway game model.serverId
+    in
+    Server.listLogs server
 
 
 
@@ -32,14 +54,140 @@ update msg model =
         ToOS _ ->
             ( model, Effect.none )
 
+        SelectLog logId ->
+            ( { model | selectedLog = Just logId }, Effect.none )
+
+        DeselectLog ->
+            ( { model | selectedLog = Nothing }, Effect.none )
+
 
 
 -- View
 
 
-view : Model -> Universe.Model -> UI Msg
-view model__ universe__ =
-    text "hey"
+view : Model -> Game.Model -> UI Msg
+view model game =
+    col [ cl "app-log-viewer", UI.flexFill ]
+        [ vHeader
+        , vBody model game
+        ]
+
+
+vHeader : UI Msg
+vHeader =
+    row [ cl "a-log-header", UI.centerItems ] [ text "Header" ]
+
+
+vBody : Model -> Game.Model -> UI Msg
+vBody model game =
+    col [ cl "a-log-body", UI.flexGrow, UI.flexFill ]
+        (vLogList model game)
+
+
+{-| TODO: Lazify
+-}
+vLogList : Model -> Game.Model -> List (UI Msg)
+vLogList model game =
+    let
+        logs =
+            filterLogs model game
+
+        logFn =
+            \log ->
+                case model.selectedLog of
+                    Just selectedId ->
+                        if selectedId == log.id then
+                            vSelectedLogRow log
+
+                        else
+                            vLogRow log
+
+                    Nothing ->
+                        vLogRow log
+    in
+    List.map logFn logs
+
+
+vLogRow : Log -> UI Msg
+vLogRow log =
+    let
+        date =
+            "26/01/2019"
+
+        time =
+            "19:29:18"
+
+        vLogRowDateTime =
+            col [ cl "a-log-row-date", UI.centerItems ]
+                [ row [ UI.centerItems, UI.heightFill ] [ text date ]
+                , row [ UI.centerItems, UI.heightFill ] [ text time ]
+                ]
+
+        vLogRowSeparator =
+            div [ cl "a-log-row-internal-separator" ] []
+
+        vLogRowText =
+            row [ cl "a-log-row-text", UI.centerItems ] [ text log.rawText ]
+    in
+    row
+        [ cl "a-log-row"
+        , HE.onClick <| SelectLog log.id
+        ]
+        [ vLogRowDateTime
+        , vLogRowSeparator
+        , vLogRowText
+        ]
+
+
+vSelectedLogRow : Log -> UI Msg
+vSelectedLogRow log =
+    let
+        date =
+            "26/01/2019"
+
+        time =
+            "19:29:18"
+
+        microseconds =
+            ".123"
+
+        vLogRowDateTime =
+            col [ cl "a-log-row-date", UI.centerItems ]
+                [ row [ UI.centerItems, UI.heightFill ] [ text date ]
+                , row [ UI.centerItems, UI.heightFill ]
+                    [ text time
+                    , div [ cl "a-log-row-date-microseconds" ] [ text microseconds ]
+                    ]
+                ]
+
+        vLogRowInternalSeparator =
+            div [ cl "a-log-row-internal-separator" ] []
+
+        vLogRowText =
+            row [ cl "a-log-row-text", UI.centerItems ] [ text log.rawText ]
+
+        vLogRowHorizontalSeparator =
+            div [ cl "a-log-row-vertical-separator" ] []
+
+        vLogContentRow =
+            row [ cl "a-log-srow-body" ]
+                [ vLogRowDateTime
+                , vLogRowInternalSeparator
+                , vLogRowText
+                ]
+
+        vLogActionsRow =
+            row [ cl "a-log-srow-actions", UI.centerXY ]
+                [ text "Actions icons here" ]
+    in
+    col
+        [ cl "a-log-srow"
+        , HE.onClick DeselectLog
+        ]
+        [ vLogContentRow
+        , vLogRowHorizontalSeparator
+        , vLogActionsRow
+        ]
 
 
 
@@ -62,8 +210,10 @@ willOpen _ =
 
 
 didOpen : WM.WindowInfo -> ( Model, Effect Msg )
-didOpen _ =
-    ( { selectedLog = Nothing }
+didOpen { serverId } =
+    ( { serverId = serverId
+      , selectedLog = Nothing
+      }
     , Effect.none
     )
 

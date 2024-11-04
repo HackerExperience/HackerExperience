@@ -2,6 +2,8 @@ module TestHelpers.Models exposing (..)
 
 import Apps.Manifest as App
 import Game exposing (State)
+import Game.Model
+import Game.Model.ServerID as ServerID
 import Game.Universe as Universe exposing (Universe(..))
 import HUD.ConnectionInfo as CI
 import OS
@@ -22,7 +24,7 @@ state =
             Mocks.indexRequested
 
         spModel =
-            Universe.init index
+            Game.Model.init index
     in
     Game.init Singleplayer spModel spModel
         |> Tuple.first
@@ -41,7 +43,7 @@ os : OS.Model
 os =
     let
         ( model, _ ) =
-            OS.init (WM.toSessionId 1) ( 1024, 1024 )
+            OS.init (WM.toSessionId (ServerID.fromValue 1)) ( 1024, 1024 )
     in
     model
 

@@ -2,6 +2,7 @@ module GameTest exposing (suite)
 
 import Game
 import Game.Bus exposing (Action(..))
+import Game.Model.ServerID as ServerID
 import Game.Msg exposing (Msg(..))
 import Game.Universe as Universe exposing (Universe(..))
 import TestHelpers.Expect as E
@@ -35,9 +36,12 @@ msgPerformActionTests =
                             TM.state
                                 |> TM.stateWithUniverse Singleplayer
 
+                        serverId =
+                            ServerID.fromValue 999
+
                         -- We'll go to MP
                         msg =
-                            PerformAction (SwitchGateway Multiplayer 999)
+                            PerformAction (SwitchGateway Multiplayer serverId)
 
                         ( newState, effect ) =
                             Game.update msg initialState
@@ -51,7 +55,7 @@ msgPerformActionTests =
                         , E.equal newState.currentUniverse Multiplayer
 
                         -- Active gateway has changed in the MP model
-                        , E.equal newState.mp.activeGateway 999
+                        , E.equal newState.mp.activeGateway serverId
 
                         -- Active gateway in the SP model remains unchanged
                         , E.equal newState.sp.activeGateway initialState.sp.activeGateway

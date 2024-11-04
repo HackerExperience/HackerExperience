@@ -12,7 +12,8 @@ defmodule Game.Index.Log do
 
   @typep rendered_log :: %{
            id: integer(),
-           revision_id: integer()
+           revision_id: integer(),
+           type: String.t()
          }
 
   def spec do
@@ -20,9 +21,10 @@ defmodule Game.Index.Log do
       schema(%{
         __openapi_name: "IdxLog",
         id: integer(),
-        revision_id: integer()
+        revision_id: integer(),
+        type: binary()
       }),
-      [:id, :revision_id]
+      [:id, :revision_id, :type]
     )
   end
 
@@ -57,7 +59,8 @@ defmodule Game.Index.Log do
   defp render_log(%Log{} = log) do
     %{
       id: log.id,
-      revision_id: log.revision_id
+      revision_id: log.revision_id,
+      type: "#{log.type}"
     }
   end
 end

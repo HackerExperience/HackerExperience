@@ -15,6 +15,7 @@
             "elm/random": "1.0.0",
             "elm/url": "1.0.0",
             "elmcraft/core-extra": "2.0.0",
+            "j-maas/elm-ordered-containers": "1.0.0",
             "jinjor/elm-debounce": "3.0.0",
             "savardd/elm-time-travel": "2.0.0"
         },

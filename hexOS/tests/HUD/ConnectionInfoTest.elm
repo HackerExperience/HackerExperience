@@ -3,6 +3,7 @@ module HUD.ConnectionInfoTest exposing (suite)
 import Effect
 import Game
 import Game.Bus
+import Game.Model.ServerID as ServerID
 import Game.Universe exposing (Universe(..))
 import HUD.ConnectionInfo as CI exposing (Selector(..))
 import OS
@@ -66,8 +67,11 @@ suite =
                         ( state, model ) =
                             ( TM.state, TM.hudCiWithSelector SelectorGateway )
 
+                        serverId =
+                            ServerID.fromValue 999
+
                         msg =
-                            CI.SwitchGateway state.currentUniverse 999
+                            CI.SwitchGateway state.currentUniverse serverId
 
                         ( newModel, effect ) =
                             CI.update state msg model
@@ -75,7 +79,7 @@ suite =
                     E.batch
                         [ -- We request (via Game.Bus) that the gateway is switched
                           E.effectMsgToCmd effect <|
-                            CI.ToOS (OS.Bus.ToGame (Game.Bus.SwitchGateway Singleplayer 999))
+                            CI.ToOS (OS.Bus.ToGame (Game.Bus.SwitchGateway Singleplayer serverId))
 
                         -- The selector was closed
                         , E.notEqual model newModel

@@ -9,8 +9,10 @@ module Game exposing
 
 import Effect exposing (Effect)
 import Game.Bus exposing (Action(..))
+import Game.Model as Model exposing (Model)
+import Game.Model.ServerID exposing (ServerID)
 import Game.Msg exposing (Msg(..))
-import Game.Universe as Universe exposing (Universe(..))
+import Game.Universe exposing (Universe(..))
 
 
 
@@ -18,10 +20,8 @@ import Game.Universe as Universe exposing (Universe(..))
 
 
 type alias State =
-    -- TODO: Rethink "Universe" vs "Universe.Model". Sometimes they are both referred to as simply
-    -- "universe" but that won't play well in the long term. Maybe UniverseId?
-    { sp : Universe.Model
-    , mp : Universe.Model
+    { sp : Model
+    , mp : Model
 
     -- TODO: rename to `activeUniverse`
     , currentUniverse : Universe
@@ -32,7 +32,7 @@ type alias State =
 -- Model
 
 
-init : Universe -> Universe.Model -> Universe.Model -> ( State, Effect Msg )
+init : Universe -> Model -> Model -> ( State, Effect Msg )
 init currentUniverse spModel mpModel =
     ( { sp = spModel
       , mp = mpModel
@@ -42,7 +42,7 @@ init currentUniverse spModel mpModel =
     )
 
 
-getActiveUniverse : State -> Universe.Model
+getActiveUniverse : State -> Model
 getActiveUniverse state =
     case state.currentUniverse of
         Singleplayer ->
@@ -52,7 +52,7 @@ getActiveUniverse state =
             state.mp
 
 
-getInactiveUniverse : State -> Universe.Model
+getInactiveUniverse : State -> Model
 getInactiveUniverse state =
     case state.currentUniverse of
         Singleplayer ->
@@ -62,7 +62,7 @@ getInactiveUniverse state =
             state.sp
 
 
-replaceActiveUniverse : State -> Universe.Model -> State
+replaceActiveUniverse : State -> Model -> State
 replaceActiveUniverse state newUniverse =
     case state.currentUniverse of
         Singleplayer ->
@@ -81,16 +81,16 @@ switchUniverse universe state =
 -- Model > Universe API
 
 
-getActiveGateway : State -> Int
+getActiveGateway : State -> ServerID
 getActiveGateway state =
     (getActiveUniverse state).activeGateway
 
 
-switchActiveGateway : Int -> State -> State
+switchActiveGateway : ServerID -> State -> State
 switchActiveGateway newActiveGatewayId state =
     state
         |> getActiveUniverse
-        |> Universe.switchActiveGateway newActiveGatewayId
+        |> Model.switchActiveGateway newActiveGatewayId
         |> replaceActiveUniverse state
 
 

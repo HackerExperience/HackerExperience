@@ -18,7 +18,7 @@ import Apps.Types as Apps
 import Dict exposing (Dict)
 import Effect exposing (Effect)
 import Game exposing (State)
-import Game.Universe as Universe
+import Game.Model as Game
 import HUD
 import HUD.ConnectionInfo
 import Html
@@ -202,7 +202,7 @@ performRequestOpen model app parentInfo =
             model.wm.nextAppId
 
         windowInfo =
-            WM.createWindowInfo app appId parentInfo
+            WM.createWindowInfo model.wm.currentSession app appId parentInfo
 
         windowConfig =
             WM.Windowable.getWindowConfig windowInfo
@@ -357,7 +357,7 @@ performOpenApp { currentUniverse } model app parentInfo =
             model.wm.nextAppId
 
         windowInfo =
-            WM.createWindowInfo app appId parentInfo
+            WM.createWindowInfo model.wm.currentSession app appId parentInfo
 
         windowConfig =
             WM.Windowable.getWindowConfig windowInfo
@@ -554,19 +554,21 @@ dispatchUpdateApp model appMsg =
         Apps.LogViewerMsg _ (LogViewer.ToOS busAction) ->
             ( model, Effect.msgToCmd (PerformAction busAction) )
 
-        -- Apps.LogViewerMsg appId subMsg ->
-        --     case getAppModel model.appModels appId of
-        --         Apps.LogViewerModel appModel ->
-        --             updateApp
-        --                 model
-        --                 appId
-        --                 appModel
-        --                 subMsg
-        --                 Apps.LogViewerModel
-        --                 Apps.LogViewerMsg
-        --                 LogViewer.update
-        --         _ ->
-        --             ( model, Effect.none )
+        Apps.LogViewerMsg appId subMsg ->
+            case getAppModel model.appModels appId of
+                Apps.LogViewerModel appModel ->
+                    updateApp
+                        model
+                        appId
+                        appModel
+                        subMsg
+                        Apps.LogViewerModel
+                        Apps.LogViewerMsg
+                        LogViewer.update
+
+                _ ->
+                    ( model, Effect.none )
+
         Apps.DemoMsg _ (Demo.ToOS busAction) ->
             ( model, Effect.msgToCmd (PerformAction busAction) )
 
@@ -716,7 +718,7 @@ viewWindow state model appId window acc =
             -- In fact, it may make sense for each App to implement a "stateFilter", thus letting
             -- each App decide which data it receives (based on its own needs)
             windowContent =
-                Html.map AppMsg <| renderWindowContent appId window appModel state.sp
+                Html.map AppMsg <| getWindowInnerContent appId window appModel state.sp
 
             renderedWindow =
                 renderWindow model.wm appId window windowContent
@@ -737,7 +739,7 @@ viewWindow state model appId window acc =
 shouldRenderWindow : State -> WM.Model -> WM.Window -> Bool
 shouldRenderWindow state wm window =
     -- TODO: maybe move this function to WM?
-    window.isVisible && window.universe == state.currentUniverse && window.sessionCID == wm.currentSession
+    window.isVisible && window.universe == state.currentUniverse && window.sessionID == wm.currentSession
 
 
 renderWindow : WM.Model -> AppID -> WM.Window -> UI Msg -> UI Msg
@@ -766,7 +768,7 @@ renderWindow wm appId window renderedContent =
             UI.emptyAttr
         ]
         [ renderWindowTitle appId window (WM.isDraggingApp wm appId)
-        , renderedContent
+        , renderWindowContent renderedContent
         , windowBlockingOverlay window
         ]
 
@@ -826,14 +828,19 @@ renderWindowTitle appId window isDragging =
         ]
 
 
+renderWindowContent : UI Msg -> UI Msg
+renderWindowContent innerContent =
+    col [ cl "os-w-content" ] [ innerContent ]
+
+
 stopPropagation : String -> UI.Attribute Msg
 stopPropagation event =
     HE.stopPropagationOn event
         (JD.succeed <| (\msg -> ( msg, True )) (PerformAction OS.Bus.NoOp))
 
 
-renderWindowContent : AppID -> WM.Window -> Apps.Model -> Universe.Model -> UI Apps.Msg
-renderWindowContent appId _ appModel universe =
+getWindowInnerContent : AppID -> WM.Window -> Apps.Model -> Game.Model -> UI Apps.Msg
+getWindowInnerContent appId _ appModel universe =
     case appModel of
         Apps.InvalidModel ->
             UI.emptyEl
