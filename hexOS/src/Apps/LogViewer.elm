@@ -108,10 +108,6 @@ vLogList model game =
     List.map logFn logs
 
 
-
--- [ row [] [ text "a1" ], row [] [ text "a2" ] ]
-
-
 vLogRow : Log -> UI Msg
 vLogRow log =
     let
@@ -121,17 +117,10 @@ vLogRow log =
         time =
             "19:29:18"
 
-        -- microseconds =
-        --     ".123"
         vLogRowDateTime =
             col [ cl "a-log-row-date", UI.centerItems ]
                 [ row [ UI.centerItems, UI.heightFill ] [ text date ]
-                , row [ UI.centerItems, UI.heightFill ]
-                    [ text time
-
-                    -- TODO: Maybe only show microseconds when log is selected?
-                    -- , div [ cl "a-log-row-date-microseconds" ] [ text microseconds ]
-                    ]
+                , row [ UI.centerItems, UI.heightFill ] [ text time ]
                 ]
 
         vLogRowSeparator =
@@ -159,16 +148,15 @@ vSelectedLogRow log =
         time =
             "19:29:18"
 
-        -- microseconds =
-        --     ".123"
+        microseconds =
+            ".123"
+
         vLogRowDateTime =
             col [ cl "a-log-row-date", UI.centerItems ]
                 [ row [ UI.centerItems, UI.heightFill ] [ text date ]
                 , row [ UI.centerItems, UI.heightFill ]
                     [ text time
-
-                    -- TODO: Maybe only show microseconds when log is selected?
-                    -- , div [ cl "a-log-row-date-microseconds" ] [ text microseconds ]
+                    , div [ cl "a-log-row-date-microseconds" ] [ text microseconds ]
                     ]
                 ]
 
@@ -182,7 +170,7 @@ vSelectedLogRow log =
             div [ cl "a-log-row-vertical-separator" ] []
 
         vLogContentRow =
-            row []
+            row [ cl "a-log-srow-body" ]
                 [ vLogRowDateTime
                 , vLogRowInternalSeparator
                 , vLogRowText

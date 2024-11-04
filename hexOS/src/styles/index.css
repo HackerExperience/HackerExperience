@@ -320,7 +320,6 @@ html, body {
 }
 
 .a-log-srow {
-    min-height: 100px;
     padding: 5px 15px;
     border-bottom: 1px solid var(--c-1);
     background: var(--c-1-darkest-a75);
@@ -331,6 +330,12 @@ html, body {
     cursor: pointer;
 }
 
+.a-log-srow-body {
+    min-height: 50px;
+    padding: 5px 0;
+}
+
 .a-log-srow-actions {
     color: var(--c-1-dark);
+    min-height: 50px;
 }
