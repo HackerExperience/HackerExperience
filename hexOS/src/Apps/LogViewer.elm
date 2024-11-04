@@ -7,6 +7,7 @@ import Game.Model.Log exposing (Log)
 import Game.Model.LogID exposing (LogID)
 import Game.Model.Server as Server
 import Game.Model.ServerID exposing (ServerID)
+import Html.Events as HE
 import OS.AppID exposing (AppID)
 import OS.Bus
 import UI exposing (UI, cl, col, div, row, text)
@@ -19,6 +20,8 @@ import WM
 
 type Msg
     = ToOS OS.Bus.Action
+    | SelectLog LogID
+    | DeselectLog
 
 
 type alias Model =
@@ -51,6 +54,12 @@ update msg model =
         ToOS _ ->
             ( model, Effect.none )
 
+        SelectLog logId ->
+            ( { model | selectedLog = Just logId }, Effect.none )
+
+        DeselectLog ->
+            ( { model | selectedLog = Nothing }, Effect.none )
+
 
 
 -- View
@@ -82,8 +91,21 @@ vLogList model game =
     let
         logs =
             filterLogs model game
+
+        logFn =
+            \log ->
+                case model.selectedLog of
+                    Just selectedId ->
+                        if selectedId == log.id then
+                            vSelectedLogRow log
+
+                        else
+                            vLogRow log
+
+                    Nothing ->
+                        vLogRow log
     in
-    List.map vLogRow logs
+    List.map logFn logs
 
 
 
@@ -118,10 +140,65 @@ vLogRow log =
         vLogRowText =
             row [ cl "a-log-row-text", UI.centerItems ] [ text log.rawText ]
     in
-    row [ cl "a-log-row" ]
+    row
+        [ cl "a-log-row"
+        , HE.onClick <| SelectLog log.id
+        ]
         [ vLogRowDateTime
         , vLogRowSeparator
         , vLogRowText
+        ]
+
+
+vSelectedLogRow : Log -> UI Msg
+vSelectedLogRow log =
+    let
+        date =
+            "26/01/2019"
+
+        time =
+            "19:29:18"
+
+        -- microseconds =
+        --     ".123"
+        vLogRowDateTime =
+            col [ cl "a-log-row-date", UI.centerItems ]
+                [ row [ UI.centerItems, UI.heightFill ] [ text date ]
+                , row [ UI.centerItems, UI.heightFill ]
+                    [ text time
+
+                    -- TODO: Maybe only show microseconds when log is selected?
+                    -- , div [ cl "a-log-row-date-microseconds" ] [ text microseconds ]
+                    ]
+                ]
+
+        vLogRowInternalSeparator =
+            div [ cl "a-log-row-internal-separator" ] []
+
+        vLogRowText =
+            row [ cl "a-log-row-text", UI.centerItems ] [ text log.rawText ]
+
+        vLogRowHorizontalSeparator =
+            div [ cl "a-log-row-vertical-separator" ] []
+
+        vLogContentRow =
+            row []
+                [ vLogRowDateTime
+                , vLogRowInternalSeparator
+                , vLogRowText
+                ]
+
+        vLogActionsRow =
+            row [ cl "a-log-srow-actions", UI.centerXY ]
+                [ text "Actions icons here" ]
+    in
+    col
+        [ cl "a-log-srow"
+        , HE.onClick DeselectLog
+        ]
+        [ vLogContentRow
+        , vLogRowHorizontalSeparator
+        , vLogActionsRow
         ]
 
 

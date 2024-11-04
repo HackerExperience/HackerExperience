@@ -554,19 +554,21 @@ dispatchUpdateApp model appMsg =
         Apps.LogViewerMsg _ (LogViewer.ToOS busAction) ->
             ( model, Effect.msgToCmd (PerformAction busAction) )
 
-        -- Apps.LogViewerMsg appId subMsg ->
-        --     case getAppModel model.appModels appId of
-        --         Apps.LogViewerModel appModel ->
-        --             updateApp
-        --                 model
-        --                 appId
-        --                 appModel
-        --                 subMsg
-        --                 Apps.LogViewerModel
-        --                 Apps.LogViewerMsg
-        --                 LogViewer.update
-        --         _ ->
-        --             ( model, Effect.none )
+        Apps.LogViewerMsg appId subMsg ->
+            case getAppModel model.appModels appId of
+                Apps.LogViewerModel appModel ->
+                    updateApp
+                        model
+                        appId
+                        appModel
+                        subMsg
+                        Apps.LogViewerModel
+                        Apps.LogViewerMsg
+                        LogViewer.update
+
+                _ ->
+                    ( model, Effect.none )
+
         Apps.DemoMsg _ (Demo.ToOS busAction) ->
             ( model, Effect.msgToCmd (PerformAction busAction) )
 
