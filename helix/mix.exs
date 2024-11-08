@@ -12,6 +12,9 @@ defmodule Helix.MixProject do
       start_permanent: Mix.env() == :prod,
       aliases: aliases(),
       deps: deps(),
+      # We implement custom protocols. If consolidated, a warning will raise when recompiling such
+      # implementations. To avoid this, let's just consolidate them under the `:prod` env.
+      consolidate_protocols: Mix.env() == :prod,
       test_coverage: [tool: ExCoveralls],
       preferred_cli_env: [
         coveralls: :test,

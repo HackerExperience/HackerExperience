@@ -1,6 +1,7 @@
 defmodule Game.Index.Server do
   use Norm
   import Core.Spec
+  alias Core.ID
   alias Game.Index
 
   @type gateway_index ::
@@ -39,7 +40,7 @@ defmodule Game.Index.Server do
           rendered_gateway_index
   def render_gateway_index(index) do
     %{
-      id: index.id,
+      id: index.id |> ID.to_external(),
       logs: Index.Log.render_index(index.logs)
     }
   end

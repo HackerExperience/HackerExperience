@@ -27,4 +27,22 @@ defmodule Game.ServerTest do
       assert on_delete == "RESTRICT"
     end
   end
+
+  describe "new/1" do
+    test "creates a server" do
+      entity = Setup.entity_lite!()
+
+      assert {:ok, server} =
+               %{
+                 entity_id: entity.id,
+                 inserted_at: DateTime.utc_now()
+               }
+               |> Server.new()
+               |> DB.insert()
+
+      assert server.id == %Server.ID{id: 1}
+      assert server.entity_id == entity.id
+      assert server.inserted_at
+    end
+  end
 end

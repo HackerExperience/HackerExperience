@@ -1,6 +1,7 @@
 defmodule Game.Index.Log do
   use Norm
   import Core.Spec
+  alias Core.ID
   alias Game.Services, as: Svc
   alias Game.Log
 
@@ -58,7 +59,7 @@ defmodule Game.Index.Log do
 
   defp render_log(%Log{} = log) do
     %{
-      id: log.id,
+      id: ID.to_external(log.id),
       revision_id: log.revision_id,
       type: "#{log.type}"
     }

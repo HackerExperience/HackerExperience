@@ -1,5 +1,5 @@
 defmodule Game.Log do
-  use Feeb.DB.Schema
+  use Core.Schema
 
   @context :server
   @table :logs
@@ -10,12 +10,12 @@ defmodule Game.Log do
   ]
 
   @schema [
-    {:id, :integer},
+    {:id, ID.ref(:log_id)},
     {:revision_id, :integer},
     {:type, {:enum, values: @log_types}},
     {:data, {:map, keys: :atom}},
     {:inserted_at, {:datetime_utc, [precision: :millisecond], mod: :inserted_at}},
-    {:server_id, {:integer, virtual: :get_server_id}}
+    {:server_id, {ID.ref(:server_id), virtual: :get_server_id}}
   ]
 
   def new(params) do
@@ -24,5 +24,5 @@ defmodule Game.Log do
     |> Schema.create()
   end
 
-  def get_server_id(_row, %{shard_id: server_id}), do: server_id
+  def get_server_id(_row, %{shard_id: raw_server_id}), do: raw_server_id
 end

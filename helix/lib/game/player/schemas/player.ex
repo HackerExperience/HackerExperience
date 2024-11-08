@@ -1,12 +1,12 @@
 defmodule Game.Player do
-  use Feeb.DB.Schema
+  use Core.Schema
 
   @context :game
   @table :players
 
   @schema [
     # `players.id` is not auto-incrementing. It is defined by `entities.id`.
-    {:id, :integer},
+    {:id, ID.ref(:player_id)},
     {:external_id, :uuid},
     {:inserted_at, {:datetime_utc, [precision: :millisecond], mod: :inserted_at}}
   ]

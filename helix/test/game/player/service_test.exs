@@ -26,7 +26,7 @@ defmodule Game.Services.PlayerTest do
 
       # We can find a Server entry for this entity
       assert [server] = Svc.Server.list(by_entity_id: player.id)
-      assert server.entity_id == player.id
+      assert server.entity_id.id == player.id.id
     end
 
     test "auto-increments the player id" do
@@ -34,8 +34,8 @@ defmodule Game.Services.PlayerTest do
       assert {:ok, player_2} = Svc.Player.setup(Random.uuid())
       assert {:ok, player_3} = Svc.Player.setup(Random.uuid())
 
-      assert player_2.id == player_1.id + 1
-      assert player_3.id == player_1.id + 2
+      assert player_2.id.id == player_1.id.id + 1
+      assert player_3.id.id == player_1.id.id + 2
     end
 
     @tag capture_log: true
@@ -72,7 +72,7 @@ defmodule Game.Services.PlayerTest do
 
     test "returns nil when player doesn't exist" do
       player = Setup.player!()
-      refute Svc.Player.fetch(by_id: player.id + 1)
+      refute Svc.Player.fetch(by_id: player.id.id + 1)
     end
   end
 

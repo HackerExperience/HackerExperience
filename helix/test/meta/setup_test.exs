@@ -6,7 +6,7 @@ defmodule Test.SetupTest do
   describe "Setup.player/1" do
     test "creates all related data" do
       %{player: player, entity: entity, server: server} = Setup.player()
-      assert player.id == entity.id
+      assert player.id.id == entity.id.id
       assert server.entity_id == entity.id
 
       # Shards were created
@@ -18,7 +18,7 @@ defmodule Test.SetupTest do
   describe "Setup.player_lite/1" do
     test "creates lite version (no shards)" do
       %{player: player, entity: entity} = Setup.player_lite()
-      assert player.id == entity.id
+      assert player.id.id == entity.id.id
 
       # No player shard
       refute_player_shard(player.id)
@@ -31,7 +31,7 @@ defmodule Test.SetupTest do
   describe "Setup.entity/1" do
     test "creates all related data" do
       assert %{entity: entity, player: player, server: server} = Setup.entity()
-      assert player.id == entity.id
+      assert player.id.id == entity.id.id
       assert server.entity_id == entity.id
 
       # Shards were created
@@ -45,7 +45,7 @@ defmodule Test.SetupTest do
       with_random_autoincrement()
 
       assert %{entity: entity, player: player} = Setup.entity_lite()
-      assert entity.id == player.id
+      assert entity.id.id == player.id.id
 
       # No player shard
       refute_player_shard(player.id)
@@ -58,7 +58,7 @@ defmodule Test.SetupTest do
   describe "Setup.server/1" do
     test "creates all related data" do
       assert %{entity: entity, player: player, server: server} = Setup.server()
-      assert player.id == entity.id
+      assert player.id.id == entity.id.id
       assert server.entity_id == entity.id
 
       # Shards were created
@@ -79,7 +79,7 @@ defmodule Test.SetupTest do
     test "creates lite version (no shards)" do
       with_random_autoincrement()
       assert %{entity: entity, player: player, server: server} = Setup.server_lite()
-      assert player.id == entity.id
+      assert player.id.id == entity.id.id
       assert server.entity_id == entity.id
 
       # No shards were created
@@ -96,22 +96,22 @@ defmodule Test.SetupTest do
     end
   end
 
-  defp assert_player_shard(player_id) do
+  defp assert_player_shard(%_{id: player_id}) do
     player_db_path = DB.Repo.get_path(Core.get_player_context(), player_id)
     assert File.exists?(player_db_path)
   end
 
-  defp refute_player_shard(player_id) do
+  defp refute_player_shard(%_{id: player_id}) do
     player_db_path = DB.Repo.get_path(Core.get_player_context(), player_id)
     refute File.exists?(player_db_path)
   end
 
-  defp assert_server_shard(server_id) do
+  defp assert_server_shard(%_{id: server_id}) do
     server_db_path = DB.Repo.get_path(Core.get_server_context(), server_id)
     assert File.exists?(server_db_path)
   end
 
-  defp refute_server_shard(server_id) do
+  defp refute_server_shard(%_{id: server_id}) do
     server_db_path = DB.Repo.get_path(Core.get_server_context(), server_id)
     refute File.exists?(server_db_path)
   end

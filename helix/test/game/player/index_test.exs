@@ -29,10 +29,10 @@ defmodule Game.Index.PlayerTest do
 
       # For now the `render_index/1` is a no-op, but we'll need to update this test with external ID
       # once it is implemented
-      assert rendered_index.mainframe_id == mainframe.id
+      assert rendered_index.mainframe_id == mainframe.id.id
 
       # Rendered index conforms to the Norm contract
-      assert {:ok, _} = Norm.conform(index, Index.Player.output_spec())
+      assert {:ok, _} = Norm.conform(rendered_index, Index.Player.output_spec())
     end
   end
 

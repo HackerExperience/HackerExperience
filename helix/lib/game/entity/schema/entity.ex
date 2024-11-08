@@ -1,5 +1,5 @@
 defmodule Game.Entity do
-  use Feeb.DB.Schema
+  use Core.Schema
 
   @context :game
   @table :entities
@@ -7,7 +7,7 @@ defmodule Game.Entity do
   @entity_types [:player, :npc, :clan]
 
   @schema [
-    {:id, {:integer, :autoincrement}},
+    {:id, {ID.ref(:entity_id), :autoincrement}},
     {:type, {:enum, values: @entity_types}},
     {:inserted_at, {:datetime_utc, [precision: :millisecond], mod: :inserted_at}}
   ]

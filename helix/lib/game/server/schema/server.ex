@@ -1,12 +1,12 @@
 defmodule Game.Server do
-  use Feeb.DB.Schema
+  use Core.Schema
 
   @context :game
   @table :servers
 
   @schema [
-    {:id, {:integer, :autoincrement}},
-    {:entity_id, :integer},
+    {:id, ID.ref(:server_id)},
+    {:entity_id, ID.ref(:entity_id)},
     {:inserted_at, {:datetime_utc, [precision: :millisecond], mod: :inserted_at}}
   ]
 
