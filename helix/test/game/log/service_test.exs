@@ -1,5 +1,6 @@
 defmodule Game.Services.LogTest do
   use Test.DBCase, async: true
+  alias Core.ID
   alias Game.Services, as: Svc
 
   setup [:with_game_db]
@@ -18,11 +19,11 @@ defmodule Game.Services.LogTest do
         end)
 
       # Only the two visibilities in `server.id` were found
-      assert [visibility_1.log_id, visibility_1.revision_id] ==
-               Enum.find(rows, &(Enum.at(&1, 0) == visibility_1.log_id))
+      assert [visibility_1.log_id.id, visibility_1.revision_id] ==
+               Enum.find(rows, &(Enum.at(&1, 0) == visibility_1.log_id.id))
 
-      assert [visibility_2.log_id, visibility_2.revision_id] ==
-               Enum.find(rows, &(Enum.at(&1, 0) == visibility_2.log_id))
+      assert [visibility_2.log_id.id, visibility_2.revision_id] ==
+               Enum.find(rows, &(Enum.at(&1, 0) == visibility_2.log_id.id))
     end
   end
 
@@ -48,7 +49,7 @@ defmodule Game.Services.LogTest do
         assert log_1.revision_id == 1
 
         # Log IDs are sequential
-        assert log_2.id == log_1.id + 1
+        assert ID.to_external(log_2.id) == ID.to_external(log_1.id) + 1
       end)
 
       Core.with_context(:player, entity.id, :read, fn ->

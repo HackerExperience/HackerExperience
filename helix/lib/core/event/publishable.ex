@@ -59,7 +59,7 @@ defmodule Core.Event.Publishable do
   defp get_pids_to_publish(whom_to_publish) do
     whom_to_publish
     |> Enum.reduce([], fn
-      {:player, player_id}, acc when is_integer(player_id) ->
+      {:player, %_{id: player_id}}, acc when is_integer(player_id) ->
         [get_pid_for_player(player_id) | acc]
     end)
     |> List.flatten()

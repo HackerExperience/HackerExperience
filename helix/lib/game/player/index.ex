@@ -1,6 +1,7 @@
 defmodule Game.Index.Player do
   use Norm
   import Core.Spec
+  alias Core.ID
   alias Game.Services, as: Svc
   alias Game.Index
 
@@ -43,7 +44,7 @@ defmodule Game.Index.Player do
           rendered_index
   def render_index(index) do
     %{
-      mainframe_id: index.mainframe_id,
+      mainframe_id: index.mainframe_id |> ID.to_external(),
       gateways: Enum.map(index.gateways, fn idx -> Index.Server.render_gateway_index(idx) end)
     }
   end
