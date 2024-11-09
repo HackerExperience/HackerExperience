@@ -1,7 +1,6 @@
 defmodule Test.Setup.Log do
   use Test.Setup.Definition
   alias Game.{Log, LogVisibility}
-  alias DB
 
   def new(server_id, opts \\ []) do
     Core.with_context(:server, server_id, :write, fn ->
