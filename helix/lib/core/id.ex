@@ -34,4 +34,5 @@ defmodule Core.ID do
   def ref(:log_id), do: :"Elixir.Game.Log.ID"
   def ref(:player_id), do: :"Elixir.Game.Player.ID"
   def ref(:server_id), do: :"Elixir.Game.Server.ID"
+  def ref(:tunnel_id), do: :"Elixir.Game.Tunnel.ID"
 end

@@ -1,1 +1,1 @@
-{"server":["Elixir.Game.Log"],"lobby":["Elixir.Lobby.User"],"game":["Elixir.Game.Server","Elixir.Game.Player","Elixir.Game.NetworkConnection","Elixir.Game.Entity"],"player":["Elixir.Game.LogVisibility"]}
+{"server":["Elixir.Game.Log"],"lobby":["Elixir.Lobby.User"],"game":["Elixir.Game.Server","Elixir.Game.Player","Elixir.Game.TunnelLink","Elixir.Game.Tunnel","Elixir.Game.NetworkConnection","Elixir.Game.Entity"],"player":["Elixir.Game.LogVisibility"]}

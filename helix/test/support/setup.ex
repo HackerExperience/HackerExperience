@@ -18,6 +18,8 @@ defmodule Test.Setup do
   # Game
   defdelegate network_connection(server_id, opts \\ []), to: S.NetworkConnection, as: :new
   defdelegate network_connection!(server_id, opts \\ []), to: S.NetworkConnection, as: :new!
+  defdelegate tunnel(opts \\ []), to: S.Tunnel, as: :new
+  defdelegate tunnel!(opts \\ []), to: S.Tunnel, as: :new!
 
   # Server
   defdelegate log(server_id, opts \\ []), to: S.Log, as: :new
