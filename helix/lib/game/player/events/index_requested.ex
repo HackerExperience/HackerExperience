@@ -37,8 +37,7 @@ defmodule Game.Events.Player.IndexRequested do
       {:ok, payload}
     end
 
-    def whom_to_publish(%{data: %{player_id: player_id}}) do
-      %{player: player_id}
-    end
+    def whom_to_publish(%{data: %{player_id: player_id}}),
+      do: %{player: player_id}
   end
 end
