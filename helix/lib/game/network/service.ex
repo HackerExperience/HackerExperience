@@ -5,6 +5,14 @@ defmodule Game.Services.Network do
   @typep parsed_links :: [parsed_link]
   @typep parsed_link :: {nip :: String.t(), server_id :: integer()}
 
+  def fetch(filter_params, opts \\ []) do
+    filters = [
+      network_connection_by_nip: {:one, {:network_connections, :by_nip}}
+    ]
+
+    Core.Fetch.query(filter_params, opts, filters)
+  end
+
   @spec create_tunnel(parsed_links) ::
           term
   def create_tunnel(parsed_links) do

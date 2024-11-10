@@ -42,11 +42,15 @@ defmodule Core.NIP do
   # components in order to improve cache cardinality. As soon as data is retrieved from DB, we
   # convert it back `from_internal/1`. Similarly, right before writing to disk, we convert it
   # `to_internal/1`.
-  defp to_internal(%__MODULE__{network_id: network_id, ip: ip}),
+  def to_internal(%__MODULE__{network_id: network_id, ip: ip}),
     do: "#{ip}@#{network_id}"
 
   defp from_internal(internal_nip) when is_binary(internal_nip) do
     [raw_ip, raw_network_id] = String.split(internal_nip, "@")
     %__MODULE__{network_id: String.to_integer(raw_network_id), ip: raw_ip}
+  end
+
+  defimpl String.Chars do
+    def to_string(%_{} = nip), do: Core.NIP.to_internal(nip)
   end
 end
