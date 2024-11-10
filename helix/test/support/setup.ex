@@ -12,6 +12,8 @@ defmodule Test.Setup do
   defdelegate player_lite!(opts \\ []), to: S.Player, as: :new_lite!
   defdelegate server(opts \\ []), to: S.Server, as: :new
   defdelegate server!(opts \\ []), to: S.Server, as: :new!
+  defdelegate server_full(opts \\ []), to: S.Server, as: :new_full
+  defdelegate server_full!(opts \\ []), to: S.Server, as: :new_full!
   defdelegate server_lite(opts \\ []), to: S.Server, as: :new_lite
   defdelegate server_lite!(opts \\ []), to: S.Server, as: :new_lite!
 

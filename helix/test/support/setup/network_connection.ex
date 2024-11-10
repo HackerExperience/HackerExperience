@@ -24,7 +24,7 @@ defmodule Test.Setup.NetworkConnection do
 
   defp infer_nip_from_opts(opts) do
     network_id = opts[:network_id] || 0
-    ip = opts[:ip] || "1.2.3.4"
+    ip = opts[:ip] || Random.ip()
     opts[:nip] || "#{network_id}@#{ip}"
   end
 end

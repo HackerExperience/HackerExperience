@@ -3,13 +3,22 @@ defmodule Test.Setup.Server do
   alias Game.Server
 
   @doc """
-  Creates a full Server entry, and makes sure all related data is created, as well as the
-  corresponding shards.
+  Creates a Server entry with real shards.
   """
   def new(opts \\ []) do
     opts
     |> get_source_entity()
     |> new_server(opts)
+  end
+
+  @doc """
+  Creates a full Server entry, meaning it not only has the shards but also useful and relevant
+  data that may be helpful for tests. For example, it has an Internet-connected NIP.
+  """
+  def new_full(opts \\ []) do
+    opts
+    |> new()
+    |> create_server_data(opts)
   end
 
   @doc """
@@ -37,6 +46,7 @@ defmodule Test.Setup.Server do
   end
 
   def new!(opts \\ []), do: opts |> new() |> Map.fetch!(:server)
+  def new_full!(opts \\ []), do: opts |> new_full() |> Map.fetch!(:server)
   def new_lite!(opts \\ []), do: opts |> new_lite() |> Map.fetch!(:server)
 
   def params(opts \\ []) do
@@ -71,5 +81,14 @@ defmodule Test.Setup.Server do
   defp new_server({:existing_entity, entity}, _) do
     {:ok, server} = Svc.Server.setup(entity)
     %{server: server, entity: entity}
+  end
+
+  # We were tasked with having a "complete" server. Let's make it complete, then
+  defp create_server_data(%{server: server, entity: _entity} = related, opts) do
+    # Surely a complete server has a working NIP and is connected to the public Internet
+    network_connection = S.network_connection!(server.id)
+
+    related
+    |> Map.merge(%{nip: network_connection.nip})
   end
 end
