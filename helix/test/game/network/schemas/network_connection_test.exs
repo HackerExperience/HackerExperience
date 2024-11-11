@@ -1,6 +1,5 @@
 defmodule Game.NetworkConnectionTest do
   use Test.DBCase, async: true
-  alias Feeb.DB
   alias Game.NetworkConnection
 
   setup [:with_game_db]

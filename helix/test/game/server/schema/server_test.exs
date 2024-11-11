@@ -1,6 +1,5 @@
 defmodule Game.ServerTest do
   use Test.DBCase, async: true
-  alias Feeb.DB
   alias Game.Server
 
   setup [:with_game_db]
