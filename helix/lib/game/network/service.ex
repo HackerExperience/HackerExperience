@@ -5,6 +5,9 @@ defmodule Game.Services.Network do
   @typep parsed_links :: [parsed_link]
   @typep parsed_link :: {nip :: String.t(), server_id :: integer()}
 
+  @doc """
+  TODO DOCME
+  """
   def fetch(filter_params, opts \\ []) do
     filters = [
       network_connection_by_nip: {:one, {:network_connections, :by_nip}}
@@ -13,6 +16,26 @@ defmodule Game.Services.Network do
     Core.Fetch.query(filter_params, opts, filters)
   end
 
+  def resolve_route(nil, nil) do
+    # The route uses neither a Tunnel nor a VPN, so it's a direct link
+    []
+  end
+
+  def resolve_route(%Tunnel{status: :open} = tunnel, nil) do
+    # The route passes through an existing Tunnel, so we essentially just need to return its links
+  end
+
+  # def resolve_route(nil, %VPN.ID{} = vpn_id) do
+  #   # The route passes through a VPN. We need to grab the NIP for each member of the VPN
+  # end
+
+  ###
+  # Writes
+  ###
+
+  @doc """
+  TODO DOCME
+  """
   @spec create_tunnel(parsed_links) ::
           term
   def create_tunnel(parsed_links) do

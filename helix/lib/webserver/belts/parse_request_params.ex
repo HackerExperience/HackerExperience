@@ -16,9 +16,12 @@ defmodule Webserver.Belt.ParseRequestParams do
 
     # TODO: Only merge body if request is not multipart/upload
 
+    # In order to remain consistent, all of `raw_params` keys should be a string
+    normalized_cowboy_bindings = Renatils.Map.stringify_keys(cowboy_request.bindings)
+
     new_raw_params =
       qs_params
-      |> Map.merge(cowboy_request.bindings)
+      |> Map.merge(normalized_cowboy_bindings)
       |> Map.merge(request.raw_params)
 
     Map.put(request, :raw_params, new_raw_params)
