@@ -13,12 +13,20 @@ defmodule Game.Services.Tunnel do
     Core.Fetch.query(filter_params, opts, filters)
   end
 
+  def list_links(filter_params, opts \\ []) do
+    filters = [
+      on_tunnel: {:all, {:tunnel_links, :by_tunnel_id}}
+    ]
+
+    Core.Fetch.query(filter_params, opts, filters)
+  end
+
   @doc """
   TODO DOCME
   """
-  @spec create_tunnel(parsed_links) ::
+  @spec create(parsed_links) ::
           term
-  def create_tunnel(parsed_links) do
+  def create(parsed_links) do
     %{
       nips: nips,
       source_nip: source_nip,
@@ -31,8 +39,8 @@ defmodule Game.Services.Tunnel do
 
     access = :ssh
 
-    with {:ok, tunnel} <- do_create_tunnel(source_nip, target_nip, access),
-         {:ok, _links} <- do_create_tunnel_links(tunnel, nips) do
+    with {:ok, tunnel} <- do_create(source_nip, target_nip, access),
+         {:ok, _links} <- do_create_links(tunnel, nips) do
       {:ok, tunnel}
     else
       e ->
@@ -41,7 +49,7 @@ defmodule Game.Services.Tunnel do
     end
   end
 
-  defp do_create_tunnel(source_nip, target_nip, access) do
+  defp do_create(source_nip, target_nip, access) do
     %{
       source_nip: source_nip,
       target_nip: target_nip,
@@ -52,7 +60,7 @@ defmodule Game.Services.Tunnel do
     |> DB.insert()
   end
 
-  defp do_create_tunnel_links(%Tunnel{} = tunnel, nips) do
+  defp do_create_links(%Tunnel{} = tunnel, nips) do
     Enum.reduce_while(nips, {:ok, [], 0}, fn nip, {:ok, acc_links, acc_idx} ->
       %{tunnel_id: tunnel.id, idx: acc_idx, nip: nip}
       |> TunnelLink.new()

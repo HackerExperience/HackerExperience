@@ -4,7 +4,7 @@ defmodule Game.Services.NetworkTest do
 
   setup [:with_game_db]
 
-  describe "create_tunnel/2" do
+  describe "create/2" do
     test "creates a tunnel" do
       gateway = Setup.server_lite!()
       %{nip: gtw_nip} = Setup.network_connection!(gateway.id, ip: "1.1.1.1")
@@ -26,7 +26,7 @@ defmodule Game.Services.NetworkTest do
           {endp_nip, endpoint.id}
         ]
 
-      assert {:ok, tunnel} = Svc.Network.create_tunnel(parsed_links)
+      assert {:ok, tunnel} = Svc.Network.create(parsed_links)
 
       # `Game.Tunnel` was created with the correct data
       assert tunnel.source_nip == gtw_nip

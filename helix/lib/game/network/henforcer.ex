@@ -2,6 +2,7 @@ defmodule Game.Henforcers.Network do
   alias Core.{Henforcer, NIP}
   alias Game.Henforcers
   alias Game.Services, as: Svc
+  alias Game.Tunnel
 
   @type nip_exists_relay :: Henforcers.Server.server_exists_relay()
   @type nip_exists_error :: {false, {:nip, :not_found}, %{}}
@@ -21,8 +22,30 @@ defmodule Game.Henforcers.Network do
     end
   end
 
-  # `hops` is a map of NIPs
-  def can_use_route?(%NIP{} = gtw_nip, %NIP{} = endp_nip, hops) do
+  def all_nips_exist?(nips) do
+    Enum.reduce_while(nips, {true, %{}}, fn nip, {true, acc} ->
+      case nip_exists?(nip) do
+        {true, relay} ->
+          {:cont, {true, Map.put(acc, nip, relay)}}
+
+        {false, _, _} ->
+          {:halt, {false, {:nip, :not_found, nip}}}
+      end
+    end)
+  end
+
+  def tunnel_exists?(%Tunnel.ID{} = tunnel_id) do
+    case Svc.Tunnel.fetch(by_id: tunnel_id) do
+      %_{} = tunnel ->
+        Henforcer.success(%{tunnel: tunnel})
+
+      nil ->
+        Henforcer.fail({:tunnel, :not_found})
+    end
+  end
+
+  # `hops` is a list of NIPs
+  def can_resolve_route?(%NIP{} = gtw_nip, %NIP{} = endp_nip, bounce_hops) do
     # Q1: Is route reachable?
     # - A1.1 - All NIPs within same network (this changes once we implement multiple networks)
     # Q2: Are there cycles?
@@ -32,10 +55,10 @@ defmodule Game.Henforcers.Network do
     # - A3.2 - But basically, for each NIP (ex-source and ex-target), make sure player has HDB entry
     # - A3.3 - Then, make sure HDB entry is up-to-date with the current server password
 
-    full_route = [gtw_nip | hops] ++ [endp_nip]
+    full_route = [gtw_nip | bounce_hops] ++ [endp_nip]
 
     with {true, %{nips_servers: nips_servers}} <- is_route_reachable?(full_route),
-         route_map = build_route_map(gtw_nip, endp_nip, hops, nips_servers),
+         route_map = build_route_map(gtw_nip, endp_nip, bounce_hops, nips_servers),
          {true, r2} = can_access_route_hops?(route_map) do
       {true, Map.merge(r2, %{route_map: route_map})}
     end
@@ -58,19 +81,6 @@ defmodule Game.Henforcers.Network do
     |> Map.put(:gateway_nip, gtw_nip)
     |> Map.put(:endpoint, Map.fetch!(nips_servers, endp_nip).server)
     |> Map.put(:endpoint_nip, endp_nip)
-    |> IO.inspect()
-  end
-
-  def all_nips_exist?(nips) do
-    Enum.reduce_while(nips, {true, %{}}, fn nip, {true, acc} ->
-      case nip_exists?(nip) do
-        {true, relay} ->
-          {:cont, {true, Map.put(acc, nip, relay)}}
-
-        {false, _, _} ->
-          {:halt, {false, {:nip, :not_found, nip}}}
-      end
-    end)
   end
 
   @doc """

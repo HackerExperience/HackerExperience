@@ -13,7 +13,7 @@ defmodule Game.TunnelLinkTest do
       %{nip: endp_nip} = Setup.network_connection!(endpoint.id, ip: "2.2.2.2")
 
       # There is a tunnel between `gateway` and `endpoint`
-      tunnel = Setup.tunnel!(source_nip: gtw_nip, target_nip: endp_nip)
+      tunnel = Setup.tunnel_lite!(source_nip: gtw_nip, target_nip: endp_nip)
 
       assert {:ok, link_1} =
                %{

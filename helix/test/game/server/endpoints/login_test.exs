@@ -1,25 +1,28 @@
 defmodule Game.Endpoint.Server.LoginTest do
   use Test.WebCase, async: true
-  alias Core.NIP
+  alias Core.{ID, NIP}
   alias Game.{Tunnel, TunnelLink}
 
   setup [:with_game_db, :with_game_webserver]
 
   describe "Server.Login request" do
-    test "successfully logs into a remote server", %{shard_id: shard_id} = ctx do
+    # TODO: Note I can easily reproduce the "Adding LS entry to a key that already exists here"
+    # But find an easier-to-reproduce / more-minimal example
+
+    test "successfully logs into the endpoint (direct connection)", %{shard_id: shard_id} = ctx do
       # TODO: `player` (and `jwt`?) should automagically show up when `with_game_webserver`
       player = Setup.player!()
       jwt = U.jwt_token(uid: player.external_id)
 
-      %{server: gateway, nip: gtw_nip} = Setup.server_full(entity_id: player.id)
-      %{server: endpoint, nip: endp_nip} = Setup.server_full()
+      %{nip: gtw_nip} = Setup.server_full(entity_id: player.id)
+      %{nip: endp_nip} = Setup.server_full()
 
       params = %{}
 
       DB.commit()
       U.start_sse_listener(ctx, player)
 
-      assert {:ok, resp} =
+      assert {:ok, %{status: 200, data: %{}}} =
                post(build_path(gtw_nip, endp_nip), params, shard_id: shard_id, token: jwt)
 
       # A wild Tunnel appears
@@ -62,6 +65,73 @@ defmodule Game.Endpoint.Server.LoginTest do
         1000 ->
           flunk("No event received")
       end
+    end
+
+    test "successfully logs into the endpoint (using tunnel)", %{shard_id: shard_id} = ctx do
+      # TODO: `player` (and `jwt`?) should automagically show up when `with_game_webserver`
+      player = Setup.player!()
+      jwt = U.jwt_token(uid: player.external_id)
+
+      %{nip: gtw_nip} = Setup.server_full(entity_id: player.id)
+      %{nip: endp_nip} = Setup.server_full()
+
+      %{nip: other_hop_nip} = Setup.server_full()
+      %{nip: other_endp_nip} = Setup.server_full()
+
+      # Tunnel between Gateway and OtherEndpoint, which we'll use to create an implicit bounce.
+      # Notice it has one intermediary hop. Therefore, we expect the final bounce to be:
+      # Gateway -> OtherHop -> OtherEndpoint -> Endpoint
+      other_tunnel =
+        Setup.tunnel!(source_nip: gtw_nip, target_nip: other_endp_nip, hops: [other_hop_nip])
+
+      params =
+        %{
+          tunnel_id: other_tunnel.id |> ID.to_external()
+        }
+
+      DB.commit()
+      U.start_sse_listener(ctx, player)
+
+      assert {:ok, %{status: 200, data: %{}}} =
+               post(build_path(gtw_nip, endp_nip), params, shard_id: shard_id, token: jwt)
+
+      receive do
+        {:event, %{name: "tunnel_created", data: %{tunnel_id: raw_tunnel_id}}} ->
+          :timer.sleep(300)
+          begin_game_db(:read)
+
+          # The tunnel was created as expected
+          tunnel_id = Tunnel.ID.from_external(raw_tunnel_id)
+          tunnel = Svc.Tunnel.fetch(by_id: tunnel_id)
+          assert tunnel.source_nip == gtw_nip
+          assert tunnel.target_nip == endp_nip
+          assert tunnel.status == :open
+          assert tunnel.access == :ssh
+
+          # The tunnel has two intermediary hop: `other_hop` -> `other_tunnel`
+          # As expected, the final bounce is: Gateway -> OtherHop -> OtherEndpoint -> Endpoint
+          [link_gtw, link_hop_1, link_hop_2, link_endp] =
+            Svc.Tunnel.list_links(on_tunnel: tunnel.id)
+
+          assert link_gtw.nip == gtw_nip
+          assert link_gtw.idx == 0
+
+          assert link_hop_1.nip == other_hop_nip
+          assert link_hop_1.idx == 1
+
+          assert link_hop_2.nip == other_endp_nip
+          assert link_hop_2.idx == 2
+
+          assert link_endp.nip == endp_nip
+          assert link_endp.idx == 3
+      after
+        1000 ->
+          flunk("No event received")
+      end
+    end
+
+    @tag :skip
+    test "successfully logs into the endpoint (using VPN)", %{shard_id: _shard_id} = _ctx do
     end
 
     # TODO: Test I can't use someone else's server as gateway...

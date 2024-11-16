@@ -39,7 +39,7 @@ defmodule Test.Utils.SSEListener do
     # This conflict happens because (usually) you will have the sync request (performed above) in
     # addition to the request done at the test. They happen at the same-ish time, which leads to
     # conflict if they are both `:readwrite` requests.
-    :timer.sleep(100)
+    :timer.sleep(500)
   end
 
   defp loop_notify_events(port, test_pid, total_to_notify, total_notified \\ 0) do

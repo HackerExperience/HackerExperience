@@ -26,7 +26,7 @@ defmodule Core.ID do
       def from_endpoint(nil, opts),
         do: if(opts[:optional], do: {:ok, nil}, else: {:error, :empty})
 
-      def from_endpoint(raw_id, _opts) when is_integer(id),
+      def from_endpoint(raw_id, _opts) when is_integer(raw_id),
         do: {:ok, from_external(raw_id)}
 
       def from_endpoint(_, _),

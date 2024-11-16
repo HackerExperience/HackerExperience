@@ -22,6 +22,8 @@ defmodule Test.Setup do
   defdelegate network_connection!(server_id, opts \\ []), to: S.NetworkConnection, as: :new!
   defdelegate tunnel(opts \\ []), to: S.Tunnel, as: :new
   defdelegate tunnel!(opts \\ []), to: S.Tunnel, as: :new!
+  defdelegate tunnel_lite(opts \\ []), to: S.Tunnel, as: :new_lite
+  defdelegate tunnel_lite!(opts \\ []), to: S.Tunnel, as: :new_lite!
 
   # Server
   defdelegate log(server_id, opts \\ []), to: S.Log, as: :new
