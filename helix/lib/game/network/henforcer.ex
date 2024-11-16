@@ -10,7 +10,7 @@ defmodule Game.Henforcers.Network do
           {true, nip_exists_relay}
           | nip_exists_error
   def nip_exists?(%NIP{} = nip) do
-    case Svc.Network.fetch(network_connection_by_nip: nip) do
+    case Svc.NetworkConnection.fetch(by_nip: nip) do
       %_{server_id: server_id} ->
         server_id
         |> Henforcers.Server.server_exists?()
