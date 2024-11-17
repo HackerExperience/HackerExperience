@@ -29,7 +29,7 @@ defmodule Game.Henforcers.Network do
           {:cont, {true, Map.put(acc, nip, relay)}}
 
         {false, _, _} ->
-          {:halt, {false, {:nip, :not_found, nip}}}
+          {:halt, {false, {:nip, :not_found, nip}, %{}}}
       end
     end)
   end

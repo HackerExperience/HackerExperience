@@ -41,40 +41,23 @@ defmodule Game.Endpoint.Server.Login do
 
       {:ok, %{request | params: params}}
     else
-      e ->
-        IO.puts("Fuuuu")
-        raise e
+      {:error, {field, _reason}} ->
+        {:error, %{request | response: {400, "invalid_input:#{field}"}}}
     end
   end
 
-  # TODO: One task worth doing to validate the assumptions (of Network and Tunnel in general) is to
-  # pseudo-write the get_context (or more speicfically the Henforcer) of a remote request (like
-  # FielDownload or LogFOrge), with the intention of making sure it's easy and doable to authenticate
-  # the player's action.
-
   def get_context(request, %{source_nip: source_nip, target_nip: target_nip} = params, session) do
     with true <- true,
-         # Both the source and target NIPs exist and correspond to valid servers
-         {true, %{server: gateway}} <- Henforcers.Network.nip_exists?(source_nip),
-         {true, %{server: endpoint}} <- Henforcers.Network.nip_exists?(target_nip),
+         {:ok, bounce_hops} <- resolve_bounce_hops(params[:tunnel_id], params[:vpn_id], source_nip),
+         {true, %{route_map: %{gateway: gateway, endpoint: endpoint} = route_map}} <-
+           Henforcers.Network.can_resolve_route?(source_nip, target_nip, bounce_hops),
 
          # Surely the user is not trying to connect (remotely) to their own server...
          # TODO: Not sure about this henforcement. It _should_ happen, but not here and applied to
-         # any connection within the entire tunnel.
+         # any connection within the entire tunnel (what if VPN has a Gateway in it?).
          true <- gateway.entity_id != endpoint.entity_id || {:error, :self_connection},
-         # {:ok, bounce_hops} = Svc.Network.resolve_bounce_hops(params[:tunnel_id], params[:vpn_id]),
 
-         {:ok, bounce_hops} = resolve_bounce_hops(params[:tunnel_id], params[:vpn_id], source_nip),
-
-         # TODO: Now that I have a "RouteMap" being returned here, I can remove the two `nip_exists?`
-         # calls above
-         {true, %{route_map: route_map}} <-
-           Henforcers.Network.can_resolve_route?(source_nip, target_nip, bounce_hops),
-
-         # Gateway belongs to the user in this session
-         # Note that, even for implicit bounces, it still makes sense for the request to begin from
-         # the player's gateway (and then using `tunnel_id`). This removes confusion as to what
-         # should be the actual gateway NIP (what if player has multiple connections to the remote?)
+         # Gateway always belongs to the user making the action (the one in the `session`)
          true <- gateway.entity_id.id == session.data.player_id.id || {:error, :invalid_gateway},
 
          # TODO: Check {username, password} pair
@@ -88,8 +71,12 @@ defmodule Game.Endpoint.Server.Login do
 
       {:ok, %{request | context: context}}
     else
-      e ->
-        raise e
+      {:error, reason} ->
+        {:error, %{request | response: {400, reason}}}
+
+      {false, henforcer_error, _} ->
+        error_msg = format_henforcer_error(henforcer_error)
+        {:error, %{request | response: {400, error_msg}}}
     end
   end
 
@@ -138,4 +125,15 @@ defmodule Game.Endpoint.Server.Login do
     [gtw_link, hops_links, endp_link]
     |> List.flatten()
   end
+
+  # We could provide a better error message (e.g. saying which NIP is unreachable), but I'll wait
+  # for the UI to catch up before eagerly supporting this.
+  defp format_henforcer_error({:route, {:unreachable, _unreachable_reason}}),
+    do: "route_unreachable"
+
+  defp format_henforcer_error({:route, :cyclical}),
+    do: "route_cyclical"
+
+  defp format_henforcer_error({:tunnel, reason}),
+    do: "tunnel_#{reason}"
 end

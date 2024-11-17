@@ -73,7 +73,16 @@ defmodule Webserver.Dispatcher do
       Endpoint.render_response(req, endpoint)
     else
       {:error, req} ->
-        # TODO: Determine if we should rollback
+        # This is a TODO. FeebDB should expose this kind of information. Also, we may want to roll
+        # back within a hook instead of here (not sure though)
+        case Process.get(:feebdb_current_context) do
+          {_, _} ->
+            Feeb.DB.rollback()
+
+          _ ->
+            :noop
+        end
+
         Endpoint.render_response(req, endpoint)
     end
   end
