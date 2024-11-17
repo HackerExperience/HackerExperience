@@ -1,7 +1,7 @@
 CREATE TABLE connection_groups (
   id INTEGER PRIMARY KEY,
   tunnel_id INTEGER NOT NULL,
-  group_type TEXT NOT NULL,
+  type TEXT NOT NULL,
   inserted_at TEXT NOT NULL,
   FOREIGN KEY (tunnel_id) REFERENCES tunnels(id) ON DELETE RESTRICT ON UPDATE RESTRICT
 ) STRICT;
@@ -13,7 +13,7 @@ CREATE TABLE connections (
   nip TEXT NOT NULL,
   from_nip TEXT,
   to_nip TEXT,
-  connection_type TEXT NOT NULL,
+  type TEXT NOT NULL,
   group_id INTEGER NOT NULL,
   tunnel_id INTEGER NOT NULL,
   inserted_at TEXT NOT NULL,

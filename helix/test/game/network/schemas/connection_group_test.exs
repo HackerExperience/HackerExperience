@@ -15,15 +15,12 @@ defmodule Game.ConnectionGroupTest do
       tunnel = Setup.tunnel_lite!(source_nip: source_nip, target_nip: target_nip)
 
       assert {:ok, conn_group} =
-               %{
-                 tunnel_id: tunnel.id,
-                 group_type: :ssh
-               }
+               %{tunnel_id: tunnel.id, type: :ssh}
                |> ConnectionGroup.new()
                |> DB.insert()
 
       assert conn_group.tunnel_id == tunnel.id
-      assert conn_group.group_type == :ssh
+      assert conn_group.type == :ssh
       assert conn_group.inserted_at
     end
   end

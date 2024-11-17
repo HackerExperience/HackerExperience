@@ -5,6 +5,7 @@ defmodule Game.Connection do
   @table :connections
 
   @connection_types [
+    :ftp,
     :proxy,
     :ssh
   ]
@@ -14,7 +15,7 @@ defmodule Game.Connection do
     {:nip, NIP},
     {:from_nip, {NIP, nullable: true}},
     {:to_nip, {NIP, nullable: true}},
-    {:connection_type, {:enum, values: @connection_types}},
+    {:type, {:enum, values: @connection_types}},
     {:group_id, ID.ref(:connection_group_id)},
     {:tunnel_id, ID.ref(:tunnel_id)},
     {:inserted_at, {:datetime_utc, [precision: :millisecond], mod: :inserted_at}}

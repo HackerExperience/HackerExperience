@@ -97,7 +97,7 @@ S -> AP and AP -> EN are a proxy connection in the SSH group
 
 Let's break this down into actual entries.
 
-S -> AP
+S:
 
 nip: S
 from_nip: null
@@ -105,7 +105,7 @@ to_nip: AP
 type: Proxy
 group_id: ssh
 
-AP -> EN
+AP:
 
 nip: AP
 from_nip: S
@@ -113,7 +113,7 @@ to_nip: EN
 type: Proxy
 group_id: ssh
 
-EN -> T
+EN:
 
 nip: EN
 from_nip: AP
@@ -127,23 +127,31 @@ to_nip: T
 type: SSH
 group_id: ssh
 
-Okay, looks good. What happens when somebody (with zero context) runs nmap in AP? They will find:
+T:
 
-S:
+nip: T
+from_nip: EN
+to_nip: null
+type: SSH
+group_id: ssh
+
+Okay, looks good. What happens when somebody (with zero context) runs nmap? They will find:
+
+On S:
 
 1 "Proxy" connection from localhost to AP
 
-AP:
+On AP:
 
 1 "Proxy" connection from S to localhost
 2 "Proxy" connection from localhost to EN
 
-EN:
+On EN:
 
 1 "Proxy" connection from AP to localhost
 2 "SSH" connection from localhost to EN
 
-T:
+On T:
 
 1. "SSH" connection from EN to localhost
 

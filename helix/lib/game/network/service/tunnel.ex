@@ -1,5 +1,6 @@
 defmodule Game.Services.Tunnel do
   alias Feeb.DB
+  alias Game.Services, as: Svc
   alias Game.{Tunnel, TunnelLink}
 
   @typep parsed_links :: [parsed_link]
@@ -40,7 +41,8 @@ defmodule Game.Services.Tunnel do
     access = :ssh
 
     with {:ok, tunnel} <- do_create(source_nip, target_nip, access),
-         {:ok, _links} <- do_create_links(tunnel, nips) do
+         {:ok, links} <- do_create_links(tunnel, nips),
+         {:ok, _connections} <- Svc.Connection.create(tunnel.id, links, :ssh) do
       {:ok, tunnel}
     else
       e ->

@@ -4,7 +4,7 @@
 
 -- :__insert
 INSERT INTO connection_groups
-  (tunnel_id, group_type, inserted_at)
+  (tunnel_id, type, inserted_at)
 VALUES
   (?, ?, ?)
 RETURNING *;

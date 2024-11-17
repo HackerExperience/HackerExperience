@@ -15,7 +15,7 @@ defmodule Game.ConnectionTest do
       tunnel = Setup.tunnel_lite!(source_nip: source_nip, target_nip: target_nip)
 
       conn_group =
-        %{tunnel_id: tunnel.id, group_type: :ssh}
+        %{tunnel_id: tunnel.id, type: :ssh}
         |> ConnectionGroup.new()
         |> DB.insert!()
 
@@ -23,7 +23,7 @@ defmodule Game.ConnectionTest do
         nip: source_nip,
         from_nip: nil,
         to_nip: target_nip,
-        connection_type: :ssh,
+        type: :ssh,
         tunnel_id: tunnel.id,
         group_id: conn_group.id
       }

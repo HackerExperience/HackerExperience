@@ -48,7 +48,29 @@ defmodule Game.Endpoint.Server.LoginTest do
       assert endp_link.nip == endp_nip
       assert endp_link.idx == 1
 
-      # TODO: assert that the connection(group) is there too
+      # SSH ConnectionGroup was created
+      assert [group] = DB.all(Game.ConnectionGroup)
+      assert group.tunnel_id == tunnel.id
+      assert group.type == :ssh
+
+      # SSH Connections were created
+      assert [gtw_conn, endp_conn] =
+               DB.all(Game.Connection)
+               |> Enum.sort_by(& &1.id)
+
+      assert gtw_conn.nip == gtw_nip
+      assert gtw_conn.from_nip == nil
+      assert gtw_conn.to_nip == endp_nip
+      assert gtw_conn.type == :ssh
+      assert gtw_conn.group_id == group.id
+      assert gtw_conn.tunnel_id == tunnel.id
+
+      assert endp_conn.nip == endp_nip
+      assert endp_conn.from_nip == gtw_nip
+      assert endp_conn.to_nip == nil
+      assert endp_conn.type == :ssh
+      assert endp_conn.group_id == group.id
+      assert endp_conn.tunnel_id == tunnel.id
 
       receive do
         {:event, event} ->
@@ -124,6 +146,51 @@ defmodule Game.Endpoint.Server.LoginTest do
 
           assert link_endp.nip == endp_nip
           assert link_endp.idx == 3
+
+          # ConnectionGroup was created correctly
+          assert [group] =
+                   DB.all(Game.ConnectionGroup)
+                   |> Enum.filter(&(&1.tunnel_id == tunnel.id))
+
+          assert group.tunnel_id == tunnel.id
+          assert group.type == :ssh
+
+          # Proxy connections were created as expected
+          assert [gtw_conn, other_hop_conn, other_endpoint_conn] =
+                   DB.all(Game.Connection)
+                   |> Enum.filter(&(&1.group_id == group.id))
+                   |> Enum.filter(&(&1.type == :proxy))
+                   |> Enum.sort_by(& &1.id)
+
+          assert gtw_conn.nip == gtw_nip
+          assert gtw_conn.from_nip == nil
+          assert gtw_conn.to_nip == other_hop_nip
+          assert gtw_conn.type == :proxy
+
+          assert other_hop_conn.nip == other_hop_nip
+          assert other_hop_conn.from_nip == gtw_nip
+          assert other_hop_conn.to_nip == other_endp_nip
+          assert other_hop_conn.type == :proxy
+
+          assert other_endpoint_conn.nip == other_endp_nip
+          assert other_endpoint_conn.from_nip == other_hop_nip
+          assert other_endpoint_conn.to_nip == nil
+          assert other_endpoint_conn.type == :proxy
+
+          # Peer connections were created as expected
+          assert [src_conn, endp_conn] =
+                   DB.all(Game.Connection)
+                   |> Enum.filter(&(&1.group_id == group.id))
+                   |> Enum.filter(&(&1.type == :ssh))
+                   |> Enum.sort_by(& &1.id)
+
+          assert src_conn.nip == other_endp_nip
+          assert src_conn.from_nip == nil
+          assert src_conn.to_nip == endp_nip
+
+          assert endp_conn.nip == endp_nip
+          assert endp_conn.from_nip == other_endp_nip
+          assert endp_conn.to_nip == nil
       after
         1000 ->
           flunk("No event received")
