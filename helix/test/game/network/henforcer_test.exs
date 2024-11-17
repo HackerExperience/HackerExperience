@@ -34,14 +34,14 @@ defmodule Game.Henforcers.NetworkTest do
     end
   end
 
-  describe "can_use_route?/3" do
+  describe "can_resolve_route?/3" do
     test "succeeds when player has HDB access to intermediary hops" do
       %{nip: nip1} = Setup.server_full()
       %{nip: nip2} = Setup.server_full()
       %{nip: nip3} = Setup.server_full()
 
       # TODO: Assert the relay, write tests covering other cases (@skip the TODO ones)
-      Henforcers.Network.can_use_route?(nip1, nip3, [nip2])
+      Henforcers.Network.can_resolve_route?(nip1, nip3, [nip2])
       |> IO.inspect()
     end
   end

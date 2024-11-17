@@ -1,4 +1,4 @@
-defmodule Game.Services.NetworkTest do
+defmodule Game.Services.TunnelTest do
   use Test.DBCase, async: true
   alias Game.Services, as: Svc
 
@@ -26,7 +26,7 @@ defmodule Game.Services.NetworkTest do
           {endp_nip, endpoint.id}
         ]
 
-      assert {:ok, tunnel} = Svc.Network.create(parsed_links)
+      assert {:ok, tunnel} = Svc.Tunnel.create(parsed_links)
 
       # `Game.Tunnel` was created with the correct data
       assert tunnel.source_nip == gtw_nip

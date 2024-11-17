@@ -20,6 +20,7 @@ defmodule Test.Setup.Tunnel do
     {:ok, tunnel} =
       opts
       |> params()
+      |> extra_params(opts)
       |> parsed_links_from_opts.()
       |> Svc.Tunnel.create()
 
@@ -45,8 +46,12 @@ defmodule Test.Setup.Tunnel do
       source_nip: Kw.get(opts, :source_nip, "0@1.2.3.4"),
       target_nip: Kw.get(opts, :target_nip, "0@4.3.2.1"),
       access: Kw.get(opts, :access, :ssh),
-      status: Kw.get(opts, :status, :open),
-      hops: Kw.get(opts, :hops, [])
+      status: Kw.get(opts, :status, :open)
     }
+  end
+
+  defp extra_params(params, opts) do
+    params
+    |> Map.put(:hops, Kw.get(opts, :hops, []))
   end
 end
