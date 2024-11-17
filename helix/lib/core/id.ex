@@ -42,6 +42,8 @@ defmodule Core.ID do
   @doc """
   We reference the corresponding ID modules in such a way to not create compile-time dependencies.
   """
+  def ref(:connection_id), do: :"Elixir.Game.Connection.ID"
+  def ref(:connection_group_id), do: :"Elixir.Game.ConnectionGroup.ID"
   def ref(:entity_id), do: :"Elixir.Game.Entity.ID"
   def ref(:log_id), do: :"Elixir.Game.Log.ID"
   def ref(:player_id), do: :"Elixir.Game.Player.ID"

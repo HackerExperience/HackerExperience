@@ -12,8 +12,8 @@ CREATE TABLE tunnels (
 ) STRICT;
 
 -- NOTE: An index on (*_nip, status) may make more sense than (*_nip). Confirm, benchmark, change.
-CREATE INDEX tunnels_source_nip_status_idx ON tunnels (source_nip);
-CREATE INDEX tunnels_target_nip_status_idx ON tunnels (target_nip);
+CREATE INDEX tunnels_source_nip_status_idx ON tunnels(source_nip);
+CREATE INDEX tunnels_target_nip_status_idx ON tunnels(target_nip);
 
 CREATE TABLE tunnel_links (
   tunnel_id INTEGER,

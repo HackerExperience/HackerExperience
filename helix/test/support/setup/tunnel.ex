@@ -2,6 +2,9 @@ defmodule Test.Setup.Tunnel do
   use Test.Setup.Definition
   alias Game.Tunnel
 
+  @doc """
+  Creates a Tunnel and its corresponding TunnelLinks.
+  """
   def new(opts \\ []) do
     parsed_links_from_opts = fn %{source_nip: gtw_nip, target_nip: endp_nip, hops: hops} ->
       %{server_id: gtw_id} = Svc.NetworkConnection.fetch!(by_nip: gtw_nip)
@@ -29,6 +32,9 @@ defmodule Test.Setup.Tunnel do
 
   def new!(opts \\ []), do: opts |> new() |> Map.fetch!(:tunnel)
 
+  @doc """
+  Creates a "lite" Tunnel: it has no Links.
+  """
   def new_lite(opts \\ []) do
     tunnel =
       opts
