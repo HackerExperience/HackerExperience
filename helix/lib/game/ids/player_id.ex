@@ -28,4 +28,16 @@ defmodule Game.Player.ID do
   defimpl String.Chars do
     def to_string(%{id: id}), do: "#{id}"
   end
+
+  def from_endpoint(nil, opts),
+    do: if(opts[:optional], do: {:ok, nil}, else: {:error, :empty})
+
+  def from_endpoint(raw_id, _opts) when is_integer(raw_id),
+    do: {:ok, from_external(raw_id)}
+
+  def from_endpoint(_, _),
+    do: {:error, :invalid}
+
+  def from_external(id) when is_integer(id),
+    do: %__MODULE__{id: id}
 end
