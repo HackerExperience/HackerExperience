@@ -31,12 +31,15 @@ defmodule Core.NIP do
   @impl true
   def cast!(str_nip, _, _) when is_binary(str_nip), do: from_external(str_nip)
   def cast!(%__MODULE__{} = nip, _, _), do: nip
+  def cast!(nil, %{nullable: true}, _), do: nil
 
   @impl true
   def dump!(%__MODULE__{} = nip, _, _), do: to_internal(nip)
+  def dump!(nil, _, _), do: nil
 
   @impl true
   def load!(internal_nip, _, _) when is_binary(internal_nip), do: from_internal(internal_nip)
+  def load!(nil, %{nullable: true}, _), do: nil
 
   # The "internal" format is used when storing the NIP in the database. We invert the order of the
   # components in order to improve cache cardinality. As soon as data is retrieved from DB, we
