@@ -27,7 +27,12 @@ defmodule Core.Endpoint do
   if the player has authorization to access it.
   """
   def cast_nip(field, raw_value) do
-    # TODO: Actually validate that the NIP is valid (or do that inside Core.NIP)
-    {:ok, NIP.from_external(raw_value)}
+    case NIP.parse_external(raw_value) do
+      {:ok, nip} ->
+        {:ok, nip}
+
+      {:error, reason} ->
+        {:error, {field, reason}}
+    end
   end
 end

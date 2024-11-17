@@ -13,10 +13,23 @@ defmodule Core.NIP do
   @doc """
   TODO
   """
-  def from_external(str_nip) when is_binary(str_nip) do
-    # TODO: Validate that values are valid
-    [raw_network_id, raw_ip] = String.split(str_nip, "@")
-    %__MODULE__{network_id: String.to_integer(raw_network_id), ip: raw_ip}
+  def parse_external(str_nip) when is_binary(str_nip) do
+    with [raw_network_id, raw_ip] <- String.split(str_nip, "@"),
+         {:ok, network_id} <- parse_external_network_id(raw_network_id),
+         {:ok, ip} <- parse_external_ip(raw_ip) do
+      {:ok, %__MODULE__{network_id: network_id, ip: ip}}
+    else
+      {:error, _} = error ->
+        error
+
+      _ ->
+        {:error, :invalid_nip}
+    end
+  end
+
+  def parse_external!(str_nip) when is_binary(str_nip) do
+    {:ok, nip} = parse_external(str_nip)
+    nip
   end
 
   @doc """
@@ -29,7 +42,7 @@ defmodule Core.NIP do
   def sqlite_type, do: :text
 
   @impl true
-  def cast!(str_nip, _, _) when is_binary(str_nip), do: from_external(str_nip)
+  def cast!(str_nip, _, _) when is_binary(str_nip), do: unsafe_from_external!(str_nip)
   def cast!(%__MODULE__{} = nip, _, _), do: nip
   def cast!(nil, %{nullable: true}, _), do: nil
 
@@ -50,6 +63,29 @@ defmodule Core.NIP do
 
   defp from_internal(internal_nip) when is_binary(internal_nip) do
     [raw_ip, raw_network_id] = String.split(internal_nip, "@")
+    %__MODULE__{network_id: String.to_integer(raw_network_id), ip: raw_ip}
+  end
+
+  defp parse_external_network_id(raw_network_id) when is_binary(raw_network_id) do
+    try do
+      {:ok, String.to_integer(raw_network_id)}
+    rescue
+      ArgumentError ->
+        {:error, {:invalid_network_id, raw_network_id}}
+    end
+  end
+
+  defp parse_external_ip(raw_ip) do
+    if Renatils.IP.valid?(raw_ip) do
+      {:ok, raw_ip}
+    else
+      {:error, {:invalid_ip, raw_ip}}
+    end
+  end
+
+  # Unsafe. Use only when retrieving from disk (which is assumed to be stored correctly)
+  defp unsafe_from_external!(str_nip) do
+    [raw_network_id, raw_ip] = String.split(str_nip, "@")
     %__MODULE__{network_id: String.to_integer(raw_network_id), ip: raw_ip}
   end
 

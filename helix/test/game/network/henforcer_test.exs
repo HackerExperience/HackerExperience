@@ -16,7 +16,7 @@ defmodule Game.Henforcers.NetworkTest do
     end
 
     test "fails when NIP does not exist" do
-      fake_nip = NIP.from_external("0@1.1.1.1")
+      fake_nip = NIP.parse_external!("0@1.1.1.1")
       assert {false, {:nip, :not_found}, %{}} == Henforcers.Network.nip_exists?(fake_nip)
     end
   end
