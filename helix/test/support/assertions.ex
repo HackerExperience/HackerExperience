@@ -3,7 +3,7 @@ defmodule Test.Assertions do
   Ensure that the returned relay (from the Henforcer) has the given keys (and only them). It did not
   return any extra keys. Useful to make sure relay accumulation is working as expected.
   """
-  defmacro assert_relay(relay, keys) do
+  defmacro assert_relay(relay, keys) when is_list(keys) do
     quote do
       acc_relay =
         Enum.reduce(unquote(keys), %{}, fn key, acc ->

@@ -3,6 +3,8 @@ defmodule Core.ID do
     quote do
       @behaviour Feeb.DB.Type.Behaviour
 
+      @type t :: %__MODULE__{id: integer()}
+
       defstruct [:id]
 
       @impl true
