@@ -5,7 +5,6 @@ defmodule Game.Endpoint.Server.Login do
   import Core.Spec
   import Core.Endpoint
 
-  alias Core.NIP
   alias Game.Services, as: Svc
   alias Game.Henforcers
   alias Game.Events.Network.TunnelCreated, as: TunnelCreatedEvent
@@ -26,7 +25,7 @@ defmodule Game.Endpoint.Server.Login do
     selection(schema(%{}), [])
   end
 
-  def get_params(request, parsed, session) do
+  def get_params(request, parsed, _session) do
     # TODO: Validate NIPs, IDs...
 
     with {:ok, source_nip} <- cast_nip(:nip, parsed.nip),
@@ -92,11 +91,11 @@ defmodule Game.Endpoint.Server.Login do
     end
   end
 
-  defp resolve_bounce_hops(nil, %{}) do
+  defp resolve_bounce_hops(nil, _vpn_id, _source_nip) do
     raise "TODO"
   end
 
-  defp resolve_bounce_hops(_, _), do: {:error, :cant_use_vpn_and_tunnel_at_same_time}
+  defp resolve_bounce_hops(_, _, _), do: {:error, :cant_use_vpn_and_tunnel_at_same_time}
 
   def handle_request(request, _params, context, session) do
     with {:ok, tunnel} <- Svc.Tunnel.create(context.parsed_links) do

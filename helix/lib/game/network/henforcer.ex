@@ -64,7 +64,7 @@ defmodule Game.Henforcers.Network do
     end
   end
 
-  def can_access_route_hops?(%{gateway: %{entity_id: source_entity_id}} = route_map) do
+  def can_access_route_hops?(%{gateway: %{entity_id: source_entity_id}} = _route_map) do
     with {true, %{player: _player_id} = r} <- Henforcers.Entity.is_player?(source_entity_id) do
       # Now we:
       # 1. Grab all relevant HDB entries (in a single query or doing N+1)

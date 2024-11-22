@@ -21,7 +21,7 @@ defmodule Game.Henforcers.Entity do
         :player ->
           Henforcers.Player.player_exists?(entity.id)
 
-        other_type ->
+        _other_type ->
           {false, {:entity, :not_a_player}, relay}
       end
     end

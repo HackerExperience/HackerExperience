@@ -84,7 +84,7 @@ defmodule Test.Setup.Server do
   end
 
   # We were tasked with having a "complete" server. Let's make it complete, then
-  defp create_server_data(%{server: server, entity: _entity} = related, opts) do
+  defp create_server_data(%{server: server, entity: _entity} = related, _opts) do
     # Surely a complete server has a working NIP and is connected to the public Internet
     network_connection = S.network_connection!(server.id)
 
