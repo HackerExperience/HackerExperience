@@ -18,7 +18,7 @@ defmodule Core.Webserver.Belt.Session do
         {:ok, session_for_public_endpoint(request)}
 
       true ->
-        {:ok, session_for_private_endpoint(request)}
+        session_for_private_endpoint(request)
     end
     |> case do
       {:ok, session} ->
@@ -71,8 +71,24 @@ defmodule Core.Webserver.Belt.Session do
     end
   end
 
-  defp session_for_private_endpoint(_request) do
-    raise "TODO"
+  # TODO: Cover this with (explicit) tests
+  defp session_for_private_endpoint(%{cowboy_request: cowboy_request} = request) do
+    shard_id = get_shard_id_for_universe(request)
+
+    with {:ok, claims} <- parse_jwt(cowboy_request.headers["authorization"]),
+         DB.begin(request.universe, shard_id, :read),
+         %{} = player <- Svc.Player.fetch(by_external_id: claims.external_id) || :user_not_found do
+      session_data = %{type: :authenticated, player_id: player.id, external_id: player.external_id}
+
+      {:ok,
+       %{id: claims.session_id, universe: request.universe, shard_id: shard_id, data: session_data}}
+    else
+      :user_not_found ->
+        raise "User not found"
+
+      {:error, :missing_token} ->
+        raise "Invalid token"
+    end
   end
 
   if @env == :test do

@@ -1,10 +1,13 @@
 defmodule Game.Webserver do
   defdelegate spec, to: __MODULE__.Spec
 
+  alias Game.Endpoint
+
   # TODO: Routes should be generated from the Spec
   def routes do
     [
-      {"/v1/player/sync", %{handler: Game.Endpoint.Player.Sync, method: :post, sse: true}}
+      {"/v1/player/sync", %{handler: Endpoint.Player.Sync, method: :post, sse: true}},
+      {"/v1/server/:nip/login/:target_nip", %{handler: Endpoint.Server.Login, method: :post}}
     ]
   end
 

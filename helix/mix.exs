@@ -42,7 +42,7 @@ defmodule Helix.MixProject do
   defp elixirc_paths(_), do: ["lib"]
 
   defp extra_applications(:dev), do: [:observer, :wx, :eex]
-  defp extra_applications(:test), do: [:observer]
+  defp extra_applications(:test), do: [:observer, :wx]
   defp extra_applications(_), do: []
 
   # Specifies your project dependencies.
@@ -55,7 +55,7 @@ defmodule Helix.MixProject do
       {:feebdb, github: "renatomassaro/feebdb", branch: "main"},
       {:jose, "~> 1.11"},
       {:norm, "~> 0.13"},
-      {:renatils, "~> 0.1"},
+      {:renatils, "~> 0.1.2"},
       {:dialyxir, "~> 1.4", only: [:dev], runtime: false},
       {:mox, "~> 1.1", only: :test},
       {:excoveralls, "~> 0.18.2", only: :test},

@@ -10,6 +10,7 @@ defmodule Core.Event.Publishable.Definition do
     quote do
       @behaviour Core.Event.Publishable.Behaviour
       use Norm
+      import Core.Spec
     end
   end
 end

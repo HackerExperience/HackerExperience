@@ -21,7 +21,7 @@ defmodule Core.Fetch do
   - includes: list of functions that may be executed post-query. Remember that, in an SQLite world,
   we can run N+1 queries without any kind of worries.
   """
-  def query(filter_params, opts, filters_spec, opts_spec \\ []) do
+  def query(filter_params, opts, filters_spec, opts_spec \\ []) when is_list(filter_params) do
     filters_spec = normalize_filters_spec(filters_spec)
 
     acc = %{}

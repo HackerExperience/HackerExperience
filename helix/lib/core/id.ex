@@ -3,6 +3,8 @@ defmodule Core.ID do
     quote do
       @behaviour Feeb.DB.Type.Behaviour
 
+      @type t :: %__MODULE__{id: integer()}
+
       defstruct [:id]
 
       @impl true
@@ -22,6 +24,18 @@ defmodule Core.ID do
       defimpl String.Chars do
         def to_string(%{id: id}), do: "#{id}"
       end
+
+      def from_endpoint(nil, opts),
+        do: if(opts[:optional], do: {:ok, nil}, else: {:error, :empty})
+
+      def from_endpoint(raw_id, _opts) when is_integer(raw_id),
+        do: {:ok, from_external(raw_id)}
+
+      def from_endpoint(_, _),
+        do: {:error, :invalid}
+
+      def from_external(id) when is_integer(id),
+        do: %__MODULE__{id: id}
     end
   end
 
@@ -30,8 +44,11 @@ defmodule Core.ID do
   @doc """
   We reference the corresponding ID modules in such a way to not create compile-time dependencies.
   """
+  def ref(:connection_id), do: :"Elixir.Game.Connection.ID"
+  def ref(:connection_group_id), do: :"Elixir.Game.ConnectionGroup.ID"
   def ref(:entity_id), do: :"Elixir.Game.Entity.ID"
   def ref(:log_id), do: :"Elixir.Game.Log.ID"
   def ref(:player_id), do: :"Elixir.Game.Player.ID"
   def ref(:server_id), do: :"Elixir.Game.Server.ID"
+  def ref(:tunnel_id), do: :"Elixir.Game.Tunnel.ID"
 end
