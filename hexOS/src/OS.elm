@@ -573,19 +573,21 @@ dispatchUpdateApp model appMsg =
         Apps.SSHLoginMsg _ (SSHLogin.ToOS busAction) ->
             ( model, Effect.msgToCmd (PerformAction busAction) )
 
-        -- Apps.SSHLoginMsg appId subMsg ->
-        --     case getAppModel model.appModels appId of
-        --         Apps.SSHLoginModel appModel ->
-        --             updateApp
-        --                 model
-        --                 appId
-        --                 appModel
-        --                 subMsg
-        --                 Apps.SSHLoginModel
-        --                 Apps.SSHLoginMsg
-        --                 SSHLogin.update
-        --         _ ->
-        --             ( model, Effect.none )
+        Apps.SSHLoginMsg appId subMsg ->
+            case getAppModel model.appModels appId of
+                Apps.SSHLoginModel appModel ->
+                    updateApp
+                        model
+                        appId
+                        appModel
+                        subMsg
+                        Apps.SSHLoginModel
+                        Apps.SSHLoginMsg
+                        SSHLogin.update
+
+                _ ->
+                    ( model, Effect.none )
+
         Apps.DemoMsg _ (Demo.ToOS busAction) ->
             ( model, Effect.msgToCmd (PerformAction busAction) )
 

@@ -11,6 +11,7 @@ import API.Types
 import Effect exposing (Effect)
 import UI exposing (UI, cl, col, row, text)
 import UI.Button
+import UI.Model.FormFields as FormFields exposing (TextField)
 import UI.TextInput
 
 
@@ -27,8 +28,8 @@ type Msg
 
 
 type alias Model =
-    { email : String
-    , password : String
+    { email : TextField
+    , password : TextField
     }
 
 
@@ -38,7 +39,9 @@ type alias Model =
 
 initialModel : Model
 initialModel =
-    { email = "renato@renato.com", password = "renato" }
+    { email = FormFields.textWithValue "renato@renato.com"
+    , password = FormFields.textWithValue "renato"
+    }
 
 
 
@@ -53,15 +56,15 @@ update msg model =
             ( model, Effect.none )
 
         SetEmail value ->
-            ( { model | email = value }, Effect.none )
+            ( { model | email = FormFields.setValue model.email value }, Effect.none )
 
         SetPassword value ->
-            ( { model | password = value }, Effect.none )
+            ( { model | password = FormFields.setValue model.password value }, Effect.none )
 
         OnFormSubmit ->
             let
                 config =
-                    LobbyAPI.loginConfig model.email model.password
+                    LobbyAPI.loginConfig model.email.value model.password.value
             in
             ( model, Effect.lobbyLogin OnLoginResponse config )
 

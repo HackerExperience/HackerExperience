@@ -6,7 +6,10 @@ import Game.Model as Game
 import Html.Events as HE
 import OS.AppID exposing (AppID)
 import OS.Bus
+import Regex
 import UI exposing (UI, cl, col, div, row, text)
+import UI.Model.FormFields as FormFields exposing (TextField)
+import UI.TextInput
 import WM
 
 
@@ -16,14 +19,42 @@ import WM
 
 type Msg
     = ToOS OS.Bus.Action
+    | SetIPAddress String
+    | ValidateIPAddress
+    | SetPassword String
+    | ValidatePassword
 
 
 type alias Model =
-    { ip : Maybe String }
+    { ip : TextField
+    , password : TextField
+    }
 
 
 
 -- Model
+
+
+{-| All this IP validation logic should be in a different module, of course
+-}
+ipContainsInvalidCharactersRegex : Regex.Regex
+ipContainsInvalidCharactersRegex =
+    Maybe.withDefault Regex.never <|
+        Regex.fromString "[^0-9.]"
+
+
+ipContainsInvalidCharacters : String -> Bool
+ipContainsInvalidCharacters ip =
+    Regex.contains ipContainsInvalidCharactersRegex ip
+
+
+ipValid : String -> Bool
+ipValid ip =
+    -- TODO
+    True
+
+
+
 -- Update
 
 
@@ -33,6 +64,31 @@ update msg model =
         ToOS _ ->
             ( model, Effect.none )
 
+        SetIPAddress value ->
+            if not (ipContainsInvalidCharacters value) then
+                let
+                    newIp =
+                        FormFields.setValue model.ip value
+                            |> FormFields.unsetError
+                in
+                ( { model | ip = newIp }, Effect.none )
+
+            else
+                ( model, Effect.none )
+
+        ValidateIPAddress ->
+            if ipValid model.ip.value then
+                ( model, Effect.none )
+
+            else
+                ( { model | ip = FormFields.setError model.ip "Invalid IP" }, Effect.none )
+
+        SetPassword value ->
+            ( { model | password = FormFields.setValue model.password value }, Effect.none )
+
+        ValidatePassword ->
+            ( model, Effect.none )
+
 
 
 -- View
@@ -40,7 +96,16 @@ update msg model =
 
 view : Model -> Game.Model -> UI Msg
 view model game =
-    row [] [ text "Hey" ]
+    col []
+        [ UI.TextInput.new "IP" model.ip
+            |> UI.TextInput.withOnChange SetIPAddress
+            |> UI.TextInput.withOnBlur ValidateIPAddress
+            |> UI.TextInput.toUI
+        , UI.TextInput.new "Password" model.password
+            |> UI.TextInput.withOnChange SetPassword
+            |> UI.TextInput.withOnBlur ValidatePassword
+            |> UI.TextInput.toUI
+        ]
 
 
 
@@ -64,7 +129,8 @@ willOpen _ =
 
 didOpen : WM.WindowInfo -> ( Model, Effect Msg )
 didOpen _ =
-    ( { ip = Nothing
+    ( { ip = FormFields.text
+      , password = FormFields.text
       }
     , Effect.none
     )
