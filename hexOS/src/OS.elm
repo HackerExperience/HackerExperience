@@ -14,6 +14,7 @@ import Apps.LogViewer as LogViewer
 import Apps.Manifest as App
 import Apps.Popups.ConfirmationDialog as ConfirmationDialog
 import Apps.Popups.DemoSingleton as DemoSingleton
+import Apps.SSHLogin as SSHLogin
 import Apps.Types as Apps
 import Dict exposing (Dict)
 import Effect exposing (Effect)
@@ -569,6 +570,22 @@ dispatchUpdateApp model appMsg =
                 _ ->
                     ( model, Effect.none )
 
+        Apps.SSHLoginMsg _ (SSHLogin.ToOS busAction) ->
+            ( model, Effect.msgToCmd (PerformAction busAction) )
+
+        -- Apps.SSHLoginMsg appId subMsg ->
+        --     case getAppModel model.appModels appId of
+        --         Apps.SSHLoginModel appModel ->
+        --             updateApp
+        --                 model
+        --                 appId
+        --                 appModel
+        --                 subMsg
+        --                 Apps.SSHLoginModel
+        --                 Apps.SSHLoginMsg
+        --                 SSHLogin.update
+        --         _ ->
+        --             ( model, Effect.none )
         Apps.DemoMsg _ (Demo.ToOS busAction) ->
             ( model, Effect.msgToCmd (PerformAction busAction) )
 
@@ -848,6 +865,9 @@ getWindowInnerContent appId _ appModel universe =
         Apps.LogViewerModel model ->
             Html.map (Apps.LogViewerMsg appId) <| LogViewer.view model universe
 
+        Apps.SSHLoginModel model ->
+            Html.map (Apps.SSHLoginMsg appId) <| SSHLogin.view model universe
+
         Apps.DemoModel model ->
             Html.map (Apps.DemoMsg appId) <| Demo.view model
 
@@ -907,6 +927,10 @@ viewDock _ =
             , UI.Icon.iAdd (Just "Log Viewer")
                 |> UI.Button.fromIcon
                 |> UI.Button.withOnClick (PerformAction (OS.Bus.RequestOpenApp App.LogViewerApp Nothing))
+                |> UI.Button.toUI
+            , UI.Icon.iAdd (Just "SSH Login")
+                |> UI.Button.fromIcon
+                |> UI.Button.withOnClick (PerformAction (OS.Bus.RequestOpenApp App.SSHLoginApp Nothing))
                 |> UI.Button.toUI
             ]
         ]
