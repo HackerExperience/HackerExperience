@@ -8,6 +8,7 @@ import OS.AppID exposing (AppID)
 import OS.Bus
 import Regex
 import UI exposing (UI, cl, col, div, row, text)
+import UI.Button
 import UI.Model.FormFields as FormFields exposing (TextField)
 import UI.TextInput
 import WM
@@ -23,6 +24,7 @@ type Msg
     | ValidateIPAddress
     | SetPassword String
     | ValidatePassword
+    | OnFormSubmit
 
 
 type alias Model =
@@ -58,8 +60,8 @@ ipValid ip =
 -- Update
 
 
-update : Msg -> Model -> ( Model, Effect Msg )
-update msg model =
+update : Game.Model -> Msg -> Model -> ( Model, Effect Msg )
+update game msg model =
     case msg of
         ToOS _ ->
             ( model, Effect.none )
@@ -89,6 +91,9 @@ update msg model =
         ValidatePassword ->
             ( model, Effect.none )
 
+        OnFormSubmit ->
+            ( model, Effect.none )
+
 
 
 -- View
@@ -105,6 +110,9 @@ view model game =
             |> UI.TextInput.withOnChange SetPassword
             |> UI.TextInput.withOnBlur ValidatePassword
             |> UI.TextInput.toUI
+        , UI.Button.new (Just "Login")
+            |> UI.Button.withOnClick OnFormSubmit
+            |> UI.Button.toUI
         ]
 
 

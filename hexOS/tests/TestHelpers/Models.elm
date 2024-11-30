@@ -24,7 +24,7 @@ state =
             Mocks.indexRequested
 
         spModel =
-            Game.Model.init index
+            Game.Model.init Singleplayer index
     in
     Game.init Singleplayer spModel spModel
         |> Tuple.first

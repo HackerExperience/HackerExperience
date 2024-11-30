@@ -9,10 +9,12 @@ import API.Events.Types as EventTypes
 import Dict exposing (Dict)
 import Game.Model.Server as Server exposing (Gateway)
 import Game.Model.ServerID as ServerID exposing (RawServerID, ServerID)
+import Game.Universe exposing (Universe)
 
 
 type alias Model =
-    { mainframeID : ServerID
+    { universe : Universe
+    , mainframeID : ServerID
     , activeGateway : ServerID
     , activeEndpoint : Maybe ServerID
     , gateways : Dict RawServerID Gateway
@@ -23,9 +25,10 @@ type alias Model =
 -- Model
 
 
-init : EventTypes.IndexRequested -> Model
-init index =
-    { mainframeID = ServerID.fromValue index.player.mainframe_id
+init : Universe -> EventTypes.IndexRequested -> Model
+init universe index =
+    { universe = universe
+    , mainframeID = ServerID.fromValue index.player.mainframe_id
     , activeGateway = ServerID.fromValue index.player.mainframe_id
     , activeEndpoint = Nothing
     , gateways = Server.parseGateways index.player.gateways

@@ -48,8 +48,8 @@ filterLogs model game =
 -- Update
 
 
-update : Msg -> Model -> ( Model, Effect Msg )
-update msg model =
+update : Game.Model -> Msg -> Model -> ( Model, Effect Msg )
+update game msg model =
     case msg of
         ToOS _ ->
             ( model, Effect.none )

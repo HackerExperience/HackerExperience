@@ -168,7 +168,7 @@ update state msg model =
             updateVisibilityChanged model
 
         AppMsg appMsg ->
-            dispatchUpdateApp model appMsg
+            dispatchUpdateApp state model appMsg
 
         HudMsg hudMsg ->
             updateHud state model hudMsg
@@ -546,8 +546,8 @@ updateVisibilityChanged model =
 -- Update > Apps
 
 
-dispatchUpdateApp : Model -> Apps.Msg -> ( Model, Effect Msg )
-dispatchUpdateApp model appMsg =
+dispatchUpdateApp : State -> Model -> Apps.Msg -> ( Model, Effect Msg )
+dispatchUpdateApp state model appMsg =
     case appMsg of
         Apps.InvalidMsg ->
             ( model, Effect.none )
@@ -559,6 +559,7 @@ dispatchUpdateApp model appMsg =
             case getAppModel model.appModels appId of
                 Apps.LogViewerModel appModel ->
                     updateApp
+                        state
                         model
                         appId
                         appModel
@@ -577,6 +578,7 @@ dispatchUpdateApp model appMsg =
             case getAppModel model.appModels appId of
                 Apps.SSHLoginModel appModel ->
                     updateApp
+                        state
                         model
                         appId
                         appModel
@@ -595,6 +597,7 @@ dispatchUpdateApp model appMsg =
             case getAppModel model.appModels appId of
                 Apps.DemoModel appModel ->
                     updateApp
+                        state
                         model
                         appId
                         appModel
@@ -634,18 +637,26 @@ dispatchUpdateApp model appMsg =
 
 
 updateApp :
-    Model
+    State
+    -> Model
     -> AppID
     -> appModel
     -> appMsg
     -> (appModel -> Apps.Model)
     -> (AppID -> appMsg -> Apps.Msg)
-    -> (appMsg -> appModel -> ( appModel, Effect appMsg ))
+    -> (Game.Model -> appMsg -> appModel -> ( appModel, Effect appMsg ))
     -> ( Model, Effect Msg )
-updateApp model appId appModel appMsg toAppModel toAppMsg updateFn =
+updateApp state model appId appModel appMsg toAppModel toAppMsg updateFn =
     let
+        -- TODO: Same comment as viewWindow:
+        -- TODO: Here, I should grab either sp/mp depending on gameState.currentUniverse
+        -- In fact, it may make sense for each App to implement a "stateFilter", thus letting
+        -- each App decide which data it receives (based on its own needs)
+        gameState =
+            state.sp
+
         ( newAppModel, appCmd ) =
-            updateFn appMsg appModel
+            updateFn gameState appMsg appModel
 
         midCmd =
             Effect.map (toAppMsg appId) appCmd

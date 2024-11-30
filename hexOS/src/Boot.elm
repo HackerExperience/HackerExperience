@@ -3,6 +3,7 @@ module Boot exposing (Model, Msg(..), documentView, init, update)
 import Effect exposing (Effect)
 import Event exposing (Event)
 import Game.Model as Game
+import Game.Universe exposing (Universe(..))
 import UI exposing (UI, cl, col, row, text)
 
 
@@ -54,8 +55,9 @@ updateEvent model event =
     case event of
         Event.IndexRequested index ->
             let
+                -- TODO: Create SP and MP model; currently hard-coding SP
                 spModel =
-                    Game.init index
+                    Game.init Singleplayer index
             in
             ( model, Effect.msgToCmd <| ProceedToGame spModel )
 
