@@ -8,9 +8,21 @@ import API.Lobby.Types as LobbyTypes
 -- Shared types
 
 
+type InputToken
+    = InputToken String
+    | NoToken
+
+
 type alias InputConfig input =
     { server : String
     , input : input
+    , authToken : InputToken
+    }
+
+
+type alias InputContext =
+    { token : InputToken
+    , server : String
     }
 
 
@@ -20,12 +32,22 @@ type Error a
 
 
 
+-- Common
+
+
+type alias AuthorizationHeader =
+    { authorization : String }
+
+
+
 -- Game
 -- Game > ServerLogin
 
 
 type alias ServerLoginInput =
-    { body : GameTypes.ServerLoginRequest, params : ServerLoginParams }
+    { body : GameTypes.ServerLoginRequest
+    , params : ServerLoginParams
+    }
 
 
 type alias ServerLoginParams =

@@ -193,7 +193,7 @@ update msg model =
 
                         -- TODO: For now, we are considering sp == mp
                         ( gameModel, playCmd ) =
-                            Game.init currentUniverse spModel spModel
+                            Game.init bootModel.token currentUniverse spModel spModel
                     in
                     ( { model | state = GameState gameModel osModel }
                     , Effect.batch

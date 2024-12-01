@@ -25,6 +25,7 @@ type alias State =
 
     -- TODO: rename to `activeUniverse`
     , currentUniverse : Universe
+    , authToken : String
     }
 
 
@@ -32,11 +33,12 @@ type alias State =
 -- Model
 
 
-init : Universe -> Model -> Model -> ( State, Effect Msg )
-init currentUniverse spModel mpModel =
+init : String -> Universe -> Model -> Model -> ( State, Effect Msg )
+init authToken currentUniverse spModel mpModel =
     ( { sp = spModel
       , mp = mpModel
       , currentUniverse = currentUniverse
+      , authToken = authToken
       }
     , Effect.none
     )

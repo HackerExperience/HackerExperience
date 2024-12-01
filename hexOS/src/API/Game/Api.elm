@@ -48,6 +48,7 @@ playerSyncTask config =
 
 serverLoginTask :
     { server : String
+    , authorization : { authorization : String }
     , body : API.Game.Types.ServerLoginRequest
     , params : { nip : String, target_nip : String }
     }
@@ -65,7 +66,8 @@ serverLoginTask config =
                 ]
                 []
         , method = "POST"
-        , headers = []
+        , headers =
+            [ Http.header "Authorization" config.authorization.authorization ]
         , resolver =
             OpenApi.Common.jsonResolverCustom
                 (Dict.fromList [])

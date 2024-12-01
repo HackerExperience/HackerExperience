@@ -6,9 +6,10 @@ import API.Types as Types
     exposing
         ( Error(..)
         , InputConfig
+        , InputToken(..)
         , LobbyLoginError(..)
         )
-import API.Utils exposing (PrivateErrType(..), dataMapper, extractBody, extractBodyAndParams, mapError, mapResponse)
+import API.Utils exposing (PrivateErrType(..), dataMapper, extractBodyAndParams, extractBodyNH, mapError, mapResponse)
 import OpenApi.Common
 import Task exposing (Task)
 
@@ -25,12 +26,12 @@ loginConfig email password =
         input =
             { body = { email = email, password = password } }
     in
-    { server = lobbyServer, input = input }
+    { server = lobbyServer, input = input, authToken = NoToken }
 
 
 loginTask : InputConfig Types.LobbyLoginInput -> Task (Error LobbyLoginError) LobbyTypes.UserLoginOutput
 loginTask config =
-    Api.userLoginTask (extractBody config)
+    Api.userLoginTask (extractBodyNH config)
         |> mapResponse dataMapper
         |> mapError
             (\apiError ->

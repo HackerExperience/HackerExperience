@@ -3,11 +3,13 @@ module API.Utils exposing
     , dataMapper
     , extractBody
     , extractBodyAndParams
+    , extractBodyAndParamsNH
+    , extractBodyNH
     , mapError
     , mapResponse
     )
 
-import API.Types as Types exposing (Error(..), InputConfig)
+import API.Types as Types exposing (Error(..), InputConfig, InputToken(..))
 import OpenApi.Common
 import Task exposing (Task)
 
@@ -65,13 +67,51 @@ errorHandler error =
 
 extractBody :
     InputConfig { body : b }
-    -> { server : String, body : b }
+    -> { server : String, body : b, authorization : { authorization : String } }
 extractBody config =
+    { server = config.server
+    , body = config.input.body
+    , authorization = { authorization = tokenToString config.authToken }
+    }
+
+
+{-| "No Header" variant
+-}
+extractBodyNH :
+    InputConfig { body : b }
+    -> { server : String, body : b }
+extractBodyNH config =
     { server = config.server, body = config.input.body }
 
 
 extractBodyAndParams :
     InputConfig { body : b, params : p }
-    -> { server : String, body : b, params : p }
+    -> { server : String, body : b, params : p, authorization : { authorization : String } }
 extractBodyAndParams config =
-    { server = config.server, body = config.input.body, params = config.input.params }
+    { server = config.server
+    , body = config.input.body
+    , params = config.input.params
+    , authorization = { authorization = tokenToString config.authToken }
+    }
+
+
+{-| "No Header" variant
+-}
+extractBodyAndParamsNH :
+    InputConfig { body : b, params : p }
+    -> { server : String, body : b, params : p }
+extractBodyAndParamsNH config =
+    { server = config.server
+    , body = config.input.body
+    , params = config.input.params
+    }
+
+
+tokenToString : InputToken -> String
+tokenToString inputToken =
+    case inputToken of
+        InputToken token ->
+            token
+
+        NoToken ->
+            ""
