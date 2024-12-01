@@ -2,6 +2,7 @@ module Effect exposing (..)
 
 -- Type
 
+import API.Game as GameAPI
 import API.Lobby as LobbyAPI
 import API.Types exposing (InputConfig)
 import Json.Encode as JE
@@ -21,7 +22,8 @@ type Effect msg
 
 
 type APIRequestEnum msg
-    = LobbyLogin (API.Types.LobbyLoginResult -> msg) (InputConfig API.Types.LobbyLoginBody)
+    = LobbyLogin (API.Types.LobbyLoginResult -> msg) (InputConfig API.Types.LobbyLoginInput)
+    | ServerLogin (API.Types.ServerLoginResult -> msg) (InputConfig API.Types.ServerLoginInput)
 
 
 
@@ -60,6 +62,11 @@ apply ( seeds, effect ) =
 applyApiRequest : APIRequestEnum msg -> Seeds -> ( Seeds, Cmd msg )
 applyApiRequest apiRequest seeds =
     case apiRequest of
+        -- Game
+        ServerLogin msg config ->
+            ( seeds, Task.attempt msg (GameAPI.serverLoginTask config) )
+
+        -- Lobby
         LobbyLogin msg config ->
             ( seeds, Task.attempt msg (LobbyAPI.loginTask config) )
 
@@ -108,9 +115,14 @@ debouncedCmd cmd =
 -- Effects > API Requests
 
 
-lobbyLogin : (API.Types.LobbyLoginResult -> msg) -> InputConfig API.Types.LobbyLoginBody -> Effect msg
+lobbyLogin : (API.Types.LobbyLoginResult -> msg) -> InputConfig API.Types.LobbyLoginInput -> Effect msg
 lobbyLogin msg config =
     APIRequest (LobbyLogin msg config)
+
+
+serverLogin : (API.Types.ServerLoginResult -> msg) -> InputConfig API.Types.ServerLoginInput -> Effect msg
+serverLogin msg config =
+    APIRequest (ServerLogin msg config)
 
 
 
@@ -131,6 +143,11 @@ map toMsg effect =
 
         APIRequest apiRequestType ->
             case apiRequestType of
+                -- Game
+                ServerLogin msg body ->
+                    APIRequest (ServerLogin (\result -> toMsg (msg result)) body)
+
+                -- Lobby
                 LobbyLogin msg body ->
                     APIRequest (LobbyLogin (\result -> toMsg (msg result)) body)
 

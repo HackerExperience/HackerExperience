@@ -1,5 +1,6 @@
 module API.Types exposing (..)
 
+import API.Game.Types as GameTypes
 import API.Lobby.Types as LobbyTypes
 
 
@@ -7,13 +8,36 @@ import API.Lobby.Types as LobbyTypes
 -- Shared types
 
 
-type alias InputConfig body =
-    { body : body, server : String }
+type alias InputConfig input =
+    { server : String
+    , input : input
+    }
 
 
 type Error a
     = AppError a
     | InternalError
+
+
+
+-- Game
+-- Game > ServerLogin
+
+
+type alias ServerLoginInput =
+    { body : GameTypes.ServerLoginRequest, params : ServerLoginParams }
+
+
+type alias ServerLoginParams =
+    { nip : String, target_nip : String }
+
+
+type alias ServerLoginError =
+    GameTypes.GenericError
+
+
+type alias ServerLoginResult =
+    Result (Error ServerLoginError) GameTypes.ServerLoginOutput
 
 
 
@@ -25,16 +49,12 @@ type LobbyLoginError
     = LobbyLoginUnauthorized
 
 
-type alias LobbyLoginResponse =
-    LobbyTypes.UserLoginOutput
-
-
-type alias LobbyLoginBody =
-    LobbyTypes.UserLoginRequest
+type alias LobbyLoginInput =
+    { body : LobbyTypes.UserLoginRequest }
 
 
 type alias LobbyLoginResult =
-    Result (Error LobbyLoginError) LobbyLoginResponse
+    Result (Error LobbyLoginError) LobbyTypes.UserLoginOutput
 
 
 
@@ -47,3 +67,8 @@ type LobbyRegisterError
 
 type alias LobbyRegisterResponse =
     LobbyTypes.UserRegisterOutput
+
+
+
+-- Utils
+-- TODO: Maybe move to API.Utils?

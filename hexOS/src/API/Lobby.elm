@@ -8,6 +8,7 @@ import API.Types as Types
         , InputConfig
         , LobbyLoginError(..)
         )
+import API.Utils exposing (PrivateErrType(..), dataMapper, extractBody, extractBodyAndParams, mapError, mapResponse)
 import OpenApi.Common
 import Task exposing (Task)
 
@@ -18,15 +19,19 @@ lobbyServer =
     "http://localhost:4000"
 
 
-loginConfig : String -> String -> InputConfig Types.LobbyLoginBody
+loginConfig : String -> String -> InputConfig Types.LobbyLoginInput
 loginConfig email password =
-    { server = lobbyServer, body = { email = email, password = password } }
+    let
+        input =
+            { body = { email = email, password = password } }
+    in
+    { server = lobbyServer, input = input }
 
 
-loginTask : InputConfig Types.LobbyLoginBody -> Task (Error LobbyLoginError) LobbyTypes.UserLoginOutput
+loginTask : InputConfig Types.LobbyLoginInput -> Task (Error LobbyLoginError) LobbyTypes.UserLoginOutput
 loginTask config =
-    Api.userLoginTask config
-        |> mapResponse genericDataMapper
+    Api.userLoginTask (extractBody config)
+        |> mapResponse dataMapper
         |> mapError
             (\apiError ->
                 case apiError of
@@ -47,50 +52,3 @@ loginTask config =
                     UnexpectedError ->
                         InternalError
             )
-
-
-mapResponse : (a -> b) -> Task e a -> Task e b
-mapResponse mapper =
-    Task.map (\resp -> mapper resp)
-
-
-genericDataMapper : { b | data : a } -> a
-genericDataMapper =
-    \{ data } -> data
-
-
-mapError : (PrivateErrType a -> Error b) -> Task (OpenApi.Common.Error a x) r -> Task (Error b) r
-mapError mapper =
-    Task.mapError
-        (\apiError ->
-            case apiError of
-                OpenApi.Common.KnownBadStatus _ appError ->
-                    mapper (LegitimateError appError)
-
-                _ ->
-                    mapper UnexpectedError
-        )
-
-
-
--- Error handler
-
-
-type PrivateErrType a
-    = LegitimateError a
-    | UnexpectedError
-
-
-withErrorHandler : Task (OpenApi.Common.Error x y) a -> Task (PrivateErrType x) a
-withErrorHandler =
-    Task.onError errorHandler
-
-
-errorHandler : OpenApi.Common.Error x y -> Task (PrivateErrType x) a
-errorHandler error =
-    case error of
-        OpenApi.Common.KnownBadStatus _ appError ->
-            Task.fail (LegitimateError appError)
-
-        _ ->
-            Task.fail UnexpectedError
