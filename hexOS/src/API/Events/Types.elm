@@ -31,4 +31,4 @@ type alias IdxLog =
 
 
 type alias IdxGateway =
-    { id : Int, logs : List IdxLog }
+    { id : Int, logs : List IdxLog, nip : String }

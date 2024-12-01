@@ -4,15 +4,19 @@ info:
   title: Events API
 components:
   responses: {}
+  requestBodies: {}
   schemas:
     IdxGateway:
       type: object
       required:
         - logs
+        - nip
         - id
       properties:
         id:
           type: integer
+        nip:
+          type: string
         logs:
           type: array
           items:
@@ -33,15 +37,15 @@ components:
     IdxPlayer:
       type: object
       required:
-        - mainframe_id
         - gateways
+        - mainframe_id
       properties:
+        mainframe_id:
+          type: integer
         gateways:
           type: array
           items:
             $ref: '#/components/schemas/IdxGateway'
-        mainframe_id:
-          type: integer
     index_requested:
       type: object
       required:
@@ -65,7 +69,6 @@ components:
           type: string
         source_nip:
           type: string
-  requestBodies: {}
   securitySchemes: {}
 openapi: 3.1.0
 paths: {}

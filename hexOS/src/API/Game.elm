@@ -10,7 +10,7 @@ import API.Types as Types
         , InputToken(..)
         )
 import API.Utils exposing (PrivateErrType(..), dataMapper, extractBody, extractBodyAndParams, mapError, mapResponse)
-import OpenApi.Common
+import Game.Model.NIP as NIP exposing (NIP)
 import Task exposing (Task)
 
 
@@ -19,12 +19,12 @@ import Task exposing (Task)
 -- Requests > ServerLogin
 
 
-serverLoginConfig : InputContext -> String -> String -> Maybe Int -> InputConfig Types.ServerLoginInput
+serverLoginConfig : InputContext -> NIP -> NIP -> Maybe Int -> InputConfig Types.ServerLoginInput
 serverLoginConfig ctx sourceNip targetNip tunnelId =
     let
         input =
             { body = { tunnel_id = tunnelId }
-            , params = { nip = sourceNip, target_nip = targetNip }
+            , params = { nip = NIP.toString sourceNip, target_nip = NIP.toString targetNip }
             }
     in
     { server = ctx.server, input = input, authToken = ctx.token }

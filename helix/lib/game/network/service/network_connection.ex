@@ -4,7 +4,8 @@ defmodule Game.Services.NetworkConnection do
   """
   def fetch(filter_params, opts \\ []) do
     filters = [
-      by_nip: {:one, {:network_connections, :by_nip}}
+      by_nip: {:one, {:network_connections, :by_nip}},
+      by_server_id: {:one, {:network_connections, :by_server_id}}
     ]
 
     Core.Fetch.query(filter_params, opts, filters)

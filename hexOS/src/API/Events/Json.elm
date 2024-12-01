@@ -136,13 +136,18 @@ encodeIdxLog rec =
 decodeIdxGateway : Json.Decode.Decoder API.Events.Types.IdxGateway
 decodeIdxGateway =
     Json.Decode.succeed
-        (\id logs -> { id = id, logs = logs })
+        (\id logs nip -> { id = id, logs = logs, nip = nip })
         |> OpenApi.Common.jsonDecodeAndMap
             (Json.Decode.field "id" Json.Decode.int)
         |> OpenApi.Common.jsonDecodeAndMap
             (Json.Decode.field
                 "logs"
                 (Json.Decode.list decodeIdxLog)
+            )
+        |> OpenApi.Common.jsonDecodeAndMap
+            (Json.Decode.field
+                "nip"
+                Json.Decode.string
             )
 
 
@@ -151,4 +156,5 @@ encodeIdxGateway rec =
     Json.Encode.object
         [ ( "id", Json.Encode.int rec.id )
         , ( "logs", Json.Encode.list encodeIdxLog rec.logs )
+        , ( "nip", Json.Encode.string rec.nip )
         ]
