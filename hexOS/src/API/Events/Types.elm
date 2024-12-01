@@ -1,13 +1,21 @@
-module API.Events.Types exposing (IdxGateway, IdxLog, IdxPlayer, IndexRequested)
+module API.Events.Types exposing (IdxGateway, IdxLog, IdxPlayer, IndexRequested, TunnelCreated)
 
 {-|
 
 
 ## Aliases
 
-@docs IdxGateway, IdxLog, IdxPlayer, IndexRequested
+@docs IdxGateway, IdxLog, IdxPlayer, IndexRequested, TunnelCreated
 
 -}
+
+
+type alias TunnelCreated =
+    { access : String
+    , source_nip : String
+    , target_nip : String
+    , tunnel_id : String
+    }
 
 
 type alias IndexRequested =

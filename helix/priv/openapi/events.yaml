@@ -4,7 +4,6 @@ info:
   title: Events API
 components:
   responses: {}
-  requestBodies: {}
   schemas:
     IdxGateway:
       type: object
@@ -50,5 +49,22 @@ components:
       properties:
         player:
           $ref: '#/components/schemas/IdxPlayer'
+    tunnel_created:
+      type: object
+      required:
+        - source_nip
+        - target_nip
+        - tunnel_id
+        - access
+      properties:
+        access:
+          type: string
+        tunnel_id:
+          type: string
+        target_nip:
+          type: string
+        source_nip:
+          type: string
+  requestBodies: {}
 openapi: 3.1.0
 paths: {}

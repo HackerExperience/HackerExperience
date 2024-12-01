@@ -1,6 +1,6 @@
 module API.Events.Json exposing
-    ( encodeIdxGateway, encodeIdxLog, encodeIdxPlayer, encodeIndexRequested
-    , decodeIdxGateway, decodeIdxLog, decodeIdxPlayer, decodeIndexRequested
+    ( encodeIdxGateway, encodeIdxLog, encodeIdxPlayer, encodeIndexRequested, encodeTunnelCreated
+    , decodeIdxGateway, decodeIdxLog, decodeIdxPlayer, decodeIndexRequested, decodeTunnelCreated
     )
 
 {-|
@@ -8,12 +8,12 @@ module API.Events.Json exposing
 
 ## Encoders
 
-@docs encodeIdxGateway, encodeIdxLog, encodeIdxPlayer, encodeIndexRequested
+@docs encodeIdxGateway, encodeIdxLog, encodeIdxPlayer, encodeIndexRequested, encodeTunnelCreated
 
 
 ## Decoders
 
-@docs decodeIdxGateway, decodeIdxLog, decodeIdxPlayer, decodeIndexRequested
+@docs decodeIdxGateway, decodeIdxLog, decodeIdxPlayer, decodeIndexRequested, decodeTunnelCreated
 
 -}
 
@@ -21,6 +21,45 @@ import API.Events.Types
 import Json.Decode
 import Json.Encode
 import OpenApi.Common
+
+
+decodeTunnelCreated : Json.Decode.Decoder API.Events.Types.TunnelCreated
+decodeTunnelCreated =
+    Json.Decode.succeed
+        (\access source_nip target_nip tunnel_id ->
+            { access = access
+            , source_nip = source_nip
+            , target_nip = target_nip
+            , tunnel_id = tunnel_id
+            }
+        )
+        |> OpenApi.Common.jsonDecodeAndMap
+            (Json.Decode.field "access" Json.Decode.string)
+        |> OpenApi.Common.jsonDecodeAndMap
+            (Json.Decode.field
+                "source_nip"
+                Json.Decode.string
+            )
+        |> OpenApi.Common.jsonDecodeAndMap
+            (Json.Decode.field
+                "target_nip"
+                Json.Decode.string
+            )
+        |> OpenApi.Common.jsonDecodeAndMap
+            (Json.Decode.field
+                "tunnel_id"
+                Json.Decode.string
+            )
+
+
+encodeTunnelCreated : API.Events.Types.TunnelCreated -> Json.Encode.Value
+encodeTunnelCreated rec =
+    Json.Encode.object
+        [ ( "access", Json.Encode.string rec.access )
+        , ( "source_nip", Json.Encode.string rec.source_nip )
+        , ( "target_nip", Json.Encode.string rec.target_nip )
+        , ( "tunnel_id", Json.Encode.string rec.tunnel_id )
+        ]
 
 
 decodeIndexRequested : Json.Decode.Decoder API.Events.Types.IndexRequested
