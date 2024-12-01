@@ -30,7 +30,7 @@ defmodule Webserver.OpenApi.Spec.Generator do
     |> Enum.group_by(fn {_, %{path: path}} -> path end)
     |> Enum.map(fn {path, path_endpoints} ->
       path_definitions =
-        Enum.map(path_endpoints, fn {{_endpoint, method}, entry} ->
+        Enum.map(path_endpoints, fn {{endpoint, method}, entry} ->
           endpoint_responses =
             Enum.map(entry.responses, fn {code, response_ref} ->
               {"#{code}", %{"$ref" => "\#/components/responses/#{response_ref}"}}
@@ -45,6 +45,7 @@ defmodule Webserver.OpenApi.Spec.Generator do
               },
               responses: endpoint_responses
             }
+            |> maybe_add_path_parameters(endpoint, entry)
 
           {method, endpoint_definition}
         end)
@@ -53,6 +54,42 @@ defmodule Webserver.OpenApi.Spec.Generator do
       {path, path_definitions}
     end)
     |> Map.new()
+  end
+
+  defp maybe_add_path_parameters(definition, endpoint, entry) do
+    input_spec = apply(endpoint, :input_spec, [])
+
+    case get_path_parameters(entry.path) do
+      [_ | _] = params ->
+        parameters =
+          Enum.map(params, fn param ->
+            input_type =
+              input_spec.schema.specs
+              |> Map.fetch!(param)
+              |> get_openapi_type_from_spec(nil, nil)
+
+            %{
+              in: :path,
+              name: param,
+              required: true,
+              schema: %{
+                type: input_type
+              },
+              description: ""
+            }
+          end)
+
+        Map.put(definition, :parameters, parameters)
+
+      [] ->
+        definition
+    end
+  end
+
+  defp get_path_parameters(path) do
+    ~r/\{(.+?)\}/
+    |> Regex.scan(path)
+    |> Enum.map(fn [_, match] -> match end)
   end
 
   defp generate_components(helix_spec) do
@@ -214,6 +251,8 @@ defmodule Webserver.OpenApi.Spec.Generator do
   end
 
   defp openapi_schema_from_norm_spec(%Norm.Core.Schema{specs: specs}, required, root_name, acc) do
+    {specs, required} = filter_path_parameters_from_spec(specs, required)
+
     specs
     # `__openapi_name` is a "magic"/internal keyword used to name Schemas. Filter them out.
     |> Enum.reject(fn {name, _} -> name == :__openapi_name end)
@@ -238,6 +277,11 @@ defmodule Webserver.OpenApi.Spec.Generator do
       {Map.put(iacc, name, entry), child_schemas}
     end)
   end
+
+  defp filter_path_parameters_from_spec(%{__openapi_path_parameters: params} = spec, required),
+    do: {Map.drop(spec, [:__openapi_path_parameters | params]), required -- params}
+
+  defp filter_path_parameters_from_spec(spec, required), do: {spec, required}
 
   defp get_openapi_type_from_spec(%Norm.Core.Selection{schema: schema}, _root_name, _acc) do
     {:ref, schema.specs.__openapi_name}

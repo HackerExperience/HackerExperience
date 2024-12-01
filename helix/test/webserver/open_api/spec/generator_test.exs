@@ -88,6 +88,48 @@ defmodule Webserver.OpenApi.Spec.GeneratorTest do
     end
   end
 
+  describe "generate/1 for the Game spec" do
+    setup do
+      {:ok, %{spec: Game.Webserver.spec()}}
+    end
+
+    test "generates expected `paths` (with path parameters)", %{spec: spec} do
+      %{paths: paths, components: %{schemas: schemas}} = Generator.generate(spec)
+
+      # We'll be using the ServerLogin endpoint for this test
+      assert %{post: server_login} = paths["/v1/server/{nip}/login/{target_nip}"]
+
+      # It has two path parameters: nip and target_nip
+      assert Enum.count(server_login.parameters) == 2
+      assert nip_param = Enum.find(server_login.parameters, &(&1.name == "nip"))
+      assert target_nip_param = Enum.find(server_login.parameters, &(&1.name == "target_nip"))
+
+      assert nip_param.name == "nip"
+      assert nip_param.in == :path
+      assert nip_param.required
+      assert nip_param.schema.type == :string
+
+      assert target_nip_param.name == "target_nip"
+      assert target_nip_param.in == :path
+      assert target_nip_param.required
+      assert target_nip_param.schema.type == :string
+
+      # The ServerLoginInput schema (body of the request) filtered out path parameters
+      assert server_login_input = schemas["ServerLoginInput"]
+
+      # `nip` and `target_nip` are not properties of the body payload
+      refute server_login_input.properties["nip"]
+      refute server_login_input.properties["target_nip"]
+
+      # `tunnel_id`, for example, is
+      assert server_login_input.properties["tunnel_id"]
+
+      # Similarly, `nip` and `target_nip` are not required properties of the body
+      refute "nip" in server_login_input.required
+      refute "target_nip" in server_login_input.required
+    end
+  end
+
   describe "generate/1 for the Events spec" do
     setup do
       spec = Core.Event.Publishable.Spec.spec()

@@ -13,6 +13,7 @@ defmodule Game.Endpoint.Server.Login do
   def input_spec do
     selection(
       schema(%{
+        :__openapi_path_parameters => ["nip", "target_nip"],
         "nip" => binary(),
         "target_nip" => binary(),
         "tunnel_id" => integer()

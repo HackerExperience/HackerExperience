@@ -1,4 +1,6 @@
 defmodule Game.Webserver.Spec do
+  alias Game.Endpoint
+
   @doc """
   DOCME
   """
@@ -15,10 +17,14 @@ defmodule Game.Webserver.Spec do
 
   defp endpoints do
     %{
-      {Game.Endpoint.Player.Sync, :post} => %{
+      {Endpoint.Player.Sync, :post} => %{
         # TODO: How do I turn this into an SSE spec?
         path: "/v1/player/sync",
         responses: [200, 400]
+      },
+      {Endpoint.Server.Login, :post} => %{
+        path: "/v1/server/{nip}/login/{target_nip}",
+        responses: [200]
       }
     }
   end
