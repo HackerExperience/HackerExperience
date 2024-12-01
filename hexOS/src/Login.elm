@@ -8,6 +8,7 @@ module Login exposing
 
 import API.Lobby as LobbyAPI
 import API.Types
+import API.Utils
 import Effect exposing (Effect)
 import UI exposing (UI, cl, col, row, text)
 import UI.Button
@@ -23,7 +24,7 @@ type Msg
     = SetEmail String
     | SetPassword String
     | OnFormSubmit
-    | ProceedToBoot String
+    | ProceedToBoot API.Types.InputToken
     | OnLoginResponse API.Types.LobbyLoginResult
 
 
@@ -63,13 +64,16 @@ update msg model =
 
         OnFormSubmit ->
             let
+                apiCtx =
+                    API.Utils.buildContext Nothing API.Types.ServerLobby
+
                 config =
-                    LobbyAPI.loginConfig model.email.value model.password.value
+                    LobbyAPI.loginConfig apiCtx model.email.value model.password.value
             in
             ( model, Effect.lobbyLogin OnLoginResponse config )
 
         OnLoginResponse (Ok { token }) ->
-            ( model, Effect.msgToCmd <| ProceedToBoot token )
+            ( model, Effect.msgToCmd <| ProceedToBoot (API.Utils.stringToToken token) )
 
         OnLoginResponse (Err (API.Types.AppError _)) ->
             ( model, Effect.none )

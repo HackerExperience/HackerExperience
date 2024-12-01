@@ -1,5 +1,6 @@
 module API.Utils exposing
     ( PrivateErrType(..)
+    , buildContext
     , dataMapper
     , extractBody
     , extractBodyAndParams
@@ -7,9 +8,20 @@ module API.Utils exposing
     , extractBodyNH
     , mapError
     , mapResponse
+    , stringToToken
+    , tokenToString
     )
 
-import API.Types as Types exposing (Error(..), InputConfig, InputToken(..))
+import API.Types as Types
+    exposing
+        ( APIServer(..)
+        , Error(..)
+        , InputConfig
+        , InputContext
+        , InputToken(..)
+        , ServerURL(..)
+        )
+import Game.Universe exposing (Universe)
 import OpenApi.Common
 import Task exposing (Task)
 
@@ -69,7 +81,7 @@ extractBody :
     InputConfig { body : b }
     -> { server : String, body : b, authorization : { authorization : String } }
 extractBody config =
-    { server = config.server
+    { server = serverUrlToString config.server
     , body = config.input.body
     , authorization = { authorization = tokenToString config.authToken }
     }
@@ -81,14 +93,14 @@ extractBodyNH :
     InputConfig { body : b }
     -> { server : String, body : b }
 extractBodyNH config =
-    { server = config.server, body = config.input.body }
+    { server = serverUrlToString config.server, body = config.input.body }
 
 
 extractBodyAndParams :
     InputConfig { body : b, params : p }
     -> { server : String, body : b, params : p, authorization : { authorization : String } }
 extractBodyAndParams config =
-    { server = config.server
+    { server = serverUrlToString config.server
     , body = config.input.body
     , params = config.input.params
     , authorization = { authorization = tokenToString config.authToken }
@@ -101,10 +113,61 @@ extractBodyAndParamsNH :
     InputConfig { body : b, params : p }
     -> { server : String, body : b, params : p }
 extractBodyAndParamsNH config =
-    { server = config.server
+    { server = serverUrlToString config.server
     , body = config.input.body
     , params = config.input.params
     }
+
+
+
+-- Utils > Context
+
+
+buildContext : Maybe InputToken -> APIServer -> InputContext
+buildContext maybeToken apiServer =
+    let
+        inputToken =
+            case maybeToken of
+                Just token ->
+                    token
+
+                Nothing ->
+                    NoToken
+    in
+    { server = getServerUrl apiServer
+    , token = inputToken
+    }
+
+
+
+-- Utils > Server
+
+
+getServerUrl : APIServer -> ServerURL
+getServerUrl server =
+    case server of
+        ServerLobby ->
+            ServerURL "http://localhost:4000"
+
+        ServerGameSP ->
+            ServerURL "http://localhost:4001"
+
+        ServerGameMP ->
+            ServerURL "http://localhost:4002"
+
+
+serverUrlToString : ServerURL -> String
+serverUrlToString (ServerURL rawServerUrl) =
+    rawServerUrl
+
+
+
+-- Utils > Misc
+
+
+stringToToken : String -> InputToken
+stringToToken rawToken =
+    InputToken rawToken
 
 
 tokenToString : InputToken -> String

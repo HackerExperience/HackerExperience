@@ -8,13 +8,23 @@ import API.Lobby.Types as LobbyTypes
 -- Shared types
 
 
+type APIServer
+    = ServerLobby
+    | ServerGameSP
+    | ServerGameMP
+
+
+type ServerURL
+    = ServerURL String
+
+
 type InputToken
     = InputToken String
     | NoToken
 
 
 type alias InputConfig input =
-    { server : String
+    { server : ServerURL
     , input : input
     , authToken : InputToken
     }
@@ -22,7 +32,7 @@ type alias InputConfig input =
 
 type alias InputContext =
     { token : InputToken
-    , server : String
+    , server : ServerURL
     }
 
 

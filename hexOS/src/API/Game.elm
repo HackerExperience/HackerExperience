@@ -15,23 +15,6 @@ import Task exposing (Task)
 
 
 
--- Utils
-
-
-gameServer : String
-gameServer =
-    -- TODO
-    "http://localhost:4001"
-
-
-getContext : String -> String -> InputContext
-getContext server authToken =
-    { server = gameServer
-    , token = InputToken authToken
-    }
-
-
-
 -- Requests
 -- Requests > ServerLogin
 

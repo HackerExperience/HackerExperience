@@ -6,7 +6,7 @@ import API.Types as Types
     exposing
         ( Error(..)
         , InputConfig
-        , InputToken(..)
+        , InputContext
         , LobbyLoginError(..)
         )
 import API.Utils exposing (PrivateErrType(..), dataMapper, extractBodyAndParams, extractBodyNH, mapError, mapResponse)
@@ -14,19 +14,13 @@ import OpenApi.Common
 import Task exposing (Task)
 
 
-lobbyServer : String
-lobbyServer =
-    -- TODO
-    "http://localhost:4000"
-
-
-loginConfig : String -> String -> InputConfig Types.LobbyLoginInput
-loginConfig email password =
+loginConfig : InputContext -> String -> String -> InputConfig Types.LobbyLoginInput
+loginConfig ctx email password =
     let
         input =
             { body = { email = email, password = password } }
     in
-    { server = lobbyServer, input = input, authToken = NoToken }
+    { server = ctx.server, input = input, authToken = ctx.token }
 
 
 loginTask : InputConfig Types.LobbyLoginInput -> Task (Error LobbyLoginError) LobbyTypes.UserLoginOutput
