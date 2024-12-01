@@ -46,6 +46,7 @@ defmodule Webserver.OpenApi.Spec.Generator do
               responses: endpoint_responses
             }
             |> maybe_add_path_parameters(endpoint, entry)
+            |> maybe_add_security(entry)
 
           {method, endpoint_definition}
         end)
@@ -86,6 +87,11 @@ defmodule Webserver.OpenApi.Spec.Generator do
     end
   end
 
+  defp maybe_add_security(definition, %{public?: true}), do: definition
+
+  defp maybe_add_security(definition, _entry),
+    do: Map.put(definition, :security, [%{"AuthorizationToken" => []}])
+
   defp get_path_parameters(path) do
     ~r/\{(.+?)\}/
     |> Regex.scan(path)
@@ -96,7 +102,8 @@ defmodule Webserver.OpenApi.Spec.Generator do
     %{
       schemas: generate_schemas(helix_spec),
       requestBodies: generate_request_bodies(helix_spec),
-      responses: generate_responses(helix_spec)
+      responses: generate_responses(helix_spec),
+      securitySchemes: generate_security_schemes(helix_spec)
     }
   end
 
@@ -166,6 +173,19 @@ defmodule Webserver.OpenApi.Spec.Generator do
         end
       end)
     end)
+  end
+
+  defp generate_security_schemes(%{type: :events}), do: %{}
+
+  defp generate_security_schemes(_) do
+    %{
+      "AuthorizationToken" => %{
+        type: "apiKey",
+        description: "",
+        name: "Authorization",
+        in: :header
+      }
+    }
   end
 
   defp generate_schemas(%{type: :events, endpoints: events}) do

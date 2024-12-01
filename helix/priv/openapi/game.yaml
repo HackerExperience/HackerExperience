@@ -105,6 +105,12 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/ServerLoginInput'
+  securitySchemes:
+    AuthorizationToken:
+      in: header
+      name: Authorization
+      type: apiKey
+      description: ''
 openapi: 3.1.0
 paths:
   /v1/player/sync:
@@ -138,3 +144,5 @@ paths:
       operationId: ServerLogin
       requestBody:
         $ref: '#/components/requestBodies/ServerLoginRequest'
+      security:
+        - AuthorizationToken: []

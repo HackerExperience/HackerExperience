@@ -66,5 +66,6 @@ components:
         source_nip:
           type: string
   requestBodies: {}
+  securitySchemes: {}
 openapi: 3.1.0
 paths: {}

@@ -122,6 +122,12 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/UserRegisterInput'
+  securitySchemes:
+    AuthorizationToken:
+      in: header
+      name: Authorization
+      type: apiKey
+      description: ''
 openapi: 3.1.0
 paths:
   /v1/user/login:

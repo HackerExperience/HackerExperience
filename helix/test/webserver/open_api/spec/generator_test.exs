@@ -128,6 +128,24 @@ defmodule Webserver.OpenApi.Spec.GeneratorTest do
       refute "nip" in server_login_input.required
       refute "target_nip" in server_login_input.required
     end
+
+    test "requires authorization header on non-public endpoints", %{spec: spec} do
+      %{paths: paths, components: %{securitySchemes: security_schemes}} = Generator.generate(spec)
+
+      # ServerLogin is an endpoint that requires Authorization header to be present
+      assert %{post: server_login} = paths["/v1/server/{nip}/login/{target_nip}"]
+      assert server_login.security == [%{"AuthorizationToken" => []}]
+
+      # The "AuthorizationToken" scheme is defined in `security_schemes`
+      assert token_scheme = security_schemes["AuthorizationToken"]
+      assert token_scheme.in == :header
+      assert token_scheme.type == "apiKey"
+      assert token_scheme.name == "Authorization"
+
+      # On the other hand, the PlayerSync endpoint does not require such header
+      assert %{post: player_sync} = paths["/v1/player/sync"]
+      refute Map.has_key?(player_sync, :security)
+    end
   end
 
   describe "generate/1 for the Events spec" do

@@ -20,7 +20,9 @@ defmodule Game.Webserver.Spec do
       {Endpoint.Player.Sync, :post} => %{
         # TODO: How do I turn this into an SSE spec?
         path: "/v1/player/sync",
-        responses: [200, 400]
+        responses: [200, 400],
+        # SSE apiKey is passed as a parameter. Not really public, but for the OAS it is
+        public?: true
       },
       {Endpoint.Server.Login, :post} => %{
         path: "/v1/server/{nip}/login/{target_nip}",
