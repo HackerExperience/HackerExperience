@@ -1,8 +1,11 @@
 module Apps.SSHLogin exposing (..)
 
+import API.Game as GameAPI
+import API.Types
 import Apps.Manifest as App
 import Effect exposing (Effect)
 import Game.Model as Game
+import Game.Model.NIP as NIP
 import Html.Events as HE
 import OS.AppID exposing (AppID)
 import OS.Bus
@@ -25,6 +28,7 @@ type Msg
     | SetPassword String
     | ValidatePassword
     | OnFormSubmit
+    | OnLoginResponse API.Types.ServerLoginResult
 
 
 type alias Model =
@@ -92,6 +96,22 @@ update game msg model =
             ( model, Effect.none )
 
         OnFormSubmit ->
+            let
+                gateway =
+                    Game.getGateway game game.activeGateway
+
+                targetNip =
+                    NIP.new "0" model.ip.value
+
+                config =
+                    GameAPI.serverLoginConfig game.apiCtx gateway.nip targetNip Nothing
+            in
+            ( model, Effect.serverLogin OnLoginResponse config )
+
+        OnLoginResponse (Ok _) ->
+            ( model, Effect.none )
+
+        OnLoginResponse (Err _) ->
             ( model, Effect.none )
 
 
