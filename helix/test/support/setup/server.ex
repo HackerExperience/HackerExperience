@@ -9,6 +9,7 @@ defmodule Test.Setup.Server do
     opts
     |> get_source_entity()
     |> new_server(opts)
+    |> gather_server_data(opts)
   end
 
   @doc """
@@ -19,6 +20,7 @@ defmodule Test.Setup.Server do
     opts
     |> new()
     |> create_server_data(opts)
+    |> gather_server_data(opts)
   end
 
   @doc """
@@ -84,9 +86,14 @@ defmodule Test.Setup.Server do
   end
 
   # We were tasked with having a "complete" server. Let's make it complete, then
-  defp create_server_data(%{server: server, entity: _entity} = related, _opts) do
-    # Surely a complete server has a working NIP and is connected to the public Internet
-    network_connection = S.network_connection!(server.id)
+  defp create_server_data(%{server: _server, entity: _entity} = related, _opts) do
+    # TODO: No longer creating a NIP because that's automatic, but here is where I'd create more
+    # useful data for a "full" server
+    related
+  end
+
+  defp gather_server_data(%{server: server} = related, _opts) do
+    network_connection = Svc.NetworkConnection.fetch!(by_server_id: server.id)
 
     related
     |> Map.merge(%{nip: network_connection.nip})

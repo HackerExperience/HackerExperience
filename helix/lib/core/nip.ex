@@ -10,6 +10,9 @@ defmodule Core.NIP do
           ip: String.t()
         }
 
+  def new(network_id, ip),
+    do: %__MODULE__{network_id: network_id, ip: ip}
+
   @doc """
   TODO
   """

@@ -1,4 +1,7 @@
 defmodule Game.Services.NetworkConnection do
+  alias Feeb.DB
+  alias Game.NetworkConnection
+
   @doc """
   TODO DOCME
   """
@@ -15,5 +18,11 @@ defmodule Game.Services.NetworkConnection do
     filter_params
     |> fetch(opts)
     |> Core.Fetch.assert_non_empty_result!(filter_params, opts)
+  end
+
+  def create(params) do
+    params
+    |> NetworkConnection.new()
+    |> DB.insert()
   end
 end

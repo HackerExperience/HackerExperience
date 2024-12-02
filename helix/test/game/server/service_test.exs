@@ -22,9 +22,13 @@ defmodule Game.Services.ServerTest do
       assert File.exists?(server_db_path)
 
       # We can connect to the newly created Server shard
-      Core.begin_context(:server, server.id, :write)
+      Core.with_context(:server, server.id, :write, fn ->
+        # TODO: Query S.meta and other seed data
+        assert true
+      end)
 
-      # TODO: Query S.meta and other seed data
+      # Every server is created with a working NetworkConnection over the internet
+      assert %_{} = Svc.NetworkConnection.fetch(by_server_id: server.id)
     end
   end
 
