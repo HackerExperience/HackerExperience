@@ -367,6 +367,7 @@ subscriptions model =
 
                   else
                     Sub.none
+                , Ports.eventSubscriber OnRawEventReceived
                 ]
 
         _ ->
