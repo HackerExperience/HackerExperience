@@ -34,9 +34,7 @@ defmodule Game.Index.Server do
   @spec gateway_index(term(), term()) ::
           gateway_index
   def gateway_index(player, server) do
-    # TODO: NIP should always exist (and it's okay to crash). Just figure out a way for tests
-    # to pass... Remove the || and *do* crash after you found an easy way to keep existing tests
-    %{nip: nip} = Svc.NetworkConnection.fetch(by_server_id: server.id) || %{nip: nil}
+    %{nip: nip} = Svc.NetworkConnection.fetch!(by_server_id: server.id)
 
     %{
       id: server.id,
