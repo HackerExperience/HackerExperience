@@ -14,7 +14,7 @@ type alias TunnelCreated =
     { access : String
     , source_nip : String
     , target_nip : String
-    , tunnel_id : String
+    , tunnel_id : Int
     }
 
 

@@ -63,6 +63,8 @@ updateEvent model event =
             in
             ( model, Effect.msgToCmd <| ProceedToGame spModel )
 
+        _ ->
+            ( model, Effect.none )
 
 
 -- View

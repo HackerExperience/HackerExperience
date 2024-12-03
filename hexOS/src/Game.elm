@@ -104,6 +104,10 @@ update msg state =
         PerformAction action ->
             updateAction state action
 
+        OnEventReceived event ->
+            -- TODO: Now we actually process the event
+            ( state, Effect.none )
+
         NoOp ->
             ( state, Effect.none )
 

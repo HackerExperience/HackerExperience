@@ -48,7 +48,7 @@ decodeTunnelCreated =
         |> OpenApi.Common.jsonDecodeAndMap
             (Json.Decode.field
                 "tunnel_id"
-                Json.Decode.string
+                Json.Decode.int
             )
 
 
@@ -58,7 +58,7 @@ encodeTunnelCreated rec =
         [ ( "access", Json.Encode.string rec.access )
         , ( "source_nip", Json.Encode.string rec.source_nip )
         , ( "target_nip", Json.Encode.string rec.target_nip )
-        , ( "tunnel_id", Json.Encode.string rec.tunnel_id )
+        , ( "tunnel_id", Json.Encode.int rec.tunnel_id )
         ]
 
 

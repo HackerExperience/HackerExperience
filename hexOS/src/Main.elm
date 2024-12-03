@@ -305,10 +305,27 @@ update msg model =
                 BootMsg _ ->
                     ( model, Effect.none )
 
-                OnRawEventReceived _ ->
-                    ( model, Effect.none )
+                OnRawEventReceived rawEvent ->
+                    let
+                        eventResult =
+                            Event.processReceivedEvent rawEvent
+                    in
+                    ( model, Effect.msgToCmd (OnEventReceived eventResult) )
 
-                OnEventReceived _ ->
+                OnEventReceived (Ok event) ->
+                    let
+                        ( newGameModel, gameEffect ) =
+                            Game.update (Game.OnEventReceived event) gameModel
+                    in
+                    ( { model | state = GameState newGameModel osModel }
+                    , Effect.map GameMsg gameEffect
+                    )
+
+                OnEventReceived (Err reason) ->
+                    let
+                        _ =
+                            Debug.log "Failed to decode event" reason
+                    in
                     ( model, Effect.none )
 
         InstallState ->

@@ -37,15 +37,15 @@ components:
     IdxPlayer:
       type: object
       required:
-        - gateways
         - mainframe_id
+        - gateways
       properties:
-        mainframe_id:
-          type: integer
         gateways:
           type: array
           items:
             $ref: '#/components/schemas/IdxGateway'
+        mainframe_id:
+          type: integer
     index_requested:
       type: object
       required:
@@ -56,18 +56,18 @@ components:
     tunnel_created:
       type: object
       required:
-        - source_nip
         - target_nip
+        - source_nip
         - tunnel_id
         - access
       properties:
         access:
           type: string
         tunnel_id:
+          type: integer
+        source_nip:
           type: string
         target_nip:
-          type: string
-        source_nip:
           type: string
   securitySchemes: {}
 openapi: 3.1.0

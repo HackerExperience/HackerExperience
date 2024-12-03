@@ -20,7 +20,7 @@ defmodule Game.Events.Network.TunnelCreated do
     def spec do
       selection(
         schema(%{
-          tunnel_id: binary(),
+          tunnel_id: integer(),
           source_nip: binary(),
           target_nip: binary(),
           # TODO: Is Enum supported? oneOf?
