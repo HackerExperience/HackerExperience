@@ -18,6 +18,7 @@ module API.Events.Json exposing
 -}
 
 import API.Events.Types
+import Game.Model.ServerID as ServerID exposing (ServerID(..))
 import Json.Decode
 import Json.Encode
 import OpenApi.Common
@@ -92,7 +93,7 @@ decodeIdxPlayer =
         |> OpenApi.Common.jsonDecodeAndMap
             (Json.Decode.field
                 "mainframe_id"
-                Json.Decode.int
+                (Json.Decode.map ServerID Json.Decode.int)
             )
 
 
@@ -100,7 +101,7 @@ encodeIdxPlayer : API.Events.Types.IdxPlayer -> Json.Encode.Value
 encodeIdxPlayer rec =
     Json.Encode.object
         [ ( "gateways", Json.Encode.list encodeIdxGateway rec.gateways )
-        , ( "mainframe_id", Json.Encode.int rec.mainframe_id )
+        , ( "mainframe_id", Json.Encode.int (ServerID.toValue rec.mainframe_id) )
         ]
 
 

@@ -31,8 +31,8 @@ type alias Model =
 init : API.Types.InputToken -> Universe -> EventTypes.IndexRequested -> Model
 init token universe index =
     { universe = universe
-    , mainframeID = ServerID.fromValue index.player.mainframe_id
-    , activeGateway = ServerID.fromValue index.player.mainframe_id
+    , mainframeID = index.player.mainframe_id
+    , activeGateway = index.player.mainframe_id
     , activeEndpoint = Nothing
     , gateways = Server.parseGateways index.player.gateways
     , apiCtx = buildApiContext token universe
