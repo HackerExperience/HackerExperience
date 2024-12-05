@@ -21,9 +21,10 @@ defmodule OpenAPI.Elm.Formatter do
 
       Enum.each(@files, fn file ->
         handle(type, file)
-        elm_format(file)
       end)
     end)
+
+    Enum.each(@files, &elm_format/1)
   end
 
   ##################################################################################################
