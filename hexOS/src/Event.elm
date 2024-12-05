@@ -6,16 +6,13 @@ module Event exposing
 import API.Events.Json as Events
 import API.Events.Types as Events
 import Game.Model.NIP as NIP exposing (NIP)
+import Game.Universe as Universe exposing (Universe)
 import Json.Decode as JD
 
 
-
--- TODO: Where do I scope the Universe? In the Event type itself?
-
-
 type Event
-    = IndexRequested Events.IndexRequested
-    | TunnelCreated Events.TunnelCreated
+    = IndexRequested Events.IndexRequested Universe
+    | TunnelCreated Events.TunnelCreated Universe
 
 
 
@@ -30,21 +27,35 @@ processReceivedEvent event =
 
 eventDecoder : JD.Decoder Event
 eventDecoder =
-    JD.field "name" JD.string
-        |> JD.andThen dataDecoder
+    JD.field "universe" JD.string
+        |> JD.andThen universeDecoder
 
 
-dataDecoder : String -> JD.Decoder Event
-dataDecoder eventName =
+universeDecoder : String -> JD.Decoder Event
+universeDecoder rawUniverse =
+    let
+        ( isUniverseValid, universe ) =
+            Universe.isUniverseStringValid rawUniverse
+    in
+    if isUniverseValid then
+        JD.field "name" JD.string
+            |> JD.andThen (dataDecoder universe)
+
+    else
+        JD.fail <| "Invalid universe string: " ++ rawUniverse
+
+
+dataDecoder : Universe -> String -> JD.Decoder Event
+dataDecoder universe eventName =
     let
         innerDataDecoder =
             case eventName of
                 "index_requested" ->
-                    JD.map (\x -> IndexRequested x)
+                    JD.map (\x -> IndexRequested x universe)
                         Events.decodeIndexRequested
 
                 "tunnel_created" ->
-                    JD.map (\x -> TunnelCreated x)
+                    JD.map (\x -> TunnelCreated x universe)
                         Events.decodeTunnelCreated
 
                 name ->

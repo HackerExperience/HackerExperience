@@ -55,7 +55,7 @@ update msg model =
 updateEvent : Model -> Event -> ( Model, Effect Msg )
 updateEvent model event =
     case event of
-        Event.IndexRequested index ->
+        Event.IndexRequested index _ ->
             let
                 -- TODO: Create SP and MP model; currently hard-coding SP
                 spModel =

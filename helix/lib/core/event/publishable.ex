@@ -27,7 +27,8 @@ defmodule Core.Event.Publishable do
         {:ok, raw_data} ->
           %{
             data: raw_data,
-            name: event_name
+            name: event_name,
+            universe: Process.get(:helix_universe)
           }
           |> :json.encode()
           |> to_string()

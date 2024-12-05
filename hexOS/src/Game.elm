@@ -7,7 +7,9 @@ module Game exposing
     , update
     )
 
+import API.Events.Types as Events
 import Effect exposing (Effect)
+import Event exposing (Event)
 import Game.Bus exposing (Action(..))
 import Game.Model as Model exposing (Model)
 import Game.Model.ServerID exposing (ServerID)
@@ -40,6 +42,16 @@ init currentUniverse spModel mpModel =
       }
     , Effect.none
     )
+
+
+getUniverse : State -> Universe -> Model
+getUniverse state universe =
+    case universe of
+        Singleplayer ->
+            state.sp
+
+        Multiplayer ->
+            state.mp
 
 
 getActiveUniverse : State -> Model
@@ -105,8 +117,7 @@ update msg state =
             updateAction state action
 
         OnEventReceived event ->
-            -- TODO: Now we actually process the event
-            ( state, Effect.none )
+            updateEvent state event
 
         NoOp ->
             ( state, Effect.none )
@@ -126,3 +137,19 @@ updateAction state action =
 
         ActionNoOp ->
             ( state, Effect.none )
+
+
+updateEvent : State -> Event -> ( State, Effect Msg )
+updateEvent state event_ =
+    case event_ of
+        Event.TunnelCreated event universe ->
+            onTunnelCreatedEvent state (getUniverse state universe) event
+
+        -- This event is handled during BootState and should never hit this branch
+        Event.IndexRequested _ _ ->
+            ( state, Effect.none )
+
+
+onTunnelCreatedEvent : State -> Model -> Events.TunnelCreated -> ( State, Effect Msg )
+onTunnelCreatedEvent state model event =
+    ( state, Effect.none )
