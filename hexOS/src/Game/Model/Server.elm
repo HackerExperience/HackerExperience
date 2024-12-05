@@ -37,7 +37,7 @@ parseGateways idxGateways =
 parseGateway : EventTypes.IdxGateway -> Gateway
 parseGateway gateway =
     { id = ServerID.fromValue gateway.id
-    , nip = NIP.fromString gateway.nip
+    , nip = gateway.nip
     , logs = Log.parse gateway.logs
     }
 

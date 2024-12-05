@@ -2,6 +2,7 @@ module API.Types exposing (..)
 
 import API.Game.Types as GameTypes
 import API.Lobby.Types as LobbyTypes
+import Game.Model.NIP exposing (NIP)
 
 
 
@@ -61,7 +62,7 @@ type alias ServerLoginInput =
 
 
 type alias ServerLoginParams =
-    { nip : String, target_nip : String }
+    { nip : NIP, target_nip : NIP }
 
 
 type alias ServerLoginError =

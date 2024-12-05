@@ -12,6 +12,8 @@ module API.Game.Api exposing (playerSyncTask, serverLoginTask)
 import API.Game.Json
 import API.Game.Types
 import Dict
+import Game.Model.NIP as NIP exposing (NIP(..))
+import Game.Model.ServerID as ServerID exposing (ServerID(..))
 import Http
 import Json.Decode
 import Json.Encode
@@ -50,7 +52,7 @@ serverLoginTask :
     { server : String
     , authorization : { authorization : String }
     , body : API.Game.Types.ServerLoginRequest
-    , params : { nip : String, target_nip : String }
+    , params : { nip : NIP, target_nip : NIP }
     }
     -> Task.Task (OpenApi.Common.Error API.Game.Types.ServerLogin_Error String) API.Game.Types.ServerLoginOkResponse
 serverLoginTask config =
@@ -60,9 +62,9 @@ serverLoginTask config =
                 config.server
                 [ "v1"
                 , "server"
-                , config.params.nip
+                , NIP.toString config.params.nip
                 , "login"
-                , config.params.target_nip
+                , NIP.toString config.params.target_nip
                 ]
                 []
         , method = "POST"

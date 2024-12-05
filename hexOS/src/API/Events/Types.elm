@@ -1,5 +1,6 @@
 module API.Events.Types exposing (IdxGateway, IdxLog, IdxPlayer, IndexRequested, TunnelCreated)
 
+import Game.Model.NIP as NIP exposing (NIP(..))
 import Game.Model.ServerID as ServerID exposing (ServerID(..))
 
 
@@ -13,8 +14,8 @@ import Game.Model.ServerID as ServerID exposing (ServerID(..))
 -}
 type alias TunnelCreated =
     { access : String
-    , source_nip : String
-    , target_nip : String
+    , source_nip : NIP
+    , target_nip : NIP
     , tunnel_id : Int
     }
 
@@ -32,4 +33,4 @@ type alias IdxLog =
 
 
 type alias IdxGateway =
-    { id : Int, logs : List IdxLog, nip : String }
+    { id : Int, logs : List IdxLog, nip : NIP }

@@ -24,7 +24,7 @@ serverLoginConfig ctx sourceNip targetNip tunnelId =
     let
         input =
             { body = { tunnel_id = tunnelId }
-            , params = { nip = NIP.toString sourceNip, target_nip = NIP.toString targetNip }
+            , params = { nip = sourceNip, target_nip = targetNip }
             }
     in
     { server = ctx.server, input = input, authToken = ctx.token }

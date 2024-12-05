@@ -6,11 +6,13 @@ defmodule OpenAPI.Elm.Formatter do
   # TODO: Add comment stating these files are generated and should not be hand-edited
   @files [
     "src/API/Events/Types.elm",
-    "src/API/Events/Json.elm"
+    "src/API/Events/Json.elm",
+    "src/API/Game/Api.elm"
   ]
 
   @custom_types [
-    :server_id
+    :server_id,
+    :nip
   ]
 
   def format do
@@ -28,11 +30,49 @@ defmodule OpenAPI.Elm.Formatter do
   # Handlers
   ##################################################################################################
 
+  # TODO: I may be able to simplify some of these operations
+  defp handle(:nip, file) do
+    insert_import("import Game.Model.NIP as NIP exposing (NIP(..))", file)
+
+    # Types
+    sed("s/{ nip \: String/{ nip \: NIP/", file)
+    sed("s/, nip \: String/, nip \: NIP/", file)
+    sed("s/, source_nip \: String/, source_nip \: NIP/", file)
+    sed("s/, target_nip \: String/, target_nip \: NIP/", file)
+
+    # Json parsing
+    sed("/\"nip\"/!b;n;s/Json\.Decode\.string/#{json_dec(:nip)}/", file)
+    sed("/\"source_nip\"/!b;n;s/Json\.Decode\.string/#{json_dec(:nip)}/", file)
+    sed("/\"target_nip\"/!b;n;s/Json\.Decode\.string/#{json_dec(:nip)}/", file)
+
+    sed(
+      "s/\"nip\", Json\.Encode\.string rec\.nip/" <>
+        "\"nip\", #{json_enc(:nip)} rec\.nip)/",
+      file
+    )
+
+    sed(
+      "s/\"source_nip\", Json\.Encode\.string rec\.source_nip/" <>
+        "\"source_nip\", #{json_enc(:nip)} rec\.source_nip)/",
+      file
+    )
+
+    sed(
+      "s/\"target_nip\", Json\.Encode\.string rec\.target_nip/" <>
+        "\"target_nip\", #{json_enc(:nip)} rec\.target_nip)/",
+      file
+    )
+
+    # Path parameters
+    sed("s/, config\.params\.nip/, NIP\.toString config\.params\.nip/", file)
+    sed("s/, config\.params\.target_nip/, NIP\.toString config\.params\.target_nip/", file)
+  end
+
   defp handle(:server_id, file) do
     insert_import("import Game.Model.ServerID as ServerID exposing (ServerID(..))", file)
 
     # Types
-    sed("s/mainframe_id \: Int/mainframe_id \: ServerID/", file)
+    sed("s/, mainframe_id \: Int/, mainframe_id \: ServerID/", file)
 
     # Json parsing
     sed("/\"mainframe_id\"/!b;n;s/Json\.Decode\.int/#{json_dec("ServerID", "int")}/", file)
@@ -48,11 +88,23 @@ defmodule OpenAPI.Elm.Formatter do
   # Utils
   ##################################################################################################
 
-  defp json_dec(elm_type, json_type \\ "int") do
+  defp json_dec(elm_type, json_type \\ "int")
+
+  defp json_dec(:nip, _) do
+    "(Json\.Decode\.map (\\\\nip -> NIP\.fromString nip) Json\.Decode\.string)"
+  end
+
+  defp json_dec(elm_type, json_type) do
     "(Json\.Decode\.map #{elm_type} Json\.Decode\.#{json_type})"
   end
 
-  defp json_enc(elm_type, json_type \\ "int") do
+  defp json_enc(elm_type, json_type \\ "int")
+
+  defp json_enc(:nip, _) do
+    "Json\.Encode\.string (NIP\.toString "
+  end
+
+  defp json_enc(elm_type, json_type) do
     "Json\.Encode\.#{json_type} (#{elm_type}\.toValue "
   end
 

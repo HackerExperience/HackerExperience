@@ -18,6 +18,7 @@ module API.Events.Json exposing
 -}
 
 import API.Events.Types
+import Game.Model.NIP as NIP exposing (NIP(..))
 import Game.Model.ServerID as ServerID exposing (ServerID(..))
 import Json.Decode
 import Json.Encode
@@ -39,12 +40,12 @@ decodeTunnelCreated =
         |> OpenApi.Common.jsonDecodeAndMap
             (Json.Decode.field
                 "source_nip"
-                Json.Decode.string
+                (Json.Decode.map (\nip -> NIP.fromString nip) Json.Decode.string)
             )
         |> OpenApi.Common.jsonDecodeAndMap
             (Json.Decode.field
                 "target_nip"
-                Json.Decode.string
+                (Json.Decode.map (\nip -> NIP.fromString nip) Json.Decode.string)
             )
         |> OpenApi.Common.jsonDecodeAndMap
             (Json.Decode.field
@@ -57,8 +58,8 @@ encodeTunnelCreated : API.Events.Types.TunnelCreated -> Json.Encode.Value
 encodeTunnelCreated rec =
     Json.Encode.object
         [ ( "access", Json.Encode.string rec.access )
-        , ( "source_nip", Json.Encode.string rec.source_nip )
-        , ( "target_nip", Json.Encode.string rec.target_nip )
+        , ( "source_nip", Json.Encode.string (NIP.toString rec.source_nip) )
+        , ( "target_nip", Json.Encode.string (NIP.toString rec.target_nip) )
         , ( "tunnel_id", Json.Encode.int rec.tunnel_id )
         ]
 
@@ -148,7 +149,7 @@ decodeIdxGateway =
         |> OpenApi.Common.jsonDecodeAndMap
             (Json.Decode.field
                 "nip"
-                Json.Decode.string
+                (Json.Decode.map (\nip -> NIP.fromString nip) Json.Decode.string)
             )
 
 
@@ -157,5 +158,5 @@ encodeIdxGateway rec =
     Json.Encode.object
         [ ( "id", Json.Encode.int rec.id )
         , ( "logs", Json.Encode.list encodeIdxLog rec.logs )
-        , ( "nip", Json.Encode.string rec.nip )
+        , ( "nip", Json.Encode.string (NIP.toString rec.nip) )
         ]
