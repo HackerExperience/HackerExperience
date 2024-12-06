@@ -9,6 +9,11 @@ import Game.Universe as Universe exposing (Universe)
 import Json.Decode as JD
 
 
+{-| TODO: Think about the event "scope". Most events happen within the scope of a Server.
+Sometimes, the scope is the Account. Or maybe the Clan. In any case, having the scope and the
+corresponding identifier (NIP in the case of remote server) will make the frontend life
+significantly easier
+-}
 type Event
     = IndexRequested Events.IndexRequested Universe
     | TunnelCreated Events.TunnelCreated Universe
