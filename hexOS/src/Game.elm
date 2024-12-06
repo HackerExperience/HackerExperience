@@ -8,6 +8,7 @@ module Game exposing
     )
 
 import Effect exposing (Effect)
+import Event exposing (Event)
 import Game.Bus exposing (Action(..))
 import Game.Model as Model exposing (Model)
 import Game.Model.ServerID exposing (ServerID)
@@ -42,6 +43,16 @@ init currentUniverse spModel mpModel =
     )
 
 
+getUniverse : State -> Universe -> Model
+getUniverse state universe =
+    case universe of
+        Singleplayer ->
+            state.sp
+
+        Multiplayer ->
+            state.mp
+
+
 getActiveUniverse : State -> Model
 getActiveUniverse state =
     case state.currentUniverse of
@@ -60,6 +71,16 @@ getInactiveUniverse state =
 
         Multiplayer ->
             state.sp
+
+
+replaceUniverse : State -> Model -> Universe -> State
+replaceUniverse state newModel universe =
+    case universe of
+        Singleplayer ->
+            { state | sp = newModel }
+
+        Multiplayer ->
+            { state | mp = newModel }
 
 
 replaceActiveUniverse : State -> Model -> State
@@ -104,6 +125,9 @@ update msg state =
         PerformAction action ->
             updateAction state action
 
+        OnEventReceived event ->
+            updateEvent state event
+
         NoOp ->
             ( state, Effect.none )
 
@@ -121,4 +145,19 @@ updateAction state action =
             ( newState, Effect.none )
 
         ActionNoOp ->
+            ( state, Effect.none )
+
+
+updateEvent : State -> Event -> ( State, Effect Msg )
+updateEvent state event_ =
+    case event_ of
+        Event.TunnelCreated event universe ->
+            let
+                newModel =
+                    Model.onTunnelCreatedEvent (getUniverse state universe) event
+            in
+            ( replaceUniverse state newModel universe, Effect.none )
+
+        -- This event is handled during BootState and should never hit this branch
+        Event.IndexRequested _ _ ->
             ( state, Effect.none )

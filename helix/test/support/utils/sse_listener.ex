@@ -19,6 +19,8 @@ defmodule Test.Utils.SSEListener do
 
       receive do
         {^port, {:data, index_payload}} ->
+          send(test_pid, :proceed)
+
           # This first event (the index payload from IndexRequested) is sent as a separate message
           # because, usually, the test does not care about it. It simply is an "automatic" event
           # that comes up every time we establish the SSE connection.
@@ -32,14 +34,16 @@ defmodule Test.Utils.SSEListener do
       end
     end)
 
-    # This sleep timer can be removed once we implement queueing on concurrent writing connections
-    # (at the moment, FeebDB simply crashes if there are multiple writers at the same time, however
-    # nothing prevents us from waiting until the other writer is done so we can start processing the
-    # request).
-    # This conflict happens because (usually) you will have the sync request (performed above) in
-    # addition to the request done at the test. They happen at the same-ish time, which leads to
-    # conflict if they are both `:readwrite` requests.
-    :timer.sleep(500)
+    # Block the test from proceeding until SSE is properly set up. This is important because
+    # otherwise the request that will be performed by the test may cause a number of race conditions
+    # with the Sync request performed in this function. It's just simpler to avoid that entirely.
+    receive do
+      :proceed ->
+        :ok
+    after
+      500 ->
+        raise "SSE did not set up correctly"
+    end
   end
 
   defp loop_notify_events(port, test_pid, total_to_notify, total_notified \\ 0) do

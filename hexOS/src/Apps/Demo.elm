@@ -3,6 +3,7 @@ module Apps.Demo exposing (..)
 import Apps.Manifest as App
 import Apps.Popups.ConfirmationDialog as ConfirmationDialog
 import Effect exposing (Effect)
+import Game.Model as Game
 import OS.AppID exposing (AppID)
 import OS.Bus
 import UI exposing (UI, cl, row, text)
@@ -77,8 +78,8 @@ viewCounter model =
 -- Update
 
 
-update : Msg -> Model -> ( Model, Effect Msg )
-update msg model =
+update : Game.Model -> Msg -> Model -> ( Model, Effect Msg )
+update _ msg model =
     case msg of
         IncrementCount ->
             ( { model | count = model.count + 1 }, Effect.none )

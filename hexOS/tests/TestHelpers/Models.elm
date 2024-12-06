@@ -1,5 +1,6 @@
 module TestHelpers.Models exposing (..)
 
+import API.Types
 import Apps.Manifest as App
 import Game exposing (State)
 import Game.Model
@@ -24,7 +25,7 @@ state =
             Mocks.indexRequested
 
         spModel =
-            Game.Model.init index
+            Game.Model.init (API.Types.InputToken "t0k3n") Singleplayer index
     in
     Game.init Singleplayer spModel spModel
         |> Tuple.first

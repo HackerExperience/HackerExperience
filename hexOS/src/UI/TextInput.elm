@@ -5,6 +5,7 @@ import Html.Attributes as HA
 import Html.Events as HE
 import UI exposing (UI, cl)
 import UI.Icon exposing (Icon)
+import UI.Model.FormFields exposing (TextField)
 
 
 type Input msg
@@ -13,7 +14,7 @@ type Input msg
 
 type alias Props =
     { label : String
-    , value : String
+    , field : TextField
     , kind : String
     }
 
@@ -27,21 +28,23 @@ type alias Opts msg =
     }
 
 
-new : String -> String -> Input msg
-new label value =
+new : String -> TextField -> Input msg
+new label field =
     Input
         { label = label
-        , value = value
+        , field = field
         , kind = "text"
         }
-        { defaultOpts | placeholder = Just label }
+        defaultOpts
+        |> withPlaceholder (Just label)
+        |> withProblem field.error
 
 
-fromIcon : String -> Icon msg -> Input msg
-fromIcon value icon =
+fromIcon : TextField -> Icon msg -> Input msg
+fromIcon field icon =
     Input
         { label = Maybe.withDefault "" (UI.Icon.getHint icon)
-        , value = value
+        , field = field
         , kind = "text"
         }
         { defaultOpts | icon = Just icon }
@@ -69,6 +72,11 @@ withPasswordType (Input props opts) =
 withProblem : Maybe String -> Input msg -> Input msg
 withProblem maybeProblem (Input props opts) =
     Input props { opts | problem = maybeProblem }
+
+
+withPlaceholder : Maybe String -> Input msg -> Input msg
+withPlaceholder maybePlaceholder (Input props opts) =
+    Input props { opts | placeholder = maybePlaceholder }
 
 
 defaultOpts : Opts msg
@@ -106,11 +114,11 @@ toUI ((Input _ { icon }) as input) =
 
 
 inputUI : Input msg -> UI msg
-inputUI (Input { label, value, kind } { onChange, onBlur, placeholder, problem }) =
+inputUI (Input { label, field, kind } { onChange, onBlur, placeholder, problem }) =
     H.input
         [ cl "ui-input-text"
         , HA.type_ kind
-        , HA.value value
+        , HA.value field.value
         , HA.title label
         , attrProblem problem
         , attrPlaceholder placeholder

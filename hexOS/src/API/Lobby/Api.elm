@@ -14,6 +14,7 @@ import API.Lobby.Types
 import Dict
 import Http
 import Json.Decode
+import Json.Encode
 import OpenApi.Common
 import Task
 import Url.Builder

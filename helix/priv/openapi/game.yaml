@@ -1,7 +1,7 @@
 info:
   version: 1.0.0
   description: nil
-  title: Lobby API
+  title: Game API
 components:
   responses:
     GenericBadRequestResponse:
@@ -29,7 +29,7 @@ components:
     GenericUnauthorizedResponse:
       description: TODO
       content: {}
-    UserLoginOkResponse:
+    PlayerSyncOkResponse:
       description: TODO description
       content:
         application/json:
@@ -39,8 +39,8 @@ components:
               - data
             properties:
               data:
-                $ref: '#/components/schemas/UserLoginOutput'
-    UserRegisterOkResponse:
+                $ref: '#/components/schemas/PlayerSyncOutput'
+    ServerLoginOkResponse:
       description: TODO description
       content:
         application/json:
@@ -50,7 +50,7 @@ components:
               - data
             properties:
               data:
-                $ref: '#/components/schemas/UserRegisterOutput'
+                $ref: '#/components/schemas/ServerLoginOutput'
   schemas:
     GenericBadRequest:
       type: object
@@ -70,58 +70,41 @@ components:
           type: string
         details:
           type: string
-    UserLoginInput:
+    PlayerSyncInput:
       type: object
-      required:
-        - password
-        - email
-      properties:
-        email:
-          type: string
-        password:
-          type: string
-    UserLoginOutput:
-      type: object
-      required:
-        - token
+      required: []
       properties:
         token:
           type: string
-    UserRegisterInput:
+    PlayerSyncOutput:
       type: object
-      required:
-        - username
-        - password
-        - email
-      properties:
-        email:
-          type: string
-        password:
-          type: string
-        username:
-          type: string
-    UserRegisterOutput:
+      required: []
+      properties: {}
+    ServerLoginInput:
       type: object
-      required:
-        - id
+      required: []
       properties:
-        id:
-          type: string
+        tunnel_id:
+          type: integer
+    ServerLoginOutput:
+      type: object
+      required: []
+      properties: {}
   requestBodies:
-    UserLoginRequest:
+    PlayerSyncRequest:
       description: TODO description
       required: true
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/UserLoginInput'
-    UserRegisterRequest:
+            $ref: '#/components/schemas/PlayerSyncInput'
+    ServerLoginRequest:
       description: TODO description
       required: true
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/UserRegisterInput'
+            $ref: '#/components/schemas/ServerLoginInput'
   securitySchemes:
     AuthorizationToken:
       in: header
@@ -130,29 +113,36 @@ components:
       description: ''
 openapi: 3.1.0
 paths:
-  /v1/user/login:
+  /v1/player/sync:
     post:
       responses:
         '200':
-          $ref: '#/components/responses/UserLoginOkResponse'
+          $ref: '#/components/responses/PlayerSyncOkResponse'
         '400':
           $ref: '#/components/responses/GenericBadRequestResponse'
-        '401':
-          $ref: '#/components/responses/GenericUnauthorizedResponse'
-        '422':
-          $ref: '#/components/responses/GenericErrorResponse'
-      operationId: UserLogin
+      operationId: PlayerSync
       requestBody:
-        $ref: '#/components/requestBodies/UserLoginRequest'
-  /v1/user/register:
+        $ref: '#/components/requestBodies/PlayerSyncRequest'
+  /v1/server/{nip}/login/{target_nip}:
     post:
+      parameters:
+        - in: path
+          name: nip
+          description: ''
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: target_nip
+          description: ''
+          required: true
+          schema:
+            type: string
       responses:
         '200':
-          $ref: '#/components/responses/UserRegisterOkResponse'
-        '400':
-          $ref: '#/components/responses/GenericBadRequestResponse'
-        '422':
-          $ref: '#/components/responses/GenericErrorResponse'
-      operationId: UserRegister
+          $ref: '#/components/responses/ServerLoginOkResponse'
+      operationId: ServerLogin
       requestBody:
-        $ref: '#/components/requestBodies/UserRegisterRequest'
+        $ref: '#/components/requestBodies/ServerLoginRequest'
+      security:
+        - AuthorizationToken: []

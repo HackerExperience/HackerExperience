@@ -5,15 +5,18 @@ module Event exposing
 
 import API.Events.Json as Events
 import API.Events.Types as Events
+import Game.Universe as Universe exposing (Universe)
 import Json.Decode as JD
 
 
-
--- TODO: Where do I scope the Universe? In the Event type itself?
-
-
+{-| TODO: Think about the event "scope". Most events happen within the scope of a Server.
+Sometimes, the scope is the Account. Or maybe the Clan. In any case, having the scope and the
+corresponding identifier (NIP in the case of remote server) will make the frontend life
+significantly easier
+-}
 type Event
-    = IndexRequested Events.IndexRequested
+    = IndexRequested Events.IndexRequested Universe
+    | TunnelCreated Events.TunnelCreated Universe
 
 
 
@@ -22,26 +25,44 @@ type Event
 
 
 processReceivedEvent : JD.Value -> Result JD.Error Event
-processReceivedEvent rawEvent =
-    JD.decodeValue eventDecoder rawEvent
+processReceivedEvent event =
+    JD.decodeValue eventDecoder event
 
 
 eventDecoder : JD.Decoder Event
 eventDecoder =
-    JD.field "name" JD.string
-        |> JD.andThen dataDecoder
+    JD.field "universe" JD.string
+        |> JD.andThen universeDecoder
 
 
-dataDecoder : String -> JD.Decoder Event
-dataDecoder eventName =
+universeDecoder : String -> JD.Decoder Event
+universeDecoder rawUniverse =
+    let
+        ( isUniverseValid, universe ) =
+            Universe.isUniverseStringValid rawUniverse
+    in
+    if isUniverseValid then
+        JD.field "name" JD.string
+            |> JD.andThen (dataDecoder universe)
+
+    else
+        JD.fail <| "Invalid universe string: " ++ rawUniverse
+
+
+dataDecoder : Universe -> String -> JD.Decoder Event
+dataDecoder universe eventName =
     let
         innerDataDecoder =
             case eventName of
                 "index_requested" ->
-                    JD.map (\x -> IndexRequested x)
+                    JD.map (\x -> IndexRequested x universe)
                         Events.decodeIndexRequested
 
-                _ ->
-                    JD.fail "Invalid event"
+                "tunnel_created" ->
+                    JD.map (\x -> TunnelCreated x universe)
+                        Events.decodeTunnelCreated
+
+                name ->
+                    JD.fail <| "Unexpected event: " ++ name
     in
     JD.field "data" innerDataDecoder

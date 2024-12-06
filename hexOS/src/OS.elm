@@ -14,6 +14,7 @@ import Apps.LogViewer as LogViewer
 import Apps.Manifest as App
 import Apps.Popups.ConfirmationDialog as ConfirmationDialog
 import Apps.Popups.DemoSingleton as DemoSingleton
+import Apps.RemoteAccess as RemoteAccess
 import Apps.Types as Apps
 import Dict exposing (Dict)
 import Effect exposing (Effect)
@@ -167,7 +168,7 @@ update state msg model =
             updateVisibilityChanged model
 
         AppMsg appMsg ->
-            dispatchUpdateApp model appMsg
+            dispatchUpdateApp state model appMsg
 
         HudMsg hudMsg ->
             updateHud state model hudMsg
@@ -545,8 +546,8 @@ updateVisibilityChanged model =
 -- Update > Apps
 
 
-dispatchUpdateApp : Model -> Apps.Msg -> ( Model, Effect Msg )
-dispatchUpdateApp model appMsg =
+dispatchUpdateApp : State -> Model -> Apps.Msg -> ( Model, Effect Msg )
+dispatchUpdateApp state model appMsg =
     case appMsg of
         Apps.InvalidMsg ->
             ( model, Effect.none )
@@ -558,6 +559,7 @@ dispatchUpdateApp model appMsg =
             case getAppModel model.appModels appId of
                 Apps.LogViewerModel appModel ->
                     updateApp
+                        state
                         model
                         appId
                         appModel
@@ -569,6 +571,25 @@ dispatchUpdateApp model appMsg =
                 _ ->
                     ( model, Effect.none )
 
+        Apps.RemoteAccessMsg _ (RemoteAccess.ToOS busAction) ->
+            ( model, Effect.msgToCmd (PerformAction busAction) )
+
+        Apps.RemoteAccessMsg appId subMsg ->
+            case getAppModel model.appModels appId of
+                Apps.RemoteAccessModel appModel ->
+                    updateApp
+                        state
+                        model
+                        appId
+                        appModel
+                        subMsg
+                        Apps.RemoteAccessModel
+                        Apps.RemoteAccessMsg
+                        RemoteAccess.update
+
+                _ ->
+                    ( model, Effect.none )
+
         Apps.DemoMsg _ (Demo.ToOS busAction) ->
             ( model, Effect.msgToCmd (PerformAction busAction) )
 
@@ -576,6 +597,7 @@ dispatchUpdateApp model appMsg =
             case getAppModel model.appModels appId of
                 Apps.DemoModel appModel ->
                     updateApp
+                        state
                         model
                         appId
                         appModel
@@ -615,18 +637,26 @@ dispatchUpdateApp model appMsg =
 
 
 updateApp :
-    Model
+    State
+    -> Model
     -> AppID
     -> appModel
     -> appMsg
     -> (appModel -> Apps.Model)
     -> (AppID -> appMsg -> Apps.Msg)
-    -> (appMsg -> appModel -> ( appModel, Effect appMsg ))
+    -> (Game.Model -> appMsg -> appModel -> ( appModel, Effect appMsg ))
     -> ( Model, Effect Msg )
-updateApp model appId appModel appMsg toAppModel toAppMsg updateFn =
+updateApp state model appId appModel appMsg toAppModel toAppMsg updateFn =
     let
+        -- TODO: Same comment as viewWindow:
+        -- TODO: Here, I should grab either sp/mp depending on gameState.currentUniverse
+        -- In fact, it may make sense for each App to implement a "stateFilter", thus letting
+        -- each App decide which data it receives (based on its own needs)
+        gameState =
+            state.sp
+
         ( newAppModel, appCmd ) =
-            updateFn appMsg appModel
+            updateFn gameState appMsg appModel
 
         midCmd =
             Effect.map (toAppMsg appId) appCmd
@@ -848,6 +878,9 @@ getWindowInnerContent appId _ appModel universe =
         Apps.LogViewerModel model ->
             Html.map (Apps.LogViewerMsg appId) <| LogViewer.view model universe
 
+        Apps.RemoteAccessModel model ->
+            Html.map (Apps.RemoteAccessMsg appId) <| RemoteAccess.view model universe
+
         Apps.DemoModel model ->
             Html.map (Apps.DemoMsg appId) <| Demo.view model
 
@@ -907,6 +940,10 @@ viewDock _ =
             , UI.Icon.iAdd (Just "Log Viewer")
                 |> UI.Button.fromIcon
                 |> UI.Button.withOnClick (PerformAction (OS.Bus.RequestOpenApp App.LogViewerApp Nothing))
+                |> UI.Button.toUI
+            , UI.Icon.iAdd (Just "Remote Access")
+                |> UI.Button.fromIcon
+                |> UI.Button.withOnClick (PerformAction (OS.Bus.RequestOpenApp App.RemoteAccessApp Nothing))
                 |> UI.Button.toUI
             ]
         ]

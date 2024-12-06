@@ -115,7 +115,6 @@ defmodule Game.Endpoint.Server.LoginTest do
 
       receive do
         {:event, %{name: "tunnel_created", data: %{tunnel_id: raw_tunnel_id}}} ->
-          :timer.sleep(300)
           begin_game_db(:read)
 
           # The tunnel was created as expected

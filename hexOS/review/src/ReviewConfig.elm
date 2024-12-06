@@ -44,10 +44,25 @@ import Simplify
 import UseMemoizedLazyLambda
 
 
+ignoreSdkFiles : Rule -> Rule
+ignoreSdkFiles =
+    Rule.ignoreErrorsForFiles
+        [ "src/API/Lobby/Api.elm"
+        , "src/API/Game/Api.elm"
+        , "src/API/Game/Types.elm"
+        , "src/API/Game/Json.elm"
+        , "src/API/Events/Types.elm"
+        , "src/API/Events/Json.elm"
+        ]
+
+
 config : List Rule
 config =
     [ NoConfusingPrefixOperator.rule
     , NoDebug.Log.rule
+        -- We use `Debug.log` to display events that failed to parse. We need that until a more
+        -- robust, in-game UI is built (akin to a DevTools app)
+        |> Rule.ignoreErrorsForFiles [ "src/Main.elm" ]
     , NoDebug.TodoOrToString.rule
         |> Rule.ignoreErrorsForDirectories [ "tests/" ]
         -- We use `Debug.toString` at Main in order to enable the `elm-time-travel` debugger
@@ -86,7 +101,9 @@ config =
         |> Rule.ignoreErrorsForFiles [ "tests/Simulator.elm" ]
     , NoUnused.Variables.rule
         |> Rule.ignoreErrorsForDirectories [ "tests/" ]
+        |> ignoreSdkFiles
     , Simplify.rule Simplify.defaults
+        |> ignoreSdkFiles
     , NoRedundantConcat.rule
     , NoRedundantCons.rule
     , NoLeftPizza.rule NoLeftPizza.Redundant
@@ -105,6 +122,7 @@ config =
         |> Rule.ignoreErrorsForFiles
             [ "src/Game/Model/LogID.elm"
             , "src/Game/Model/ServerID.elm"
+            , "src/Game/Model/TunnelID.elm"
             ]
         -- Below files are wrong and should eventually be fixed
         |> Rule.ignoreErrorsForFiles [ "src/WM.elm" ]

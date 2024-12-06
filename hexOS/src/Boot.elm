@@ -1,8 +1,11 @@
 module Boot exposing (Model, Msg(..), documentView, init, update)
 
+import API.Types
+import API.Utils
 import Effect exposing (Effect)
 import Event exposing (Event)
-import Game.Model as Game
+import Game.Model
+import Game.Universe exposing (Universe(..))
 import UI exposing (UI, cl, col, row, text)
 
 
@@ -11,20 +14,20 @@ import UI exposing (UI, cl, col, row, text)
 
 
 type Msg
-    = ProceedToGame Game.Model
+    = ProceedToGame Game.Model.Model
     | EstablishSSEConnection
     | OnEventReceived Event
 
 
 type alias Model =
-    { token : String }
+    { token : API.Types.InputToken }
 
 
 
 -- Model
 
 
-init : String -> ( Model, Effect Msg )
+init : API.Types.InputToken -> ( Model, Effect Msg )
 init token =
     ( { token = token }
     , Effect.msgToCmd EstablishSSEConnection
@@ -43,7 +46,7 @@ update msg model =
             ( model, Effect.none )
 
         EstablishSSEConnection ->
-            ( model, Effect.sseStart model.token )
+            ( model, Effect.sseStart (API.Utils.tokenToString model.token) )
 
         OnEventReceived event ->
             updateEvent model event
@@ -52,12 +55,16 @@ update msg model =
 updateEvent : Model -> Event -> ( Model, Effect Msg )
 updateEvent model event =
     case event of
-        Event.IndexRequested index ->
+        Event.IndexRequested index _ ->
             let
+                -- TODO: Create SP and MP model; currently hard-coding SP
                 spModel =
-                    Game.init index
+                    Game.Model.init model.token Singleplayer index
             in
             ( model, Effect.msgToCmd <| ProceedToGame spModel )
+
+        _ ->
+            ( model, Effect.none )
 
 
 

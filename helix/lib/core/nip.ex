@@ -10,6 +10,9 @@ defmodule Core.NIP do
           ip: String.t()
         }
 
+  def new(network_id, ip),
+    do: %__MODULE__{network_id: network_id, ip: ip}
+
   @doc """
   TODO
   """
@@ -37,6 +40,8 @@ defmodule Core.NIP do
   """
   def to_external(%__MODULE__{network_id: network_id, ip: ip}),
     do: "#{network_id}@#{ip}"
+
+  def to_external(nil), do: ""
 
   @impl true
   def sqlite_type, do: :text

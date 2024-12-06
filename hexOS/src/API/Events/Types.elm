@@ -1,13 +1,27 @@
-module API.Events.Types exposing (IdxGateway, IdxLog, IdxPlayer, IndexRequested)
+-- This is an auto-generated file; manual changes will be overwritten!
+
+
+module API.Events.Types exposing (IdxGateway, IdxLog, IdxPlayer, IndexRequested, TunnelCreated)
+
+import Game.Model.NIP as NIP exposing (NIP(..))
+import Game.Model.ServerID as ServerID exposing (ServerID(..))
+import Game.Model.TunnelID as TunnelID exposing (TunnelID(..))
+
 
 {-|
 
 
 ## Aliases
 
-@docs IdxGateway, IdxLog, IdxPlayer, IndexRequested
+@docs IdxGateway, IdxLog, IdxPlayer, IndexRequested, TunnelCreated
 
 -}
+type alias TunnelCreated =
+    { access : String
+    , source_nip : NIP
+    , target_nip : NIP
+    , tunnel_id : TunnelID
+    }
 
 
 type alias IndexRequested =
@@ -15,7 +29,7 @@ type alias IndexRequested =
 
 
 type alias IdxPlayer =
-    { gateways : List IdxGateway, mainframe_id : Int }
+    { gateways : List IdxGateway, mainframe_id : ServerID }
 
 
 type alias IdxLog =
@@ -23,4 +37,4 @@ type alias IdxLog =
 
 
 type alias IdxGateway =
-    { id : Int, logs : List IdxLog }
+    { id : Int, logs : List IdxLog, nip : NIP }

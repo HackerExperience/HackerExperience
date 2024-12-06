@@ -1,6 +1,6 @@
 module Game.Model.ServerID exposing
     ( RawServerID
-    , ServerID
+    , ServerID(..)
     , fromValue
     , toValue
     )

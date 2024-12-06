@@ -16,3 +16,5 @@ RETURNING *;
 -- :by_nip
 SELECT * FROM network_connections WHERE nip = ?;
 
+-- :by_server_id
+SELECT * FROM network_connections WHERE server_id = ?;

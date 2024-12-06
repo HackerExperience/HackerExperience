@@ -8,9 +8,11 @@ module Login exposing
 
 import API.Lobby as LobbyAPI
 import API.Types
+import API.Utils
 import Effect exposing (Effect)
 import UI exposing (UI, cl, col, row, text)
 import UI.Button
+import UI.Model.FormFields as FormFields exposing (TextField)
 import UI.TextInput
 
 
@@ -22,13 +24,13 @@ type Msg
     = SetEmail String
     | SetPassword String
     | OnFormSubmit
-    | ProceedToBoot String
+    | ProceedToBoot API.Types.InputToken
     | OnLoginResponse API.Types.LobbyLoginResult
 
 
 type alias Model =
-    { email : String
-    , password : String
+    { email : TextField
+    , password : TextField
     }
 
 
@@ -38,7 +40,9 @@ type alias Model =
 
 initialModel : Model
 initialModel =
-    { email = "renato@renato.com", password = "renato" }
+    { email = FormFields.textWithValue "renato@renato.com"
+    , password = FormFields.textWithValue "renato"
+    }
 
 
 
@@ -53,20 +57,23 @@ update msg model =
             ( model, Effect.none )
 
         SetEmail value ->
-            ( { model | email = value }, Effect.none )
+            ( { model | email = FormFields.setValue model.email value }, Effect.none )
 
         SetPassword value ->
-            ( { model | password = value }, Effect.none )
+            ( { model | password = FormFields.setValue model.password value }, Effect.none )
 
         OnFormSubmit ->
             let
+                apiCtx =
+                    API.Utils.buildContext Nothing API.Types.ServerLobby
+
                 config =
-                    LobbyAPI.loginConfig model.email model.password
+                    LobbyAPI.loginConfig apiCtx model.email.value model.password.value
             in
             ( model, Effect.lobbyLogin OnLoginResponse config )
 
         OnLoginResponse (Ok { token }) ->
-            ( model, Effect.msgToCmd <| ProceedToBoot token )
+            ( model, Effect.msgToCmd <| ProceedToBoot (API.Utils.stringToToken token) )
 
         OnLoginResponse (Err (API.Types.AppError _)) ->
             ( model, Effect.none )

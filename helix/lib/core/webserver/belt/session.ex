@@ -78,6 +78,7 @@ defmodule Core.Webserver.Belt.Session do
     with {:ok, claims} <- parse_jwt(cowboy_request.headers["authorization"]),
          DB.begin(request.universe, shard_id, :read),
          %{} = player <- Svc.Player.fetch(by_external_id: claims.external_id) || :user_not_found do
+      DB.commit()
       session_data = %{type: :authenticated, player_id: player.id, external_id: player.external_id}
 
       {:ok,
