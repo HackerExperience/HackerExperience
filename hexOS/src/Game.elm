@@ -74,6 +74,16 @@ getInactiveUniverse state =
             state.sp
 
 
+replaceUniverse : State -> Model -> Universe -> State
+replaceUniverse state newModel universe =
+    case universe of
+        Singleplayer ->
+            { state | sp = newModel }
+
+        Multiplayer ->
+            { state | mp = newModel }
+
+
 replaceActiveUniverse : State -> Model -> State
 replaceActiveUniverse state newUniverse =
     case state.currentUniverse of
@@ -143,13 +153,15 @@ updateEvent : State -> Event -> ( State, Effect Msg )
 updateEvent state event_ =
     case event_ of
         Event.TunnelCreated event universe ->
-            onTunnelCreatedEvent state (getUniverse state universe) event
+            let
+                model =
+                    getUniverse state universe
+
+                newModel =
+                    Model.onTunnelCreatedEvent (getUniverse state universe) event
+            in
+            ( replaceUniverse state newModel universe, Effect.none )
 
         -- This event is handled during BootState and should never hit this branch
         Event.IndexRequested _ _ ->
             ( state, Effect.none )
-
-
-onTunnelCreatedEvent : State -> Model -> Events.TunnelCreated -> ( State, Effect Msg )
-onTunnelCreatedEvent state model event =
-    ( state, Effect.none )

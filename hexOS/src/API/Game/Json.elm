@@ -1,3 +1,6 @@
+-- This is an auto-generated file; manual changes will be overwritten!
+
+
 module API.Game.Json exposing
     ( encodeGenericBadRequest, encodeGenericBadRequestResponse, encodeGenericError, encodeGenericErrorResponse
     , encodeGenericUnauthorizedResponse, encodePlayerSyncInput, encodePlayerSyncOkResponse
@@ -30,6 +33,9 @@ module API.Game.Json exposing
 -}
 
 import API.Game.Types
+import Game.Model.NIP as NIP exposing (NIP(..))
+import Game.Model.ServerID as ServerID exposing (ServerID(..))
+import Game.Model.TunnelID as TunnelID exposing (TunnelID(..))
 import Json.Decode
 import Json.Encode
 import OpenApi.Common
@@ -52,7 +58,7 @@ decodeServerLoginInput =
         |> OpenApi.Common.jsonDecodeAndMap
             (OpenApi.Common.decodeOptionalField
                 "tunnel_id"
-                Json.Decode.int
+                (Json.Decode.map TunnelID Json.Decode.int)
             )
 
 
@@ -62,7 +68,7 @@ encodeServerLoginInput rec =
         (List.filterMap
             Basics.identity
             [ Maybe.map
-                (\mapUnpack -> ( "tunnel_id", Json.Encode.int mapUnpack ))
+                (\mapUnpack -> ( "tunnel_id", Json.Encode.int (TunnelID.toValue mapUnpack) ))
                 rec.tunnel_id
             ]
         )

@@ -1,3 +1,6 @@
+-- This is an auto-generated file; manual changes will be overwritten!
+
+
 module API.Events.Json exposing
     ( encodeIdxGateway, encodeIdxLog, encodeIdxPlayer, encodeIndexRequested, encodeTunnelCreated
     , decodeIdxGateway, decodeIdxLog, decodeIdxPlayer, decodeIndexRequested, decodeTunnelCreated
@@ -20,6 +23,7 @@ module API.Events.Json exposing
 import API.Events.Types
 import Game.Model.NIP as NIP exposing (NIP(..))
 import Game.Model.ServerID as ServerID exposing (ServerID(..))
+import Game.Model.TunnelID as TunnelID exposing (TunnelID(..))
 import Json.Decode
 import Json.Encode
 import OpenApi.Common
@@ -50,7 +54,7 @@ decodeTunnelCreated =
         |> OpenApi.Common.jsonDecodeAndMap
             (Json.Decode.field
                 "tunnel_id"
-                Json.Decode.int
+                (Json.Decode.map TunnelID Json.Decode.int)
             )
 
 
@@ -60,7 +64,7 @@ encodeTunnelCreated rec =
         [ ( "access", Json.Encode.string rec.access )
         , ( "source_nip", Json.Encode.string (NIP.toString rec.source_nip) )
         , ( "target_nip", Json.Encode.string (NIP.toString rec.target_nip) )
-        , ( "tunnel_id", Json.Encode.int rec.tunnel_id )
+        , ( "tunnel_id", Json.Encode.int (TunnelID.toValue rec.tunnel_id) )
         ]
 
 

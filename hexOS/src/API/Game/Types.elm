@@ -1,9 +1,28 @@
+-- This is an auto-generated file; manual changes will be overwritten!
+
+
 module API.Game.Types exposing
-    ( GenericBadRequest, GenericBadRequestResponse, GenericError, GenericErrorResponse
-    , GenericUnauthorizedResponse, PlayerSyncInput, PlayerSyncOkResponse, PlayerSyncOutput, PlayerSyncRequest
-    , ServerLoginInput, ServerLoginOkResponse, ServerLoginOutput, ServerLoginRequest
-    , PlayerSync_Error(..), ServerLogin_Error
+    ( GenericBadRequest
+    , GenericBadRequestResponse
+    , GenericError
+    , GenericErrorResponse
+    , GenericUnauthorizedResponse
+    , PlayerSyncInput
+    , PlayerSyncOkResponse
+    , PlayerSyncOutput
+    , PlayerSyncRequest
+    , PlayerSync_Error(..)
+    , ServerLoginInput
+    , ServerLoginOkResponse
+    , ServerLoginOutput
+    , ServerLoginRequest
+    , ServerLogin_Error
     )
+
+import Game.Model.NIP as NIP exposing (NIP(..))
+import Game.Model.ServerID as ServerID exposing (ServerID(..))
+import Game.Model.TunnelID as TunnelID exposing (TunnelID(..))
+
 
 {-|
 
@@ -20,8 +39,6 @@ module API.Game.Types exposing
 @docs PlayerSync_Error, ServerLogin_Error
 
 -}
-
-
 type PlayerSync_Error
     = PlayerSync_400 GenericBadRequestResponse
 
@@ -35,7 +52,7 @@ type alias ServerLoginOutput =
 
 
 type alias ServerLoginInput =
-    { tunnel_id : Maybe Int }
+    { tunnel_id : Maybe TunnelID }
 
 
 type alias PlayerSyncOutput =

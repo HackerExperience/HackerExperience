@@ -1,3 +1,6 @@
+-- This is an auto-generated file; manual changes will be overwritten!
+
+
 module API.Game.Api exposing (playerSyncTask, serverLoginTask)
 
 {-|
@@ -14,6 +17,7 @@ import API.Game.Types
 import Dict
 import Game.Model.NIP as NIP exposing (NIP(..))
 import Game.Model.ServerID as ServerID exposing (ServerID(..))
+import Game.Model.TunnelID as TunnelID exposing (TunnelID(..))
 import Http
 import Json.Decode
 import Json.Encode

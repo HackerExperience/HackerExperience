@@ -1,7 +1,11 @@
+-- This is an auto-generated file; manual changes will be overwritten!
+
+
 module API.Events.Types exposing (IdxGateway, IdxLog, IdxPlayer, IndexRequested, TunnelCreated)
 
 import Game.Model.NIP as NIP exposing (NIP(..))
 import Game.Model.ServerID as ServerID exposing (ServerID(..))
+import Game.Model.TunnelID as TunnelID exposing (TunnelID(..))
 
 
 {-|
@@ -16,7 +20,7 @@ type alias TunnelCreated =
     { access : String
     , source_nip : NIP
     , target_nip : NIP
-    , tunnel_id : Int
+    , tunnel_id : TunnelID
     }
 
 

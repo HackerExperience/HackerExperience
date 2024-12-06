@@ -10,6 +10,8 @@ import Dict exposing (Dict)
 import Game.Model.Log as Log exposing (Log, Logs)
 import Game.Model.NIP as NIP exposing (NIP)
 import Game.Model.ServerID as ServerID exposing (RawServerID, ServerID)
+import Game.Model.Tunnel as Tunnel exposing (Tunnels)
+import Game.Model.TunnelID exposing (TunnelID)
 import OrderedDict
 
 
@@ -21,6 +23,7 @@ type alias Gateway =
     { id : ServerID
     , nip : NIP
     , logs : Logs
+    , tunnels : Tunnels
     }
 
 
@@ -39,6 +42,7 @@ parseGateway gateway =
     { id = ServerID.fromValue gateway.id
     , nip = gateway.nip
     , logs = Log.parse gateway.logs
+    , tunnels = []
     }
 
 
@@ -47,6 +51,7 @@ invalidGateway =
     { id = ServerID.fromValue 0
     , nip = NIP.invalidNip
     , logs = OrderedDict.empty
+    , tunnels = []
     }
 
 
