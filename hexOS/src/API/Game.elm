@@ -7,9 +7,8 @@ import API.Types as Types
         ( Error(..)
         , InputConfig
         , InputContext
-        , InputToken(..)
         )
-import API.Utils exposing (PrivateErrType(..), dataMapper, extractBody, extractBodyAndParams, mapError, mapResponse)
+import API.Utils exposing (PrivateErrType(..), dataMapper, extractBodyAndParams, mapError, mapResponse)
 import Game.Model.NIP exposing (NIP)
 import Game.Model.TunnelID exposing (TunnelID)
 import Task exposing (Task)

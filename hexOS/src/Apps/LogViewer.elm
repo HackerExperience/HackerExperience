@@ -49,7 +49,7 @@ filterLogs model game =
 
 
 update : Game.Model -> Msg -> Model -> ( Model, Effect Msg )
-update game msg model =
+update _ msg model =
     case msg of
         ToOS _ ->
             ( model, Effect.none )

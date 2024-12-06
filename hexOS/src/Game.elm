@@ -7,7 +7,6 @@ module Game exposing
     , update
     )
 
-import API.Events.Types as Events
 import Effect exposing (Effect)
 import Event exposing (Event)
 import Game.Bus exposing (Action(..))
@@ -154,9 +153,6 @@ updateEvent state event_ =
     case event_ of
         Event.TunnelCreated event universe ->
             let
-                model =
-                    getUniverse state universe
-
                 newModel =
                     Model.onTunnelCreatedEvent (getUniverse state universe) event
             in

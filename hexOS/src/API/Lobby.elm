@@ -9,7 +9,7 @@ import API.Types as Types
         , InputContext
         , LobbyLoginError(..)
         )
-import API.Utils exposing (PrivateErrType(..), dataMapper, extractBodyAndParams, extractBodyNH, mapError, mapResponse)
+import API.Utils exposing (PrivateErrType(..), dataMapper, extractBodyNH, mapError, mapResponse)
 import Task exposing (Task)
 
 

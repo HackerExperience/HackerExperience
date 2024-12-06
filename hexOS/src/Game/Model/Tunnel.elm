@@ -3,9 +3,10 @@ module Game.Model.Tunnel exposing
     , Tunnels
     )
 
-import API.Events.Types as Events
+-- import API.Events.Types as Events
+
 import Game.Model.NIP exposing (NIP)
-import Game.Model.TunnelID as TunnelID exposing (TunnelID)
+import Game.Model.TunnelID exposing (TunnelID)
 
 
 
@@ -25,11 +26,9 @@ type alias Tunnels =
 
 
 -- Model
-
-
-fromTunnelCreatedEvent : Events.TunnelCreated -> Tunnel
-fromTunnelCreatedEvent event =
-    { id = event.tunnel_id
-    , sourceNip = event.source_nip
-    , targetNip = event.target_nip
-    }
+-- fromTunnelCreatedEvent : Events.TunnelCreated -> Tunnel
+-- fromTunnelCreatedEvent event =
+--     { id = event.tunnel_id
+--     , sourceNip = event.source_nip
+--     , targetNip = event.target_nip
+--     }

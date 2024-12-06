@@ -7,12 +7,12 @@ module Game.Model.NIP exposing
     )
 
 
-type alias NetworkID =
-    String
+type NetworkID
+    = NetworkID String
 
 
-type alias IP =
-    String
+type IP
+    = IP String
 
 
 type NIP
@@ -20,8 +20,8 @@ type NIP
 
 
 new : String -> String -> NIP
-new networkId ip =
-    NIP networkId ip
+new rawNetworkId rawIp =
+    NIP (NetworkID rawNetworkId) (IP rawIp)
 
 
 fromString : String -> NIP
@@ -35,7 +35,7 @@ fromString rawNip =
 
 
 toString : NIP -> String
-toString (NIP networkId ip) =
+toString (NIP (NetworkID networkId) (IP ip)) =
     networkId ++ "@" ++ ip
 
 

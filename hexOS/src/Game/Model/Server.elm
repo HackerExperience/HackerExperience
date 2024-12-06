@@ -10,8 +10,7 @@ import Dict exposing (Dict)
 import Game.Model.Log as Log exposing (Log, Logs)
 import Game.Model.NIP as NIP exposing (NIP)
 import Game.Model.ServerID as ServerID exposing (RawServerID, ServerID)
-import Game.Model.Tunnel as Tunnel exposing (Tunnels)
-import Game.Model.TunnelID exposing (TunnelID)
+import Game.Model.Tunnel exposing (Tunnels)
 import OrderedDict
 
 

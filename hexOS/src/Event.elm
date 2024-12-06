@@ -5,7 +5,6 @@ module Event exposing
 
 import API.Events.Json as Events
 import API.Events.Types as Events
-import Game.Model.NIP as NIP exposing (NIP)
 import Game.Universe as Universe exposing (Universe)
 import Json.Decode as JD
 

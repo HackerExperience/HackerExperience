@@ -1,7 +1,5 @@
 module Game.Model.TunnelID exposing
-    ( RawTunnelID
-    , TunnelID(..)
-    , fromValue
+    ( TunnelID(..)
     , toValue
     )
 
@@ -15,10 +13,6 @@ type TunnelID
     = TunnelID Int
 
 
-type alias RawTunnelID =
-    Int
-
-
 
 -- Functions
 
@@ -26,8 +20,3 @@ type alias RawTunnelID =
 toValue : TunnelID -> Int
 toValue (TunnelID id) =
     id
-
-
-fromValue : Int -> TunnelID
-fromValue id =
-    TunnelID id

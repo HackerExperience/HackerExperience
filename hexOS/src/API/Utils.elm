@@ -12,16 +12,15 @@ module API.Utils exposing
     , tokenToString
     )
 
-import API.Types as Types
+import API.Types
     exposing
         ( APIServer(..)
-        , Error(..)
+        , Error
         , InputConfig
         , InputContext
         , InputToken(..)
         , ServerURL(..)
         )
-import Game.Universe exposing (Universe)
 import OpenApi.Common
 import Task exposing (Task)
 
@@ -56,21 +55,6 @@ mapError mapper =
                 _ ->
                     mapper UnexpectedError
         )
-
-
-withErrorHandler : Task (OpenApi.Common.Error x y) a -> Task (PrivateErrType x) a
-withErrorHandler =
-    Task.onError errorHandler
-
-
-errorHandler : OpenApi.Common.Error x y -> Task (PrivateErrType x) a
-errorHandler error =
-    case error of
-        OpenApi.Common.KnownBadStatus _ appError ->
-            Task.fail (LegitimateError appError)
-
-        _ ->
-            Task.fail UnexpectedError
 
 
 

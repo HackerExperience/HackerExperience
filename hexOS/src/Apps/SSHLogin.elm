@@ -6,11 +6,10 @@ import Apps.Manifest as App
 import Effect exposing (Effect)
 import Game.Model as Game
 import Game.Model.NIP as NIP
-import Html.Events as HE
 import OS.AppID exposing (AppID)
 import OS.Bus
 import Regex
-import UI exposing (UI, cl, col, div, row, text)
+import UI exposing (UI, col)
 import UI.Button
 import UI.Model.FormFields as FormFields exposing (TextField)
 import UI.TextInput
@@ -55,7 +54,7 @@ ipContainsInvalidCharacters ip =
 
 
 ipValid : String -> Bool
-ipValid ip =
+ipValid _ =
     -- TODO
     True
 
@@ -120,7 +119,7 @@ update game msg model =
 
 
 view : Model -> Game.Model -> UI Msg
-view model game =
+view model _ =
     col []
         [ UI.TextInput.new "IP" model.ip
             |> UI.TextInput.withOnChange SetIPAddress
