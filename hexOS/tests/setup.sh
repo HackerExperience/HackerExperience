@@ -106,6 +106,33 @@ setup_simulated_openapi_common() {
     format $TARGET_FILE
 }
 
+setup_simulated_utils() {
+    SPEC_FILE="src/API/Utils.elm"
+    TARGET_FILE="src/API/SimulatedUtils.elm"
+
+    # Copy the file
+    cp $SPEC_FILE $TARGET_FILE
+
+    # Replace module name
+    sed -i '1 s/\.Utils/\.SimulatedUtils/' $TARGET_FILE
+
+    # Handle imports
+    add_SimulatedTask $TARGET_FILE
+    add_SimulatedEffectTask $TARGET_FILE
+    add_SimulatedCommon $TARGET_FILE
+    remove_moduleOpenApiCommon $TARGET_FILE
+    remove_moduleTask $TARGET_FILE
+
+    # Replace Task.Task with SimulatedTask
+    sed -i 's/ Task / SimulatedTask /g' $TARGET_FILE
+
+    # Replace OpenApi.Common with OpenApi.SimulatedCommon
+    sed -i 's/OpenApi\.Common/OpenApi\.SimulatedCommon/' $TARGET_FILE
+
+    # Format file
+    format $TARGET_FILE
+}
+
 setup_simulated_api() {
     SPEC_FILE=$1
     API_NAME=$2
@@ -120,22 +147,20 @@ setup_simulated_api() {
 
     # Handle imports
     add_SimulatedTask $TARGET_FILE
-    add_SimulatedEffectTask $TARGET_FILE
     remove_moduleTask $TARGET_FILE
 
     # Replace spec module (e.g. API.Lobby.API -> API.Lobby.SimulatedApi)
     sed -i "s/import API.${API_NAME}.Api/import API.${API_NAME}.SimulatedApi/" $TARGET_FILE
+    sed -i "s/import API.Utils/import API.SimulatedUtils/" $TARGET_FILE
 
     # Replace Task types in header
     sed -i 's/ Task / SimulatedTask /g' $TARGET_FILE
-
-    # Replace OpenApi.Common with OpenApi.SimulatedCommon
-    sed -i 's/OpenApi\.Common/OpenApi\.SimulatedCommon/' $TARGET_FILE
 
     # Format file
     format $TARGET_FILE
 }
 
-setup_simulated_spec "src/API/Lobby/Api.elm"
 setup_simulated_openapi_common
+setup_simulated_utils
+setup_simulated_spec "src/API/Lobby/Api.elm"
 setup_simulated_api "src/API/Lobby.elm" "Lobby" "SimulatedLobby"

@@ -1,5 +1,6 @@
 module Game.Model exposing
     ( Model
+    , buildApiContext
     , getGateway
     , init
     , onTunnelCreatedEvent

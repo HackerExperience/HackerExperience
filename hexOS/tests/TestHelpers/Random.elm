@@ -1,5 +1,6 @@
 module TestHelpers.Random exposing (..)
 
+import API.Types
 import Dict
 import Game exposing (State)
 import Game.Model as Game
@@ -27,14 +28,16 @@ universeId =
     R.oneOf2 Singleplayer Multiplayer
 
 
-game : Generator Game.Model
-game =
+game : Universe -> Generator Game.Model
+game universe =
     let
         genGame =
             \gatewayId ->
-                { mainframeID = gatewayId
+                { universe = universe
+                , mainframeID = gatewayId
                 , activeGateway = gatewayId
                 , activeEndpoint = Nothing
+                , apiCtx = Game.buildApiContext (API.Types.InputToken "s3cr3t") universe
 
                 -- TODO
                 , gateways = Dict.empty
@@ -53,7 +56,7 @@ state =
                 , currentUniverse = universe_
                 }
     in
-    map3 genState game game universeId
+    map3 genState (game Singleplayer) (game Multiplayer) universeId
 
 
 

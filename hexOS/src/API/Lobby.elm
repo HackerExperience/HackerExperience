@@ -10,7 +10,6 @@ import API.Types as Types
         , LobbyLoginError(..)
         )
 import API.Utils exposing (PrivateErrType(..), dataMapper, extractBodyAndParams, extractBodyNH, mapError, mapResponse)
-import OpenApi.Common
 import Task exposing (Task)
 
 
