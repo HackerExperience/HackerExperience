@@ -14,7 +14,7 @@ import Apps.LogViewer as LogViewer
 import Apps.Manifest as App
 import Apps.Popups.ConfirmationDialog as ConfirmationDialog
 import Apps.Popups.DemoSingleton as DemoSingleton
-import Apps.SSHLogin as SSHLogin
+import Apps.RemoteAccess as RemoteAccess
 import Apps.Types as Apps
 import Dict exposing (Dict)
 import Effect exposing (Effect)
@@ -571,21 +571,21 @@ dispatchUpdateApp state model appMsg =
                 _ ->
                     ( model, Effect.none )
 
-        Apps.SSHLoginMsg _ (SSHLogin.ToOS busAction) ->
+        Apps.RemoteAccessMsg _ (RemoteAccess.ToOS busAction) ->
             ( model, Effect.msgToCmd (PerformAction busAction) )
 
-        Apps.SSHLoginMsg appId subMsg ->
+        Apps.RemoteAccessMsg appId subMsg ->
             case getAppModel model.appModels appId of
-                Apps.SSHLoginModel appModel ->
+                Apps.RemoteAccessModel appModel ->
                     updateApp
                         state
                         model
                         appId
                         appModel
                         subMsg
-                        Apps.SSHLoginModel
-                        Apps.SSHLoginMsg
-                        SSHLogin.update
+                        Apps.RemoteAccessModel
+                        Apps.RemoteAccessMsg
+                        RemoteAccess.update
 
                 _ ->
                     ( model, Effect.none )
@@ -878,8 +878,8 @@ getWindowInnerContent appId _ appModel universe =
         Apps.LogViewerModel model ->
             Html.map (Apps.LogViewerMsg appId) <| LogViewer.view model universe
 
-        Apps.SSHLoginModel model ->
-            Html.map (Apps.SSHLoginMsg appId) <| SSHLogin.view model universe
+        Apps.RemoteAccessModel model ->
+            Html.map (Apps.RemoteAccessMsg appId) <| RemoteAccess.view model universe
 
         Apps.DemoModel model ->
             Html.map (Apps.DemoMsg appId) <| Demo.view model
@@ -941,9 +941,9 @@ viewDock _ =
                 |> UI.Button.fromIcon
                 |> UI.Button.withOnClick (PerformAction (OS.Bus.RequestOpenApp App.LogViewerApp Nothing))
                 |> UI.Button.toUI
-            , UI.Icon.iAdd (Just "SSH Login")
+            , UI.Icon.iAdd (Just "Remote Access")
                 |> UI.Button.fromIcon
-                |> UI.Button.withOnClick (PerformAction (OS.Bus.RequestOpenApp App.SSHLoginApp Nothing))
+                |> UI.Button.withOnClick (PerformAction (OS.Bus.RequestOpenApp App.RemoteAccessApp Nothing))
                 |> UI.Button.toUI
             ]
         ]

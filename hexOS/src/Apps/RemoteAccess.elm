@@ -1,4 +1,4 @@
-module Apps.SSHLogin exposing (..)
+module Apps.RemoteAccess exposing (..)
 
 import API.Game as GameAPI
 import API.Types
@@ -143,7 +143,7 @@ getWindowConfig : WM.WindowInfo -> WM.WindowConfig
 getWindowConfig _ =
     { lenX = 400
     , lenY = 400
-    , title = "Secure Shell (SSH) login"
+    , title = "Secure Shell login"
     , childBehavior = Nothing
     , misc = Nothing
     }
@@ -151,7 +151,7 @@ getWindowConfig _ =
 
 willOpen : WM.WindowInfo -> OS.Bus.Action
 willOpen _ =
-    OS.Bus.OpenApp App.SSHLoginApp Nothing
+    OS.Bus.OpenApp App.RemoteAccessApp Nothing
 
 
 didOpen : WM.WindowInfo -> ( Model, Effect Msg )

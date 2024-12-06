@@ -4,7 +4,7 @@ module Apps.Manifest exposing (..)
 type Manifest
     = InvalidApp
     | LogViewerApp
-    | SSHLoginApp
+    | RemoteAccessApp
     | DemoApp
       -- Popups
     | PopupConfirmationDialog

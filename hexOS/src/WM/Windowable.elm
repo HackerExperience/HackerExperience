@@ -21,7 +21,7 @@ import Apps.LogViewer as LogViewer
 import Apps.Manifest as App
 import Apps.Popups.ConfirmationDialog as ConfirmationDialog
 import Apps.Popups.DemoSingleton as DemoSingleton
-import Apps.SSHLogin as SSHLogin
+import Apps.RemoteAccess as RemoteAccess
 import Apps.Types as Apps
 import Effect exposing (Effect)
 import OS.AppID exposing (AppID)
@@ -43,8 +43,8 @@ willOpen app windowInfo =
         App.LogViewerApp ->
             LogViewer.willOpen windowInfo
 
-        App.SSHLoginApp ->
-            SSHLogin.willOpen windowInfo
+        App.RemoteAccessApp ->
+            RemoteAccess.willOpen windowInfo
 
         App.DemoApp ->
             Demo.willOpen windowInfo
@@ -100,11 +100,11 @@ didOpen app appId windowInfo =
                 Apps.LogViewerMsg
                 LogViewer.didOpen
 
-        App.SSHLoginApp ->
+        App.RemoteAccessApp ->
             wrapMe
-                Apps.SSHLoginModel
-                Apps.SSHLoginMsg
-                SSHLogin.didOpen
+                Apps.RemoteAccessModel
+                Apps.RemoteAccessMsg
+                RemoteAccess.didOpen
 
         App.DemoApp ->
             wrapMe
@@ -150,11 +150,11 @@ didOpenChild parentId parentModel childInfo windowInfo =
                 Apps.LogViewerMsg
                 (LogViewer.didOpenChild model)
 
-        Apps.SSHLoginModel model ->
+        Apps.RemoteAccessModel model ->
             wrapMe
-                Apps.SSHLoginModel
-                Apps.SSHLoginMsg
-                (SSHLogin.didOpenChild model)
+                Apps.RemoteAccessModel
+                Apps.RemoteAccessMsg
+                (RemoteAccess.didOpenChild model)
 
         Apps.DemoModel model ->
             wrapMe
@@ -180,8 +180,8 @@ willClose window appModel =
         Apps.LogViewerModel model ->
             LogViewer.willClose window.appId model window
 
-        Apps.SSHLoginModel model ->
-            SSHLogin.willClose window.appId model window
+        Apps.RemoteAccessModel model ->
+            RemoteAccess.willClose window.appId model window
 
         Apps.DemoModel model ->
             Demo.willClose window.appId model window
@@ -219,11 +219,11 @@ didCloseChild parentId parentModel childInfo parentWindow =
                 Apps.LogViewerMsg
                 (LogViewer.didCloseChild model)
 
-        Apps.SSHLoginModel model ->
+        Apps.RemoteAccessModel model ->
             wrapMe
-                Apps.SSHLoginModel
-                Apps.SSHLoginMsg
-                (SSHLogin.didCloseChild model)
+                Apps.RemoteAccessModel
+                Apps.RemoteAccessMsg
+                (RemoteAccess.didCloseChild model)
 
         Apps.DemoModel model ->
             wrapMe
@@ -249,8 +249,8 @@ willFocus app appId window =
         App.LogViewerApp ->
             LogViewer.willFocus appId window
 
-        App.SSHLoginApp ->
-            SSHLogin.willFocus appId window
+        App.RemoteAccessApp ->
+            RemoteAccess.willFocus appId window
 
         App.DemoApp ->
             Demo.willFocus appId window
@@ -272,8 +272,8 @@ getWindowConfig windowInfo =
         App.LogViewerApp ->
             LogViewer.getWindowConfig windowInfo
 
-        App.SSHLoginApp ->
-            SSHLogin.getWindowConfig windowInfo
+        App.RemoteAccessApp ->
+            RemoteAccess.getWindowConfig windowInfo
 
         App.DemoApp ->
             Demo.getWindowConfig windowInfo
