@@ -24,6 +24,7 @@ defmodule OpenAPI.Elm.Formatter do
       Enum.each(@files, &handle(type, &1))
     end)
 
+    Enum.each(@files, &add_warning_comment/1)
     Enum.each(@files, &elm_format/1)
   end
 
@@ -128,12 +129,20 @@ defmodule OpenAPI.Elm.Formatter do
 
   defp sed(pattern, file) do
     # NOTE: This entire script assumes GNU Sed
-    {"", 0} = System.cmd("sed", ["-i", pattern, file] |> IO.inspect())
+    Logger.debug("sed -i '#{pattern}' #{file}")
+    {"", 0} = System.cmd("sed", ["-i", pattern, file])
   end
 
   defp elm_format(file) do
     {_, 0} = System.cmd("elm-format", ["--yes", file])
   end
+
+  defp add_warning_comment(file) do
+    comment = "-- This is an auto-generated file; manual changes will be overwritten!"
+    sed("1s/^/#{comment}\\n/", file)
+  end
 end
 
+# s/none/debug/ for debugging
+Logger.configure(level: :none)
 OpenAPI.Elm.Formatter.format()
