@@ -44,3 +44,6 @@ cd "$(dirname "$0")"
 
 # Generate Elm types for the Events API
 (cd ../hexOS && generate_elm_types_for_events_api)
+
+# Format the SDK to use custom Elm types (instead of generic OpenAPI types)
+(cd ../hexOS && ../bin/format_openapi_spec.exs)

@@ -189,11 +189,11 @@ update msg model =
                             WM.toSessionId spModel.mainframeID
 
                         ( osModel, osCmd ) =
-                            OS.init wmSessionId ( model.flags.viewportX, model.flags.viewportY )
+                            OS.init ( model.flags.viewportX, model.flags.viewportY )
 
                         -- TODO: For now, we are considering sp == mp
                         ( gameModel, playCmd ) =
-                            Game.init currentUniverse spModel spModel
+                            Game.init currentUniverse wmSessionId spModel spModel
                     in
                     ( { model | state = GameState gameModel osModel }
                     , Effect.batch

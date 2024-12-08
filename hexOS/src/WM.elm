@@ -51,7 +51,6 @@ type SessionID
 
 type alias Model =
     { windows : Windows
-    , currentSession : SessionID
     , focusedWindow : Maybe AppID
     , dragging : Maybe ( AppID, XY, XY )
     , nextAppId : Int
@@ -148,10 +147,9 @@ type alias ViewportLimits =
 -- Model
 
 
-init : SessionID -> XY -> Model
-init sessionID ( viewportX, viewportY ) =
+init : XY -> Model
+init ( viewportX, viewportY ) =
     { windows = Dict.empty
-    , currentSession = sessionID
     , focusedWindow = Nothing
     , nextAppId = 1
     , nextZIndex = 1
@@ -448,8 +446,8 @@ isFocusedApp model appId =
 -- app
 
 
-createWindow : Model -> Universe -> App.Manifest -> AppID -> WindowConfig -> Maybe ParentInfo -> Window
-createWindow model universe app appId config parentInfo =
+createWindow : Model -> Universe -> SessionID -> App.Manifest -> AppID -> WindowConfig -> Maybe ParentInfo -> Window
+createWindow model universe sessionId app appId config parentInfo =
     let
         defaultChildBehavior =
             { closeWithParent = True
@@ -488,7 +486,7 @@ createWindow model universe app appId config parentInfo =
     , blockedByApp = Nothing
     , childBehavior = childBehavior
     , universe = universe
-    , sessionID = model.currentSession
+    , sessionID = sessionId
     }
 
 
@@ -532,15 +530,16 @@ willOpenApp model app _ parentInfo openAction =
 registerApp :
     Model
     -> Universe
+    -> SessionID
     -> App.Manifest
     -> AppID
     -> WindowConfig
     -> Maybe ParentInfo
     -> Model
-registerApp model universe app appId windowConfig parentInfo =
+registerApp model universe sessionId app appId windowConfig parentInfo =
     let
         window =
-            createWindow model universe app appId windowConfig parentInfo
+            createWindow model universe sessionId app appId windowConfig parentInfo
 
         newWindows =
             Dict.insert appId window model.windows
