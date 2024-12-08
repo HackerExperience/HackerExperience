@@ -24,10 +24,13 @@ state =
         index =
             Mocks.indexRequested
 
+        gatewayId =
+            ServerID.fromValue 1
+
         spModel =
             Game.Model.init (API.Types.InputToken "t0k3n") Singleplayer index
     in
-    Game.init Singleplayer spModel spModel
+    Game.init Singleplayer (WM.toSessionId gatewayId) spModel spModel
         |> Tuple.first
 
 
@@ -42,11 +45,8 @@ stateWithUniverse universe state_ =
 
 os : OS.Model
 os =
-    let
-        ( model, _ ) =
-            OS.init (WM.toSessionId (ServerID.fromValue 1)) ( 1024, 1024 )
-    in
-    model
+    OS.init ( 1024, 1024 )
+        |> Tuple.first
 
 
 osWithApp : OS.Model -> ( OS.Model, AppID )
