@@ -1,6 +1,7 @@
 module Game exposing
     ( State
-    , getActiveGateway
+    , getActiveEndpointNip
+    , getActiveGatewayId
     , getActiveUniverse
     , getInactiveUniverse
     , init
@@ -11,6 +12,7 @@ import Effect exposing (Effect)
 import Event exposing (Event)
 import Game.Bus exposing (Action(..))
 import Game.Model as Model exposing (Model)
+import Game.Model.NIP exposing (NIP)
 import Game.Model.ServerID exposing (ServerID)
 import Game.Msg exposing (Msg(..))
 import Game.Universe exposing (Universe(..))
@@ -110,9 +112,14 @@ switchSession sessionId state =
 -- Model > Universe API
 
 
-getActiveGateway : State -> ServerID
-getActiveGateway state =
+getActiveGatewayId : State -> ServerID
+getActiveGatewayId state =
     (getActiveUniverse state).activeGateway
+
+
+getActiveEndpointNip : State -> Maybe NIP
+getActiveEndpointNip state =
+    (getActiveUniverse state).activeEndpoint
 
 
 switchActiveGateway : ServerID -> State -> State

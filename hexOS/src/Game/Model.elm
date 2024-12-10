@@ -1,6 +1,7 @@
 module Game.Model exposing
     ( Model
     , buildApiContext
+    , getActiveGateway
     , getGateway
     , init
     , onTunnelCreatedEvent
@@ -36,6 +37,9 @@ init token universe index =
     { universe = universe
     , mainframeID = index.player.mainframe_id
     , activeGateway = index.player.mainframe_id
+
+    -- Even if the player has active endpoints within the gateways, let's start with none selected
+    -- by default. This may change in the future once I define the ideal UX for this kind of stuff
     , activeEndpoint = Nothing
     , gateways = Server.parseGateways index.player.gateways
     , apiCtx = buildApiContext token universe
@@ -46,6 +50,11 @@ getGateway : Model -> ServerID -> Gateway
 getGateway model gatewayId =
     Dict.get (ServerID.toValue gatewayId) model.gateways
         |> Maybe.withDefault Server.invalidGateway
+
+
+getActiveGateway : Model -> Gateway
+getActiveGateway model =
+    getGateway model model.activeGateway
 
 
 switchActiveGateway : ServerID -> Model -> Model

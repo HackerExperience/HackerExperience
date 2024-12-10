@@ -9,8 +9,10 @@ module HUD.ConnectionInfo exposing
     )
 
 import Effect exposing (Effect)
-import Game exposing (State)
+import Game as State exposing (State)
 import Game.Bus as Game
+import Game.Model as Game
+import Game.Model.NIP as NIP
 import Game.Model.ServerID as ServerID exposing (ServerID)
 import Game.Universe as Universe exposing (Universe(..))
 import Html.Events as HE
@@ -79,7 +81,7 @@ updateSwitchGateway state model gtwUniverse gatewayId =
     let
         -- Always switch, except if the selected gateway is the activeGateway in the activeUniverse
         shouldSwitch =
-            state.currentUniverse /= gtwUniverse || (Game.getActiveGateway state /= gatewayId)
+            state.currentUniverse /= gtwUniverse || (State.getActiveGatewayId state /= gatewayId)
 
         effect =
             if shouldSwitch then
@@ -120,7 +122,7 @@ viewConnectionInfo state model =
     row [ id "hud-connection-info" ]
         [ viewGatewayArea state model
         , viewVpnArea
-        , viewEndpointArea
+        , viewEndpointArea state model
         ]
 
 
@@ -128,7 +130,7 @@ viewGatewayArea : State -> Model -> UI Msg
 viewGatewayArea state model =
     row [ cl "hud-ci-gateway-area" ]
         [ viewSideIcons
-        , viewServer state model
+        , viewGatewayServer state model
         ]
 
 
@@ -138,23 +140,33 @@ viewVpnArea =
         [ text "vpn" ]
 
 
-viewEndpointArea : UI Msg
-viewEndpointArea =
+viewEndpointArea : State -> Model -> UI Msg
+viewEndpointArea state model =
     row [ cl "hud-ci-endpoint-area" ]
-        [ text "endp" ]
+        [ viewEndpointServer state model
+        , viewSideIcons
+
+        -- text "endp"
+        ]
 
 
 viewSideIcons : UI Msg
 viewSideIcons =
     col [ cl "hud-ci-side-area" ]
-        [ text "a"
+        [ text "[X]"
         , text "b"
         ]
 
 
-viewServer : State -> Model -> UI Msg
-viewServer state model =
+viewGatewayServer : State -> Model -> UI Msg
+viewGatewayServer state model =
     let
+        game =
+            State.getActiveUniverse state
+
+        gateway =
+            Game.getActiveGateway game
+
         ( arrowText, onClickMsg ) =
             case model.selector of
                 NoSelector ->
@@ -163,14 +175,9 @@ viewServer state model =
                 _ ->
                     ( text "/\\", CloseSelector )
     in
-    col [ cl "hud-ci-server", UI.flexFill ]
+    col [ cl "hud-ci-server-gateway", UI.flexFill ]
         [ text "Gateway"
-        , case state.currentUniverse of
-            Universe.Singleplayer ->
-                text "SP"
-
-            Universe.Multiplayer ->
-                text "MP"
+        , text (NIP.getIPString gateway.nip)
         , div
             [ cl "hud-ci-server-selector"
             , UI.pointer
@@ -180,6 +187,28 @@ viewServer state model =
             , stopPropagation "mousedown"
             ]
             [ arrowText ]
+        ]
+
+
+viewEndpointServer : State -> Model -> UI Msg
+viewEndpointServer state model =
+    let
+        endpoint =
+            State.getActiveEndpointNip state
+
+        label =
+            case endpoint of
+                Just nip ->
+                    NIP.getIPString nip
+
+                Nothing ->
+                    "Not Connected"
+    in
+    col [ cl "hud-ci-server-endpoint", UI.flexFill ]
+        [ text "Endpoint"
+        , text label
+        , div [ cl "hud-ci-server-selector" ]
+            [ text "\\/*" ]
         ]
 
 

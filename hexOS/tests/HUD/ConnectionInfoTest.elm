@@ -92,7 +92,7 @@ suite =
                             ( TM.state, TM.hudCiWithSelector SelectorGateway )
 
                         gatewayId =
-                            Game.getActiveGateway state
+                            Game.getActiveGatewayId state
 
                         { otherUniverse } =
                             TG.universeInfo state
@@ -117,7 +117,7 @@ suite =
                         ( TM.state, TM.hudCiWithSelector SelectorGateway )
 
                     msg =
-                        CI.SwitchGateway state.currentUniverse (Game.getActiveGateway state)
+                        CI.SwitchGateway state.currentUniverse (Game.getActiveGatewayId state)
 
                     ( newModel, effect ) =
                         CI.update state msg model
