@@ -227,6 +227,13 @@ update msg model =
                     , Effect.batch [ Effect.map BootMsg bootCmd ]
                     )
 
+                OnEventReceived (Err reason) ->
+                    let
+                        _ =
+                            Debug.log "[Boot] Failed to decode event" reason
+                    in
+                    ( model, Effect.none )
+
                 _ ->
                     ( model, Effect.none )
 
