@@ -1,6 +1,7 @@
 module Game exposing
     ( State
-    , getActiveGateway
+    , getActiveEndpointNip
+    , getActiveGatewayId
     , getActiveUniverse
     , getInactiveUniverse
     , init
@@ -11,9 +12,11 @@ import Effect exposing (Effect)
 import Event exposing (Event)
 import Game.Bus exposing (Action(..))
 import Game.Model as Model exposing (Model)
+import Game.Model.NIP exposing (NIP)
 import Game.Model.ServerID exposing (ServerID)
 import Game.Msg exposing (Msg(..))
 import Game.Universe exposing (Universe(..))
+import WM
 
 
 
@@ -26,6 +29,7 @@ type alias State =
 
     -- TODO: rename to `activeUniverse`
     , currentUniverse : Universe
+    , currentSession : WM.SessionID
     }
 
 
@@ -33,11 +37,12 @@ type alias State =
 -- Model
 
 
-init : Universe -> Model -> Model -> ( State, Effect Msg )
-init currentUniverse spModel mpModel =
+init : Universe -> WM.SessionID -> Model -> Model -> ( State, Effect Msg )
+init currentUniverse currentSession spModel mpModel =
     ( { sp = spModel
       , mp = mpModel
       , currentUniverse = currentUniverse
+      , currentSession = currentSession
       }
     , Effect.none
     )
@@ -98,13 +103,23 @@ switchUniverse universe state =
     { state | currentUniverse = universe }
 
 
+switchSession : WM.SessionID -> State -> State
+switchSession sessionId state =
+    { state | currentSession = sessionId }
+
+
 
 -- Model > Universe API
 
 
-getActiveGateway : State -> ServerID
-getActiveGateway state =
+getActiveGatewayId : State -> ServerID
+getActiveGatewayId state =
     (getActiveUniverse state).activeGateway
+
+
+getActiveEndpointNip : State -> Maybe NIP
+getActiveEndpointNip state =
+    (getActiveUniverse state).activeEndpoint
 
 
 switchActiveGateway : ServerID -> State -> State
@@ -141,6 +156,7 @@ updateAction state action =
                     state
                         |> switchUniverse universe
                         |> switchActiveGateway gatewayId
+                        |> switchSession (WM.toSessionId gatewayId)
             in
             ( newState, Effect.none )
 

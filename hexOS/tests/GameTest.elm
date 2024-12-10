@@ -10,6 +10,7 @@ import TestHelpers.Game as TG
 import TestHelpers.Models as TM
 import TestHelpers.Random as TR
 import TestHelpers.Test exposing (Test, describe, test)
+import WM
 
 
 suite : Test
@@ -53,6 +54,9 @@ msgPerformActionTests =
                         [ -- Universe changed from SP to MP
                           E.equal initialState.currentUniverse Singleplayer
                         , E.equal newState.currentUniverse Multiplayer
+
+                        -- `currentSession` is now pointing to the new server
+                        , E.equal newState.currentSession (WM.toSessionId serverId)
 
                         -- Active gateway has changed in the MP model
                         , E.equal newState.mp.activeGateway serverId

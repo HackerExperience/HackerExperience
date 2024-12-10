@@ -14,6 +14,14 @@ defmodule Game.Services.Tunnel do
     Core.Fetch.query(filter_params, opts, filters)
   end
 
+  def list(filter_params, opts \\ []) do
+    filters = [
+      by_source_nip: {:all, {:tunnels, :by_source_nip}}
+    ]
+
+    Core.Fetch.query(filter_params, opts, filters)
+  end
+
   def list_links(filter_params, opts \\ []) do
     filters = [
       on_tunnel: {:all, {:tunnel_links, :by_tunnel_id}}

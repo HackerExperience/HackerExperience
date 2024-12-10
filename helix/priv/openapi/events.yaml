@@ -9,6 +9,7 @@ components:
     IdxGateway:
       type: object
       required:
+        - tunnels
         - logs
         - nip
         - id
@@ -21,6 +22,10 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/IdxLog'
+        tunnels:
+          type: array
+          items:
+            $ref: '#/components/schemas/IdxTunnel'
     IdxLog:
       type: object
       required:
@@ -46,6 +51,19 @@ components:
             $ref: '#/components/schemas/IdxGateway'
         mainframe_id:
           type: integer
+    IdxTunnel:
+      type: object
+      required:
+        - source_nip
+        - target_nip
+        - tunnel_id
+      properties:
+        tunnel_id:
+          type: integer
+        target_nip:
+          type: string
+        source_nip:
+          type: string
     index_requested:
       type: object
       required:
