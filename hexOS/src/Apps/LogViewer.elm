@@ -25,8 +25,7 @@ type Msg
 
 
 type alias Model =
-    { serverId : ServerID
-    , selectedLog : Maybe LogID
+    { selectedLog : Maybe LogID
     }
 
 
@@ -36,12 +35,14 @@ type alias Model =
 
 filterLogs : Model -> Game.Model -> List Log
 filterLogs model game =
+    -- TODO: Figure out a way to handle ServerID (for gateways) and NIPs (for endpoints)
     -- TODO: Currently this is not doing any filtering other than grabbing all logs in the server
-    let
-        server =
-            Game.getGateway game model.serverId
-    in
-    Server.listLogs server
+    -- let
+    --     server =
+    --         Game.getGateway game model.serverId
+    -- in
+    -- Server.listLogs server
+    []
 
 
 
@@ -210,9 +211,8 @@ willOpen _ =
 
 
 didOpen : WM.WindowInfo -> ( Model, Effect Msg )
-didOpen { serverId } =
-    ( { serverId = serverId
-      , selectedLog = Nothing
+didOpen _ =
+    ( { selectedLog = Nothing
       }
     , Effect.none
     )

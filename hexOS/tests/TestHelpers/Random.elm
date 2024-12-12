@@ -55,7 +55,7 @@ state =
                 { sp = sp
                 , mp = mp
                 , currentUniverse = universe_
-                , currentSession = WM.toSessionId gatewayId
+                , currentSession = WM.toLocalSessionId gatewayId
                 }
     in
     map4 genState (game Singleplayer) (game Multiplayer) universeId serverId

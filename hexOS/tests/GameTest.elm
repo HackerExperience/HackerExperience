@@ -56,7 +56,7 @@ msgPerformActionTests =
                         , E.equal newState.currentUniverse Multiplayer
 
                         -- `currentSession` is now pointing to the new server
-                        , E.equal newState.currentSession (WM.toSessionId serverId)
+                        , E.equal newState.currentSession (WM.toLocalSessionId serverId)
 
                         -- Active gateway has changed in the MP model
                         , E.equal newState.mp.activeGateway serverId

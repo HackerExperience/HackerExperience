@@ -24,7 +24,7 @@ module WM exposing
     , registerApp
     , startDrag
     , stopDrag
-    , toSessionId
+    , toLocalSessionId
     , unvibrateApp
     , updateViewport
     , willOpenApp
@@ -37,6 +37,7 @@ OS gerencia as Msgs/Updates etc. Tentar fazer assim (mas tudo bem se nao rolar)
 
 import Apps.Manifest as App
 import Dict exposing (Dict)
+import Game.Model.NIP exposing (NIP)
 import Game.Model.ServerID as ServerID exposing (ServerID)
 import Game.Universe as Universe exposing (Universe)
 import List.Extra as List
@@ -46,7 +47,8 @@ import OS.Bus
 
 
 type SessionID
-    = SessionID ServerID
+    = LocalSessionID ServerID
+    | RemoteSessioID NIP
 
 
 type alias Model =
@@ -114,7 +116,7 @@ type alias WindowInfo =
     { appId : AppID
     , app : App.Manifest
     , parent : Maybe ParentInfo
-    , serverId : ServerID
+    , sessionId : SessionID
     }
 
 
@@ -163,9 +165,9 @@ init ( viewportX, viewportY ) =
     }
 
 
-toSessionId : ServerID -> SessionID
-toSessionId serverId =
-    SessionID serverId
+toLocalSessionId : ServerID -> SessionID
+toLocalSessionId serverId =
+    LocalSessionID serverId
 
 
 updateViewport : Model -> ( X, Y ) -> Model
@@ -297,11 +299,11 @@ getWindowSafe windows appId =
 
 
 createWindowInfo : SessionID -> App.Manifest -> AppID -> Maybe ParentInfo -> WindowInfo
-createWindowInfo (SessionID serverId) app appId parentInfo =
+createWindowInfo sessionId app appId parentInfo =
     { appId = appId
     , app = app
     , parent = parentInfo
-    , serverId = serverId
+    , sessionId = sessionId
     }
 
 
@@ -690,7 +692,7 @@ dummyWindow =
     , blockedByApp = Nothing
     , childBehavior = Nothing
     , universe = Universe.Singleplayer
-    , sessionID = SessionID (ServerID.fromValue 0)
+    , sessionID = LocalSessionID (ServerID.fromValue 0)
     }
 
 

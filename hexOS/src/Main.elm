@@ -186,7 +186,7 @@ update msg model =
                             Game.Universe.Singleplayer
 
                         wmSessionId =
-                            WM.toSessionId spModel.mainframeID
+                            WM.toLocalSessionId spModel.mainframeID
 
                         ( osModel, osCmd ) =
                             OS.init ( model.flags.viewportX, model.flags.viewportY )

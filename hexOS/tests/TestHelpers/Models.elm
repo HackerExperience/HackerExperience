@@ -30,7 +30,7 @@ state =
         spModel =
             Game.Model.init (API.Types.InputToken "t0k3n") Singleplayer index
     in
-    Game.init Singleplayer (WM.toSessionId gatewayId) spModel spModel
+    Game.init Singleplayer (WM.toLocalSessionId gatewayId) spModel spModel
         |> Tuple.first
 
 

@@ -156,7 +156,7 @@ updateAction state action =
                     state
                         |> switchUniverse universe
                         |> switchActiveGateway gatewayId
-                        |> switchSession (WM.toSessionId gatewayId)
+                        |> switchSession (WM.toLocalSessionId gatewayId)
             in
             ( newState, Effect.none )
 
