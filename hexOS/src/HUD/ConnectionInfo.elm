@@ -36,6 +36,15 @@ type Selector
     | SelectorEndpoint
 
 
+{-| This type is exclusive for this module and is meant for enabling shared logic by defining which
+"side" (i.e. Gateway or Endpoint) the function should implement. Sometimes the behaviour changes
+slightly, but for the most part the implementation logic is shared/common.
+-}
+type CISide
+    = CIGateway
+    | CIEndpoint
+
+
 type Msg
     = OpenSelector Selector
     | CloseSelector
@@ -134,7 +143,7 @@ viewConnectionInfo state model =
 viewGatewayArea : State -> Model -> UI Msg
 viewGatewayArea state model =
     row [ cl "hud-ci-gateway-area" ]
-        [ viewSideIcons
+        [ viewSideIcons state CIGateway
         , viewGatewayServer state model
         ]
 
@@ -149,22 +158,39 @@ viewEndpointArea : State -> Model -> UI Msg
 viewEndpointArea state model =
     row [ cl "hud-ci-endpoint-area" ]
         [ viewEndpointServer state model
-        , viewSideIcons
-
-        -- text "endp"
+        , viewSideIcons state CIEndpoint
         ]
 
 
-viewSideIcons : UI Msg
-viewSideIcons =
+viewSideIcons : State -> CISide -> UI Msg
+viewSideIcons { currentSession } side =
+    let
+        isLocalSession =
+            WM.isSessionLocal currentSession
+
+        isWMActive =
+            case side of
+                CIGateway ->
+                    isLocalSession
+
+                CIEndpoint ->
+                    not isLocalSession
+
+        wmIndicator =
+            if isWMActive then
+                "X"
+
+            else
+                " "
+    in
     col [ cl "hud-ci-side-area" ]
-        [ text "[X]"
+        [ text ("[" ++ wmIndicator ++ "]")
         , text "b"
         ]
 
 
 {-| TODO: Once this module matures, try to merge the "mirrored" functions into a single one with
-shared logic.
+shared logic. An example can be found at `viewSideIcons`.
 -}
 viewGatewayServer : State -> Model -> UI Msg
 viewGatewayServer state model =
