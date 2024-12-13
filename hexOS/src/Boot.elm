@@ -1,7 +1,6 @@
 module Boot exposing (Model, Msg(..), documentView, init, update)
 
 import API.Types
-import API.Utils
 import Effect exposing (Effect)
 import Event exposing (Event)
 import Game.Model
@@ -15,7 +14,7 @@ import UI exposing (UI, cl, col, row, text)
 
 type Msg
     = ProceedToGame Game.Model.Model
-    | EstablishSSEConnection
+    | EstablishSSEConnections
     | OnEventReceived Event
 
 
@@ -30,7 +29,7 @@ type alias Model =
 init : API.Types.InputToken -> ( Model, Effect Msg )
 init token =
     ( { token = token }
-    , Effect.msgToCmd EstablishSSEConnection
+    , Effect.msgToCmd EstablishSSEConnections
     )
 
 
@@ -45,8 +44,21 @@ update msg model =
         ProceedToGame _ ->
             ( model, Effect.none )
 
-        EstablishSSEConnection ->
-            ( model, Effect.sseStart (API.Utils.tokenToString model.token) )
+        EstablishSSEConnections ->
+            let
+                -- TODO: Build the urls based on the env
+                spBaseUrl =
+                    "http://localhost:4001"
+
+                mpBaseUrl =
+                    "http://localhost:4002"
+            in
+            ( model
+            , Effect.batch
+                [ Effect.sseStart model.token spBaseUrl
+                , Effect.sseStart model.token mpBaseUrl
+                ]
+            )
 
         OnEventReceived event ->
             updateEvent model event
