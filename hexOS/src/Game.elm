@@ -29,6 +29,13 @@ type alias State =
 
     -- TODO: rename to `activeUniverse`
     , currentUniverse : Universe
+
+    -- NOTE: The `currentSession` is a "bridge" between Game state and Client state. It is only here
+    -- due to the SwitchGateway/SwitchEndpoint messages. I'll leave it here for now, but if that's
+    -- the *only* reason WM state is used, consider moving it back to WM and duplicating these Msgs
+    -- at HUD.ConnectionInfo. Another possibility is sending messages from Game to OS. This is not
+    -- supported now, but I think it will likely be needed in the future. In any case, I'm delaying
+    -- its implementation as much as possible.
     , currentSession : WM.SessionID
     }
 
@@ -159,6 +166,21 @@ updateAction state action =
                         |> switchSession (WM.toLocalSessionId gatewayId)
             in
             ( newState, Effect.none )
+
+        ToggleWMSession ->
+            let
+                game =
+                    getActiveUniverse state
+
+                newSessionId =
+                    case game.activeEndpoint of
+                        Just endpointNip ->
+                            WM.toggleSession game.activeGateway endpointNip state.currentSession
+
+                        Nothing ->
+                            state.currentSession
+            in
+            ( { state | currentSession = newSessionId }, Effect.none )
 
         ActionNoOp ->
             ( state, Effect.none )

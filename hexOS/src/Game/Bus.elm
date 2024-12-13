@@ -7,3 +7,4 @@ import Game.Universe exposing (Universe)
 type Action
     = ActionNoOp
     | SwitchGateway Universe ServerID
+    | ToggleWMSession

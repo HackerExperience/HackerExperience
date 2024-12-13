@@ -19,6 +19,7 @@ import Html.Events as HE
 import Json.Decode as JD
 import OS.Bus
 import UI exposing (UI, cl, col, div, id, row, text)
+import WM
 
 
 
@@ -39,6 +40,7 @@ type Msg
     = OpenSelector Selector
     | CloseSelector
     | SwitchGateway Universe ServerID
+    | ToggleWMSession
     | ToOS OS.Bus.Action
     | NoOp
 
@@ -70,6 +72,9 @@ update state msg model =
 
         SwitchGateway universe gatewayId ->
             updateSwitchGateway state model universe gatewayId
+
+        ToggleWMSession ->
+            ( model, Effect.msgToCmd <| ToOS <| OS.Bus.ToGame Game.ToggleWMSession )
 
         ToOS _ ->
             -- Handled by parent
@@ -158,6 +163,9 @@ viewSideIcons =
         ]
 
 
+{-| TODO: Once this module matures, try to merge the "mirrored" functions into a single one with
+shared logic.
+-}
 viewGatewayServer : State -> Model -> UI Msg
 viewGatewayServer state model =
     let
@@ -174,10 +182,25 @@ viewGatewayServer state model =
 
                 _ ->
                     ( text "/\\", CloseSelector )
+
+        canSwitchSession =
+            not (WM.isSessionLocal state.currentSession)
+
+        serverClasses =
+            if canSwitchSession then
+                [ UI.pointer, UI.onClick ToggleWMSession ]
+
+            else
+                []
+
+        serverCol =
+            col serverClasses
+                [ text "Gatewayy"
+                , text (NIP.getIPString gateway.nip)
+                ]
     in
     col [ cl "hud-ci-server-gateway", UI.flexFill ]
-        [ text "Gateway"
-        , text (NIP.getIPString gateway.nip)
+        [ serverCol
         , div
             [ cl "hud-ci-server-selector"
             , UI.pointer
@@ -196,17 +219,32 @@ viewEndpointServer state model =
         endpoint =
             State.getActiveEndpointNip state
 
-        label =
+        ( label, isConnected ) =
             case endpoint of
                 Just nip ->
-                    NIP.getIPString nip
+                    ( NIP.getIPString nip, True )
 
                 Nothing ->
-                    "Not Connected"
+                    ( "Not Connected", False )
+
+        canSwitchSession =
+            isConnected && WM.isSessionLocal state.currentSession
+
+        serverClasses =
+            if canSwitchSession then
+                [ UI.pointer, UI.onClick ToggleWMSession ]
+
+            else
+                []
+
+        serverCol =
+            col serverClasses
+                [ text "Endpoint"
+                , text label
+                ]
     in
     col [ cl "hud-ci-server-endpoint", UI.flexFill ]
-        [ text "Endpoint"
-        , text label
+        [ serverCol
         , div [ cl "hud-ci-server-selector" ]
             [ text "\\/*" ]
         ]

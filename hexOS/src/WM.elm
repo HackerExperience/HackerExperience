@@ -21,10 +21,12 @@ module WM exposing
     , isDragging
     , isDraggingApp
     , isFocusedApp
+    , isSessionLocal
     , registerApp
     , startDrag
     , stopDrag
     , toLocalSessionId
+    , toggleSession
     , unvibrateApp
     , updateViewport
     , willOpenApp
@@ -48,7 +50,7 @@ import OS.Bus
 
 type SessionID
     = LocalSessionID ServerID
-    | RemoteSessioID NIP
+    | RemoteSessionID NIP
 
 
 type alias Model =
@@ -165,11 +167,6 @@ init ( viewportX, viewportY ) =
     }
 
 
-toLocalSessionId : ServerID -> SessionID
-toLocalSessionId serverId =
-    LocalSessionID serverId
-
-
 updateViewport : Model -> ( X, Y ) -> Model
 updateViewport model ( vX, vY ) =
     { model | viewportX = vX, viewportY = vY }
@@ -217,6 +214,35 @@ getViewportLimits model lenX lenY =
     , minY = model.hud.topHeight
     , maxY = model.viewportY - model.hud.dockHeight - lenY
     }
+
+
+
+-- Model > Session
+
+
+toLocalSessionId : ServerID -> SessionID
+toLocalSessionId serverId =
+    LocalSessionID serverId
+
+
+isSessionLocal : SessionID -> Bool
+isSessionLocal session =
+    case session of
+        LocalSessionID _ ->
+            True
+
+        RemoteSessionID _ ->
+            False
+
+
+toggleSession : ServerID -> NIP -> SessionID -> SessionID
+toggleSession gatewayId endpointNip currentSession =
+    case currentSession of
+        LocalSessionID _ ->
+            RemoteSessionID endpointNip
+
+        RemoteSessionID _ ->
+            LocalSessionID gatewayId
 
 
 
