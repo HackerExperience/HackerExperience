@@ -37,13 +37,25 @@ init token universe index =
     { universe = universe
     , mainframeID = index.player.mainframe_id
     , activeGateway = index.player.mainframe_id
-
-    -- Even if the player has active endpoints within the gateways, let's start with none selected
-    -- by default. This may change in the future once I define the ideal UX for this kind of stuff
-    , activeEndpoint = Nothing
     , gateways = Server.parseGateways index.player.gateways
     , apiCtx = buildApiContext token universe
+
+    -- `activeEndpoint` will be filled at `initSetActiveEndpoint`
+    , activeEndpoint = Nothing
     }
+        |> initSetActiveEndpoint
+
+
+initSetActiveEndpoint : Model -> Model
+initSetActiveEndpoint model =
+    let
+        activeGatewayFirstTunnel =
+            List.head (getActiveGateway model).tunnels
+
+        activeEndpoint =
+            Maybe.map (\t -> t.targetNip) activeGatewayFirstTunnel
+    in
+    { model | activeEndpoint = activeEndpoint }
 
 
 getGateway : Model -> ServerID -> Gateway
