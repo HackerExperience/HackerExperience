@@ -4,6 +4,7 @@ module Game exposing
     , getActiveGatewayId
     , getActiveUniverse
     , getInactiveUniverse
+    , getUniverse
     , init
     , update
     )

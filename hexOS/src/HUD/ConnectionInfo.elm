@@ -317,30 +317,33 @@ viewGatewaySelector state model__ =
     let
         -- TODO: feed the list of gateways directly from State
         spGateways =
-            List.foldl (gatewaySelectorEntries state Singleplayer) [] [ ServerID.fromValue 1 ]
+            List.foldl (gatewaySelectorEntries state.sp Singleplayer) [] [ ServerID.fromValue 1 ]
 
         mpGateways =
-            List.foldl (gatewaySelectorEntries state Multiplayer) [] [ ServerID.fromValue 9 ]
+            List.foldl (gatewaySelectorEntries state.mp Multiplayer) [] [ ServerID.fromValue 1 ]
     in
     col [] <|
         spGateways
             ++ mpGateways
 
 
-gatewaySelectorEntries : State -> Universe -> ServerID -> List (UI Msg) -> List (UI Msg)
-gatewaySelectorEntries state__ gtwUniverse serverId acc__ =
+gatewaySelectorEntries : Game.Model -> Universe -> ServerID -> List (UI Msg) -> List (UI Msg)
+gatewaySelectorEntries game gtwUniverse serverId acc__ =
     -- TODO: Use acc
     let
         onClickMsg =
             SwitchGateway gtwUniverse serverId
 
+        gateway =
+            Game.getGateway game serverId
+
         label =
             case gtwUniverse of
                 Singleplayer ->
-                    "SP " ++ String.fromInt (ServerID.toValue serverId)
+                    "SP: " ++ NIP.getIPString gateway.nip
 
                 Multiplayer ->
-                    "MP " ++ String.fromInt (ServerID.toValue serverId)
+                    "MP: " ++ NIP.getIPString gateway.nip
     in
     [ div [ UI.onClick onClickMsg ] [ text label ] ]
 
