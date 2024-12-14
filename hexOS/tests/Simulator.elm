@@ -21,7 +21,7 @@ simulateEffect effect =
             -- TODO
             SimulatedEffect.Cmd.none
 
-        Effect.StartSSESubscription token ->
+        Effect.StartSSESubscription token baseUrl ->
             -- TODO
             SimulatedEffect.Cmd.none
 
