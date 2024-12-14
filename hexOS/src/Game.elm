@@ -138,6 +138,14 @@ switchActiveGateway newActiveGatewayId state =
         |> replaceActiveUniverse state
 
 
+switchActiveEndpoint : NIP -> State -> State
+switchActiveEndpoint newActiveEndpointNip state =
+    state
+        |> getActiveUniverse
+        |> Model.switchActiveEndpoint newActiveEndpointNip
+        |> replaceActiveUniverse state
+
+
 
 -- Update
 
@@ -165,6 +173,16 @@ updateAction state action =
                         |> switchUniverse universe
                         |> switchActiveGateway gatewayId
                         |> switchSession (WM.toLocalSessionId gatewayId)
+            in
+            ( newState, Effect.none )
+
+        SwitchEndpoint universe nip ->
+            let
+                newState =
+                    state
+                        |> switchUniverse universe
+                        |> switchActiveEndpoint nip
+                        |> switchSession (WM.toRemoteSessionId nip)
             in
             ( newState, Effect.none )
 

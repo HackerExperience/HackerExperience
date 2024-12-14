@@ -12,8 +12,9 @@ import Effect exposing (Effect)
 import Game as State exposing (State)
 import Game.Bus as Game
 import Game.Model as Game
-import Game.Model.NIP as NIP
+import Game.Model.NIP as NIP exposing (NIP)
 import Game.Model.ServerID as ServerID exposing (ServerID)
+import Game.Model.Tunnel exposing (Tunnel)
 import Game.Universe as Universe exposing (Universe(..))
 import Html.Events as HE
 import Json.Decode as JD
@@ -49,6 +50,7 @@ type Msg
     = OpenSelector Selector
     | CloseSelector
     | SwitchGateway Universe ServerID
+    | SwitchEndpoint Universe NIP
     | ToggleWMSession
     | ToOS OS.Bus.Action
     | NoOp
@@ -82,6 +84,9 @@ update state msg model =
         SwitchGateway universe gatewayId ->
             updateSwitchGateway state model universe gatewayId
 
+        SwitchEndpoint universe endpointNip ->
+            updateSwitchEndpoint state model universe endpointNip
+
         ToggleWMSession ->
             ( model, Effect.msgToCmd <| ToOS <| OS.Bus.ToGame Game.ToggleWMSession )
 
@@ -105,6 +110,13 @@ updateSwitchGateway state model gtwUniverse gatewayId =
                 Effect.none
     in
     ( { model | selector = NoSelector }, effect )
+
+
+updateSwitchEndpoint : State -> Model -> Universe -> NIP -> ( Model, Effect Msg )
+updateSwitchEndpoint state model universe nip =
+    ( { model | selector = NoSelector }
+    , Effect.msgToCmd <| ToOS <| OS.Bus.ToGame (Game.SwitchEndpoint universe nip)
+    )
 
 
 
@@ -206,6 +218,9 @@ viewGatewayServer state model =
                 NoSelector ->
                     ( text "\\/", OpenSelector SelectorGateway )
 
+                SelectorEndpoint ->
+                    ( text "\\/", OpenSelector SelectorGateway )
+
                 _ ->
                     ( text "/\\", CloseSelector )
 
@@ -253,6 +268,18 @@ viewEndpointServer state model =
                 Nothing ->
                     ( "Not Connected", False )
 
+        -- TODO: Hide selector switch if there are no tunnels
+        ( arrowText, onClickMsg ) =
+            case model.selector of
+                NoSelector ->
+                    ( text "\\/", OpenSelector SelectorEndpoint )
+
+                SelectorGateway ->
+                    ( text "\\/", OpenSelector SelectorEndpoint )
+
+                _ ->
+                    ( text "/\\", CloseSelector )
+
         canSwitchSession =
             isConnected && WM.isSessionLocal state.currentSession
 
@@ -271,8 +298,15 @@ viewEndpointServer state model =
     in
     col [ cl "hud-ci-server-endpoint", UI.flexFill ]
         [ serverCol
-        , div [ cl "hud-ci-server-selector" ]
-            [ text "\\/*" ]
+        , div
+            [ cl "hud-ci-server-selector"
+            , UI.pointer
+            , UI.onClick onClickMsg
+
+            -- Don't close the selector on "mousedown". We'll handle that ourselves.
+            , stopPropagation "mousedown"
+            ]
+            [ arrowText ]
         ]
 
 
@@ -290,7 +324,7 @@ viewSelector state model =
             renderSelector <| viewGatewaySelector state model
 
         SelectorEndpoint ->
-            text "todo"
+            renderSelector <| viewEndpointSelector state model
 
 
 renderSelector : UI Msg -> UI Msg
@@ -327,6 +361,58 @@ viewGatewaySelector state model__ =
             ++ mpGateways
 
 
+viewEndpointSelector : State -> Model -> UI Msg
+viewEndpointSelector state _ =
+    let
+        activeGame =
+            State.getActiveUniverse state
+
+        otherGame =
+            State.getInactiveUniverse state
+
+        gateway =
+            Game.getActiveGateway activeGame
+
+        -- List of every tunnel within the active gateway
+        gatewayTunnels =
+            gateway.tunnels
+
+        endpointsOnGateway =
+            List.foldl (endpointSelectorEntries activeGame.universe activeGame.activeEndpoint)
+                []
+                gatewayTunnels
+
+        -- List of every tunnel in the Universe minus tunnels in active gateway
+        universeTunnels =
+            Game.getGateways activeGame
+                |> List.concatMap (\{ tunnels } -> tunnels)
+                |> List.filter (\{ sourceNip } -> sourceNip /= gateway.nip)
+
+        endpointsOnUniverse =
+            List.foldl (endpointSelectorEntries activeGame.universe Nothing)
+                []
+                universeTunnels
+
+        otherUniverseSeparator =
+            [ div [] [ text <| Universe.toString otherGame.universe ++ ":" ] ]
+
+        -- List of every tunnel in the other universe
+        otherUniverseTunnels =
+            Game.getGateways otherGame
+                |> List.concatMap (\{ tunnels } -> tunnels)
+
+        endpointsOnOtherUniverse =
+            List.foldl (endpointSelectorEntries otherGame.universe Nothing)
+                []
+                otherUniverseTunnels
+    in
+    col [] <|
+        endpointsOnGateway
+            ++ endpointsOnUniverse
+            ++ otherUniverseSeparator
+            ++ endpointsOnOtherUniverse
+
+
 gatewaySelectorEntries : Game.Model -> Universe -> ServerID -> List (UI Msg) -> List (UI Msg)
 gatewaySelectorEntries game gtwUniverse serverId acc__ =
     -- TODO: Use acc
@@ -345,7 +431,41 @@ gatewaySelectorEntries game gtwUniverse serverId acc__ =
                 Multiplayer ->
                     "MP: " ++ NIP.getIPString gateway.nip
     in
-    [ div [ UI.onClick onClickMsg ] [ text label ] ]
+    [ div [ UI.pointer, UI.onClick onClickMsg ] [ text label ] ]
+
+
+endpointSelectorEntries : Universe -> Maybe NIP -> Tunnel -> List (UI Msg) -> List (UI Msg)
+endpointSelectorEntries universe activeEndpoint tunnel acc =
+    let
+        isCurrentEndpoint =
+            case activeEndpoint of
+                Just nip ->
+                    nip == tunnel.targetNip
+
+                Nothing ->
+                    False
+
+        onClickMsg =
+            SwitchEndpoint universe tunnel.targetNip
+
+        classes =
+            if not isCurrentEndpoint then
+                [ UI.pointer, UI.onClick onClickMsg ]
+
+            else
+                []
+
+        label =
+            NIP.getIPString tunnel.targetNip
+
+        indicator =
+            if isCurrentEndpoint then
+                " <--"
+
+            else
+                ""
+    in
+    [ div classes [ text <| label ++ indicator ] ] ++ acc
 
 
 addGlobalEvents : Model -> List (UI.Attribute Msg)

@@ -26,6 +26,7 @@ module WM exposing
     , startDrag
     , stopDrag
     , toLocalSessionId
+    , toRemoteSessionId
     , toggleSession
     , unvibrateApp
     , updateViewport
@@ -223,6 +224,11 @@ getViewportLimits model lenX lenY =
 toLocalSessionId : ServerID -> SessionID
 toLocalSessionId serverId =
     LocalSessionID serverId
+
+
+toRemoteSessionId : NIP -> SessionID
+toRemoteSessionId nip =
+    RemoteSessionID nip
 
 
 isSessionLocal : SessionID -> Bool

@@ -3,8 +3,10 @@ module Game.Model exposing
     , buildApiContext
     , getActiveGateway
     , getGateway
+    , getGateways
     , init
     , onTunnelCreatedEvent
+    , switchActiveEndpoint
     , switchActiveGateway
     )
 
@@ -64,6 +66,12 @@ getGateway model gatewayId =
         |> Maybe.withDefault Server.invalidGateway
 
 
+getGateways : Model -> List Gateway
+getGateways model =
+    Dict.toList model.gateways
+        |> List.map (\( _, v ) -> v)
+
+
 getActiveGateway : Model -> Gateway
 getActiveGateway model =
     getGateway model model.activeGateway
@@ -72,6 +80,11 @@ getActiveGateway model =
 switchActiveGateway : ServerID -> Model -> Model
 switchActiveGateway newActiveGatewayId model =
     { model | activeGateway = newActiveGatewayId }
+
+
+switchActiveEndpoint : NIP -> Model -> Model
+switchActiveEndpoint newActiveEndpointNip model =
+    { model | activeEndpoint = Just newActiveEndpointNip }
 
 
 onTunnelCreatedEvent : Model -> Events.TunnelCreated -> Model
