@@ -18,7 +18,7 @@ import Apps.RemoteAccess as RemoteAccess
 import Apps.Types as Apps
 import Dict exposing (Dict)
 import Effect exposing (Effect)
-import Game exposing (State)
+import Game as State exposing (State)
 import Game.Model as Game
 import HUD
 import HUD.ConnectionInfo
@@ -650,14 +650,13 @@ updateApp :
 updateApp state model appId appModel appMsg toAppModel toAppMsg updateFn =
     let
         -- TODO: Same comment as viewWindow:
-        -- TODO: Here, I should grab either sp/mp depending on gameState.currentUniverse
         -- In fact, it may make sense for each App to implement a "stateFilter", thus letting
         -- each App decide which data it receives (based on its own needs)
-        gameState =
-            state.sp
+        game =
+            State.getActiveUniverse state
 
         ( newAppModel, appCmd ) =
-            updateFn gameState appMsg appModel
+            updateFn game appMsg appModel
 
         midCmd =
             Effect.map (toAppMsg appId) appCmd
@@ -745,11 +744,13 @@ viewWindow state model appId window acc =
             appModel =
                 getAppModel model.appModels appId
 
-            -- TODO: Here, I should grab either sp/mp depending on gameState.currentUniverse
-            -- In fact, it may make sense for each App to implement a "stateFilter", thus letting
+            game =
+                State.getActiveUniverse state
+
+            -- TODO: it may make sense for each App to implement a "stateFilter", thus letting
             -- each App decide which data it receives (based on its own needs)
             windowContent =
-                Html.map AppMsg <| getWindowInnerContent appId window appModel state.sp
+                Html.map AppMsg <| getWindowInnerContent appId window appModel game
 
             renderedWindow =
                 renderWindow model.wm appId window windowContent
