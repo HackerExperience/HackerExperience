@@ -68,8 +68,7 @@ getGateway model gatewayId =
 
 getGateways : Model -> List Gateway
 getGateways model =
-    Dict.toList model.gateways
-        |> List.map (\( _, v ) -> v)
+    Dict.values model.gateways
 
 
 getActiveGateway : Model -> Gateway

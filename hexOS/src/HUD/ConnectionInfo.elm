@@ -85,7 +85,7 @@ update state msg model =
             updateSwitchGateway state model universe gatewayId
 
         SwitchEndpoint universe endpointNip ->
-            updateSwitchEndpoint state model universe endpointNip
+            updateSwitchEndpoint model universe endpointNip
 
         ToggleWMSession ->
             ( model, Effect.msgToCmd <| ToOS <| OS.Bus.ToGame Game.ToggleWMSession )
@@ -112,8 +112,8 @@ updateSwitchGateway state model gtwUniverse gatewayId =
     ( { model | selector = NoSelector }, effect )
 
 
-updateSwitchEndpoint : State -> Model -> Universe -> NIP -> ( Model, Effect Msg )
-updateSwitchEndpoint state model universe nip =
+updateSwitchEndpoint : Model -> Universe -> NIP -> ( Model, Effect Msg )
+updateSwitchEndpoint model universe nip =
     ( { model | selector = NoSelector }
     , Effect.msgToCmd <| ToOS <| OS.Bus.ToGame (Game.SwitchEndpoint universe nip)
     )
@@ -465,7 +465,7 @@ endpointSelectorEntries universe activeEndpoint tunnel acc =
             else
                 ""
     in
-    [ div classes [ text <| label ++ indicator ] ] ++ acc
+    div classes [ text <| label ++ indicator ] :: acc
 
 
 addGlobalEvents : Model -> List (UI.Attribute Msg)

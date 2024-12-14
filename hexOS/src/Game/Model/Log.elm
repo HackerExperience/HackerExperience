@@ -1,7 +1,7 @@
 module Game.Model.Log exposing
     ( Log
     , Logs
-    , logsToList
+      -- , logsToList
     , parse
     )
 
@@ -34,15 +34,10 @@ type LogType
 
 
 -- Model
-
-
-logsToList : Logs -> List Log
-logsToList logs =
-    OrderedDict.toList logs
-        |> List.map (\( _, log ) -> log)
-
-
-
+-- logsToList : Logs -> List Log
+-- logsToList logs =
+--     OrderedDict.toList logs
+--         |> List.map (\( _, log ) -> log)
 -- Model > Parser
 
 

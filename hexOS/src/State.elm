@@ -4,7 +4,6 @@ module State exposing
     , getActiveGatewayId
     , getActiveUniverse
     , getInactiveUniverse
-    , getUniverse
     , init
     , update
     )
