@@ -1,5 +1,6 @@
 module Boot exposing (Model, Msg(..), documentView, init, update)
 
+import API.Events.Types as Events
 import API.Types
 import Effect exposing (Effect)
 import Event exposing (Event)
@@ -13,13 +14,16 @@ import UI exposing (UI, cl, col, row, text)
 
 
 type Msg
-    = ProceedToGame Game.Model.Model
+    = ProceedToGame Game.Model.Model Game.Model.Model
     | EstablishSSEConnections
     | OnEventReceived Event
 
 
 type alias Model =
-    { token : API.Types.InputToken }
+    { token : API.Types.InputToken
+    , spIndex : Maybe Events.IndexRequested
+    , mpIndex : Maybe Events.IndexRequested
+    }
 
 
 
@@ -28,7 +32,10 @@ type alias Model =
 
 init : API.Types.InputToken -> ( Model, Effect Msg )
 init token =
-    ( { token = token }
+    ( { token = token
+      , spIndex = Nothing
+      , mpIndex = Nothing
+      }
     , Effect.msgToCmd EstablishSSEConnections
     )
 
@@ -41,7 +48,7 @@ update : Msg -> Model -> ( Model, Effect Msg )
 update msg model =
     case msg of
         -- Intercepted by `Main`
-        ProceedToGame _ ->
+        ProceedToGame _ _ ->
             ( model, Effect.none )
 
         EstablishSSEConnections ->
@@ -67,13 +74,29 @@ update msg model =
 updateEvent : Model -> Event -> ( Model, Effect Msg )
 updateEvent model event =
     case event of
-        Event.IndexRequested index _ ->
+        Event.IndexRequested index universe ->
             let
-                -- TODO: Create SP and MP model; currently hard-coding SP
-                spModel =
-                    Game.Model.init model.token Singleplayer index
+                newModel =
+                    case universe of
+                        Singleplayer ->
+                            { model | spIndex = Just index }
+
+                        Multiplayer ->
+                            { model | mpIndex = Just index }
             in
-            ( model, Effect.msgToCmd <| ProceedToGame spModel )
+            case ( newModel.spIndex, newModel.mpIndex ) of
+                ( Just spIndex, Just mpIndex ) ->
+                    let
+                        spModel =
+                            Game.Model.init model.token Singleplayer spIndex
+
+                        mpModel =
+                            Game.Model.init model.token Multiplayer mpIndex
+                    in
+                    ( newModel, Effect.msgToCmd <| ProceedToGame spModel mpModel )
+
+                _ ->
+                    ( newModel, Effect.none )
 
         _ ->
             ( model, Effect.none )

@@ -179,7 +179,7 @@ update msg model =
 
         BootState bootModel ->
             case msg of
-                BootMsg (Boot.ProceedToGame spModel) ->
+                BootMsg (Boot.ProceedToGame spModel mpModel) ->
                     let
                         -- TODO
                         currentUniverse =
@@ -191,9 +191,8 @@ update msg model =
                         ( osModel, osCmd ) =
                             OS.init ( model.flags.viewportX, model.flags.viewportY )
 
-                        -- TODO: For now, we are considering sp == mp
                         ( gameModel, playCmd ) =
-                            Game.init currentUniverse wmSessionId spModel spModel
+                            Game.init currentUniverse wmSessionId spModel mpModel
                     in
                     ( { model | state = GameState gameModel osModel }
                     , Effect.batch
