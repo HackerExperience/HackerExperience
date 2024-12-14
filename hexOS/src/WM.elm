@@ -21,10 +21,13 @@ module WM exposing
     , isDragging
     , isDraggingApp
     , isFocusedApp
+    , isSessionLocal
     , registerApp
     , startDrag
     , stopDrag
-    , toSessionId
+    , toLocalSessionId
+    , toRemoteSessionId
+    , toggleSession
     , unvibrateApp
     , updateViewport
     , willOpenApp
@@ -37,6 +40,7 @@ OS gerencia as Msgs/Updates etc. Tentar fazer assim (mas tudo bem se nao rolar)
 
 import Apps.Manifest as App
 import Dict exposing (Dict)
+import Game.Model.NIP exposing (NIP)
 import Game.Model.ServerID as ServerID exposing (ServerID)
 import Game.Universe as Universe exposing (Universe)
 import List.Extra as List
@@ -46,12 +50,12 @@ import OS.Bus
 
 
 type SessionID
-    = SessionID ServerID
+    = LocalSessionID ServerID
+    | RemoteSessionID NIP
 
 
 type alias Model =
     { windows : Windows
-    , currentSession : SessionID
     , focusedWindow : Maybe AppID
     , dragging : Maybe ( AppID, XY, XY )
     , nextAppId : Int
@@ -115,7 +119,7 @@ type alias WindowInfo =
     { appId : AppID
     , app : App.Manifest
     , parent : Maybe ParentInfo
-    , serverId : ServerID
+    , sessionId : SessionID
     }
 
 
@@ -148,10 +152,9 @@ type alias ViewportLimits =
 -- Model
 
 
-init : SessionID -> XY -> Model
-init sessionID ( viewportX, viewportY ) =
+init : XY -> Model
+init ( viewportX, viewportY ) =
     { windows = Dict.empty
-    , currentSession = sessionID
     , focusedWindow = Nothing
     , nextAppId = 1
     , nextZIndex = 1
@@ -163,11 +166,6 @@ init sessionID ( viewportX, viewportY ) =
         , dockHeight = 80
         }
     }
-
-
-toSessionId : ServerID -> SessionID
-toSessionId serverId =
-    SessionID serverId
 
 
 updateViewport : Model -> ( X, Y ) -> Model
@@ -217,6 +215,40 @@ getViewportLimits model lenX lenY =
     , minY = model.hud.topHeight
     , maxY = model.viewportY - model.hud.dockHeight - lenY
     }
+
+
+
+-- Model > Session
+
+
+toLocalSessionId : ServerID -> SessionID
+toLocalSessionId serverId =
+    LocalSessionID serverId
+
+
+toRemoteSessionId : NIP -> SessionID
+toRemoteSessionId nip =
+    RemoteSessionID nip
+
+
+isSessionLocal : SessionID -> Bool
+isSessionLocal session =
+    case session of
+        LocalSessionID _ ->
+            True
+
+        RemoteSessionID _ ->
+            False
+
+
+toggleSession : ServerID -> NIP -> SessionID -> SessionID
+toggleSession gatewayId endpointNip currentSession =
+    case currentSession of
+        LocalSessionID _ ->
+            RemoteSessionID endpointNip
+
+        RemoteSessionID _ ->
+            LocalSessionID gatewayId
 
 
 
@@ -299,11 +331,11 @@ getWindowSafe windows appId =
 
 
 createWindowInfo : SessionID -> App.Manifest -> AppID -> Maybe ParentInfo -> WindowInfo
-createWindowInfo (SessionID serverId) app appId parentInfo =
+createWindowInfo sessionId app appId parentInfo =
     { appId = appId
     , app = app
     , parent = parentInfo
-    , serverId = serverId
+    , sessionId = sessionId
     }
 
 
@@ -448,8 +480,8 @@ isFocusedApp model appId =
 -- app
 
 
-createWindow : Model -> Universe -> App.Manifest -> AppID -> WindowConfig -> Maybe ParentInfo -> Window
-createWindow model universe app appId config parentInfo =
+createWindow : Model -> Universe -> SessionID -> App.Manifest -> AppID -> WindowConfig -> Maybe ParentInfo -> Window
+createWindow model universe sessionId app appId config parentInfo =
     let
         defaultChildBehavior =
             { closeWithParent = True
@@ -488,7 +520,7 @@ createWindow model universe app appId config parentInfo =
     , blockedByApp = Nothing
     , childBehavior = childBehavior
     , universe = universe
-    , sessionID = model.currentSession
+    , sessionID = sessionId
     }
 
 
@@ -532,15 +564,16 @@ willOpenApp model app _ parentInfo openAction =
 registerApp :
     Model
     -> Universe
+    -> SessionID
     -> App.Manifest
     -> AppID
     -> WindowConfig
     -> Maybe ParentInfo
     -> Model
-registerApp model universe app appId windowConfig parentInfo =
+registerApp model universe sessionId app appId windowConfig parentInfo =
     let
         window =
-            createWindow model universe app appId windowConfig parentInfo
+            createWindow model universe sessionId app appId windowConfig parentInfo
 
         newWindows =
             Dict.insert appId window model.windows
@@ -691,7 +724,7 @@ dummyWindow =
     , blockedByApp = Nothing
     , childBehavior = Nothing
     , universe = Universe.Singleplayer
-    , sessionID = SessionID (ServerID.fromValue 0)
+    , sessionID = LocalSessionID (ServerID.fromValue 0)
     }
 
 

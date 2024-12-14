@@ -1,7 +1,7 @@
 module TestHelpers.Game exposing (..)
 
-import Game exposing (State)
 import Game.Universe exposing (Universe(..))
+import State exposing (State)
 
 
 type alias UniverseInfo =

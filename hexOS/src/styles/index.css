@@ -207,14 +207,18 @@ html, body {
 
 .hud-ci-endpoint-area {
     width: 200px;
-    justify-content: center;
 }
 
 .hud-ci-side-area {
     width: 35px;
 }
 
-.hud-ci-server {}
+.hud-ci-server-gateway {
+}
+
+.hud-ci-server-endpoint {
+    /* align-items: center; */
+}
 
 .hud-ci-server-selector {
     background-color: yellow;

@@ -3,7 +3,7 @@ module Apps.Demo exposing (..)
 import Apps.Manifest as App
 import Apps.Popups.ConfirmationDialog as ConfirmationDialog
 import Effect exposing (Effect)
-import Game.Model as Game
+import Game
 import OS.AppID exposing (AppID)
 import OS.Bus
 import UI exposing (UI, cl, row, text)

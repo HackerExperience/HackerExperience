@@ -1,10 +1,13 @@
 module Game.Model.Tunnel exposing
     ( Tunnel
     , Tunnels
+      -- , fromTunnelCreatedEvent
+    , parse
     )
 
 -- import API.Events.Types as Events
 
+import API.Events.Types as Events
 import Game.Model.NIP exposing (NIP)
 import Game.Model.TunnelID exposing (TunnelID)
 
@@ -32,3 +35,17 @@ type alias Tunnels =
 --     , sourceNip = event.source_nip
 --     , targetNip = event.target_nip
 --     }
+-- Model > Index Parser
+
+
+parse : List Events.IdxTunnel -> Tunnels
+parse idxTunnels =
+    List.map (\idxTunnel -> parseTunnel idxTunnel) idxTunnels
+
+
+parseTunnel : Events.IdxTunnel -> Tunnel
+parseTunnel idxTunnel =
+    { id = idxTunnel.tunnel_id
+    , sourceNip = idxTunnel.source_nip
+    , targetNip = idxTunnel.target_nip
+    }

@@ -1,13 +1,13 @@
 module HUD.ConnectionInfoTest exposing (suite)
 
 import Effect
-import Game
 import Game.Bus
 import Game.Model.ServerID as ServerID
 import Game.Universe exposing (Universe(..))
 import HUD.ConnectionInfo as CI exposing (Selector(..))
 import OS
 import OS.Bus
+import State
 import TestHelpers.Expect as E
 import TestHelpers.Game as TG
 import TestHelpers.Models as TM
@@ -92,7 +92,7 @@ suite =
                             ( TM.state, TM.hudCiWithSelector SelectorGateway )
 
                         gatewayId =
-                            Game.getActiveGateway state
+                            State.getActiveGatewayId state
 
                         { otherUniverse } =
                             TG.universeInfo state
@@ -117,7 +117,7 @@ suite =
                         ( TM.state, TM.hudCiWithSelector SelectorGateway )
 
                     msg =
-                        CI.SwitchGateway state.currentUniverse (Game.getActiveGateway state)
+                        CI.SwitchGateway state.currentUniverse (State.getActiveGatewayId state)
 
                     ( newModel, effect ) =
                         CI.update state msg model

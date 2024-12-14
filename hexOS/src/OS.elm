@@ -18,8 +18,7 @@ import Apps.RemoteAccess as RemoteAccess
 import Apps.Types as Apps
 import Dict exposing (Dict)
 import Effect exposing (Effect)
-import Game exposing (State)
-import Game.Model as Game
+import Game
 import HUD
 import HUD.ConnectionInfo
 import Html
@@ -30,6 +29,7 @@ import List.Extra as List exposing (Step(..))
 import Maybe.Extra as Maybe
 import OS.AppID exposing (AppID)
 import OS.Bus
+import State exposing (State)
 import UI exposing (UI, cl, col, div, id, row, style, text)
 import UI.Button
 import UI.Icon
@@ -73,11 +73,11 @@ type Msg
 -- Model
 
 
-init : WM.SessionID -> WM.XY -> ( Model, Effect Msg )
-init sessionId viewport =
+init : WM.XY -> ( Model, Effect Msg )
+init viewport =
     let
         wmModel =
-            WM.init sessionId viewport
+            WM.init viewport
     in
     ( { wm = wmModel
       , appModels = Dict.empty
@@ -122,7 +122,7 @@ update state msg model =
             ( model, Effect.none )
 
         PerformAction (OS.Bus.RequestOpenApp app parentInfo) ->
-            performRequestOpen model app parentInfo
+            performRequestOpen state model app parentInfo
 
         PerformAction (OS.Bus.RequestCloseApp appId) ->
             performActionOnApp model appId performRequestClose
@@ -193,17 +193,18 @@ performActionOnApp model appId fun =
 
 
 performRequestOpen :
-    Model
+    State
+    -> Model
     -> App.Manifest
     -> Maybe WM.ParentInfo
     -> ( Model, Effect Msg )
-performRequestOpen model app parentInfo =
+performRequestOpen { currentSession } model app parentInfo =
     let
         appId =
             model.wm.nextAppId
 
         windowInfo =
-            WM.createWindowInfo model.wm.currentSession app appId parentInfo
+            WM.createWindowInfo currentSession app appId parentInfo
 
         windowConfig =
             WM.Windowable.getWindowConfig windowInfo
@@ -352,13 +353,13 @@ performOpenApp :
     -> App.Manifest
     -> Maybe WM.ParentInfo
     -> ( Model, Effect Msg )
-performOpenApp { currentUniverse } model app parentInfo =
+performOpenApp { currentUniverse, currentSession } model app parentInfo =
     let
         appId =
             model.wm.nextAppId
 
         windowInfo =
-            WM.createWindowInfo model.wm.currentSession app appId parentInfo
+            WM.createWindowInfo currentSession app appId parentInfo
 
         windowConfig =
             WM.Windowable.getWindowConfig windowInfo
@@ -385,7 +386,7 @@ performOpenApp { currentUniverse } model app parentInfo =
                     ( Nothing, Effect.none, OS.Bus.NoOp )
 
         newWm =
-            WM.registerApp model.wm currentUniverse app appId windowConfig parentInfo
+            WM.registerApp model.wm currentUniverse currentSession app appId windowConfig parentInfo
 
         newAppModels =
             Dict.insert appId initialAppModel model.appModels
@@ -649,14 +650,13 @@ updateApp :
 updateApp state model appId appModel appMsg toAppModel toAppMsg updateFn =
     let
         -- TODO: Same comment as viewWindow:
-        -- TODO: Here, I should grab either sp/mp depending on gameState.currentUniverse
         -- In fact, it may make sense for each App to implement a "stateFilter", thus letting
         -- each App decide which data it receives (based on its own needs)
-        gameState =
-            state.sp
+        game =
+            State.getActiveUniverse state
 
         ( newAppModel, appCmd ) =
-            updateFn gameState appMsg appModel
+            updateFn game appMsg appModel
 
         midCmd =
             Effect.map (toAppMsg appId) appCmd
@@ -739,16 +739,18 @@ wmView gameState model =
 
 viewWindow : State -> Model -> AppID -> WM.Window -> List (UI Msg) -> List (UI Msg)
 viewWindow state model appId window acc =
-    if shouldRenderWindow state model.wm window then
+    if shouldRenderWindow state window then
         let
             appModel =
                 getAppModel model.appModels appId
 
-            -- TODO: Here, I should grab either sp/mp depending on gameState.currentUniverse
-            -- In fact, it may make sense for each App to implement a "stateFilter", thus letting
+            game =
+                State.getActiveUniverse state
+
+            -- TODO: it may make sense for each App to implement a "stateFilter", thus letting
             -- each App decide which data it receives (based on its own needs)
             windowContent =
-                Html.map AppMsg <| getWindowInnerContent appId window appModel state.sp
+                Html.map AppMsg <| getWindowInnerContent appId window appModel game
 
             renderedWindow =
                 renderWindow model.wm appId window windowContent
@@ -766,10 +768,10 @@ viewWindow state model appId window acc =
 3.  It has the `isVisible` flag set to True (it's not minimized).
 
 -}
-shouldRenderWindow : State -> WM.Model -> WM.Window -> Bool
-shouldRenderWindow state wm window =
+shouldRenderWindow : State -> WM.Window -> Bool
+shouldRenderWindow state window =
     -- TODO: maybe move this function to WM?
-    window.isVisible && window.universe == state.currentUniverse && window.sessionID == wm.currentSession
+    window.isVisible && window.universe == state.currentUniverse && window.sessionID == state.currentSession
 
 
 renderWindow : WM.Model -> AppID -> WM.Window -> UI Msg -> UI Msg

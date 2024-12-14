@@ -1,31 +1,32 @@
 module Game exposing
-    ( State
+    ( Model
+    , buildApiContext
     , getActiveGateway
-    , getActiveUniverse
-    , getInactiveUniverse
+    , getGateway
+    , getGateways
     , init
-    , update
+    , onTunnelCreatedEvent
+    , switchActiveEndpoint
+    , switchActiveGateway
     )
 
-import Effect exposing (Effect)
-import Event exposing (Event)
-import Game.Bus exposing (Action(..))
-import Game.Model as Model exposing (Model)
-import Game.Model.ServerID exposing (ServerID)
-import Game.Msg exposing (Msg(..))
+import API.Events.Types as Events
+import API.Types
+import API.Utils
+import Dict exposing (Dict)
+import Game.Model.NIP exposing (NIP)
+import Game.Model.Server as Server exposing (Gateway)
+import Game.Model.ServerID as ServerID exposing (RawServerID, ServerID)
 import Game.Universe exposing (Universe(..))
 
 
-
--- Types
-
-
-type alias State =
-    { sp : Model
-    , mp : Model
-
-    -- TODO: rename to `activeUniverse`
-    , currentUniverse : Universe
+type alias Model =
+    { universe : Universe
+    , mainframeID : ServerID
+    , activeGateway : ServerID
+    , activeEndpoint : Maybe NIP
+    , gateways : Dict RawServerID Gateway
+    , apiCtx : API.Types.InputContext
     }
 
 
@@ -33,131 +34,76 @@ type alias State =
 -- Model
 
 
-init : Universe -> Model -> Model -> ( State, Effect Msg )
-init currentUniverse spModel mpModel =
-    ( { sp = spModel
-      , mp = mpModel
-      , currentUniverse = currentUniverse
-      }
-    , Effect.none
-    )
+init : API.Types.InputToken -> Universe -> Events.IndexRequested -> Model
+init token universe index =
+    { universe = universe
+    , mainframeID = index.player.mainframe_id
+    , activeGateway = index.player.mainframe_id
+    , gateways = Server.parseGateways index.player.gateways
+    , apiCtx = buildApiContext token universe
+
+    -- `activeEndpoint` will be filled at `initSetActiveEndpoint`
+    , activeEndpoint = Nothing
+    }
+        |> initSetActiveEndpoint
 
 
-getUniverse : State -> Universe -> Model
-getUniverse state universe =
-    case universe of
-        Singleplayer ->
-            state.sp
+initSetActiveEndpoint : Model -> Model
+initSetActiveEndpoint model =
+    let
+        activeGatewayFirstTunnel =
+            List.head (getActiveGateway model).tunnels
 
-        Multiplayer ->
-            state.mp
-
-
-getActiveUniverse : State -> Model
-getActiveUniverse state =
-    case state.currentUniverse of
-        Singleplayer ->
-            state.sp
-
-        Multiplayer ->
-            state.mp
+        activeEndpoint =
+            Maybe.map (\t -> t.targetNip) activeGatewayFirstTunnel
+    in
+    { model | activeEndpoint = activeEndpoint }
 
 
-getInactiveUniverse : State -> Model
-getInactiveUniverse state =
-    case state.currentUniverse of
-        Singleplayer ->
-            state.mp
-
-        Multiplayer ->
-            state.sp
+getGateway : Model -> ServerID -> Gateway
+getGateway model gatewayId =
+    Dict.get (ServerID.toValue gatewayId) model.gateways
+        |> Maybe.withDefault Server.invalidGateway
 
 
-replaceUniverse : State -> Model -> Universe -> State
-replaceUniverse state newModel universe =
-    case universe of
-        Singleplayer ->
-            { state | sp = newModel }
-
-        Multiplayer ->
-            { state | mp = newModel }
+getGateways : Model -> List Gateway
+getGateways model =
+    Dict.values model.gateways
 
 
-replaceActiveUniverse : State -> Model -> State
-replaceActiveUniverse state newUniverse =
-    case state.currentUniverse of
-        Singleplayer ->
-            { state | sp = newUniverse }
-
-        Multiplayer ->
-            { state | mp = newUniverse }
+getActiveGateway : Model -> Gateway
+getActiveGateway model =
+    getGateway model model.activeGateway
 
 
-switchUniverse : Universe -> State -> State
-switchUniverse universe state =
-    { state | currentUniverse = universe }
+switchActiveGateway : ServerID -> Model -> Model
+switchActiveGateway newActiveGatewayId model =
+    { model | activeGateway = newActiveGatewayId }
+
+
+switchActiveEndpoint : NIP -> Model -> Model
+switchActiveEndpoint newActiveEndpointNip model =
+    { model | activeEndpoint = Just newActiveEndpointNip }
+
+
+onTunnelCreatedEvent : Model -> Events.TunnelCreated -> Model
+onTunnelCreatedEvent model event =
+    { model | activeEndpoint = Just event.target_nip }
 
 
 
--- Model > Universe API
+-- Utils
 
 
-getActiveGateway : State -> ServerID
-getActiveGateway state =
-    (getActiveUniverse state).activeGateway
+buildApiContext : API.Types.InputToken -> Universe -> API.Types.InputContext
+buildApiContext token universe =
+    let
+        apiServer =
+            case universe of
+                Singleplayer ->
+                    API.Types.ServerGameSP
 
-
-switchActiveGateway : ServerID -> State -> State
-switchActiveGateway newActiveGatewayId state =
-    state
-        |> getActiveUniverse
-        |> Model.switchActiveGateway newActiveGatewayId
-        |> replaceActiveUniverse state
-
-
-
--- Update
-
-
-update : Msg -> State -> ( State, Effect Msg )
-update msg state =
-    case msg of
-        PerformAction action ->
-            updateAction state action
-
-        OnEventReceived event ->
-            updateEvent state event
-
-        NoOp ->
-            ( state, Effect.none )
-
-
-updateAction : State -> Action -> ( State, Effect Msg )
-updateAction state action =
-    case action of
-        SwitchGateway universe gatewayId ->
-            let
-                newState =
-                    state
-                        |> switchUniverse universe
-                        |> switchActiveGateway gatewayId
-            in
-            ( newState, Effect.none )
-
-        ActionNoOp ->
-            ( state, Effect.none )
-
-
-updateEvent : State -> Event -> ( State, Effect Msg )
-updateEvent state event_ =
-    case event_ of
-        Event.TunnelCreated event universe ->
-            let
-                newModel =
-                    Model.onTunnelCreatedEvent (getUniverse state universe) event
-            in
-            ( replaceUniverse state newModel universe, Effect.none )
-
-        -- This event is handled during BootState and should never hit this branch
-        Event.IndexRequested _ _ ->
-            ( state, Effect.none )
+                Multiplayer ->
+                    API.Types.ServerGameMP
+    in
+    API.Utils.buildContext (Just token) apiServer

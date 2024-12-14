@@ -8,11 +8,11 @@ module HUD exposing
     )
 
 import Effect exposing (Effect)
-import Game exposing (State)
 import HUD.ConnectionInfo as CI
 import Html
 import Html.Attributes as HA
 import OS.Bus
+import State exposing (State)
 import UI exposing (UI, id, row)
 
 

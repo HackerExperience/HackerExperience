@@ -2,11 +2,9 @@ module Apps.LogViewer exposing (..)
 
 import Apps.Manifest as App
 import Effect exposing (Effect)
-import Game.Model as Game
+import Game
 import Game.Model.Log exposing (Log)
 import Game.Model.LogID exposing (LogID)
-import Game.Model.Server as Server
-import Game.Model.ServerID exposing (ServerID)
 import Html.Events as HE
 import OS.AppID exposing (AppID)
 import OS.Bus
@@ -25,8 +23,7 @@ type Msg
 
 
 type alias Model =
-    { serverId : ServerID
-    , selectedLog : Maybe LogID
+    { selectedLog : Maybe LogID
     }
 
 
@@ -35,13 +32,15 @@ type alias Model =
 
 
 filterLogs : Model -> Game.Model -> List Log
-filterLogs model game =
+filterLogs _ _ =
+    -- TODO: Figure out a way to handle ServerID (for gateways) and NIPs (for endpoints)
     -- TODO: Currently this is not doing any filtering other than grabbing all logs in the server
-    let
-        server =
-            Game.getGateway game model.serverId
-    in
-    Server.listLogs server
+    -- let
+    --     server =
+    --         Game.getGateway game model.serverId
+    -- in
+    -- Server.listLogs server
+    []
 
 
 
@@ -210,9 +209,8 @@ willOpen _ =
 
 
 didOpen : WM.WindowInfo -> ( Model, Effect Msg )
-didOpen { serverId } =
-    ( { serverId = serverId
-      , selectedLog = Nothing
+didOpen _ =
+    ( { selectedLog = Nothing
       }
     , Effect.none
     )

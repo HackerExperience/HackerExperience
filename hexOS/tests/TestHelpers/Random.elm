@@ -2,15 +2,16 @@ module TestHelpers.Random exposing (..)
 
 import API.Types
 import Dict
-import Game exposing (State)
-import Game.Model as Game
+import Game
 import Game.Model.ServerID as ServerID exposing (ServerID)
 import Game.Universe as Universe exposing (Universe(..))
 import HUD.ConnectionInfo as CI
-import Random as R exposing (Generator, int, map, map3, maxInt)
+import Random as R exposing (Generator, int, map, map4, maxInt)
 import Random.Extra as R
 import Random.List as R
+import State exposing (State)
 import TestHelpers.Support.RandomUtils as R
+import WM
 
 
 
@@ -50,13 +51,14 @@ state : Generator State
 state =
     let
         genState =
-            \sp mp universe_ ->
+            \sp mp universe_ gatewayId ->
                 { sp = sp
                 , mp = mp
                 , currentUniverse = universe_
+                , currentSession = WM.toLocalSessionId gatewayId
                 }
     in
-    map3 genState (game Singleplayer) (game Multiplayer) universeId
+    map4 genState (game Singleplayer) (game Multiplayer) universeId serverId
 
 
 

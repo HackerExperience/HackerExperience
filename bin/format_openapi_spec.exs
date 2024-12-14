@@ -62,7 +62,14 @@ defmodule OpenAPI.Elm.Formatter do
     sed("s/, #{name} \: Maybe #{oas_type}/, #{name} \: Maybe #{elm_type}/", file)
     sed("s/{ #{name} \: Maybe #{oas_type}/{ #{name} \: Maybe #{elm_type}/", file)
 
-    # Replace Decoder
+    # Replace Decoder (without line break)
+    sed(
+      "s/(Json\.Decode\.field \"#{name}\" Json\.Decode\.#{oas_decoder_type})/" <>
+        "(Json\.Decode\.field \"#{name}\" #{json_dec(elm_type, oas_decoder_type)})/",
+      file
+    )
+
+    # Replace decoder (with line break)
     sed(
       "/\"#{name}\"/!b;n;s/Json\.Decode\.#{oas_decoder_type}/" <>
         "#{json_dec(elm_type, oas_decoder_type)}/",

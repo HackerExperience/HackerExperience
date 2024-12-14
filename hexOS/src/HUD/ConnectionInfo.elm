@@ -9,14 +9,18 @@ module HUD.ConnectionInfo exposing
     )
 
 import Effect exposing (Effect)
-import Game exposing (State)
+import Game
 import Game.Bus as Game
+import Game.Model.NIP as NIP exposing (NIP)
 import Game.Model.ServerID as ServerID exposing (ServerID)
+import Game.Model.Tunnel exposing (Tunnel)
 import Game.Universe as Universe exposing (Universe(..))
 import Html.Events as HE
 import Json.Decode as JD
 import OS.Bus
+import State exposing (State)
 import UI exposing (UI, cl, col, div, id, row, text)
+import WM
 
 
 
@@ -33,10 +37,21 @@ type Selector
     | SelectorEndpoint
 
 
+{-| This type is exclusive for this module and is meant for enabling shared logic by defining which
+"side" (i.e. Gateway or Endpoint) the function should implement. Sometimes the behaviour changes
+slightly, but for the most part the implementation logic is shared/common.
+-}
+type CISide
+    = CIGateway
+    | CIEndpoint
+
+
 type Msg
     = OpenSelector Selector
     | CloseSelector
     | SwitchGateway Universe ServerID
+    | SwitchEndpoint Universe NIP
+    | ToggleWMSession
     | ToOS OS.Bus.Action
     | NoOp
 
@@ -69,6 +84,12 @@ update state msg model =
         SwitchGateway universe gatewayId ->
             updateSwitchGateway state model universe gatewayId
 
+        SwitchEndpoint universe endpointNip ->
+            updateSwitchEndpoint model universe endpointNip
+
+        ToggleWMSession ->
+            ( model, Effect.msgToCmd <| ToOS <| OS.Bus.ToGame Game.ToggleWMSession )
+
         ToOS _ ->
             -- Handled by parent
             ( model, Effect.none )
@@ -79,7 +100,7 @@ updateSwitchGateway state model gtwUniverse gatewayId =
     let
         -- Always switch, except if the selected gateway is the activeGateway in the activeUniverse
         shouldSwitch =
-            state.currentUniverse /= gtwUniverse || (Game.getActiveGateway state /= gatewayId)
+            state.currentUniverse /= gtwUniverse || (State.getActiveGatewayId state /= gatewayId)
 
         effect =
             if shouldSwitch then
@@ -89,6 +110,13 @@ updateSwitchGateway state model gtwUniverse gatewayId =
                 Effect.none
     in
     ( { model | selector = NoSelector }, effect )
+
+
+updateSwitchEndpoint : Model -> Universe -> NIP -> ( Model, Effect Msg )
+updateSwitchEndpoint model universe nip =
+    ( { model | selector = NoSelector }
+    , Effect.msgToCmd <| ToOS <| OS.Bus.ToGame (Game.SwitchEndpoint universe nip)
+    )
 
 
 
@@ -120,15 +148,15 @@ viewConnectionInfo state model =
     row [ id "hud-connection-info" ]
         [ viewGatewayArea state model
         , viewVpnArea
-        , viewEndpointArea
+        , viewEndpointArea state model
         ]
 
 
 viewGatewayArea : State -> Model -> UI Msg
 viewGatewayArea state model =
     row [ cl "hud-ci-gateway-area" ]
-        [ viewSideIcons
-        , viewServer state model
+        [ viewSideIcons state CIGateway
+        , viewGatewayServer state model
         ]
 
 
@@ -138,39 +166,138 @@ viewVpnArea =
         [ text "vpn" ]
 
 
-viewEndpointArea : UI Msg
-viewEndpointArea =
+viewEndpointArea : State -> Model -> UI Msg
+viewEndpointArea state model =
     row [ cl "hud-ci-endpoint-area" ]
-        [ text "endp" ]
+        [ viewEndpointServer state model
+        , viewSideIcons state CIEndpoint
+        ]
 
 
-viewSideIcons : UI Msg
-viewSideIcons =
+viewSideIcons : State -> CISide -> UI Msg
+viewSideIcons { currentSession } side =
+    let
+        isLocalSession =
+            WM.isSessionLocal currentSession
+
+        isWMActive =
+            case side of
+                CIGateway ->
+                    isLocalSession
+
+                CIEndpoint ->
+                    not isLocalSession
+
+        wmIndicator =
+            if isWMActive then
+                "X"
+
+            else
+                " "
+    in
     col [ cl "hud-ci-side-area" ]
-        [ text "a"
+        [ text ("[" ++ wmIndicator ++ "]")
         , text "b"
         ]
 
 
-viewServer : State -> Model -> UI Msg
-viewServer state model =
+{-| TODO: Once this module matures, try to merge the "mirrored" functions into a single one with
+shared logic. An example can be found at `viewSideIcons`.
+-}
+viewGatewayServer : State -> Model -> UI Msg
+viewGatewayServer state model =
     let
+        game =
+            State.getActiveUniverse state
+
+        gateway =
+            Game.getActiveGateway game
+
         ( arrowText, onClickMsg ) =
             case model.selector of
                 NoSelector ->
                     ( text "\\/", OpenSelector SelectorGateway )
 
+                SelectorEndpoint ->
+                    ( text "\\/", OpenSelector SelectorGateway )
+
                 _ ->
                     ( text "/\\", CloseSelector )
-    in
-    col [ cl "hud-ci-server", UI.flexFill ]
-        [ text "Gateway"
-        , case state.currentUniverse of
-            Universe.Singleplayer ->
-                text "SP"
 
-            Universe.Multiplayer ->
-                text "MP"
+        canSwitchSession =
+            not (WM.isSessionLocal state.currentSession)
+
+        serverClasses =
+            if canSwitchSession then
+                [ UI.pointer, UI.onClick ToggleWMSession ]
+
+            else
+                []
+
+        serverCol =
+            col serverClasses
+                [ text "Gatewayy"
+                , text (NIP.getIPString gateway.nip)
+                ]
+    in
+    col [ cl "hud-ci-server-gateway", UI.flexFill ]
+        [ serverCol
+        , div
+            [ cl "hud-ci-server-selector"
+            , UI.pointer
+            , UI.onClick onClickMsg
+
+            -- Don't close the selector on "mousedown". We'll handle that ourselves.
+            , stopPropagation "mousedown"
+            ]
+            [ arrowText ]
+        ]
+
+
+viewEndpointServer : State -> Model -> UI Msg
+viewEndpointServer state model =
+    let
+        endpoint =
+            State.getActiveEndpointNip state
+
+        ( label, isConnected ) =
+            case endpoint of
+                Just nip ->
+                    ( NIP.getIPString nip, True )
+
+                Nothing ->
+                    ( "Not Connected", False )
+
+        -- TODO: Hide selector switch if there are no tunnels
+        ( arrowText, onClickMsg ) =
+            case model.selector of
+                NoSelector ->
+                    ( text "\\/", OpenSelector SelectorEndpoint )
+
+                SelectorGateway ->
+                    ( text "\\/", OpenSelector SelectorEndpoint )
+
+                _ ->
+                    ( text "/\\", CloseSelector )
+
+        canSwitchSession =
+            isConnected && WM.isSessionLocal state.currentSession
+
+        serverClasses =
+            if canSwitchSession then
+                [ UI.pointer, UI.onClick ToggleWMSession ]
+
+            else
+                []
+
+        serverCol =
+            col serverClasses
+                [ text "Endpoint"
+                , text label
+                ]
+    in
+    col [ cl "hud-ci-server-endpoint", UI.flexFill ]
+        [ serverCol
         , div
             [ cl "hud-ci-server-selector"
             , UI.pointer
@@ -197,7 +324,7 @@ viewSelector state model =
             renderSelector <| viewGatewaySelector state model
 
         SelectorEndpoint ->
-            text "todo"
+            renderSelector <| viewEndpointSelector state model
 
 
 renderSelector : UI Msg -> UI Msg
@@ -224,32 +351,121 @@ viewGatewaySelector state model__ =
     let
         -- TODO: feed the list of gateways directly from State
         spGateways =
-            List.foldl (gatewaySelectorEntries state Singleplayer) [] [ ServerID.fromValue 1 ]
+            List.foldl (gatewaySelectorEntries state.sp Singleplayer) [] [ ServerID.fromValue 1 ]
 
         mpGateways =
-            List.foldl (gatewaySelectorEntries state Multiplayer) [] [ ServerID.fromValue 9 ]
+            List.foldl (gatewaySelectorEntries state.mp Multiplayer) [] [ ServerID.fromValue 1 ]
     in
     col [] <|
         spGateways
             ++ mpGateways
 
 
-gatewaySelectorEntries : State -> Universe -> ServerID -> List (UI Msg) -> List (UI Msg)
-gatewaySelectorEntries state__ gtwUniverse serverId acc__ =
+viewEndpointSelector : State -> Model -> UI Msg
+viewEndpointSelector state _ =
+    let
+        activeGame =
+            State.getActiveUniverse state
+
+        otherGame =
+            State.getInactiveUniverse state
+
+        gateway =
+            Game.getActiveGateway activeGame
+
+        -- List of every tunnel within the active gateway
+        gatewayTunnels =
+            gateway.tunnels
+
+        endpointsOnGateway =
+            List.foldl (endpointSelectorEntries activeGame.universe activeGame.activeEndpoint)
+                []
+                gatewayTunnels
+
+        -- List of every tunnel in the Universe minus tunnels in active gateway
+        universeTunnels =
+            Game.getGateways activeGame
+                |> List.concatMap (\{ tunnels } -> tunnels)
+                |> List.filter (\{ sourceNip } -> sourceNip /= gateway.nip)
+
+        endpointsOnUniverse =
+            List.foldl (endpointSelectorEntries activeGame.universe Nothing)
+                []
+                universeTunnels
+
+        otherUniverseSeparator =
+            [ div [] [ text <| Universe.toString otherGame.universe ++ ":" ] ]
+
+        -- List of every tunnel in the other universe
+        otherUniverseTunnels =
+            Game.getGateways otherGame
+                |> List.concatMap (\{ tunnels } -> tunnels)
+
+        endpointsOnOtherUniverse =
+            List.foldl (endpointSelectorEntries otherGame.universe Nothing)
+                []
+                otherUniverseTunnels
+    in
+    col [] <|
+        endpointsOnGateway
+            ++ endpointsOnUniverse
+            ++ otherUniverseSeparator
+            ++ endpointsOnOtherUniverse
+
+
+gatewaySelectorEntries : Game.Model -> Universe -> ServerID -> List (UI Msg) -> List (UI Msg)
+gatewaySelectorEntries game gtwUniverse serverId acc__ =
     -- TODO: Use acc
     let
         onClickMsg =
             SwitchGateway gtwUniverse serverId
 
+        gateway =
+            Game.getGateway game serverId
+
         label =
             case gtwUniverse of
                 Singleplayer ->
-                    "SP " ++ String.fromInt (ServerID.toValue serverId)
+                    "SP: " ++ NIP.getIPString gateway.nip
 
                 Multiplayer ->
-                    "MP " ++ String.fromInt (ServerID.toValue serverId)
+                    "MP: " ++ NIP.getIPString gateway.nip
     in
-    [ div [ UI.onClick onClickMsg ] [ text label ] ]
+    [ div [ UI.pointer, UI.onClick onClickMsg ] [ text label ] ]
+
+
+endpointSelectorEntries : Universe -> Maybe NIP -> Tunnel -> List (UI Msg) -> List (UI Msg)
+endpointSelectorEntries universe activeEndpoint tunnel acc =
+    let
+        isCurrentEndpoint =
+            case activeEndpoint of
+                Just nip ->
+                    nip == tunnel.targetNip
+
+                Nothing ->
+                    False
+
+        onClickMsg =
+            SwitchEndpoint universe tunnel.targetNip
+
+        classes =
+            if not isCurrentEndpoint then
+                [ UI.pointer, UI.onClick onClickMsg ]
+
+            else
+                []
+
+        label =
+            NIP.getIPString tunnel.targetNip
+
+        indicator =
+            if isCurrentEndpoint then
+                " <--"
+
+            else
+                ""
+    in
+    div classes [ text <| label ++ indicator ] :: acc
 
 
 addGlobalEvents : Model -> List (UI.Attribute Msg)

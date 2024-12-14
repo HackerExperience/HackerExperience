@@ -4,7 +4,8 @@ module Effect exposing (..)
 
 import API.Game as GameAPI
 import API.Lobby as LobbyAPI
-import API.Types exposing (InputConfig)
+import API.Types exposing (InputConfig, InputToken)
+import API.Utils
 import Json.Encode as JE
 import Ports
 import Task
@@ -17,7 +18,7 @@ type Effect msg
     | Batch (List (Effect msg))
     | APIRequest (APIRequestEnum msg)
     | MsgToCmd Float msg
-    | StartSSESubscription String
+    | StartSSESubscription InputToken String
     | DebouncedCmd (Cmd msg)
 
 
@@ -51,8 +52,15 @@ apply ( seeds, effect ) =
             else
                 ( seeds, Utils.msgToCmdWithDelay delay msg )
 
-        StartSSESubscription token ->
-            ( seeds, Ports.eventStart (JE.string token) )
+        StartSSESubscription token baseUrl ->
+            let
+                encodedValue =
+                    JE.object
+                        [ ( "token", JE.string <| API.Utils.tokenToString token )
+                        , ( "baseUrl", JE.string baseUrl )
+                        ]
+            in
+            ( seeds, Ports.eventStart encodedValue )
 
         -- The `elm-debounce` library always returns a Cmd. We are merely wrapping it into an Effect
         DebouncedCmd cmd ->
@@ -101,9 +109,9 @@ msgToCmdWithDelay delay msg =
     MsgToCmd delay msg
 
 
-sseStart : String -> Effect msg
-sseStart token =
-    StartSSESubscription token
+sseStart : InputToken -> String -> Effect msg
+sseStart token baseUrl =
+    StartSSESubscription token baseUrl
 
 
 debouncedCmd : Cmd msg -> Effect msg
@@ -151,8 +159,8 @@ map toMsg effect =
                 LobbyLogin msg body ->
                     APIRequest (LobbyLogin (\result -> toMsg (msg result)) body)
 
-        StartSSESubscription token ->
-            StartSSESubscription token
+        StartSSESubscription token baseUrl ->
+            StartSSESubscription token baseUrl
 
         DebouncedCmd cmd ->
             DebouncedCmd (Cmd.map toMsg cmd)

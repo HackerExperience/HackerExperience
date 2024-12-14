@@ -1,15 +1,16 @@
-module GameTest exposing (suite)
+module StateTest exposing (suite)
 
-import Game
 import Game.Bus exposing (Action(..))
 import Game.Model.ServerID as ServerID
 import Game.Msg exposing (Msg(..))
 import Game.Universe as Universe exposing (Universe(..))
+import State
 import TestHelpers.Expect as E
 import TestHelpers.Game as TG
 import TestHelpers.Models as TM
 import TestHelpers.Random as TR
 import TestHelpers.Test exposing (Test, describe, test)
+import WM
 
 
 suite : Test
@@ -44,15 +45,18 @@ msgPerformActionTests =
                             PerformAction (SwitchGateway Multiplayer serverId)
 
                         ( newState, effect ) =
-                            Game.update msg initialState
+                            State.update msg initialState
 
                         newActiveUniverse =
-                            Game.getActiveUniverse newState
+                            State.getActiveUniverse newState
                     in
                     E.batch
                         [ -- Universe changed from SP to MP
                           E.equal initialState.currentUniverse Singleplayer
                         , E.equal newState.currentUniverse Multiplayer
+
+                        -- `currentSession` is now pointing to the new server
+                        , E.equal newState.currentSession (WM.toLocalSessionId serverId)
 
                         -- Active gateway has changed in the MP model
                         , E.equal newState.mp.activeGateway serverId

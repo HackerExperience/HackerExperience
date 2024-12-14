@@ -24,9 +24,8 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   // TODO: Describe token auth and why we have a token only for SSE
-  app.ports.eventStart.subscribe(function(token) {
-    // TODO: `url` itself should come from the Elm side
-    const url = `http://localhost:4001/v1/player/sync?token=${token}`
+  app.ports.eventStart.subscribe(function({ token, baseUrl }) {
+    const url = `${baseUrl}/v1/player/sync?token=${token}`
     const sse = new EventSource(url)
 
     sse.addEventListener("message", (e) => {
