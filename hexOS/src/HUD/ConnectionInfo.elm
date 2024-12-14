@@ -9,9 +9,8 @@ module HUD.ConnectionInfo exposing
     )
 
 import Effect exposing (Effect)
-import Game as State exposing (State)
+import Game
 import Game.Bus as Game
-import Game.Model as Game
 import Game.Model.NIP as NIP exposing (NIP)
 import Game.Model.ServerID as ServerID exposing (ServerID)
 import Game.Model.Tunnel exposing (Tunnel)
@@ -19,6 +18,7 @@ import Game.Universe as Universe exposing (Universe(..))
 import Html.Events as HE
 import Json.Decode as JD
 import OS.Bus
+import State exposing (State)
 import UI exposing (UI, cl, col, div, id, row, text)
 import WM
 

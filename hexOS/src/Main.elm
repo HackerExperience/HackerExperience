@@ -7,9 +7,8 @@ import Core.Debounce as Debounce
 import Debounce exposing (Debounce)
 import Effect exposing (Effect)
 import Event exposing (Event)
-import Game
 import Game.Msg as Game
-import Game.Universe
+import Game.Universe exposing (Universe(..))
 import Html
 import Json.Decode as JD
 import Login
@@ -17,6 +16,7 @@ import OS
 import OS.Bus
 import Ports
 import Random
+import State
 import TimeTravel.Browser as TimeTravel exposing (defaultConfig)
 import UI
 import UUID exposing (Seeds)
@@ -43,7 +43,7 @@ type Msg
 type State
     = LoginState Login.Model
     | BootState Boot.Model
-    | GameState Game.State OS.Model
+    | GameState State.State OS.Model
     | InstallState
     | ErrorState
 
@@ -183,7 +183,7 @@ update msg model =
                     let
                         -- TODO
                         currentUniverse =
-                            Game.Universe.Singleplayer
+                            Singleplayer
 
                         wmSessionId =
                             WM.toLocalSessionId spModel.mainframeID
@@ -191,10 +191,10 @@ update msg model =
                         ( osModel, osCmd ) =
                             OS.init ( model.flags.viewportX, model.flags.viewportY )
 
-                        ( gameModel, playCmd ) =
-                            Game.init currentUniverse wmSessionId spModel mpModel
+                        ( state, playCmd ) =
+                            State.init currentUniverse wmSessionId spModel mpModel
                     in
-                    ( { model | state = GameState gameModel osModel }
+                    ( { model | state = GameState state osModel }
                     , Effect.batch
                         [ Effect.map GameMsg playCmd
                         , Effect.map OSMsg osCmd
@@ -236,7 +236,7 @@ update msg model =
                 _ ->
                     ( model, Effect.none )
 
-        GameState gameModel osModel ->
+        GameState state osModel ->
             case msg of
                 ClickedLink _ ->
                     ( model, Effect.none )
@@ -280,7 +280,7 @@ update msg model =
                         newOsModel =
                             OS.updateViewport osModel ( w, h )
                     in
-                    ( { model | state = GameState gameModel newOsModel }, Effect.none )
+                    ( { model | state = GameState state newOsModel }, Effect.none )
 
                 OSMsg (OS.PerformAction (OS.Bus.ToGame action)) ->
                     ( model, Effect.msgToCmd <| GameMsg (Game.PerformAction action) )
@@ -290,18 +290,18 @@ update msg model =
                     -- another. Let's see how it goes...
                     let
                         ( newOsModel, osCmd ) =
-                            OS.update gameModel subMsg osModel
+                            OS.update state subMsg osModel
                     in
-                    ( { model | state = GameState gameModel newOsModel }
+                    ( { model | state = GameState state newOsModel }
                     , Effect.batch [ Effect.map OSMsg osCmd ]
                     )
 
                 GameMsg gameMsg ->
                     let
-                        ( newGameModel, gameEffect ) =
-                            Game.update gameMsg gameModel
+                        ( newState, gameEffect ) =
+                            State.update gameMsg state
                     in
-                    ( { model | state = GameState newGameModel osModel }
+                    ( { model | state = GameState newState osModel }
                     , Effect.map GameMsg gameEffect
                     )
 
@@ -320,10 +320,10 @@ update msg model =
 
                 OnEventReceived (Ok event) ->
                     let
-                        ( newGameModel, gameEffect ) =
-                            Game.update (Game.OnEventReceived event) gameModel
+                        ( newState, gameEffect ) =
+                            State.update (Game.OnEventReceived event) state
                     in
-                    ( { model | state = GameState newGameModel osModel }
+                    ( { model | state = GameState newState osModel }
                     , Effect.map GameMsg gameEffect
                     )
 
@@ -362,11 +362,11 @@ view model =
             in
             { title = title, body = List.map (Html.map BootMsg) body }
 
-        GameState gameModel osModel ->
+        GameState state osModel ->
             -- View in the GameState is entirely controlled by the OS
             let
                 { title, body } =
-                    OS.documentView gameModel osModel
+                    OS.documentView state osModel
             in
             { title = title, body = List.map (Html.map OSMsg) body }
 
@@ -381,7 +381,7 @@ view model =
 subscriptions : Model navkey -> Sub Msg
 subscriptions model =
     case model.state of
-        GameState gameModel__ osModel ->
+        GameState state__ osModel ->
             Sub.batch
                 [ Browser.Events.onResize (\w h -> BrowserResizedViewport ( w, h ))
                 , Browser.Events.onVisibilityChange BrowserVisibilityChanged

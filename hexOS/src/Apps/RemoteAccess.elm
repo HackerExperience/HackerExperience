@@ -4,7 +4,7 @@ import API.Game as GameAPI
 import API.Types
 import Apps.Manifest as App
 import Effect exposing (Effect)
-import Game.Model as Game
+import Game
 import Game.Model.NIP as NIP
 import OS.AppID exposing (AppID)
 import OS.Bus

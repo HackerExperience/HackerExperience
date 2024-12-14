@@ -4,7 +4,7 @@ import API.Events.Types as Events
 import API.Types
 import Effect exposing (Effect)
 import Event exposing (Event)
-import Game.Model
+import Game
 import Game.Universe exposing (Universe(..))
 import UI exposing (UI, cl, col, row, text)
 
@@ -14,7 +14,7 @@ import UI exposing (UI, cl, col, row, text)
 
 
 type Msg
-    = ProceedToGame Game.Model.Model Game.Model.Model
+    = ProceedToGame Game.Model Game.Model
     | EstablishSSEConnections
     | OnEventReceived Event
 
@@ -88,10 +88,10 @@ updateEvent model event =
                 ( Just spIndex, Just mpIndex ) ->
                     let
                         spModel =
-                            Game.Model.init model.token Singleplayer spIndex
+                            Game.init model.token Singleplayer spIndex
 
                         mpModel =
-                            Game.Model.init model.token Multiplayer mpIndex
+                            Game.init model.token Multiplayer mpIndex
                     in
                     ( newModel, Effect.msgToCmd <| ProceedToGame spModel mpModel )
 

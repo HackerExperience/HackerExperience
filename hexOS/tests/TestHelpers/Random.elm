@@ -2,14 +2,14 @@ module TestHelpers.Random exposing (..)
 
 import API.Types
 import Dict
-import Game exposing (State)
-import Game.Model as Game
+import Game
 import Game.Model.ServerID as ServerID exposing (ServerID)
 import Game.Universe as Universe exposing (Universe(..))
 import HUD.ConnectionInfo as CI
 import Random as R exposing (Generator, int, map, map4, maxInt)
 import Random.Extra as R
 import Random.List as R
+import State exposing (State)
 import TestHelpers.Support.RandomUtils as R
 import WM
 

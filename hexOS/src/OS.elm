@@ -18,8 +18,7 @@ import Apps.RemoteAccess as RemoteAccess
 import Apps.Types as Apps
 import Dict exposing (Dict)
 import Effect exposing (Effect)
-import Game as State exposing (State)
-import Game.Model as Game
+import Game
 import HUD
 import HUD.ConnectionInfo
 import Html
@@ -30,6 +29,7 @@ import List.Extra as List exposing (Step(..))
 import Maybe.Extra as Maybe
 import OS.AppID exposing (AppID)
 import OS.Bus
+import State exposing (State)
 import UI exposing (UI, cl, col, div, id, row, style, text)
 import UI.Button
 import UI.Icon

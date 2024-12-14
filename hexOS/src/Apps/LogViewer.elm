@@ -2,7 +2,7 @@ module Apps.LogViewer exposing (..)
 
 import Apps.Manifest as App
 import Effect exposing (Effect)
-import Game.Model as Game
+import Game
 import Game.Model.Log exposing (Log)
 import Game.Model.LogID exposing (LogID)
 import Game.Model.Server as Server

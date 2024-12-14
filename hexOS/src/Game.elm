@@ -1,43 +1,32 @@
 module Game exposing
-    ( State
-    , getActiveEndpointNip
-    , getActiveGatewayId
-    , getActiveUniverse
-    , getInactiveUniverse
-    , getUniverse
+    ( Model
+    , buildApiContext
+    , getActiveGateway
+    , getGateway
+    , getGateways
     , init
-    , update
+    , onTunnelCreatedEvent
+    , switchActiveEndpoint
+    , switchActiveGateway
     )
 
-import Effect exposing (Effect)
-import Event exposing (Event)
-import Game.Bus exposing (Action(..))
-import Game.Model as Model exposing (Model)
+import API.Events.Types as Events
+import API.Types
+import API.Utils
+import Dict exposing (Dict)
 import Game.Model.NIP exposing (NIP)
-import Game.Model.ServerID exposing (ServerID)
-import Game.Msg exposing (Msg(..))
+import Game.Model.Server as Server exposing (Gateway)
+import Game.Model.ServerID as ServerID exposing (RawServerID, ServerID)
 import Game.Universe exposing (Universe(..))
-import WM
 
 
-
--- Types
-
-
-type alias State =
-    { sp : Model
-    , mp : Model
-
-    -- TODO: rename to `activeUniverse`
-    , currentUniverse : Universe
-
-    -- NOTE: The `currentSession` is a "bridge" between Game state and Client state. It is only here
-    -- due to the SwitchGateway/SwitchEndpoint messages. I'll leave it here for now, but if that's
-    -- the *only* reason WM state is used, consider moving it back to WM and duplicating these Msgs
-    -- at HUD.ConnectionInfo. Another possibility is sending messages from Game to OS. This is not
-    -- supported now, but I think it will likely be needed in the future. In any case, I'm delaying
-    -- its implementation as much as possible.
-    , currentSession : WM.SessionID
+type alias Model =
+    { universe : Universe
+    , mainframeID : ServerID
+    , activeGateway : ServerID
+    , activeEndpoint : Maybe NIP
+    , gateways : Dict RawServerID Gateway
+    , apiCtx : API.Types.InputContext
     }
 
 
@@ -45,176 +34,77 @@ type alias State =
 -- Model
 
 
-init : Universe -> WM.SessionID -> Model -> Model -> ( State, Effect Msg )
-init currentUniverse currentSession spModel mpModel =
-    ( { sp = spModel
-      , mp = mpModel
-      , currentUniverse = currentUniverse
-      , currentSession = currentSession
-      }
-    , Effect.none
-    )
+init : API.Types.InputToken -> Universe -> Events.IndexRequested -> Model
+init token universe index =
+    { universe = universe
+    , mainframeID = index.player.mainframe_id
+    , activeGateway = index.player.mainframe_id
+    , gateways = Server.parseGateways index.player.gateways
+    , apiCtx = buildApiContext token universe
+
+    -- `activeEndpoint` will be filled at `initSetActiveEndpoint`
+    , activeEndpoint = Nothing
+    }
+        |> initSetActiveEndpoint
 
 
-getUniverse : State -> Universe -> Model
-getUniverse state universe =
-    case universe of
-        Singleplayer ->
-            state.sp
+initSetActiveEndpoint : Model -> Model
+initSetActiveEndpoint model =
+    let
+        activeGatewayFirstTunnel =
+            List.head (getActiveGateway model).tunnels
 
-        Multiplayer ->
-            state.mp
-
-
-getActiveUniverse : State -> Model
-getActiveUniverse state =
-    case state.currentUniverse of
-        Singleplayer ->
-            state.sp
-
-        Multiplayer ->
-            state.mp
+        activeEndpoint =
+            Maybe.map (\t -> t.targetNip) activeGatewayFirstTunnel
+    in
+    { model | activeEndpoint = activeEndpoint }
 
 
-getInactiveUniverse : State -> Model
-getInactiveUniverse state =
-    case state.currentUniverse of
-        Singleplayer ->
-            state.mp
-
-        Multiplayer ->
-            state.sp
+getGateway : Model -> ServerID -> Gateway
+getGateway model gatewayId =
+    Dict.get (ServerID.toValue gatewayId) model.gateways
+        |> Maybe.withDefault Server.invalidGateway
 
 
-replaceUniverse : State -> Model -> Universe -> State
-replaceUniverse state newModel universe =
-    case universe of
-        Singleplayer ->
-            { state | sp = newModel }
-
-        Multiplayer ->
-            { state | mp = newModel }
+getGateways : Model -> List Gateway
+getGateways model =
+    Dict.toList model.gateways
+        |> List.map (\( _, v ) -> v)
 
 
-replaceActiveUniverse : State -> Model -> State
-replaceActiveUniverse state newUniverse =
-    case state.currentUniverse of
-        Singleplayer ->
-            { state | sp = newUniverse }
-
-        Multiplayer ->
-            { state | mp = newUniverse }
+getActiveGateway : Model -> Gateway
+getActiveGateway model =
+    getGateway model model.activeGateway
 
 
-switchUniverse : Universe -> State -> State
-switchUniverse universe state =
-    { state | currentUniverse = universe }
+switchActiveGateway : ServerID -> Model -> Model
+switchActiveGateway newActiveGatewayId model =
+    { model | activeGateway = newActiveGatewayId }
 
 
-switchSession : WM.SessionID -> State -> State
-switchSession sessionId state =
-    { state | currentSession = sessionId }
+switchActiveEndpoint : NIP -> Model -> Model
+switchActiveEndpoint newActiveEndpointNip model =
+    { model | activeEndpoint = Just newActiveEndpointNip }
+
+
+onTunnelCreatedEvent : Model -> Events.TunnelCreated -> Model
+onTunnelCreatedEvent model event =
+    { model | activeEndpoint = Just event.target_nip }
 
 
 
--- Model > Universe API
+-- Utils
 
 
-getActiveGatewayId : State -> ServerID
-getActiveGatewayId state =
-    (getActiveUniverse state).activeGateway
+buildApiContext : API.Types.InputToken -> Universe -> API.Types.InputContext
+buildApiContext token universe =
+    let
+        apiServer =
+            case universe of
+                Singleplayer ->
+                    API.Types.ServerGameSP
 
-
-getActiveEndpointNip : State -> Maybe NIP
-getActiveEndpointNip state =
-    (getActiveUniverse state).activeEndpoint
-
-
-switchActiveGateway : ServerID -> State -> State
-switchActiveGateway newActiveGatewayId state =
-    state
-        |> getActiveUniverse
-        |> Model.switchActiveGateway newActiveGatewayId
-        |> replaceActiveUniverse state
-
-
-switchActiveEndpoint : NIP -> State -> State
-switchActiveEndpoint newActiveEndpointNip state =
-    state
-        |> getActiveUniverse
-        |> Model.switchActiveEndpoint newActiveEndpointNip
-        |> replaceActiveUniverse state
-
-
-
--- Update
-
-
-update : Msg -> State -> ( State, Effect Msg )
-update msg state =
-    case msg of
-        PerformAction action ->
-            updateAction state action
-
-        OnEventReceived event ->
-            updateEvent state event
-
-        NoOp ->
-            ( state, Effect.none )
-
-
-updateAction : State -> Action -> ( State, Effect Msg )
-updateAction state action =
-    case action of
-        SwitchGateway universe gatewayId ->
-            let
-                newState =
-                    state
-                        |> switchUniverse universe
-                        |> switchActiveGateway gatewayId
-                        |> switchSession (WM.toLocalSessionId gatewayId)
-            in
-            ( newState, Effect.none )
-
-        SwitchEndpoint universe nip ->
-            let
-                newState =
-                    state
-                        |> switchUniverse universe
-                        |> switchActiveEndpoint nip
-                        |> switchSession (WM.toRemoteSessionId nip)
-            in
-            ( newState, Effect.none )
-
-        ToggleWMSession ->
-            let
-                game =
-                    getActiveUniverse state
-
-                newSessionId =
-                    case game.activeEndpoint of
-                        Just endpointNip ->
-                            WM.toggleSession game.activeGateway endpointNip state.currentSession
-
-                        Nothing ->
-                            state.currentSession
-            in
-            ( { state | currentSession = newSessionId }, Effect.none )
-
-        ActionNoOp ->
-            ( state, Effect.none )
-
-
-updateEvent : State -> Event -> ( State, Effect Msg )
-updateEvent state event_ =
-    case event_ of
-        Event.TunnelCreated event universe ->
-            let
-                newModel =
-                    Model.onTunnelCreatedEvent (getUniverse state universe) event
-            in
-            ( replaceUniverse state newModel universe, Effect.none )
-
-        -- This event is handled during BootState and should never hit this branch
-        Event.IndexRequested _ _ ->
-            ( state, Effect.none )
+                Multiplayer ->
+                    API.Types.ServerGameMP
+    in
+    API.Utils.buildContext (Just token) apiServer
