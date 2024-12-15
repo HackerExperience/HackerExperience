@@ -94,10 +94,13 @@ components:
         - target_nip
         - source_nip
         - tunnel_id
+        - index
         - access
       properties:
         access:
           type: string
+        index:
+          $ref: '#/components/schemas/IdxEndpoint'
         tunnel_id:
           type: integer
         source_nip:

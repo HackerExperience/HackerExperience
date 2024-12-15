@@ -4,6 +4,7 @@ module Game.Model.Server exposing
     , invalidGateway
       -- , listLogs
     , onTunnelCreatedEvent
+    , parseEndpoint
     , parseEndpoints
     , parseGateways
     , switchActiveEndpoint
@@ -106,3 +107,16 @@ switchActiveEndpoint gateway endpointNip =
 -- listLogs : Gateway -> List Log
 -- listLogs server =
 --     Log.logsToList server.logs
+-- Event handlers
+
+
+onTunnelCreatedEvent : Events.TunnelCreated -> Gateway -> Gateway
+onTunnelCreatedEvent event gateway =
+    let
+        tunnel =
+            Tunnel.fromTunnelCreatedEvent event
+    in
+    { gateway
+        | tunnels = tunnel :: gateway.tunnels
+        , activeEndpoint = Just event.target_nip
+    }

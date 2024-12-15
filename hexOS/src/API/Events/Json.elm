@@ -36,8 +36,9 @@ import OpenApi.Common
 decodeTunnelCreated : Json.Decode.Decoder API.Events.Types.TunnelCreated
 decodeTunnelCreated =
     Json.Decode.succeed
-        (\access source_nip target_nip tunnel_id ->
+        (\access index source_nip target_nip tunnel_id ->
             { access = access
+            , index = index
             , source_nip = source_nip
             , target_nip = target_nip
             , tunnel_id = tunnel_id
@@ -45,6 +46,8 @@ decodeTunnelCreated =
         )
         |> OpenApi.Common.jsonDecodeAndMap
             (Json.Decode.field "access" Json.Decode.string)
+        |> OpenApi.Common.jsonDecodeAndMap
+            (Json.Decode.field "index" decodeIdxEndpoint)
         |> OpenApi.Common.jsonDecodeAndMap
             (Json.Decode.field
                 "source_nip"
@@ -66,6 +69,7 @@ encodeTunnelCreated : API.Events.Types.TunnelCreated -> Json.Encode.Value
 encodeTunnelCreated rec =
     Json.Encode.object
         [ ( "access", Json.Encode.string rec.access )
+        , ( "index", encodeIdxEndpoint rec.index )
         , ( "source_nip", Json.Encode.string (NIP.toString rec.source_nip) )
         , ( "target_nip", Json.Encode.string (NIP.toString rec.target_nip) )
         , ( "tunnel_id", Json.Encode.int (TunnelID.toValue rec.tunnel_id) )

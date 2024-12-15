@@ -16,7 +16,7 @@ import API.Types
 import API.Utils
 import Dict exposing (Dict)
 import Dict.Extra as Dict
-import Game.Model.NIP exposing (NIP, RawNIP)
+import Game.Model.NIP as NIP exposing (NIP, RawNIP)
 import Game.Model.Server as Server exposing (Endpoint, Gateway)
 import Game.Model.ServerID as ServerID exposing (RawServerID, ServerID)
 import Game.Model.Tunnel as Tunnel exposing (Tunnels)
@@ -121,13 +121,18 @@ switchActiveEndpoint newActiveEndpointNip model =
 -- Model > Gateways
 
 
+maybeFindGatewayByNip : Model -> NIP -> Maybe Gateway
+maybeFindGatewayByNip model nip =
+    Dict.find (\_ gtw -> gtw.nip == nip) model.gateways
+        |> Maybe.map Tuple.second
+
+
 {-| Returns the gateway with the corresponding NIP. This function assumes that the NIP will always
 exist. If there is a possibility it won't, use the `maybeFindGatewayByNip` variant.
 -}
 findGatewayByNip : Model -> NIP -> Gateway
 findGatewayByNip model nip =
-    Dict.find (\_ gtw -> gtw.nip == nip) model.gateways
-        |> Maybe.map Tuple.second
+    maybeFindGatewayByNip model nip
         |> Maybe.withDefault Server.invalidGateway
 
 
@@ -146,8 +151,34 @@ getAllTunnels model =
 
 
 onTunnelCreatedEvent : Model -> Events.TunnelCreated -> Model
-onTunnelCreatedEvent model _ =
+onTunnelCreatedEvent model event =
+    let
+        gateway =
+            maybeFindGatewayByNip model event.source_nip
+
+        updateGatewayFn =
+            \model_ ->
+                case gateway of
+                    Just gtw ->
+                        updateGateway gtw.id (Server.onTunnelCreatedEvent event) model_
+
+                    Nothing ->
+                        model
+
+        updateEndpointsFn =
+            \model_ ->
+                let
+                    endpoint =
+                        Server.parseEndpoint event.index
+
+                    newEndpoints =
+                        Dict.insert (NIP.toString endpoint.nip) endpoint model_.endpoints
+                in
+                { model_ | endpoints = newEndpoints }
+    in
     model
+        |> updateGatewayFn
+        |> updateEndpointsFn
 
 
 

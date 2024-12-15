@@ -72,10 +72,10 @@ defmodule Game.Index.Server do
 
   @spec endpoint_index(term(), term(), term()) ::
           endpoint_index
-  def endpoint_index(player, server_id, nip) do
+  def endpoint_index(player_id, server_id, nip) do
     %{
       nip: nip,
-      logs: Index.Log.index(player.id, server_id)
+      logs: Index.Log.index(player_id, server_id)
     }
   end
 

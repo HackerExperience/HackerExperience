@@ -50,7 +50,7 @@ defmodule Game.Index.Player do
       |> Enum.flat_map(& &1.tunnels)
       |> Enum.map(fn %{target_nip: endpoint_nip} ->
         endpoint_id = Svc.NetworkConnection.fetch!(by_nip: endpoint_nip).server_id
-        Index.Server.endpoint_index(player, endpoint_id, endpoint_nip)
+        Index.Server.endpoint_index(player.id, endpoint_id, endpoint_nip)
       end)
 
     Map.put(partial_index, :endpoints, endpoints)

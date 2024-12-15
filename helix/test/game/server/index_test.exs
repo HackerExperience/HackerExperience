@@ -12,7 +12,7 @@ defmodule Game.Index.ServerTest do
       %{nip: endp_nip, server: endpoint} = Setup.server()
       Setup.tunnel_lite!(source_nip: gtw_nip, target_nip: endp_nip)
 
-      assert index = Index.Server.endpoint_index(entity, endpoint.id, endp_nip)
+      assert index = Index.Server.endpoint_index(entity.id, endpoint.id, endp_nip)
 
       # Index contains all the expected keys
       Enum.each(expected_endpoint_keys(), fn key ->
@@ -33,7 +33,7 @@ defmodule Game.Index.ServerTest do
       Setup.tunnel_lite!(source_nip: gtw_nip, target_nip: endp_nip)
 
       rendered_index =
-        entity
+        entity.id
         |> Index.Server.endpoint_index(endpoint.id, endp_nip)
         |> Index.Server.render_endpoint_index()
 

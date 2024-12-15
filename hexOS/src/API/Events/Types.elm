@@ -18,6 +18,7 @@ import Game.Model.TunnelID as TunnelID exposing (TunnelID(..))
 -}
 type alias TunnelCreated =
     { access : String
+    , index : IdxEndpoint
     , source_nip : NIP
     , target_nip : NIP
     , tunnel_id : TunnelID
