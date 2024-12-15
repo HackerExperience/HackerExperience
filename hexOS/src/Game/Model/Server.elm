@@ -1,5 +1,6 @@
 module Game.Model.Server exposing
-    ( Gateway
+    ( Endpoint
+    , Gateway
     , invalidGateway
       -- , listLogs
     , parseGateways
@@ -25,6 +26,12 @@ type alias Gateway =
     , logs : Logs
     , tunnels : Tunnels
     , activeEndpoint : Maybe NIP
+    }
+
+
+type alias Endpoint =
+    { nip : NIP
+    , logs : Logs
     }
 
 

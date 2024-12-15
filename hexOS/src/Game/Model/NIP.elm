@@ -1,5 +1,6 @@
 module Game.Model.NIP exposing
     ( NIP
+    , RawNIP
     , fromString
     , getIPString
     , invalidNip
@@ -18,6 +19,10 @@ type IP
 
 type NIP
     = NIP NetworkID IP
+
+
+type alias RawNIP =
+    String
 
 
 new : String -> String -> NIP

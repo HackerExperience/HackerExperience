@@ -41,6 +41,7 @@ game universe =
 
                 -- TODO
                 , gateways = Dict.empty
+                , endpoints = Dict.empty
                 }
     in
     map genGame serverId

@@ -119,10 +119,12 @@ config =
         |> Rule.ignoreErrorsForFiles [ "src/OS/AppID.elm" ]
         -- We have some "Raw*ID" instances for comparable entries in Dict/Sets. That's fine, as long
         -- as "Raw*ID"s remain as an implementation detail and are never exposed by the API.
+        -- The same comment applies to "RawNIP".
         |> Rule.ignoreErrorsForFiles
             [ "src/Game/Model/LogID.elm"
             , "src/Game/Model/ServerID.elm"
             , "src/Game/Model/TunnelID.elm"
+            , "src/Game/Model/NIP.elm"
             ]
         -- Below files are wrong and should eventually be fixed
         |> Rule.ignoreErrorsForFiles [ "src/WM.elm" ]

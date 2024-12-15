@@ -16,8 +16,8 @@ import API.Types
 import API.Utils
 import Dict exposing (Dict)
 import Dict.Extra as Dict
-import Game.Model.NIP exposing (NIP)
-import Game.Model.Server as Server exposing (Gateway)
+import Game.Model.NIP exposing (NIP, RawNIP)
+import Game.Model.Server as Server exposing (Endpoint, Gateway)
 import Game.Model.ServerID as ServerID exposing (RawServerID, ServerID)
 import Game.Model.Tunnel as Tunnel exposing (Tunnels)
 import Game.Universe exposing (Universe(..))
@@ -28,6 +28,7 @@ type alias Model =
     , mainframeID : ServerID
     , activeGateway : ServerID
     , gateways : Dict RawServerID Gateway
+    , endpoints : Dict RawNIP Endpoint
     , apiCtx : API.Types.InputContext
     }
 
@@ -42,6 +43,7 @@ init token universe index =
     , mainframeID = index.player.mainframe_id
     , activeGateway = index.player.mainframe_id
     , gateways = Server.parseGateways index.player.gateways
+    , endpoints = Dict.empty
     , apiCtx = buildApiContext token universe
     }
 
