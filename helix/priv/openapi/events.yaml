@@ -6,6 +6,18 @@ components:
   responses: {}
   requestBodies: {}
   schemas:
+    IdxEndpoint:
+      type: object
+      required:
+        - logs
+        - nip
+      properties:
+        nip:
+          type: string
+        logs:
+          type: array
+          items:
+            $ref: '#/components/schemas/IdxLog'
     IdxGateway:
       type: object
       required:
@@ -42,15 +54,20 @@ components:
     IdxPlayer:
       type: object
       required:
-        - mainframe_id
+        - endpoints
         - gateways
+        - mainframe_id
       properties:
+        mainframe_id:
+          type: integer
         gateways:
           type: array
           items:
             $ref: '#/components/schemas/IdxGateway'
-        mainframe_id:
-          type: integer
+        endpoints:
+          type: array
+          items:
+            $ref: '#/components/schemas/IdxEndpoint'
     IdxTunnel:
       type: object
       required:
