@@ -1,6 +1,7 @@
 module Game exposing
     ( Model
     , buildApiContext
+    , getActiveEndpointNip
     , getActiveGateway
     , getGateway
     , getGateways
@@ -14,9 +15,11 @@ import API.Events.Types as Events
 import API.Types
 import API.Utils
 import Dict exposing (Dict)
+import Dict.Extra as Dict
 import Game.Model.NIP exposing (NIP)
 import Game.Model.Server as Server exposing (Gateway)
 import Game.Model.ServerID as ServerID exposing (RawServerID, ServerID)
+import Game.Model.Tunnel as Tunnel exposing (Tunnels)
 import Game.Universe exposing (Universe(..))
 
 
@@ -24,7 +27,6 @@ type alias Model =
     { universe : Universe
     , mainframeID : ServerID
     , activeGateway : ServerID
-    , activeEndpoint : Maybe NIP
     , gateways : Dict RawServerID Gateway
     , apiCtx : API.Types.InputContext
     }
@@ -41,23 +43,7 @@ init token universe index =
     , activeGateway = index.player.mainframe_id
     , gateways = Server.parseGateways index.player.gateways
     , apiCtx = buildApiContext token universe
-
-    -- `activeEndpoint` will be filled at `initSetActiveEndpoint`
-    , activeEndpoint = Nothing
     }
-        |> initSetActiveEndpoint
-
-
-initSetActiveEndpoint : Model -> Model
-initSetActiveEndpoint model =
-    let
-        activeGatewayFirstTunnel =
-            List.head (getActiveGateway model).tunnels
-
-        activeEndpoint =
-            Maybe.map (\t -> t.targetNip) activeGatewayFirstTunnel
-    in
-    { model | activeEndpoint = activeEndpoint }
 
 
 getGateway : Model -> ServerID -> Gateway
@@ -76,19 +62,90 @@ getActiveGateway model =
     getGateway model model.activeGateway
 
 
+getActiveEndpointNip : Model -> Maybe NIP
+getActiveEndpointNip model =
+    (getActiveGateway model).activeEndpoint
+
+
+updateGateway : ServerID -> (Gateway -> Gateway) -> Model -> Model
+updateGateway gatewayId updater model =
+    let
+        newGateways =
+            Dict.update
+                (ServerID.toValue gatewayId)
+                (Maybe.map (\gtw -> updater gtw))
+                model.gateways
+    in
+    { model | gateways = newGateways }
+
+
+updateActiveGateway : (Gateway -> Gateway) -> Model -> Model
+updateActiveGateway updater model =
+    updateGateway model.activeGateway updater model
+
+
 switchActiveGateway : ServerID -> Model -> Model
 switchActiveGateway newActiveGatewayId model =
     { model | activeGateway = newActiveGatewayId }
 
 
+{-| Switches the "activeEndpoint" entry. There's no guarantee that the `newActiveEndpointNip` is in
+a tunnel from `activeGateway`, which is why we want to iterate over the existing tunnels and switch
+the gateway if needed.
+-}
 switchActiveEndpoint : NIP -> Model -> Model
 switchActiveEndpoint newActiveEndpointNip model =
-    { model | activeEndpoint = Just newActiveEndpointNip }
+    let
+        tunnels =
+            getAllTunnels model
+
+        tunnel =
+            Tunnel.findTunnelWithTargetNip tunnels newActiveEndpointNip
+
+        gateway =
+            case tunnel of
+                Just { sourceNip } ->
+                    findGatewayByNip model sourceNip
+
+                Nothing ->
+                    Server.invalidGateway
+    in
+    model
+        |> switchActiveGateway gateway.id
+        |> updateActiveGateway (\gtw -> Server.switchActiveEndpoint gtw newActiveEndpointNip)
+
+
+
+-- Model > Gateways
+
+
+{-| Returns the gateway with the corresponding NIP. This function assumes that the NIP will always
+exist. If there is a possibility it won't, use the `maybeFindGatewayByNip` variant.
+-}
+findGatewayByNip : Model -> NIP -> Gateway
+findGatewayByNip model nip =
+    Dict.find (\_ gtw -> gtw.nip == nip) model.gateways
+        |> Maybe.map Tuple.second
+        |> Maybe.withDefault Server.invalidGateway
+
+
+
+-- Model > Tunnels
+
+
+getAllTunnels : Model -> Tunnels
+getAllTunnels model =
+    getGateways model
+        |> List.concatMap (\{ tunnels } -> tunnels)
+
+
+
+-- Event handlers
 
 
 onTunnelCreatedEvent : Model -> Events.TunnelCreated -> Model
-onTunnelCreatedEvent model event =
-    { model | activeEndpoint = Just event.target_nip }
+onTunnelCreatedEvent model _ =
+    model
 
 
 

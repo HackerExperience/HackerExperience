@@ -258,7 +258,9 @@ viewEndpointServer : State -> Model -> UI Msg
 viewEndpointServer state model =
     let
         endpoint =
-            State.getActiveEndpointNip state
+            state
+                |> State.getActiveUniverse
+                |> Game.getActiveEndpointNip
 
         ( label, isConnected ) =
             case endpoint of
@@ -351,7 +353,7 @@ viewGatewaySelector state model__ =
     let
         -- TODO: feed the list of gateways directly from State
         spGateways =
-            List.foldl (gatewaySelectorEntries state.sp Singleplayer) [] [ ServerID.fromValue 1 ]
+            List.foldl (gatewaySelectorEntries state.sp Singleplayer) [] [ ServerID.fromValue 1, ServerID.fromValue 4 ]
 
         mpGateways =
             List.foldl (gatewaySelectorEntries state.mp Multiplayer) [] [ ServerID.fromValue 1 ]
@@ -373,12 +375,15 @@ viewEndpointSelector state _ =
         gateway =
             Game.getActiveGateway activeGame
 
+        activeEndpoint =
+            Game.getActiveEndpointNip activeGame
+
         -- List of every tunnel within the active gateway
         gatewayTunnels =
             gateway.tunnels
 
         endpointsOnGateway =
-            List.foldl (endpointSelectorEntries activeGame.universe activeGame.activeEndpoint)
+            List.foldl (endpointSelectorEntries activeGame.universe activeEndpoint)
                 []
                 gatewayTunnels
 
@@ -414,8 +419,7 @@ viewEndpointSelector state _ =
 
 
 gatewaySelectorEntries : Game.Model -> Universe -> ServerID -> List (UI Msg) -> List (UI Msg)
-gatewaySelectorEntries game gtwUniverse serverId acc__ =
-    -- TODO: Use acc
+gatewaySelectorEntries game gtwUniverse serverId acc =
     let
         onClickMsg =
             SwitchGateway gtwUniverse serverId
@@ -431,7 +435,7 @@ gatewaySelectorEntries game gtwUniverse serverId acc__ =
                 Multiplayer ->
                     "MP: " ++ NIP.getIPString gateway.nip
     in
-    [ div [ UI.pointer, UI.onClick onClickMsg ] [ text label ] ]
+    div [ UI.pointer, UI.onClick onClickMsg ] [ text label ] :: acc
 
 
 endpointSelectorEntries : Universe -> Maybe NIP -> Tunnel -> List (UI Msg) -> List (UI Msg)

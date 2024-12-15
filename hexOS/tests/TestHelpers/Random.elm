@@ -37,7 +37,6 @@ game universe =
                 { universe = universe
                 , mainframeID = gatewayId
                 , activeGateway = gatewayId
-                , activeEndpoint = Nothing
                 , apiCtx = Game.buildApiContext (API.Types.InputToken "s3cr3t") universe
 
                 -- TODO

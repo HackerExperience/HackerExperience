@@ -3,6 +3,7 @@ module Game.Model.Server exposing
     , invalidGateway
       -- , listLogs
     , parseGateways
+    , switchActiveEndpoint
     )
 
 import API.Events.Types as EventTypes
@@ -23,6 +24,7 @@ type alias Gateway =
     , nip : NIP
     , logs : Logs
     , tunnels : Tunnels
+    , activeEndpoint : Maybe NIP
     }
 
 
@@ -38,10 +40,18 @@ parseGateways idxGateways =
 
 parseGateway : EventTypes.IdxGateway -> Gateway
 parseGateway gateway =
+    let
+        tunnels =
+            Tunnel.parse gateway.tunnels
+
+        activeEndpoint =
+            Maybe.map (\t -> t.targetNip) (List.head tunnels)
+    in
     { id = ServerID.fromValue gateway.id
     , nip = gateway.nip
     , logs = Log.parse gateway.logs
     , tunnels = Tunnel.parse gateway.tunnels
+    , activeEndpoint = activeEndpoint
     }
 
 
@@ -51,7 +61,22 @@ invalidGateway =
     , nip = NIP.invalidNip
     , logs = OrderedDict.empty
     , tunnels = []
+    , activeEndpoint = Nothing
     }
+
+
+
+-- Model > Endpoint
+
+
+switchActiveEndpoint : Gateway -> NIP -> Gateway
+switchActiveEndpoint gateway endpointNip =
+    case Tunnel.findTunnelWithTargetNip gateway.tunnels endpointNip of
+        Just _ ->
+            { gateway | activeEndpoint = Just endpointNip }
+
+        Nothing ->
+            gateway
 
 
 

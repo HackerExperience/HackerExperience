@@ -1,6 +1,5 @@
 module State exposing
     ( State
-    , getActiveEndpointNip
     , getActiveGatewayId
     , getActiveUniverse
     , getInactiveUniverse
@@ -124,11 +123,6 @@ getActiveGatewayId state =
     (getActiveUniverse state).activeGateway
 
 
-getActiveEndpointNip : State -> Maybe NIP
-getActiveEndpointNip state =
-    (getActiveUniverse state).activeEndpoint
-
-
 switchActiveGateway : ServerID -> State -> State
 switchActiveGateway newActiveGatewayId state =
     state
@@ -190,8 +184,11 @@ updateAction state action =
                 game =
                     getActiveUniverse state
 
+                gateway =
+                    Game.getActiveGateway game
+
                 newSessionId =
-                    case game.activeEndpoint of
+                    case gateway.activeEndpoint of
                         Just endpointNip ->
                             WM.toggleSession game.activeGateway endpointNip state.currentSession
 
