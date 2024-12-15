@@ -206,10 +206,22 @@ updateEvent state event_ =
     case event_ of
         Event.TunnelCreated event universe ->
             let
+                game =
+                    getUniverse state universe
+
                 newModel =
-                    Game.onTunnelCreatedEvent (getUniverse state universe) event
+                    Game.onTunnelCreatedEvent game event
+
+                -- Switch the WM session to the new endpoint unless player is in a different gateway
+                newState =
+                    if (Game.getActiveGateway game).nip == event.source_nip then
+                        state
+                            |> switchSession (WM.toRemoteSessionId event.target_nip)
+
+                    else
+                        state
             in
-            ( replaceUniverse state newModel universe, Effect.none )
+            ( replaceUniverse newState newModel universe, Effect.none )
 
         -- This event is handled during BootState and should never hit this branch
         Event.IndexRequested _ _ ->
