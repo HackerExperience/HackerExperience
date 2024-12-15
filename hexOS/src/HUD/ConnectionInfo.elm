@@ -12,7 +12,8 @@ import Effect exposing (Effect)
 import Game
 import Game.Bus as Game
 import Game.Model.NIP as NIP exposing (NIP)
-import Game.Model.ServerID as ServerID exposing (ServerID)
+import Game.Model.Server exposing (Gateway)
+import Game.Model.ServerID exposing (ServerID)
 import Game.Model.Tunnel exposing (Tunnel)
 import Game.Universe as Universe exposing (Universe(..))
 import Html.Events as HE
@@ -351,12 +352,11 @@ stopPropagation event =
 viewGatewaySelector : State -> Model -> UI Msg
 viewGatewaySelector state model__ =
     let
-        -- TODO: feed the list of gateways directly from State
         spGateways =
-            List.foldl (gatewaySelectorEntries state.sp Singleplayer) [] [ ServerID.fromValue 1, ServerID.fromValue 4 ]
+            List.foldl (gatewaySelectorEntries Singleplayer) [] (Game.getGateways state.sp)
 
         mpGateways =
-            List.foldl (gatewaySelectorEntries state.mp Multiplayer) [] [ ServerID.fromValue 1 ]
+            List.foldl (gatewaySelectorEntries Multiplayer) [] (Game.getGateways state.mp)
     in
     col [] <|
         spGateways
@@ -418,14 +418,11 @@ viewEndpointSelector state _ =
             ++ endpointsOnOtherUniverse
 
 
-gatewaySelectorEntries : Game.Model -> Universe -> ServerID -> List (UI Msg) -> List (UI Msg)
-gatewaySelectorEntries game gtwUniverse serverId acc =
+gatewaySelectorEntries : Universe -> Gateway -> List (UI Msg) -> List (UI Msg)
+gatewaySelectorEntries gtwUniverse gateway acc =
     let
         onClickMsg =
-            SwitchGateway gtwUniverse serverId
-
-        gateway =
-            Game.getGateway game serverId
+            SwitchGateway gtwUniverse gateway.id
 
         label =
             case gtwUniverse of
