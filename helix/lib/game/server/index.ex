@@ -13,12 +13,24 @@ defmodule Game.Index.Server do
             tunnels: Index.Tunnel.index()
           }
 
+  @type endpoint_index ::
+          %{
+            nip: NIP.t(),
+            logs: Index.Log.index()
+          }
+
   @type rendered_gateway_index ::
           %{
             id: server_id :: integer(),
             nip: binary(),
             logs: Index.Log.rendered_index(),
             tunnels: Index.Tunnel.rendered_index()
+          }
+
+  @type rendered_endpoint_index ::
+          %{
+            nip: binary(),
+            logs: Index.Log.rendered_index()
           }
 
   def gateway_spec do
@@ -31,6 +43,17 @@ defmodule Game.Index.Server do
         tunnels: coll_of(Index.Tunnel.spec())
       }),
       [:id, :logs, :nip, :tunnels]
+    )
+  end
+
+  def endpoint_spec do
+    selection(
+      schema(%{
+        __openapi_name: "IdxEndpoint",
+        nip: binary(),
+        logs: coll_of(Index.Log.spec())
+      }),
+      [:logs, :nip]
     )
   end
 
@@ -47,6 +70,15 @@ defmodule Game.Index.Server do
     }
   end
 
+  @spec endpoint_index(term(), term(), term()) ::
+          endpoint_index
+  def endpoint_index(player_id, server_id, nip) do
+    %{
+      nip: nip,
+      logs: Index.Log.index(player_id, server_id)
+    }
+  end
+
   @spec render_gateway_index(gateway_index) ::
           rendered_gateway_index
   def render_gateway_index(index) do
@@ -55,6 +87,15 @@ defmodule Game.Index.Server do
       nip: index.nip |> NIP.to_external(),
       logs: Index.Log.render_index(index.logs),
       tunnels: Index.Tunnel.render_index(index.tunnels)
+    }
+  end
+
+  @spec render_endpoint_index(endpoint_index) ::
+          rendered_endpoint_index
+  def render_endpoint_index(index) do
+    %{
+      nip: index.nip |> NIP.to_external(),
+      logs: []
     }
   end
 end

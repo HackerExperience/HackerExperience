@@ -1,7 +1,8 @@
 defmodule Game.Events.Network.TunnelCreated do
   use Core.Event.Definition
   alias Core.{ID, NIP}
-  alias Game.{Player, Tunnel}
+  alias Game.{Index, Player, Tunnel}
+  alias Game.Services, as: Svc
 
   defstruct [:tunnel, :player_id]
 
@@ -24,19 +25,28 @@ defmodule Game.Events.Network.TunnelCreated do
           source_nip: binary(),
           target_nip: binary(),
           # TODO: Is Enum supported? oneOf?
-          access: binary()
+          access: binary(),
+          index: Index.Server.endpoint_spec()
         }),
-        [:tunnel_id, :source_nip, :target_nip, :access]
+        [:tunnel_id, :source_nip, :target_nip, :access, :index]
       )
     end
 
-    def generate_payload(%{data: %{tunnel: tunnel}}) do
+    def generate_payload(%{data: %{tunnel: tunnel, player_id: player_id}}) do
+      endpoint_id = Svc.NetworkConnection.fetch!(by_nip: tunnel.target_nip).server_id
+
+      index =
+        player_id
+        |> Index.Server.endpoint_index(endpoint_id, tunnel.target_nip)
+        |> Index.Server.render_endpoint_index()
+
       payload =
         %{
           tunnel_id: tunnel.id |> ID.to_external(),
           source_nip: NIP.to_external(tunnel.source_nip),
           target_nip: NIP.to_external(tunnel.target_nip),
-          access: "#{tunnel.access}"
+          access: "#{tunnel.access}",
+          index: index
         }
 
       {:ok, payload}

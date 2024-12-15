@@ -1,15 +1,15 @@
 module Game.Model.Tunnel exposing
     ( Tunnel
     , Tunnels
-      -- , fromTunnelCreatedEvent
+    , findTunnelWithTargetNip
+    , fromTunnelCreatedEvent
     , parse
     )
-
--- import API.Events.Types as Events
 
 import API.Events.Types as Events
 import Game.Model.NIP exposing (NIP)
 import Game.Model.TunnelID exposing (TunnelID)
+import List.Extra as List
 
 
 
@@ -29,12 +29,17 @@ type alias Tunnels =
 
 
 -- Model
--- fromTunnelCreatedEvent : Events.TunnelCreated -> Tunnel
--- fromTunnelCreatedEvent event =
---     { id = event.tunnel_id
---     , sourceNip = event.source_nip
---     , targetNip = event.target_nip
---     }
+
+
+fromTunnelCreatedEvent : Events.TunnelCreated -> Tunnel
+fromTunnelCreatedEvent event =
+    { id = event.tunnel_id
+    , sourceNip = event.source_nip
+    , targetNip = event.target_nip
+    }
+
+
+
 -- Model > Index Parser
 
 
@@ -49,3 +54,12 @@ parseTunnel idxTunnel =
     , sourceNip = idxTunnel.source_nip
     , targetNip = idxTunnel.target_nip
     }
+
+
+
+-- Model > Query
+
+
+findTunnelWithTargetNip : Tunnels -> NIP -> Maybe Tunnel
+findTunnelWithTargetNip tunnels targetNip =
+    List.find (\t -> t.targetNip == targetNip) tunnels

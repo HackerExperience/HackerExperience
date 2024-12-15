@@ -18,6 +18,24 @@ defmodule Game.Index.PlayerTest do
       # Keys have the expected values
       assert index.mainframe_id == mainframe.id
     end
+
+    test "index with multiple endpoints" do
+      # `entity` has two endpoints: `endp_nip_1` and `endp_nip_2`
+      %{nip: gtw_nip, entity: entity} = Setup.server()
+      %{nip: endp_nip_1} = Setup.server()
+      %{nip: endp_nip_2} = Setup.server()
+      Setup.tunnel_lite!(source_nip: gtw_nip, target_nip: endp_nip_1)
+      Setup.tunnel_lite!(source_nip: gtw_nip, target_nip: endp_nip_2)
+
+      assert index = Index.Player.index(entity)
+
+      # Both endpoints were returned in the index
+      assert Enum.count(index.endpoints) == 2
+      assert endp_1 = Enum.find(index.endpoints, &(&1.nip == endp_nip_1))
+      assert endp_1.logs == []
+      assert endp_2 = Enum.find(index.endpoints, &(&1.nip == endp_nip_2))
+      assert endp_2.logs == []
+    end
   end
 
   describe "render_index/1" do

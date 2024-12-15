@@ -2,9 +2,9 @@
 
 
 module API.Events.Json exposing
-    ( encodeIdxGateway, encodeIdxLog, encodeIdxPlayer, encodeIdxTunnel, encodeIndexRequested
+    ( encodeIdxEndpoint, encodeIdxGateway, encodeIdxLog, encodeIdxPlayer, encodeIdxTunnel, encodeIndexRequested
     , encodeTunnelCreated
-    , decodeIdxGateway, decodeIdxLog, decodeIdxPlayer, decodeIdxTunnel, decodeIndexRequested
+    , decodeIdxEndpoint, decodeIdxGateway, decodeIdxLog, decodeIdxPlayer, decodeIdxTunnel, decodeIndexRequested
     , decodeTunnelCreated
     )
 
@@ -13,13 +13,13 @@ module API.Events.Json exposing
 
 ## Encoders
 
-@docs encodeIdxGateway, encodeIdxLog, encodeIdxPlayer, encodeIdxTunnel, encodeIndexRequested
+@docs encodeIdxEndpoint, encodeIdxGateway, encodeIdxLog, encodeIdxPlayer, encodeIdxTunnel, encodeIndexRequested
 @docs encodeTunnelCreated
 
 
 ## Decoders
 
-@docs decodeIdxGateway, decodeIdxLog, decodeIdxPlayer, decodeIdxTunnel, decodeIndexRequested
+@docs decodeIdxEndpoint, decodeIdxGateway, decodeIdxLog, decodeIdxPlayer, decodeIdxTunnel, decodeIndexRequested
 @docs decodeTunnelCreated
 
 -}
@@ -36,8 +36,9 @@ import OpenApi.Common
 decodeTunnelCreated : Json.Decode.Decoder API.Events.Types.TunnelCreated
 decodeTunnelCreated =
     Json.Decode.succeed
-        (\access source_nip target_nip tunnel_id ->
+        (\access index source_nip target_nip tunnel_id ->
             { access = access
+            , index = index
             , source_nip = source_nip
             , target_nip = target_nip
             , tunnel_id = tunnel_id
@@ -45,6 +46,8 @@ decodeTunnelCreated =
         )
         |> OpenApi.Common.jsonDecodeAndMap
             (Json.Decode.field "access" Json.Decode.string)
+        |> OpenApi.Common.jsonDecodeAndMap
+            (Json.Decode.field "index" decodeIdxEndpoint)
         |> OpenApi.Common.jsonDecodeAndMap
             (Json.Decode.field
                 "source_nip"
@@ -66,6 +69,7 @@ encodeTunnelCreated : API.Events.Types.TunnelCreated -> Json.Encode.Value
 encodeTunnelCreated rec =
     Json.Encode.object
         [ ( "access", Json.Encode.string rec.access )
+        , ( "index", encodeIdxEndpoint rec.index )
         , ( "source_nip", Json.Encode.string (NIP.toString rec.source_nip) )
         , ( "target_nip", Json.Encode.string (NIP.toString rec.target_nip) )
         , ( "tunnel_id", Json.Encode.int (TunnelID.toValue rec.tunnel_id) )
@@ -123,9 +127,17 @@ encodeIdxTunnel rec =
 decodeIdxPlayer : Json.Decode.Decoder API.Events.Types.IdxPlayer
 decodeIdxPlayer =
     Json.Decode.succeed
-        (\gateways mainframe_id ->
-            { gateways = gateways, mainframe_id = mainframe_id }
+        (\endpoints gateways mainframe_id ->
+            { endpoints = endpoints
+            , gateways = gateways
+            , mainframe_id = mainframe_id
+            }
         )
+        |> OpenApi.Common.jsonDecodeAndMap
+            (Json.Decode.field
+                "endpoints"
+                (Json.Decode.list decodeIdxEndpoint)
+            )
         |> OpenApi.Common.jsonDecodeAndMap
             (Json.Decode.field
                 "gateways"
@@ -141,7 +153,8 @@ decodeIdxPlayer =
 encodeIdxPlayer : API.Events.Types.IdxPlayer -> Json.Encode.Value
 encodeIdxPlayer rec =
     Json.Encode.object
-        [ ( "gateways", Json.Encode.list encodeIdxGateway rec.gateways )
+        [ ( "endpoints", Json.Encode.list encodeIdxEndpoint rec.endpoints )
+        , ( "gateways", Json.Encode.list encodeIdxGateway rec.gateways )
         , ( "mainframe_id", Json.Encode.int (ServerID.toValue rec.mainframe_id) )
         ]
 
@@ -209,4 +222,22 @@ encodeIdxGateway rec =
         , ( "logs", Json.Encode.list encodeIdxLog rec.logs )
         , ( "nip", Json.Encode.string (NIP.toString rec.nip) )
         , ( "tunnels", Json.Encode.list encodeIdxTunnel rec.tunnels )
+        ]
+
+
+decodeIdxEndpoint : Json.Decode.Decoder API.Events.Types.IdxEndpoint
+decodeIdxEndpoint =
+    Json.Decode.succeed
+        (\logs nip -> { logs = logs, nip = nip })
+        |> OpenApi.Common.jsonDecodeAndMap
+            (Json.Decode.field "logs" (Json.Decode.list decodeIdxLog))
+        |> OpenApi.Common.jsonDecodeAndMap
+            (Json.Decode.field "nip" (Json.Decode.map (\nip -> NIP.fromString nip) Json.Decode.string))
+
+
+encodeIdxEndpoint : API.Events.Types.IdxEndpoint -> Json.Encode.Value
+encodeIdxEndpoint rec =
+    Json.Encode.object
+        [ ( "logs", Json.Encode.list encodeIdxLog rec.logs )
+        , ( "nip", Json.Encode.string (NIP.toString rec.nip) )
         ]
