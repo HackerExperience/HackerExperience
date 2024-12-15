@@ -43,7 +43,7 @@ init token universe index =
     , mainframeID = index.player.mainframe_id
     , activeGateway = index.player.mainframe_id
     , gateways = Server.parseGateways index.player.gateways
-    , endpoints = Dict.empty
+    , endpoints = Server.parseEndpoints index.player.endpoints
     , apiCtx = buildApiContext token universe
     }
 

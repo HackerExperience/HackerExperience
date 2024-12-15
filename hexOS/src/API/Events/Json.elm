@@ -2,9 +2,9 @@
 
 
 module API.Events.Json exposing
-    ( encodeIdxGateway, encodeIdxLog, encodeIdxPlayer, encodeIdxTunnel, encodeIndexRequested
+    ( encodeIdxEndpoint, encodeIdxGateway, encodeIdxLog, encodeIdxPlayer, encodeIdxTunnel, encodeIndexRequested
     , encodeTunnelCreated
-    , decodeIdxGateway, decodeIdxLog, decodeIdxPlayer, decodeIdxTunnel, decodeIndexRequested
+    , decodeIdxEndpoint, decodeIdxGateway, decodeIdxLog, decodeIdxPlayer, decodeIdxTunnel, decodeIndexRequested
     , decodeTunnelCreated
     )
 
@@ -13,13 +13,13 @@ module API.Events.Json exposing
 
 ## Encoders
 
-@docs encodeIdxGateway, encodeIdxLog, encodeIdxPlayer, encodeIdxTunnel, encodeIndexRequested
+@docs encodeIdxEndpoint, encodeIdxGateway, encodeIdxLog, encodeIdxPlayer, encodeIdxTunnel, encodeIndexRequested
 @docs encodeTunnelCreated
 
 
 ## Decoders
 
-@docs decodeIdxGateway, decodeIdxLog, decodeIdxPlayer, decodeIdxTunnel, decodeIndexRequested
+@docs decodeIdxEndpoint, decodeIdxGateway, decodeIdxLog, decodeIdxPlayer, decodeIdxTunnel, decodeIndexRequested
 @docs decodeTunnelCreated
 
 -}
@@ -123,9 +123,17 @@ encodeIdxTunnel rec =
 decodeIdxPlayer : Json.Decode.Decoder API.Events.Types.IdxPlayer
 decodeIdxPlayer =
     Json.Decode.succeed
-        (\gateways mainframe_id ->
-            { gateways = gateways, mainframe_id = mainframe_id }
+        (\endpoints gateways mainframe_id ->
+            { endpoints = endpoints
+            , gateways = gateways
+            , mainframe_id = mainframe_id
+            }
         )
+        |> OpenApi.Common.jsonDecodeAndMap
+            (Json.Decode.field
+                "endpoints"
+                (Json.Decode.list decodeIdxEndpoint)
+            )
         |> OpenApi.Common.jsonDecodeAndMap
             (Json.Decode.field
                 "gateways"
@@ -141,7 +149,8 @@ decodeIdxPlayer =
 encodeIdxPlayer : API.Events.Types.IdxPlayer -> Json.Encode.Value
 encodeIdxPlayer rec =
     Json.Encode.object
-        [ ( "gateways", Json.Encode.list encodeIdxGateway rec.gateways )
+        [ ( "endpoints", Json.Encode.list encodeIdxEndpoint rec.endpoints )
+        , ( "gateways", Json.Encode.list encodeIdxGateway rec.gateways )
         , ( "mainframe_id", Json.Encode.int (ServerID.toValue rec.mainframe_id) )
         ]
 
@@ -209,4 +218,22 @@ encodeIdxGateway rec =
         , ( "logs", Json.Encode.list encodeIdxLog rec.logs )
         , ( "nip", Json.Encode.string (NIP.toString rec.nip) )
         , ( "tunnels", Json.Encode.list encodeIdxTunnel rec.tunnels )
+        ]
+
+
+decodeIdxEndpoint : Json.Decode.Decoder API.Events.Types.IdxEndpoint
+decodeIdxEndpoint =
+    Json.Decode.succeed
+        (\logs nip -> { logs = logs, nip = nip })
+        |> OpenApi.Common.jsonDecodeAndMap
+            (Json.Decode.field "logs" (Json.Decode.list decodeIdxLog))
+        |> OpenApi.Common.jsonDecodeAndMap
+            (Json.Decode.field "nip" (Json.Decode.map (\nip -> NIP.fromString nip) Json.Decode.string))
+
+
+encodeIdxEndpoint : API.Events.Types.IdxEndpoint -> Json.Encode.Value
+encodeIdxEndpoint rec =
+    Json.Encode.object
+        [ ( "logs", Json.Encode.list encodeIdxLog rec.logs )
+        , ( "nip", Json.Encode.string (NIP.toString rec.nip) )
         ]
