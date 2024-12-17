@@ -75,13 +75,44 @@ defmodule Core.Event.Loggable do
 
     gateway_entry = {gateway_id, entity_id, {gtw_log_type, data_gateway}}
     endpoint_entry = {endpoint_id, entity_id, {endp_log_type, data_endpoint}}
+    vpn_entries = build_vpn_entries(tunnel_links, entity_id)
 
-    # TODO: VPN entries
-    [gateway_entry, endpoint_entry]
+    [gateway_entry, vpn_entries, endpoint_entry]
+    |> List.flatten()
   end
 
+  defp build_vpn_entries([_, _], _), do: []
+
+  defp build_vpn_entries(links, entity_id) do
+    total_links = length(links)
+    log_type = :connection_proxied
+    log_data_mod = Log.data_mod(log_type)
+
+    gen_log = fn from_nip, to_nip ->
+      log_data_mod.new(%{from_nip: from_nip, to_nip: to_nip})
+    end
+
+    links
+    |> Enum.with_index()
+    |> Enum.reduce({[], nil}, fn
+      {link, _idx}, {[], nil} ->
+        # The first link won't create an entry because that's the Gateway
+        {[], link}
+
+      {_, idx}, {acc, _} when idx == total_links - 1 ->
+        # The last link won't be added either because that's the Endpoint
+        acc
+
+      {link, idx}, {acc, prev_link} ->
+        next_link = Enum.at(links, idx + 1)
+        entry = {link.server_id, entity_id, {log_type, gen_log.(prev_link.nip, next_link.nip)}}
+        {[entry | acc], link}
+    end)
+  end
+
+  # TODO: Maybe pattern match with [_, x | _]
   defp get_access_point_nip([_gtw, endp]), do: endp.nip
-  defp get_access_point_nip(links), do: Enum.at(links, 2).nip
+  defp get_access_point_nip(links), do: Enum.at(links, 1).nip
 
   defp get_exit_node_nip([gtw, _endp]), do: gtw.nip
   defp get_exit_node_nip(links), do: Enum.at(links, -2).nip

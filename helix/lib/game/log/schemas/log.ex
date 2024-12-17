@@ -8,7 +8,8 @@ defmodule Game.Log do
     :custom,
     :local_login,
     :remote_login_gateway,
-    :remote_login_endpoint
+    :remote_login_endpoint,
+    :connection_proxied
   ]
 
   @schema [
@@ -36,6 +37,7 @@ defmodule Game.Log do
   def data_mod(:custom), do: __MODULE__.Data.EmptyData
   def data_mod(:remote_login_gateway), do: __MODULE__.Data.NIP
   def data_mod(:remote_login_endpoint), do: __MODULE__.Data.NIP
+  def data_mod(:connection_proxied), do: __MODULE__.Data.NIPProxy
 
   defp validate_data_struct!(params) do
     %struct{} = params.data
