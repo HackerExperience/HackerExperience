@@ -74,6 +74,7 @@ defmodule Core.Event.Publishable do
   @doc """
   Given an event, find out if it implements the Publishable trigger.
   """
+  @impl Core.Event.Handler.Behaviour
   def probe(%_{data: %ev_mod{}}) do
     if function_exported?(get_publishable_mod(ev_mod), :whom_to_publish, 1) do
       __MODULE__

@@ -43,8 +43,12 @@ defmodule Core.Event.Handler.Behaviour do
               | {:error, event() | [event()]}
               | {:error, error_details :: term(), event() | [event()]}
 
-  @callback on_rollback(data(), event(), details :: term()) :: [event()]
+  # TODO: I think probe can be implemented generically by Core.Event, perhaps with the help ofo a
+  # `get_module` optional callback.
+  @callback probe(event()) ::
+              module() | nil
 
+  @callback on_rollback(data(), event(), details :: term()) :: [event()]
   @callback on_prepare_db(data(), event()) :: prepare_db_option
   @callback teardown_db_on_success(data(), event()) :: teardown_db_success_option
   @callback teardown_db_on_failure(data(), event()) :: teardown_db_failure_option
@@ -52,5 +56,6 @@ defmodule Core.Event.Handler.Behaviour do
   @optional_callbacks on_rollback: 3,
                       on_prepare_db: 2,
                       teardown_db_on_success: 2,
-                      teardown_db_on_failure: 2
+                      teardown_db_on_failure: 2,
+                      probe: 1
 end
