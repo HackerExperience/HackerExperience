@@ -6,6 +6,7 @@ defmodule Game.Events.Player.IndexRequestedTest do
   setup [:with_game_db]
 
   describe "Publishable.generate_payload/1" do
+    @tag :capture_log
     test "generates the correct payload" do
       %{entity: entity, player: player} = Setup.server()
 

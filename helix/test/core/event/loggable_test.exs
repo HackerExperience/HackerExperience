@@ -62,8 +62,10 @@ defmodule Core.Event.LoggableTest do
         }
 
       # Emit the Event with the above `log_map` for Loggable to process
-      event = Test.LoggableEvent.new(log_map)
-      capture_log(fn -> Event.emit([event]) end)
+      capture_log(fn ->
+        event = Test.LoggableEvent.new(log_map)
+        Event.emit([event])
+      end)
 
       # The logs were created correctly in the gateway...
       Core.with_context(:server, gateway.id, :read, fn ->
@@ -110,8 +112,10 @@ defmodule Core.Event.LoggableTest do
         }
 
       # Emit the Event with the above `log_map` for Loggable to process
-      event = Test.LoggableEvent.new(log_map)
-      capture_log(fn -> Event.emit([event]) end)
+      capture_log(fn ->
+        event = Test.LoggableEvent.new(log_map)
+        Event.emit([event])
+      end)
 
       # The logs were created in the gateway...
       Core.with_context(:server, gateway.id, :read, fn ->
@@ -170,8 +174,10 @@ defmodule Core.Event.LoggableTest do
         }
 
       # Emit the Event with the above `log_map` for Loggable to process
-      event = Test.LoggableEvent.new(log_map)
-      capture_log(fn -> Event.emit([event]) end)
+      capture_log(fn ->
+        event = Test.LoggableEvent.new(log_map)
+        Event.emit([event])
+      end)
 
       # The logs were created in the gateway...
       Core.with_context(:server, gateway.id, :read, fn ->
