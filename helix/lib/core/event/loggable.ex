@@ -54,7 +54,10 @@ defmodule Core.Event.Loggable do
          data_endpoint: endp_raw_data,
          opts: _opts
        }) do
-    tunnel_links = Svc.Tunnel.list_links(on_tunnel: tunnel_id)
+    tunnel_links =
+      Core.with_context(:universe, :read, fn ->
+        Svc.Tunnel.list_links(on_tunnel: tunnel_id)
+      end)
 
     access_point_nip = get_access_point_nip(tunnel_links)
     exit_node_nip = get_exit_node_nip(tunnel_links)
@@ -110,9 +113,7 @@ defmodule Core.Event.Loggable do
     end)
   end
 
-  # TODO: Maybe pattern match with [_, x | _]
-  defp get_access_point_nip([_gtw, endp]), do: endp.nip
-  defp get_access_point_nip(links), do: Enum.at(links, 1).nip
+  defp get_access_point_nip([_gtw, endp_or_ap | _]), do: endp_or_ap.nip
 
   defp get_exit_node_nip([gtw, _endp]), do: gtw.nip
   defp get_exit_node_nip(links), do: Enum.at(links, -2).nip

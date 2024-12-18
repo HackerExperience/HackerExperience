@@ -46,7 +46,6 @@ defmodule Core.Event.LoggableTest do
       tunnel = Setup.tunnel!(source_nip: gtw_nip, target_nip: endp_nip)
 
       DB.commit()
-      Core.begin_context(:universe, :read)
 
       # LogMap for a remote log
       log_map =
@@ -96,7 +95,6 @@ defmodule Core.Event.LoggableTest do
       tunnel = Setup.tunnel!(source_nip: gtw_nip, target_nip: endp_nip, hops: [hop_nip])
 
       DB.commit()
-      Core.begin_context(:universe, :read)
 
       # LogMap for the remote log
       log_map =
@@ -158,7 +156,6 @@ defmodule Core.Event.LoggableTest do
         )
 
       DB.commit()
-      Core.begin_context(:universe, :read)
 
       # LogMap for the remote log
       log_map =
