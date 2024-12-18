@@ -66,7 +66,7 @@ defmodule Core.NIP do
   def to_internal(%__MODULE__{network_id: network_id, ip: ip}),
     do: "#{ip}@#{network_id}"
 
-  defp from_internal(internal_nip) when is_binary(internal_nip) do
+  def from_internal(internal_nip) when is_binary(internal_nip) do
     [raw_ip, raw_network_id] = String.split(internal_nip, "@")
     %__MODULE__{network_id: String.to_integer(raw_network_id), ip: raw_ip}
   end

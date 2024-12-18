@@ -100,7 +100,14 @@ defmodule Game.Endpoint.Server.Login do
 
   def handle_request(request, _params, context, session) do
     with {:ok, tunnel} <- Svc.Tunnel.create(context.parsed_links) do
-      event = TunnelCreatedEvent.new(tunnel, session.data.player_id)
+      event =
+        TunnelCreatedEvent.new(
+          tunnel,
+          session.data.player_id,
+          context.gateway.id,
+          context.endpoint.id
+        )
+
       {:ok, %{request | events: [event]}}
     else
       e ->

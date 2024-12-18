@@ -8,6 +8,7 @@ defmodule Game.TunnelLink do
     {:tunnel_id, ID.ref(:tunnel_id)},
     {:idx, :integer},
     {:nip, NIP},
+    {:server_id, ID.ref(:server_id)},
     {:inserted_at, {:datetime_utc, [precision: :millisecond], mod: :inserted_at}}
   ]
 

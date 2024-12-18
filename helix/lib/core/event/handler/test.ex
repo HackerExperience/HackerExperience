@@ -15,4 +15,9 @@ defmodule Core.Event.Handler.Test do
     :ets.insert(@table, {key, %{event: ev, mod: ev_mod, data: data}})
     :ok
   end
+
+  # We don't want the Test handler to change anything regarding transactions
+  def on_prepare_db(_, _), do: :skip
+  def teardown_db_on_success(_, _), do: :skip
+  def teardown_db_on_failure(_, _), do: :skip
 end

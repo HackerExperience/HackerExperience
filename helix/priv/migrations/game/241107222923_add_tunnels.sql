@@ -19,9 +19,11 @@ CREATE TABLE tunnel_links (
   tunnel_id INTEGER,
   idx INTEGER,
   nip TEXT NOT NULL,
+  server_id INTEGER NOT NULL,
   inserted_at TEXT NOT NULL,
   FOREIGN KEY (tunnel_id) REFERENCES tunnels(id) ON DELETE RESTRICT ON UPDATE RESTRICT,
   FOREIGN KEY (nip) REFERENCES network_connections(nip) ON DELETE RESTRICT ON UPDATE RESTRICT,
+  FOREIGN KEY (server_id) REFERENCES servers(id) ON DELETE RESTRICT ON UPDATE RESTRICT,
   PRIMARY KEY (tunnel_id, idx)
 ) STRICT;
 

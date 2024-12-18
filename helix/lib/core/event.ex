@@ -34,6 +34,7 @@ defmodule Core.Event do
   @env Mix.env()
 
   @native_triggers [
+    :"Elixir.Core.Event.Loggable",
     :"Elixir.Core.Event.Publishable"
   ]
 

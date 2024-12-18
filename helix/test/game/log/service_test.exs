@@ -2,6 +2,7 @@ defmodule Game.Services.LogTest do
   use Test.DBCase, async: true
   alias Core.ID
   alias Game.Services, as: Svc
+  alias Game.{Log, LogVisibility}
 
   setup [:with_game_db]
 
@@ -31,19 +32,19 @@ defmodule Game.Services.LogTest do
     test "inserts the log entry and corresponding visibility" do
       %{server: server, entity: entity} = Setup.server()
 
-      log_params = %{type: :localhost_logged_in, data: %{}}
+      log_params = %{type: :local_login, data: %Log.Data.EmptyData{}}
       assert {:ok, log_1} = Svc.Log.create_new(entity.id, server.id, log_params)
       assert {:ok, log_2} = Svc.Log.create_new(entity.id, server.id, log_params)
 
       Core.with_context(:server, server.id, :read, fn ->
-        logs = DB.all(Game.Log)
+        logs = DB.all(Log)
         assert log_1 == Enum.find(logs, &(&1.id == log_1.id))
         assert log_2 == Enum.find(logs, &(&1.id == log_2.id))
 
         # Has the correct data
         assert log_1.server_id == server.id
-        assert log_1.type == :localhost_logged_in
-        assert log_1.data == %{}
+        assert log_1.type == :local_login
+        assert log_1.data == %Log.Data.EmptyData{}
 
         # It's a brand new log, so revision is always 1
         assert log_1.revision_id == 1
@@ -53,7 +54,7 @@ defmodule Game.Services.LogTest do
       end)
 
       Core.with_context(:player, entity.id, :read, fn ->
-        log_visibilities = DB.all(Game.LogVisibility)
+        log_visibilities = DB.all(LogVisibility)
 
         assert visibility_1 = Enum.find(log_visibilities, &(&1.log_id == log_1.id))
         assert _visibility_2 = Enum.find(log_visibilities, &(&1.log_id == log_2.id))

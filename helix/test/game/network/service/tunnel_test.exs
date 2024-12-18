@@ -42,18 +42,22 @@ defmodule Game.Services.TunnelTest do
       assert gtw_link.tunnel_id == tunnel.id
       assert gtw_link.idx == 0
       assert gtw_link.nip == gtw_nip
+      assert gtw_link.server_id == gateway.id
 
       assert ap_link.tunnel_id == tunnel.id
       assert ap_link.idx == 1
       assert ap_link.nip == ap_nip
+      assert ap_link.server_id == access_point.id
 
       assert en_link.tunnel_id == tunnel.id
       assert en_link.idx == 2
       assert en_link.nip == en_nip
+      assert en_link.server_id == exit_node.id
 
       assert endp_link.tunnel_id == tunnel.id
       assert endp_link.idx == 3
       assert endp_link.nip == endp_nip
+      assert endp_link.server_id == endpoint.id
     end
   end
 end

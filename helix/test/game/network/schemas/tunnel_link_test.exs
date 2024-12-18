@@ -19,7 +19,8 @@ defmodule Game.TunnelLinkTest do
                %{
                  tunnel_id: tunnel.id,
                  idx: 0,
-                 nip: gtw_nip
+                 nip: gtw_nip,
+                 server_id: gateway.id
                }
                |> TunnelLink.new()
                |> DB.insert()
@@ -28,7 +29,8 @@ defmodule Game.TunnelLinkTest do
                %{
                  tunnel_id: tunnel.id,
                  idx: 1,
-                 nip: endp_nip
+                 nip: endp_nip,
+                 server_id: endpoint.id
                }
                |> TunnelLink.new()
                |> DB.insert()
