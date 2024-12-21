@@ -13,13 +13,16 @@ defmodule Core.ID do
       @impl true
       def cast!(v, _, _) when is_integer(v), do: %__MODULE__{id: v}
       def cast!(%__MODULE__{} = id, _, _), do: id
+      def cast!(nil, %{nullable: true}, _), do: nil
 
       @impl true
       def dump!(v, _, _) when is_integer(v), do: v
       def dump!(%__MODULE__{id: v}, _, _), do: v
+      def dump!(nil, %{nullable: true}, _), do: nil
 
       @impl true
       def load!(v, _, _) when is_integer(v), do: %__MODULE__{id: v}
+      def load!(nil, %{nullable: true}, _), do: nil
 
       defimpl String.Chars do
         def to_string(%{id: id}), do: "#{id}"
