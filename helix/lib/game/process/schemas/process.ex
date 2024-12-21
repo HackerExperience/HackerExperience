@@ -1,0 +1,33 @@
+defmodule Game.Process do
+  use Core.Schema
+  alias Game.Server
+
+  @context :server
+  @table :processes
+
+  @process_types [
+    :log_edit
+  ]
+
+  @schema [
+    {:id, ID.ref(:process_id)},
+    {:entity_id, ID.ref(:entity_id)},
+    {:type, {:enum, values: @process_types}},
+    # `data` is the actual process data (e.g. log edit I need the contents of the new log)
+    {:data, {:map, keys: :atom}},
+    # `registry` includes tgt_log_id, src_file_id etc (same data in ProcessRegistry)
+    {:registry, {:map, keys: :atom}},
+    {:inserted_at, {:datetime_utc, [precision: :millisecond], mod: :inserted_at}},
+    {:server_id, {ID.ref(:server_id), virtual: :get_server_id}}
+  ]
+
+  @derived_fields [:id]
+
+  def new(params) do
+    params
+    |> Schema.cast()
+    |> Schema.create()
+  end
+
+  def get_server_id(_, %{shard_id: raw_server_id}), do: Server.ID.from_external(raw_server_id)
+end
