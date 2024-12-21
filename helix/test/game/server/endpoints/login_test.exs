@@ -1,7 +1,7 @@
 defmodule Game.Endpoint.Server.LoginTest do
   use Test.WebCase, async: true
   alias Core.{ID, NIP}
-  alias Game.{Tunnel, TunnelLink}
+  alias Game.{Log, LogVisibility, Tunnel, TunnelLink}
 
   setup [:with_game_db, :with_game_webserver]
 
@@ -194,6 +194,85 @@ defmodule Game.Endpoint.Server.LoginTest do
 
     @tag :skip
     test "successfully logs into the endpoint (using VPN)", %{shard_id: _shard_id} = _ctx do
+    end
+
+    test "on successful login, log entries are created accordingly", %{shard_id: shard_id} do
+      player = Setup.player!()
+      jwt = U.jwt_token(uid: player.external_id)
+      x_request_id = Random.uuid()
+
+      %{nip: gtw_nip, server: gateway} = Setup.server_full(entity_id: player.id)
+      %{nip: endp_nip, server: endpoint, entity: endpoint_entity} = Setup.server_full()
+
+      %{nip: other_hop_nip, server: other_hop} = Setup.server_full()
+      %{nip: other_endp_nip, server: other_endpoint} = Setup.server_full()
+
+      other_tunnel =
+        Setup.tunnel!(source_nip: gtw_nip, target_nip: other_endp_nip, hops: [other_hop_nip])
+
+      DB.commit()
+
+      # Gateway -> OtherHop -> OtherEndpoint -> Endpoint (because we are using an implicit bounce)
+      params =
+        %{
+          tunnel_id: other_tunnel.id |> ID.to_external()
+        }
+
+      assert {:ok, %{status: 200, data: %{}}} =
+               post(build_path(gtw_nip, endp_nip), params,
+                 shard_id: shard_id,
+                 token: jwt,
+                 x_request_id: x_request_id
+               )
+
+      wait_events(x_request_id: x_request_id)
+
+      # Gateway -> OtherHop
+      Core.with_context(:server, gateway.id, :read, fn ->
+        assert [log] = DB.all(Log)
+        assert log.type == :remote_login_gateway
+        assert log.data.nip == other_hop_nip
+      end)
+
+      # OtherHop (AP): Gateway -> OtherEndpoint
+      Core.with_context(:server, other_hop.id, :read, fn ->
+        assert [log] = DB.all(Log)
+        assert log.type == :connection_proxied
+        assert log.data.from_nip == gtw_nip
+        assert log.data.to_nip == other_endp_nip
+      end)
+
+      # OtherEndpoint (EN): OtherHop -> Endpoint
+      Core.with_context(:server, other_endpoint.id, :read, fn ->
+        assert [log] = DB.all(Log)
+        assert log.type == :connection_proxied
+        assert log.data.from_nip == other_hop_nip
+        assert log.data.to_nip == endp_nip
+      end)
+
+      # OtherHop -> Endpoint
+      Core.with_context(:server, endpoint.id, :read, fn ->
+        assert [log] = DB.all(Log)
+        assert log.type == :remote_login_endpoint
+        assert log.data.nip == other_endp_nip
+      end)
+
+      # `player` has visibility on all four logs
+      Core.with_context(:player, player.id, :read, fn ->
+        visibilities =
+          DB.all(LogVisibility)
+          |> Enum.map(& &1.server_id)
+
+        assert gateway.id in visibilities
+        assert other_hop.id in visibilities
+        assert other_endpoint.id in visibilities
+        assert endpoint.id in visibilities
+      end)
+
+      # `endpoint_entity` does not have visibility on any logs
+      Core.with_context(:player, endpoint_entity.id, :read, fn ->
+        assert [] == DB.all(LogVisibility)
+      end)
     end
 
     test "can't connect if the endpoint NIP does not exist", %{shard_id: shard_id} do

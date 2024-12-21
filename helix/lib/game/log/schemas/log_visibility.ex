@@ -1,5 +1,6 @@
 defmodule Game.LogVisibility do
   use Core.Schema
+  alias Game.Entity
 
   @context :player
   @table :log_visibilities
@@ -18,5 +19,5 @@ defmodule Game.LogVisibility do
     |> Schema.create()
   end
 
-  def get_entity_id(_, %{shard_id: entity_id}), do: entity_id
+  def get_entity_id(_, %{shard_id: raw_entity_id}), do: Entity.ID.from_external(raw_entity_id)
 end

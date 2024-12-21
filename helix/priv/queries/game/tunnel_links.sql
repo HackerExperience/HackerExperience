@@ -4,9 +4,9 @@
 
 -- :__insert
 INSERT INTO tunnel_links
-  (tunnel_id, idx, nip, inserted_at)
+  (tunnel_id, idx, nip, server_id, inserted_at)
 VALUES
-  (?, ?, ?, ?)
+  (?, ?, ?, ?, ?)
 RETURNING *;
 
 --------------------------------------------------------------------------------

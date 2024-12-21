@@ -1,6 +1,7 @@
 defmodule Webserver.Dispatcher do
   require Logger
   use Webserver.Conveyor.Belt
+  alias Feeb.DB
   alias Webserver.{Conveyor, Endpoint, Hooks, Request}
   alias Core.Event
 
@@ -73,14 +74,11 @@ defmodule Webserver.Dispatcher do
       Endpoint.render_response(req, endpoint)
     else
       {:error, req} ->
-        # This is a TODO. FeebDB should expose this kind of information. Also, we may want to roll
-        # back within a hook instead of here (not sure though)
-        case Process.get(:feebdb_current_context) do
-          {_, _} ->
-            Feeb.DB.rollback()
+        if DB.LocalState.has_current_context?() do
+          DB.rollback()
 
-          _ ->
-            :noop
+          if DB.LocalState.count_open_contexts() > 0,
+            do: Logger.warning("Multiple open contexts left open on #{endpoint}")
         end
 
         Endpoint.render_response(req, endpoint)

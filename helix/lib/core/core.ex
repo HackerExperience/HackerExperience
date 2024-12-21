@@ -11,12 +11,12 @@ defmodule Core do
 
   def begin_context(:player, player_id, access_type) do
     universe = Process.get(:helix_universe) || raise "Universe not set"
-    DB.begin(player_ctx(universe), player_id, access_type)
+    DB.begin(player_ctx(universe), to_shard_id(player_id), access_type)
   end
 
   def begin_context(:server, server_id, access_type) do
     universe = Process.get(:helix_universe) || raise "Universe not set"
-    DB.begin(server_ctx(universe), server_id, access_type)
+    DB.begin(server_ctx(universe), to_shard_id(server_id), access_type)
   end
 
   def get_player_context do
@@ -48,10 +48,11 @@ defmodule Core do
   end
 
   def with_context(:server, server_id, access_type, callback) do
-    ctx = DB.LocalState.get_current_context!()
+    ctx = DB.LocalState.get_current_context()
 
-    if ctx.context in [:sp_server, :mp_server] do
-      # Already in `:server` context, so do nothing special. Caller is responsible for COMMITing
+    if ctx && ctx.context in [:sp_server, :mp_server] && ctx.shard_id == server_id.id &&
+         ctx.access_type == access_type do
+      # Already in the requested context, so do nothing special. Caller is responsible for COMMITing
       callback.()
     else
       DB.with_context(fn ->
@@ -64,10 +65,11 @@ defmodule Core do
   end
 
   def with_context(:player, player_id, access_type, callback) do
-    ctx = DB.LocalState.get_current_context!()
+    ctx = DB.LocalState.get_current_context()
 
-    if ctx.context in [:sp_player, :mp_player] do
-      # Already in `:player` context, so do nothing special. Caller is responsible for COMMITing
+    if ctx && ctx.context in [:sp_player, :mp_player] && ctx.shard_id == player_id.id &&
+         ctx.access_type == access_type do
+      # Already in the requested context, so do nothing special. Caller is responsible for COMMITing
       callback.()
     else
       DB.with_context(fn ->
@@ -111,4 +113,7 @@ defmodule Core do
   defp player_ctx(:multiplayer), do: :mp_player
   defp server_ctx(:singleplayer), do: :sp_server
   defp server_ctx(:multiplayer), do: :mp_server
+
+  defp to_shard_id(%{id: id}), do: id
+  defp to_shard_id(id) when is_integer(id), do: id
 end

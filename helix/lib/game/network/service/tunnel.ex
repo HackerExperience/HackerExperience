@@ -40,6 +40,7 @@ defmodule Game.Services.Tunnel do
       nips: nips,
       source_nip: source_nip,
       target_nip: target_nip,
+      nips_servers: nips_servers,
       valid?: links_valid?
     } = get_data_from_parsed_links(parsed_links)
 
@@ -49,7 +50,7 @@ defmodule Game.Services.Tunnel do
     access = :ssh
 
     with {:ok, tunnel} <- do_create(source_nip, target_nip, access),
-         {:ok, links} <- do_create_links(tunnel, nips),
+         {:ok, links} <- do_create_links(tunnel, nips, nips_servers),
          {:ok, _connections} <- Svc.Connection.create(tunnel.id, links, :ssh) do
       {:ok, tunnel}
     else
@@ -70,9 +71,9 @@ defmodule Game.Services.Tunnel do
     |> DB.insert()
   end
 
-  defp do_create_links(%Tunnel{} = tunnel, nips) do
+  defp do_create_links(%Tunnel{} = tunnel, nips, nips_servers) do
     Enum.reduce_while(nips, {:ok, [], 0}, fn nip, {:ok, acc_links, acc_idx} ->
-      %{tunnel_id: tunnel.id, idx: acc_idx, nip: nip}
+      %{tunnel_id: tunnel.id, idx: acc_idx, nip: nip, server_id: Map.fetch!(nips_servers, nip)}
       |> TunnelLink.new()
       |> DB.insert()
       |> case do
@@ -98,8 +99,8 @@ defmodule Game.Services.Tunnel do
     initial_acc =
       %{
         loops: [],
-        servers: [],
         nips: [],
+        nips_servers: Map.new(parsed_links),
         size: total_links,
         source_nip: nil,
         target_nip: nil,
@@ -108,7 +109,7 @@ defmodule Game.Services.Tunnel do
       }
 
     parsed_links
-    |> Enum.reduce(initial_acc, fn {nip, server_id}, acc ->
+    |> Enum.reduce(initial_acc, fn {nip, _server_id}, acc ->
       acc =
         cond do
           acc.idx == 0 ->
@@ -123,11 +124,9 @@ defmodule Game.Services.Tunnel do
 
       acc
       |> Map.update!(:idx, &(&1 + 1))
-      |> Map.update!(:servers, fn servers -> [server_id | servers] end)
       |> Map.update!(:nips, fn nips -> [nip | nips] end)
       |> parsed_links_check_for_loops()
     end)
-    |> Map.update!(:servers, &Enum.reverse/1)
     |> Map.update!(:nips, &Enum.reverse/1)
   end
 
