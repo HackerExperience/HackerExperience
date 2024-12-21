@@ -19,8 +19,10 @@ defmodule Core.Event.LoggableTest do
         }
 
       # Emit the `Test.LoggableEvent`, which will relay the given `log_map` for Loggable
-      event = Test.LoggableEvent.new(log_map)
-      capture_log(fn -> Event.emit([event]) end)
+      capture_log(fn ->
+        event = Test.LoggableEvent.new(log_map)
+        Event.emit([event])
+      end)
 
       # The log was correctly created in the server
       Core.with_context(:server, server.id, :read, fn ->

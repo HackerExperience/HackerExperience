@@ -1,5 +1,6 @@
 defmodule Game.Log do
   use Core.Schema
+  alias Game.Server
 
   @context :server
   @table :logs
@@ -28,7 +29,7 @@ defmodule Game.Log do
     |> Schema.create()
   end
 
-  def get_server_id(_row, %{shard_id: raw_server_id}), do: raw_server_id
+  def get_server_id(_row, %{shard_id: raw_server_id}), do: Server.ID.from_external(raw_server_id)
 
   def hydrate_data(data, %{type: type}),
     do: data_mod(type).load!(data)
