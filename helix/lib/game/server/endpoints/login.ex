@@ -47,8 +47,7 @@ defmodule Game.Endpoint.Server.Login do
   end
 
   def get_context(request, %{source_nip: source_nip, target_nip: target_nip} = params, session) do
-    with true <- true,
-         {:ok, bounce_hops} <- resolve_bounce_hops(params[:tunnel_id], params[:vpn_id], source_nip),
+    with {:ok, bounce_hops} <- resolve_bounce_hops(params[:tunnel_id], params[:vpn_id], source_nip),
          {true, %{route_map: %{gateway: gateway, endpoint: endpoint} = route_map}} <-
            Henforcers.Network.can_resolve_route?(source_nip, target_nip, bounce_hops),
 

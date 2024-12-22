@@ -11,6 +11,18 @@ defmodule Core.Event.Publishable.Definition do
       @behaviour Core.Event.Publishable.Behaviour
       use Norm
       import Core.Spec
+
+      alias Core.ID
+
+      @before_compile unquote(__MODULE__)
+    end
+  end
+
+  defmacro __before_compile__(_) do
+    quote do
+      if not Module.defines?(__MODULE__, {:whom_to_publish, 1}) do
+        raise "Publishable module #{__MODULE__} missing :whom_to_publish/1 callback"
+      end
     end
   end
 end

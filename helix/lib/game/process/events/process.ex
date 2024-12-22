@@ -28,8 +28,36 @@ defmodule Game.Events.Process do
         process: process,
         confirmed: confirmed
       }
+      |> Event.new()
     end
 
     def handlers(_, _), do: []
+
+    defmodule Publishable do
+      use Core.Event.Publishable.Definition
+
+      def spec do
+        selection(
+          schema(%{
+            id: integer(),
+            type: binary()
+          }),
+          [:id, :type]
+        )
+      end
+
+      def generate_payload(%{data: %{process: process}}) do
+        payload =
+          %{
+            id: process.id |> ID.to_external(),
+            type: "#{process.type}"
+          }
+
+        {:ok, payload}
+      end
+
+      def whom_to_publish(%{data: %{process: %{entity_id: entity_id}}}),
+        do: %{player: entity_id}
+    end
   end
 end

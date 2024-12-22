@@ -3,10 +3,11 @@ defmodule Core.Webserver.Belt.Session do
 
   # TODO: Maybe convert the session and session.data maps in proper structs
 
+  alias Feeb.DB
   alias Webserver.Conveyor
   alias Core.Crypto
   alias Game.Services, as: Svc
-  alias Feeb.DB
+  alias Game.{Entity}
 
   def call(request, conveyor, _) do
     # Maybe move the session_for_* functions to a Session module? Easier to test
@@ -51,7 +52,13 @@ defmodule Core.Webserver.Belt.Session do
           case Svc.Player.fetch(by_external_id: external_id) do
             %{} = player ->
               DB.commit()
-              %{type: :authenticated, player_id: player.id, external_id: player.external_id}
+
+              %{
+                type: :authenticated,
+                player_id: player.id,
+                entity_id: Entity.ID.new(player.id),
+                external_id: player.external_id
+              }
 
             nil ->
               %{type: :unauthenticated, external_id: external_id}
@@ -79,7 +86,13 @@ defmodule Core.Webserver.Belt.Session do
          DB.begin(request.universe, shard_id, :read),
          %{} = player <- Svc.Player.fetch(by_external_id: claims.external_id) || :user_not_found do
       DB.commit()
-      session_data = %{type: :authenticated, player_id: player.id, external_id: player.external_id}
+
+      session_data = %{
+        type: :authenticated,
+        player_id: player.id,
+        entity_id: Entity.ID.new(player.id),
+        external_id: player.external_id
+      }
 
       {:ok,
        %{id: claims.session_id, universe: request.universe, shard_id: shard_id, data: session_data}}

@@ -34,6 +34,16 @@ defmodule Core.ID do
       def from_endpoint(raw_id, _opts) when is_integer(raw_id),
         do: {:ok, from_external(raw_id)}
 
+      def from_endpoint(raw_id, opts) when is_binary(raw_id) do
+        case Integer.parse(raw_id) do
+          {raw_numeric_id, ""} ->
+            from_endpoint(raw_numeric_id, opts)
+
+          :error ->
+            {:error, :invalid}
+        end
+      end
+
       def from_endpoint(_, _),
         do: {:error, :invalid}
 

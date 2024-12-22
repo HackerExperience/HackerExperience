@@ -48,6 +48,7 @@ defmodule Core.Event do
   def new(%ev_mod{} = data) do
     relay = Process.get(:helix_event_relay)
 
+    # TODO: Only warn that relay is empty when emitting the events. This gets annoying on tests
     if is_nil(relay),
       do: Logger.warning("No relay found for #{inspect(ev_mod)}")
 

@@ -27,9 +27,9 @@ defmodule Game.Process.ExecutableTest do
       assert process.registry.tgt_log_id == log.id
       assert process.data.log_type == :local_login
 
-      assert event.__struct__ == Game.Events.Process.Created
-      assert event.process == process
-      refute event.confirmed
+      assert event.data.__struct__ == Game.Events.Process.Created
+      assert event.data.process == process
+      refute event.data.confirmed
     end
   end
 end

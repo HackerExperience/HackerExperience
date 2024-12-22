@@ -7,7 +7,8 @@ defmodule Game.Webserver do
   def routes do
     [
       {"/v1/player/sync", %{handler: Endpoint.Player.Sync, method: :post, sse: true}},
-      {"/v1/server/:nip/login/:target_nip", %{handler: Endpoint.Server.Login, method: :post}}
+      {"/v1/server/:nip/login/:target_nip", %{handler: Endpoint.Server.Login, method: :post}},
+      {"/v1/server/:nip/log/:log_id/edit", %{handler: Endpoint.Log.Edit, method: :post}}
     ]
   end
 

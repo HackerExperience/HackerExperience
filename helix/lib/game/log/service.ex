@@ -5,7 +5,8 @@ defmodule Game.Services.Log do
 
   def fetch(filter_params, opts \\ []) do
     filters = [
-      by_id_and_revision_id: &query_by_id_and_revision_id/1
+      by_id_and_revision_id: &query_by_id_and_revision_id/1,
+      by_id: {:one, {:logs, :fetch_latest_by_id}}
     ]
 
     Core.Fetch.query(filter_params, opts, filters)

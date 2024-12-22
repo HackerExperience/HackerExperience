@@ -24,6 +24,8 @@ defmodule Game.Process do
   @derived_fields [:id]
 
   def new(params) do
+    # TODO: Validate that `data` is correct (similar go Log schema)
+
     params
     |> Schema.cast()
     |> Schema.create()

@@ -3,9 +3,9 @@
 
 module API.Events.Json exposing
     ( encodeIdxEndpoint, encodeIdxGateway, encodeIdxLog, encodeIdxPlayer, encodeIdxTunnel, encodeIndexRequested
-    , encodeTunnelCreated
+    , encodeProcessCreated, encodeTunnelCreated
     , decodeIdxEndpoint, decodeIdxGateway, decodeIdxLog, decodeIdxPlayer, decodeIdxTunnel, decodeIndexRequested
-    , decodeTunnelCreated
+    , decodeProcessCreated, decodeTunnelCreated
     )
 
 {-|
@@ -14,13 +14,13 @@ module API.Events.Json exposing
 ## Encoders
 
 @docs encodeIdxEndpoint, encodeIdxGateway, encodeIdxLog, encodeIdxPlayer, encodeIdxTunnel, encodeIndexRequested
-@docs encodeTunnelCreated
+@docs encodeProcessCreated, encodeTunnelCreated
 
 
 ## Decoders
 
 @docs decodeIdxEndpoint, decodeIdxGateway, decodeIdxLog, decodeIdxPlayer, decodeIdxTunnel, decodeIndexRequested
-@docs decodeTunnelCreated
+@docs decodeProcessCreated, decodeTunnelCreated
 
 -}
 
@@ -73,6 +73,24 @@ encodeTunnelCreated rec =
         , ( "source_nip", Json.Encode.string (NIP.toString rec.source_nip) )
         , ( "target_nip", Json.Encode.string (NIP.toString rec.target_nip) )
         , ( "tunnel_id", Json.Encode.int (TunnelID.toValue rec.tunnel_id) )
+        ]
+
+
+decodeProcessCreated : Json.Decode.Decoder API.Events.Types.ProcessCreated
+decodeProcessCreated =
+    Json.Decode.succeed
+        (\id type_ -> { id = id, type_ = type_ })
+        |> OpenApi.Common.jsonDecodeAndMap
+            (Json.Decode.field "id" Json.Decode.int)
+        |> OpenApi.Common.jsonDecodeAndMap
+            (Json.Decode.field "type" Json.Decode.string)
+
+
+encodeProcessCreated : API.Events.Types.ProcessCreated -> Json.Encode.Value
+encodeProcessCreated rec =
+    Json.Encode.object
+        [ ( "id", Json.Encode.int rec.id )
+        , ( "type", Json.Encode.string rec.type_ )
         ]
 
 

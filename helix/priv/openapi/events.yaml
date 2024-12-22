@@ -88,11 +88,21 @@ components:
       properties:
         player:
           $ref: '#/components/schemas/IdxPlayer'
+    process_created:
+      type: object
+      required:
+        - type
+        - id
+      properties:
+        id:
+          type: integer
+        type:
+          type: string
     tunnel_created:
       type: object
       required:
-        - target_nip
         - source_nip
+        - target_nip
         - tunnel_id
         - index
         - access
@@ -103,9 +113,9 @@ components:
           $ref: '#/components/schemas/IdxEndpoint'
         tunnel_id:
           type: integer
-        source_nip:
-          type: string
         target_nip:
+          type: string
+        source_nip:
           type: string
   securitySchemes: {}
 openapi: 3.1.0
