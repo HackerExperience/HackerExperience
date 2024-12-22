@@ -84,16 +84,12 @@ jobs:
         run: mix feeb_db.list_schemas && git diff --exit-code --no-ext-diff
 
       - name: Test app
-        run: mix test
+        run: mix coveralls.github
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Check for transitive compilation dependencies
         run: mix xref graph --label compile-connected --fail-above 0
-
-      # Uncomment below once repository is public (so we can use coveralls.io)
-      # - name: Test app
-      #   run: mix coveralls.github
-      #   env:
-      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       # NOTE: I'm unsure about `Uncache Helix`. I'll leave it uncommented (cached) for a while and
       # see whether it causes any problems. For a more robust CI, we may want a separate
