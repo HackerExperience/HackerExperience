@@ -14,7 +14,7 @@ defmodule Game.Process do
     {:entity_id, ID.ref(:entity_id)},
     {:type, {:enum, values: @process_types}},
     # `data` is the actual process data (e.g. log edit I need the contents of the new log)
-    {:data, {:map, keys: :atom}},
+    {:data, {:map, keys: :atom, after_read: :hydrate_data}},
     # `registry` includes tgt_log_id, src_file_id etc (same data in ProcessRegistry)
     {:registry, {:map, keys: :atom}},
     {:inserted_at, {:datetime_utc, [precision: :millisecond], mod: :inserted_at}},
@@ -28,6 +28,9 @@ defmodule Game.Process do
     |> Schema.cast()
     |> Schema.create()
   end
+
+  def hydrate_data(%process{} = data, _),
+    do: apply(process, :on_db_load, [data])
 
   def get_server_id(_, %{shard_id: raw_server_id}), do: Server.ID.from_external(raw_server_id)
 end
