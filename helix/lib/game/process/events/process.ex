@@ -47,6 +47,8 @@ defmodule Game.Events.Process do
       end
 
       def generate_payload(%{data: %{process: process}}) do
+        # TODO: It doesn't make any sense to publish this process, at least while it hasn't been
+        # confirmed yet. The request that created the process already has access to this information
         payload =
           %{
             id: process.id |> ID.to_external(),
