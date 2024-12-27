@@ -36,3 +36,24 @@ Anyway, it's premature to worry about this for now, but it's certainly possible 
 Every time a process is started, recalculated, retargeted, reprioritiezed etc etc the GenServer will need to recalculate (recalque!) the entire TOP (Table Of Processes) to find out the "next to be completed".
 
 It may (or may not be) a good a idea to trigger the Executable call (*Process.execute) within the GenServer itself. Not sure. We'll see.
+
+Another interesting optimization to make is consider the possiblity of "scanner process" not altering the resources of other process. In other words, I'm proposing that "scanner processes" have an orthogonal set of resources. By following this pattern, when a scanner process is retargeted (which may be often) it won't impact other processes (scanner or not), and therefore we won't need to recalculate everything.
+
+Finally, it's important to make sure we only update the target/processed resources if a process actually changes, otherwise we'll get a lot of unnecessary IO on each recalculation
+
+====
+
+Resources
+
+We have 4 big "maps" representing resources:
+
+1. Allocated
+2. Objective (or Target)
+3. Processed
+4. Remaining
+
+We need to store the first three. The fourth (Reamining) can be derived from (Objective - Processed).
+
+Allocated means the current "rate" of resources that are processed every second. "Objective" means the total amount of resources that need to be processed for process completion. And "Processed" means how far along we've come so far -- i.e. how many resources were processed thus far.
+
+These maps are stored within each process

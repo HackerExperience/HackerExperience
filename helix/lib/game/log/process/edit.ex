@@ -19,6 +19,25 @@ defmodule Game.Process.Log.Edit do
     |> Map.put(:log_type, String.to_existing_atom(raw.log_type))
   end
 
+  defmodule Resourceable do
+    use Game.Process.Resourceable.Definition
+
+    def cpu(_factors, _params) do
+      # TODO
+      5000
+    end
+
+    #
+    def dynamic(_, _), do: [:cpu]
+
+    def static(_, _) do
+      %{
+        paused: %{ram: 10},
+        running: %{ram: 20}
+      }
+    end
+  end
+
   defmodule Executable do
     alias Game.Log
 

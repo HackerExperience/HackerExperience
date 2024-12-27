@@ -23,6 +23,10 @@ defmodule Game.Process.Executable do
 
     target_log = callback(executable, :target_log, args, callbacks)
 
+    # TODO: Executable.resources actually
+    resources_params = [meta]
+    resources = get_resources(executable, resources_params)
+
     process_data = get_process_data(executable, params, meta)
     process_type = get_process_type(executable, params, meta)
     process_info = {process_type, process_data}
@@ -30,9 +34,13 @@ defmodule Game.Process.Executable do
     registry_data =
       %{}
       |> Map.merge(target_log)
+      |> Map.merge(resources)
 
     {registry_data, process_info}
   end
+
+  defp get_resources(executable, params),
+    do: call_process(executable, :resources, params)
 
   defp callback(executable, method, args, callbacks) do
     result =

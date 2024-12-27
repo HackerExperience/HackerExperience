@@ -17,7 +17,15 @@ defmodule Game.Services.Process do
         entity_id: entity_id,
         type: process_type,
         data: process_data,
-        registry: registry_data
+        registry: registry_data,
+        resources: %{
+          l_dynamic: registry_data.l_dynamic,
+          objective: registry_data.objective,
+          # When a process is created, it hasn't been allocated any resources yet
+          allocated: nil,
+          # Similarly, it hasn't processed anything yet
+          processed: nil
+        }
       }
       |> Process.new()
       |> DB.insert()
@@ -31,9 +39,15 @@ defmodule Game.Services.Process do
         process_id: process.id,
         entity_id: process.entity_id
       }
-      |> Map.merge(registry_data)
+      |> merge_registry_params(registry_data)
       |> ProcessRegistry.new()
       |> DB.insert()
     end)
+  end
+
+  defp merge_registry_params(params, registry_data) do
+    registry_data
+    |> Map.take(ProcessRegistry.__cols__())
+    |> Map.merge(params)
   end
 end

@@ -17,6 +17,7 @@ defmodule Game.Process do
     {:data, {:map, keys: :atom, after_read: :hydrate_data}},
     # `registry` includes tgt_log_id, src_file_id etc (same data in ProcessRegistry)
     {:registry, {:map, keys: :atom}},
+    {:resources, {:map, after_read: :format_resources}},
     {:inserted_at, {:datetime_utc, [precision: :millisecond], mod: :inserted_at}},
     {:server_id, {ID.ref(:server_id), virtual: :get_server_id}}
   ]
@@ -33,6 +34,11 @@ defmodule Game.Process do
 
   def hydrate_data(%process{} = data, _),
     do: apply(process, :on_db_load, [data])
+
+  def format_resources(resources, _) do
+    resources
+    |> Map.put(:l_dynamic, Enum.map(resources.l_dynamic, &String.to_existing_atom/1))
+  end
 
   def get_server_id(_, %{shard_id: raw_server_id}), do: Server.ID.from_external(raw_server_id)
 end
