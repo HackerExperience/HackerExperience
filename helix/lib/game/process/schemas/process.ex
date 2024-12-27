@@ -32,6 +32,11 @@ defmodule Game.Process do
     |> Schema.create()
   end
 
+  def update(%_{} = process, changes) do
+    process
+    |> Schema.update(changes)
+  end
+
   def hydrate_data(%process{} = data, _),
     do: apply(process, :on_db_load, [data])
 

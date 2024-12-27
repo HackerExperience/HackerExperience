@@ -20,6 +20,9 @@ defmodule Test.Setup do
   # Game
   defdelegate network_connection(server_id, opts \\ []), to: S.NetworkConnection, as: :new
   defdelegate network_connection!(server_id, opts \\ []), to: S.NetworkConnection, as: :new!
+  defdelegate process(server_id, opts \\ []), to: S.Process, as: :new
+  defdelegate process!(server_id, opts \\ []), to: S.Process, as: :new!
+  defdelegate process_spec(server_id, opts \\ []), to: S.Process, as: :spec
   defdelegate tunnel(opts \\ []), to: S.Tunnel, as: :new
   defdelegate tunnel!(opts \\ []), to: S.Tunnel, as: :new!
   defdelegate tunnel_lite(opts \\ []), to: S.Tunnel, as: :new_lite

@@ -28,11 +28,16 @@ defmodule Game.Services.ProcessTest do
       assert process.entity_id == entity.id
       assert process.data == process_data
       assert process.type == process_type
-      assert process.registry == registry_data
+      assert process.registry == get_registry_params(registry_data)
 
       assert event.data.__struct__ == ProcessCreatedEvent
       assert event.data.process == process
       refute event.data.confirmed
     end
+  end
+
+  defp get_registry_params(registry_data) do
+    registry_data
+    |> Map.take(Game.ProcessRegistry.__cols__())
   end
 end

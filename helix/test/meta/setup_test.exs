@@ -96,6 +96,14 @@ defmodule Test.SetupTest do
     end
   end
 
+  describe "Setup.process/1" do
+    test "allows user to modify the process objective" do
+      server = Setup.server!()
+      process = Setup.process!(server.id, objective: %{cpu: 123})
+      assert process.resources.objective == %{cpu: 123}
+    end
+  end
+
   defp assert_player_shard(%_{id: player_id}) do
     player_db_path = DB.Repo.get_path(Core.get_player_context(), player_id)
     assert File.exists?(player_db_path)

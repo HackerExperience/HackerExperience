@@ -45,6 +45,12 @@ defmodule Game.Services.Server do
     Core.Fetch.query(filter_params, opts, filters)
   end
 
+  def fetch!(filter_params, opts \\ []) do
+    filter_params
+    |> fetch(opts)
+    |> Core.Fetch.assert_non_empty_result!(filter_params, opts)
+  end
+
   def list(filter_params, opts \\ []) do
     filters = [
       by_entity_id: {:all, {:servers, :by_entity_id}}
