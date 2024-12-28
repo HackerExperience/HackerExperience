@@ -10,8 +10,8 @@ defmodule Test.Setup.Process do
   - spec: Custom opts for the `spec` implementation. Consult docs at `spec/2`. Opts include:
     - params: Process params. If unset, per-process defaults are applied
     - meta: Process meta. If unset, per-process defaults are applied (new data may be created)
-  - objective: Modify the process' objective
-  - static: Modify the process' static resources. Accepts: %{paused: R}, %{paused: R, running: R}
+  - objective: Modify the process objective
+  - static: Modify the process static resources. Accepts: %{paused: R}, %{paused: R, running: R}
             or R. Any missing information will default to using the original process static.
   """
   def new(server_id, opts \\ []) do

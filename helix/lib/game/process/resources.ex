@@ -1,8 +1,8 @@
 defmodule Game.Process.Resources do
-  defstruct [:objective, :allocated, :processed]
+  defstruct cpu: 0.0, ram: 0.0
 
   @type t ::
-          %{
+          %__MODULE__{
             cpu: number,
             ram: number
           }
@@ -23,14 +23,6 @@ defmodule Game.Process.Resources do
                      end)
                      |> Map.new()
 
-  def new(objective, allocated, processed) do
-    %__MODULE__{
-      objective: objective,
-      allocated: allocated,
-      processed: processed
-    }
-  end
-
   ##################################################################################################
   # Callbacks
   ##################################################################################################
@@ -43,13 +35,13 @@ defmodule Game.Process.Resources do
   def allocate_static(process),
     do: dispatch_create(:allocate_static, [process])
 
-  def allocate_dynamic(shares, res_per_share, process),
+  def allocate_dynamic(%__MODULE__{} = shares, %__MODULE__{} = res_per_share, process),
     do: dispatch_merge(:allocate_dynamic, shares, res_per_share, [process])
 
   def get_shares(process),
     do: dispatch_create(:get_shares, [process])
 
-  def resource_per_share(available_resources, shares),
+  def resource_per_share(%__MODULE__{} = available_resources, %__MODULE__{} = shares),
     do: dispatch_merge(:resource_per_share, available_resources, shares)
 
   def overflow?(resources) do
@@ -77,19 +69,21 @@ defmodule Game.Process.Resources do
 
   @type sum(t, t) ::
           t
-  def sum(res_a, res_b),
+  def sum(%__MODULE__{} = res_a, %__MODULE__{} = res_b),
     do: dispatch_merge(:sum, res_a, res_b)
 
   @type sub(t, t) ::
           t
-  def sub(res_a, res_b),
+  def sub(%__MODULE__{} = res_a, %__MODULE__{} = res_b),
     do: dispatch_merge(:sub, res_a, res_b)
 
-  def min(res_a, res_b) do
+  def min(%__MODULE__{} = res_a, %__MODULE__{} = res_b) do
     :op_map
     |> dispatch_merge(res_a, res_a, [&Kernel.min/2])
+    |> Map.from_struct()
     |> Enum.reject(fn {res, val} -> val == call_resource(res, :initial, []) end)
     |> Map.new()
+    |> then(&struct(__MODULE__, &1))
   end
 
   ##################################################################################################
@@ -97,9 +91,12 @@ defmodule Game.Process.Resources do
   ##################################################################################################
 
   defp dispatch_create(method, params \\ []) do
-    Enum.reduce(@resources, %{}, fn resource, acc ->
-      Map.put(acc, resource, call_resource(resource, method, params))
-    end)
+    resources =
+      Enum.reduce(@resources, %{}, fn resource, acc ->
+        Map.put(acc, resource, call_resource(resource, method, params))
+      end)
+
+    struct(__MODULE__, resources)
   end
 
   defp dispatch_value(method, resources) do

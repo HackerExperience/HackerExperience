@@ -5,7 +5,7 @@ defmodule Game.Process.TOP.Allocator do
 
   alias Game.Process.Resources
 
-  def allocate(server_id, total_resources, processes) do
+  def allocate(server_id, %Resources{} = total_resources, processes) do
     # Static allocation
     {static_resources_usage, statically_allocated_processes} = static_allocation(processes)
 
@@ -83,7 +83,7 @@ defmodule Game.Process.TOP.Allocator do
       naive_dynamic_alloc = Resources.allocate_dynamic(proc_shares, resource_per_share, process)
 
       # Limit is TODO
-      limit = %{}
+      limit = Resources.initial()
 
       # Now we take the naive allocated amount and apply the process limitations
       proc_dynamic_alloc = Resources.min(naive_dynamic_alloc, limit)

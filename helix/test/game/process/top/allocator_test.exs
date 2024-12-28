@@ -1,6 +1,7 @@
 defmodule Game.Process.TOP.AllocatorTest do
   use Test.DBCase, async: true
   alias Game.Process.TOP.Allocator
+  alias Game.Process.Resources
 
   setup [:with_game_db]
 
@@ -13,7 +14,7 @@ defmodule Game.Process.TOP.AllocatorTest do
 
       # TODO: This should come from a util
       server_resources =
-        %{
+        %Resources{
           cpu: 2000,
           ram: 300
         }
@@ -40,7 +41,7 @@ defmodule Game.Process.TOP.AllocatorTest do
       proc_2 = Setup.process!(server.id, static: %{ram: 150})
 
       # The server only has 200MB available
-      server_resources = %{ram: 200}
+      server_resources = %Resources{ram: 200}
 
       assert {:error, {:overflow, [:ram]}} =
                Allocator.allocate(server.id, server_resources, [proc_1, proc_2])
