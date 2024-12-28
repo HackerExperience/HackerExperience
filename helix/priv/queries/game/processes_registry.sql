@@ -13,5 +13,8 @@ RETURNING *;
 ----------------------------------- SELECTS ------------------------------------
 --------------------------------------------------------------------------------
 
--- :fetch_by_process_id
-SELECT * FROM processes_registry WHERE process_id = ?;
+-- :__fetch
+SELECT * FROM processes_registry WHERE server_id = ? AND process_id = ?;
+
+-- :servers_with_processes
+SELECT server_id FROM processes_registry GROUP BY server_id;

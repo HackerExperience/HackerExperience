@@ -28,7 +28,7 @@ defmodule Test.Setup.Process do
 
     %{
       process: process,
-      process_registry: DB.one({:processes_registry, :fetch_by_process_id}, process.id),
+      process_registry: DB.one({:processes_registry, :fetch}, [server_id, process.id]),
       spec: spec
     }
   end

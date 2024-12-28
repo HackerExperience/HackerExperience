@@ -8,6 +8,7 @@ defmodule Game.Webserver.Hooks do
     true = req.universe in [:singleplayer, :multiplayer]
 
     Process.put(:helix_universe, req.universe)
+    Process.put(:helix_universe_shard_id, req.session.shard_id)
     Feeb.DB.begin(req.universe, req.session.shard_id, :write)
 
     {:ok, req}

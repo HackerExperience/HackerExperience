@@ -131,7 +131,7 @@ defmodule Webserver.Dispatcher do
   defp emit_events(%{events: events} = req) when is_list(events) do
     # TODO: Find a way to synchronously wait events to finish executing (for tests)
 
-    # TODO: Find a way to concentrate in a single module "dirty" state like this
+    # TODO: Find a way to concentrate in a single module "dirty" state like this (see also TOP)
     helix_universe_shard_id = req.session.shard_id
     helix_universe = Process.get(:helix_universe)
 
