@@ -11,8 +11,11 @@ defmodule Game.Services.ProcessTest do
       %{server: server, entity: entity} = Setup.server()
       log = Setup.log!(server.id)
 
+      # TODO: This test is wrong, overall. I should generate the params the same way Executable does
       registry_data =
         %{
+          l_dynamic: [:cpu],
+          objective: %{cpu: 1000},
           tgt_log_id: log.id
         }
 

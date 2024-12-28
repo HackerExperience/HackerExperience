@@ -35,6 +35,7 @@ defmodule Game.Services.Process do
         resources: %{
           l_dynamic: registry_data.l_dynamic,
           objective: registry_data.objective,
+          static: registry_data.static,
           # When a process is created, it hasn't been allocated any resources yet
           allocated: nil,
           # Similarly, it hasn't processed anything yet

@@ -5,7 +5,8 @@ defmodule Game.Process.Resourceable do
 
     %{
       objective: objective(resourceable, args),
-      l_dynamic: l_dynamic(resourceable, args)
+      l_dynamic: l_dynamic(resourceable, args),
+      static: static(resourceable, args)
     }
   end
 
@@ -20,4 +21,7 @@ defmodule Game.Process.Resourceable do
 
   defp l_dynamic(resourceable, args),
     do: apply(resourceable, :dynamic, args)
+
+  defp static(resourceable, args),
+    do: apply(resourceable, :static, args)
 end
