@@ -52,6 +52,7 @@ defmodule Helix.MixProject do
     [
       {:cowboy, "~> 2.12"},
       {:rustler, "~> 0.32.0"},
+      {:decimal, "~> 2.3.0"},
       {:feebdb, github: "renatomassaro/feebdb", branch: "main"},
       {:jose, "~> 1.11"},
       {:norm, "~> 0.13"},

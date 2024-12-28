@@ -16,4 +16,16 @@ defmodule Test.Assertions do
       assert unquote(relay) == acc_relay
     end
   end
+
+  defmacro assert_decimal_eq(a, b) do
+    quote do
+      to_dec = fn
+        %Decimal{} = v -> v
+        i when is_integer(i) -> Decimal.new(i)
+        f when is_float(f) -> Decimal.new("#{f}")
+      end
+
+      assert to_dec.(unquote(a)) == to_dec.(unquote(b))
+    end
+  end
 end

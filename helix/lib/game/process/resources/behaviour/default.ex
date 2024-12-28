@@ -5,6 +5,8 @@ defmodule Game.Process.Resources.Behaviour.Default do
 
   @type t :: number
 
+  @zero Decimal.new(0)
+
   defmacro __using__(_) do
     quote do
       @behaviour Game.Process.Resources.Behaviour
@@ -43,7 +45,12 @@ defmodule Game.Process.Resources.Behaviour.Default do
   # Callbacks
   ##################################################################################################
 
-  def initial(_), do: build(0.0)
+  def initial(_), do: build(@zero)
+
+  def fmt_value(res, nil), do: initial(res)
+  def fmt_value(res, f) when is_float(f), do: fmt_value(res, Decimal.new("#{f}"))
+  def fmt_value(res, i) when is_integer(i), do: fmt_value(res, Decimal.new(i))
+  def fmt_value(_, %Decimal{} = v), do: v
 
   # Generic data manipulation
 
@@ -94,22 +101,24 @@ defmodule Game.Process.Resources.Behaviour.Default do
     (res_per_share >= 0 && res_per_share) || 0.0
   end
 
-  def overflow?(_, v), do: v < 0
+  def overflow?(_, %Decimal{} = v), do: Decimal.lt?(v, @zero)
 
   ##################################################################################################
   # Operations
   ##################################################################################################
 
-  def sum(_, a, b), do: a + b
-  def sub(_, a, b), do: a - b
-  def mul(_, a, b), do: a * b
-  def div(res, a, b), do: ResourceUtils.safe_div(a, b, fn -> initial(res) end)
+  def sum(_, %Decimal{} = a, %Decimal{} = b), do: Decimal.add(a, b)
+  def sub(_, %Decimal{} = a, %Decimal{} = b), do: Decimal.sub(a, b)
+  def mul(_, %Decimal{} = a, %Decimal{} = b), do: Decimal.mult(a, b)
+
+  def div(res, %Decimal{} = a, %Decimal{} = b),
+    do: ResourceUtils.safe_div(a, b, fn -> initial(res) end)
 
   ##################################################################################################
   # Internal
   ##################################################################################################
 
-  defp build(v), do: ResourceUtils.ensure_float(v)
+  defp build(%Decimal{} = v), do: v
 
   defp can_allocate?(_, %{processed: nil}),
     do: true

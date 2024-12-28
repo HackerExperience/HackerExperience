@@ -1,5 +1,6 @@
 defmodule Game.Process.Resources do
-  defstruct cpu: 0.0, ram: 0.0
+  @zero Decimal.new(0)
+  defstruct cpu: @zero, ram: @zero
 
   @type t ::
           %__MODULE__{
@@ -22,6 +23,16 @@ defmodule Game.Process.Resources do
                        {resource, Module.concat(__MODULE__, resource_module_name)}
                      end)
                      |> Map.new()
+
+  def from_map(resources) do
+    %__MODULE__{
+      ram: fmt_value(:ram, resources[:ram]),
+      cpu: fmt_value(:cpu, resources[:cpu])
+    }
+  end
+
+  defp fmt_value(res, v),
+    do: call_resource(res, :fmt_value, [v])
 
   ##################################################################################################
   # Callbacks
@@ -91,12 +102,10 @@ defmodule Game.Process.Resources do
   ##################################################################################################
 
   defp dispatch_create(method, params \\ []) do
-    resources =
-      Enum.reduce(@resources, %{}, fn resource, acc ->
-        Map.put(acc, resource, call_resource(resource, method, params))
-      end)
-
-    struct(__MODULE__, resources)
+    Enum.reduce(@resources, %{}, fn resource, acc ->
+      Map.put(acc, resource, call_resource(resource, method, params))
+    end)
+    |> from_map()
   end
 
   defp dispatch_value(method, resources) do

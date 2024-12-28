@@ -14,10 +14,11 @@ defmodule Game.Process.TOP.AllocatorTest do
 
       # TODO: This should come from a util
       server_resources =
-        %Resources{
+        %{
           cpu: 2000,
           ram: 300
         }
+        |> Resources.from_map()
 
       assert {:ok, allocated_processes} =
                Allocator.allocate(server.id, server_resources, [proc_1, proc_2])
@@ -25,12 +26,12 @@ defmodule Game.Process.TOP.AllocatorTest do
       assert [{_, alloc_1}, {_, alloc_2}] = Enum.sort_by(allocated_processes, fn {p, _} -> p.id end)
 
       # Each process received half of the available CPU
-      assert alloc_1.cpu == 1000
-      assert alloc_2.cpu == 1000
+      assert alloc_1.cpu == Decimal.new(1000)
+      assert alloc_2.cpu == Decimal.new(1000)
 
       # Each process received the minimum static allocation
-      assert alloc_1.ram == proc_1.resources.static.running.ram
-      assert alloc_2.ram == proc_2.resources.static.running.ram
+      assert_decimal_eq(alloc_1.ram, proc_1.resources.static.running.ram)
+      assert_decimal_eq(alloc_2.ram, proc_2.resources.static.running.ram)
     end
 
     test "returns an error when server resources are insufficient" do
@@ -41,7 +42,9 @@ defmodule Game.Process.TOP.AllocatorTest do
       proc_2 = Setup.process!(server.id, static: %{ram: 150})
 
       # The server only has 200MB available
-      server_resources = %Resources{ram: 200}
+      server_resources =
+        %{ram: 200}
+        |> Resources.from_map()
 
       assert {:error, {:overflow, [:ram]}} =
                Allocator.allocate(server.id, server_resources, [proc_1, proc_2])
