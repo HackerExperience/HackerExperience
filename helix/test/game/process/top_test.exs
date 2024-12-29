@@ -1,7 +1,7 @@
 defmodule Game.Process.TOPTest do
   use Test.DBCase, async: true
 
-  alias Game.Process.{TOP}
+  alias Game.Process.{Resources, TOP}
   alias Game.Process
 
   setup [:with_game_db]
@@ -72,9 +72,8 @@ defmodule Game.Process.TOPTest do
         assert process_after.last_checkpoint_ts
         assert process_after.estimated_completion_ts
 
-        # TODO: Resources.equal?()
-        # # Its "processed" resource is set to zero (nothing has been processed yet)
-        # assert process_after.resources.processed == Resources.initial()
+        # Its "processed" resource is set to zero (nothing has been processed yet)
+        assert Resources.equal?(process_after.resources.processed, Resources.initial())
       end)
     end
   end
