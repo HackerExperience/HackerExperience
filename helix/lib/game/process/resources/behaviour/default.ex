@@ -63,6 +63,12 @@ defmodule Game.Process.Resources.Behaviour.Default do
   def op_map(_, a, b, fun),
     do: fun.(a, b)
 
+  def map(_, v, fun),
+    do: fun.(v)
+
+  def reduce(_, v, acc, fun),
+    do: fun.(v, acc)
+
   def allocate_static(res, %{resources: %{static: static}}) do
     # The concept of pausing a process is TODO
     is_paused? = false

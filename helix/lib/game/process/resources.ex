@@ -8,6 +8,10 @@ defmodule Game.Process.Resources do
             ram: number
           }
 
+  @type name ::
+          :cpu
+          | :ram
+
   @resources [
     :cpu,
     :ram
@@ -43,6 +47,12 @@ defmodule Game.Process.Resources do
   def initial,
     do: dispatch_create(:initial)
 
+  def map(%__MODULE__{} = resources, fun),
+    do: dispatch_value(:map, resources, [fun])
+
+  def reduce(%__MODULE__{} = resources, acc, fun),
+    do: dispatch(:reduce, resources, [acc, fun])
+
   def allocate_static(process),
     do: dispatch_create(:allocate_static, [process])
 
@@ -55,9 +65,9 @@ defmodule Game.Process.Resources do
   def resource_per_share(%__MODULE__{} = available_resources, %__MODULE__{} = shares),
     do: dispatch_merge(:resource_per_share, available_resources, shares)
 
-  def overflow?(resources) do
+  def overflow?(%__MODULE__{} = resources) do
     :overflow?
-    |> dispatch_value(resources)
+    |> dispatch(resources)
     |> Enum.reduce({false, []}, fn {res, v}, {_, acc_overflowed_resources} = acc ->
       if v do
         {true, [res | acc_overflowed_resources]}
@@ -71,6 +81,21 @@ defmodule Game.Process.Resources do
 
       {false, []} ->
         false
+    end)
+  end
+
+  @doc """
+  Returns the resource with the gratest value.
+  """
+  @spec max_value(t) ::
+          {name, Decimal.t()}
+  def max_value(%__MODULE__{} = resources) do
+    resources
+    |> reduce(@zero, fn v, acc -> Decimal.max(v, acc) end)
+    |> Enum.reduce({:cpu, @zero}, fn {res, v}, {_, current_max_v} = acc ->
+      if Decimal.compare(current_max_v, v) == :lt,
+        do: {res, v},
+        else: acc
     end)
   end
 
@@ -88,6 +113,11 @@ defmodule Game.Process.Resources do
   def sub(%__MODULE__{} = res_a, %__MODULE__{} = res_b),
     do: dispatch_merge(:sub, res_a, res_b)
 
+  @type div(t, t) ::
+          t
+  def div(%__MODULE__{} = res_a, %__MODULE__{} = res_b),
+    do: dispatch_merge(:div, res_a, res_b)
+
   def min(%__MODULE__{} = res_a, %__MODULE__{} = res_b) do
     :op_map
     |> dispatch_merge(res_a, res_a, [&Kernel.min/2])
@@ -101,6 +131,13 @@ defmodule Game.Process.Resources do
   # Internal
   ##################################################################################################
 
+  defp dispatch(method, resources, params \\ []) do
+    Enum.reduce(@resources, %{}, fn resource, acc ->
+      value = Map.fetch!(resources, resource)
+      Map.put(acc, resource, call_resource(resource, method, [value] ++ params))
+    end)
+  end
+
   defp dispatch_create(method, params \\ []) do
     Enum.reduce(@resources, %{}, fn resource, acc ->
       Map.put(acc, resource, call_resource(resource, method, params))
@@ -108,11 +145,10 @@ defmodule Game.Process.Resources do
     |> from_map()
   end
 
-  defp dispatch_value(method, resources) do
-    Enum.reduce(@resources, %{}, fn resource, acc ->
-      value = Map.fetch!(resources, resource)
-      Map.put(acc, resource, call_resource(resource, method, [value]))
-    end)
+  defp dispatch_value(method, resources, params \\ []) do
+    method
+    |> dispatch(resources, params)
+    |> from_map()
   end
 
   defp dispatch_merge(method, res_a, res_b, params \\ []) do
