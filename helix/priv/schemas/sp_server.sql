@@ -14,5 +14,5 @@ CREATE TABLE __db_migrations_summary (
 ) STRICT;
 INSERT INTO __db_migrations_summary VALUES('server',241221132844);
 CREATE TABLE logs ( id INTEGER, revision_id INTEGER NOT NULL, type TEXT NOT NULL, data TEXT NOT NULL, inserted_at TEXT NOT NULL, UNIQUE (id, revision_id) ) STRICT;
-CREATE TABLE processes ( id INTEGER PRIMARY KEY, entity_id INTEGER NOT NULL, type TEXT NOT NULL, data TEXT NOT NULL, registry TEXT NOT NULL, resources TEXT NOT NULL, inserted_at TEXT NOT NULL ) STRICT;
+CREATE TABLE processes ( id INTEGER PRIMARY KEY, entity_id INTEGER NOT NULL, type TEXT NOT NULL, data TEXT NOT NULL, registry TEXT NOT NULL, resources TEXT NOT NULL, inserted_at TEXT NOT NULL, last_checkpoint_ts INTEGER, estimated_completion_ts INTEGER ) STRICT;
 COMMIT;

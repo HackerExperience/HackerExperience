@@ -109,6 +109,9 @@ defmodule Game.Process.Resources.Behaviour.Default do
 
   def overflow?(_, %Decimal{} = v), do: Decimal.lt?(v, @zero)
 
+  def completed?(_, %Decimal{} = processed, %Decimal{} = objective),
+    do: Decimal.gte?(processed, objective)
+
   ##################################################################################################
   # Operations
   ##################################################################################################

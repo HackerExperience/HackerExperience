@@ -3,7 +3,10 @@ defmodule Game.Process.TOP.Allocator do
   Module responsible for allocating resources to the processes.
   """
 
+  require Logger
+  alias Feeb.DB
   alias Game.Process.Resources
+  alias Game.{Process}
 
   def allocate(server_id, %Resources{} = total_resources, processes) do
     # Static allocation
@@ -94,7 +97,7 @@ defmodule Game.Process.TOP.Allocator do
       # Accumulate total alloc, in order to know how many resources were used
       total_alloc = Resources.sum(total_alloc, proc_dynamic_alloc)
 
-      {total_alloc, acc ++ [{process, proc_allocation}]}
+      {total_alloc, [%{process | next_allocation: proc_allocation} | acc]}
     end)
   end
 end

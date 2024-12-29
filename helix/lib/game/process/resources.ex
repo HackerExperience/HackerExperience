@@ -84,6 +84,24 @@ defmodule Game.Process.Resources do
     end)
   end
 
+  @spec completed?(processed :: t, objective :: t) ::
+          true
+          | {false, {name(), remaining :: Decimal.t()}}
+  def completed?(%__MODULE__{} = processed, %__MODULE__{} = objective) do
+    :completed?
+    |> dispatch_merge(processed, objective)
+    |> Map.from_struct()
+    |> Enum.reduce_while(true, fn {res, res_completed?}, acc ->
+      if res_completed? do
+        {:cont, true}
+      else
+        # TODO: Test this branch
+        diff = sub(objective, processed)
+        {:halt, {res, diff.res}}
+      end
+    end)
+  end
+
   @doc """
   Returns the resource with the gratest value.
   """

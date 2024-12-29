@@ -1,6 +1,7 @@
 defmodule Game.Process do
   use Core.Schema
   alias Game.Server
+  alias __MODULE__
 
   @context :server
   @table :processes
@@ -19,7 +20,10 @@ defmodule Game.Process do
     {:registry, {:map, keys: :atom}},
     {:resources, {:map, after_read: :format_resources}},
     {:inserted_at, {:datetime_utc, [precision: :millisecond], mod: :inserted_at}},
-    {:server_id, {ID.ref(:server_id), virtual: :get_server_id}}
+    {:last_checkpoint_ts, {:integer, nullable: true}},
+    {:estimated_completion_ts, {:integer, nullable: true}},
+    {:server_id, {ID.ref(:server_id), virtual: :get_server_id}},
+    {:next_allocation, {:map, virtual: nil}}
   ]
 
   @derived_fields [:id]
@@ -41,9 +45,28 @@ defmodule Game.Process do
     do: apply(process, :on_db_load, [data])
 
   def format_resources(resources, _) do
+    # TODO: This can be removed if I always insert correctly (and/or normalize the input)
+    objective =
+      case resources.objective do
+        %_{} ->
+          resources.objective
+
+        %{} ->
+          Process.Resources.from_map(resources.objective)
+      end
+
     resources
     |> Map.put(:l_dynamic, Enum.map(resources.l_dynamic, &String.to_existing_atom/1))
+    |> Map.put(:objective, objective)
   end
 
   def get_server_id(_, %{shard_id: raw_server_id}), do: Server.ID.from_external(raw_server_id)
+
+  #
+
+  def get_last_checkpoint_ts(%_{last_checkpoint_ts: nil} = process),
+    do: DateTime.to_unix(process.inserted_at, :millisecond)
+
+  def get_last_checkpoint_ts(%_{last_checkpoint_ts: ts}) when is_integer(ts),
+    do: ts
 end
