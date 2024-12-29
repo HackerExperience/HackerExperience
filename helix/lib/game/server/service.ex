@@ -2,7 +2,7 @@ defmodule Game.Services.Server do
   alias Feeb.DB
   alias Core.NIP
   alias Game.Services, as: Svc
-  alias Game.{Entity, Server}
+  alias Game.{Entity, Process, Server, ServerMeta}
 
   def setup(%Entity{id: entity_id}) do
     with {:ok, %{id: server_id} = server} <- insert_server(entity_id) do
@@ -23,14 +23,25 @@ defmodule Game.Services.Server do
     end
   end
 
-  defp seed_new_server!(:server, _server_id) do
-    # TODO: Insert seed server data here, including S_meta
+  defp seed_new_server!(:server, server_id) do
+    # TODO: I'm not yet sure where, but this config should be defined elsewhere
+    initial_resources =
+      %{
+        cpu: 1000,
+        ram: 128
+      }
+      |> Process.Resources.from_map()
+
+    %{id: server_id, resources: initial_resources}
+    |> ServerMeta.new()
+    |> DB.insert!()
   end
 
   defp seed_new_server!(:universe, server_id) do
     # Make sure this server has a public connection to the Internet
-    %{server_id: server_id, nip: NIP.new(0, Renatils.Random.ip())}
-    |> Svc.NetworkConnection.create()
+    {:ok, _} =
+      %{server_id: server_id, nip: NIP.new(0, Renatils.Random.ip())}
+      |> Svc.NetworkConnection.create()
   end
 
   # Queries
@@ -57,6 +68,13 @@ defmodule Game.Services.Server do
     ]
 
     Core.Fetch.query(filter_params, opts, filters)
+  end
+
+  def get_meta(server_id) do
+    Core.with_context(:server, server_id, :read, fn ->
+      [meta] = DB.all(ServerMeta)
+      meta
+    end)
   end
 
   defp insert_server(entity_id) do

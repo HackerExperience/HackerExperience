@@ -1,0 +1,4 @@
+CREATE TABLE meta (
+  id INTEGER PRIMARY KEY,
+  resources TEXT NOT NULL
+) STRICT;

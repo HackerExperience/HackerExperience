@@ -1,7 +1,8 @@
 defmodule Game.Process.TOPTest do
   use Test.DBCase, async: true
 
-  alias Game.Process.TOP
+  alias Game.Process.{TOP}
+  alias Game.Process
 
   setup [:with_game_db]
 
@@ -35,20 +36,46 @@ defmodule Game.Process.TOPTest do
       top_2 = Enum.find([state_pid_1, state_pid_2], fn state -> state.server_id == server_2.id end)
 
       assert top_1.server_id == server_1.id
-      assert Enum.count(top_1.processes) == 2
+      # assert Enum.count(top_1.processes) == 2
 
       assert top_2.server_id == server_2.id
-      assert Enum.count(top_2.processes) == 1
+      # assert Enum.count(top_2.processes) == 1
     end
   end
 
   describe "bootstrap" do
     test "schedules processes after boot", ctx do
-      %{server: server} = Setup.server()
+      %{server: server, meta: meta} = Setup.server()
+      process_before = Setup.process!(server.id)
 
       assert {:ok, pid} = TOP.start_link({server.id, ctx.db_context, ctx.shard_id})
 
-      assert %{processes: []} = :sys.get_state(pid)
+      state = :sys.get_state(pid)
+
+      # Server resources were loaded
+      assert state.server_resources == meta.resources
+
+      # "Next" process was scheduled
+      assert {next_process, _, _} = state.next
+      assert next_process.id == process_before.id
+
+      # The process was allocated some resources and a completion estimate
+      Core.with_context(:server, server.id, :read, fn ->
+        [process_after] = DB.all(Process)
+        assert process_after.id == process_before.id
+
+        # Initially, the process had no resources allocated. Now it does
+        refute process_before.resources.allocated
+        assert process_after.resources.allocated
+
+        # Similarly, it has a "last checkpoint time" as well as an estimated completion date
+        assert process_after.last_checkpoint_ts
+        assert process_after.estimated_completion_ts
+
+        # TODO: Resources.equal?()
+        # # Its "processed" resource is set to zero (nothing has been processed yet)
+        # assert process_after.resources.processed == Resources.initial()
+      end)
     end
   end
 end

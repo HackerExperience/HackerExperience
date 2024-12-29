@@ -61,14 +61,9 @@ defmodule Game.Process.TOP do
     Process.put(:helix_universe, universe)
     Process.put(:helix_universe_shard_id, universe_shard_id)
 
-    # TODO: Gather this data from S_meta.resources
-    server_resources =
-      %{cpu: 100_000, ram: 500}
-      |> Resources.from_map()
-
     data = %{
       server_id: server_id,
-      server_resources: server_resources,
+      server_resources: nil,
       next: nil
     }
 
@@ -77,12 +72,14 @@ defmodule Game.Process.TOP do
 
   def handle_continue(:bootstrap, state) do
     # Here we fetch every process in said server
-    processes =
+    {processes, meta} =
       Core.with_context(:server, state.server_id, :read, fn ->
-        DB.all(Game.Process)
+        {DB.all(Game.Process), Svc.Server.get_meta(state.server_id)}
       end)
 
-    schedule(state, processes)
+    state
+    |> Map.put(:server_resources, meta.resources)
+    |> schedule(processes)
   end
 
   def handle_info(:next_process_completed, %{next: {process, _, _}} = state) do

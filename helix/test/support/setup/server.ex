@@ -97,5 +97,6 @@ defmodule Test.Setup.Server do
 
     related
     |> Map.merge(%{nip: network_connection.nip})
+    |> Map.merge(%{meta: Svc.Server.get_meta(server.id)})
   end
 end
