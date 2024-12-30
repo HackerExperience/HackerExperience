@@ -1,6 +1,6 @@
 defmodule Test.Setup.Process do
   use Test.Setup.Definition
-  alias Game.Process.Executable
+  alias Game.Process.{Executable, Resources}
   alias Game.{Process, ProcessRegistry}
   alias Test.Setup.Process.Spec, as: ProcessSpecSetup
 
@@ -24,7 +24,10 @@ defmodule Test.Setup.Process do
     {:ok, process, _} =
       Executable.execute(spec.module, server_id, entity_id, spec.params, spec.meta)
 
-    process = maybe_update_resources(process, opts)
+    process =
+      process
+      |> maybe_update_resources(opts)
+      |> maybe_mark_as_complete(opts)
 
     %{
       process: process,
@@ -85,9 +88,37 @@ defmodule Test.Setup.Process do
       |> Map.put(:static, gen_static_value.())
       |> Map.put(:l_dynamic, opts[:l_dynamic] || process.resources.l_dynamic)
 
+    update_and_fetch_process!(process, %{resources: new_resources})
+  end
+
+  defp maybe_mark_as_complete(process, opts) do
+    if opts[:completed?] || opts[:completed] do
+      now = DateTime.utc_now() |> DateTime.to_unix(:millisecond)
+
+      new_resources =
+        process.resources
+        |> Map.put(:objective, %{cpu: 1000} |> Resources.from_map())
+        |> Map.put(:processed, %{cpu: 1000} |> Resources.from_map())
+        |> Map.put(:allocated, %{cpu: 1} |> Resources.from_map())
+
+      # Required changes for a process to be deemed as complete (picked up next by the TOP)
+      changes =
+        %{
+          resources: new_resources,
+          last_checkpoint_ts: now,
+          estimated_completion_ts: now
+        }
+
+      update_and_fetch_process!(process, changes)
+    else
+      process
+    end
+  end
+
+  defp update_and_fetch_process!(process, changes) do
     Core.with_context(:server, process.server_id, :write, fn ->
       process
-      |> Process.update(%{resources: new_resources})
+      |> Process.update(changes)
       |> DB.update!()
 
       Svc.Process.fetch!(by_id: process.id)

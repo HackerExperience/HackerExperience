@@ -16,7 +16,9 @@ defmodule Game.Process.Supervisor do
         TOP.Supervisor,
         {Task,
          fn ->
-           Helix.Application.wait_until_helix_modules_are_loaded()
+           # Let's wait for FeebDB to be fully booted (so the queries are available)
+           Feeb.DB.Boot.wait_boot!()
+
            TOP.on_boot({:multiplayer, 1})
            TOP.on_boot({:singleplayer, 1})
          end}

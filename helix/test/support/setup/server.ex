@@ -1,6 +1,6 @@
 defmodule Test.Setup.Server do
   use Test.Setup.Definition
-  alias Game.Server
+  alias Game.{Process, Server, ServerMeta}
 
   @doc """
   Creates a Server entry with real shards.
@@ -9,6 +9,7 @@ defmodule Test.Setup.Server do
     opts
     |> get_source_entity()
     |> new_server(opts)
+    |> with_custom_data(opts)
     |> gather_server_data(opts)
   end
 
@@ -19,6 +20,7 @@ defmodule Test.Setup.Server do
   def new_full(opts \\ []) do
     opts
     |> new()
+    |> with_custom_data(opts)
     |> create_server_data(opts)
     |> gather_server_data(opts)
   end
@@ -83,6 +85,33 @@ defmodule Test.Setup.Server do
   defp new_server({:existing_entity, entity}, _) do
     {:ok, server} = Svc.Server.setup(entity)
     %{server: server, entity: entity}
+  end
+
+  defp with_custom_data(%{server: server} = related, opts) do
+    maybe_update_resources(server.id, opts)
+
+    related
+  end
+
+  defp maybe_update_resources(%Server.ID{} = server_id, opts) do
+    if custom_resources = opts[:resources] do
+      meta = Svc.Server.get_meta(server_id)
+
+      new_resources =
+        meta.resources
+        |> Map.from_struct()
+        |> Enum.map(fn {res, v} ->
+          {res, custom_resources[res] |> Renatils.Decimal.to_decimal() || v}
+        end)
+        |> Map.new()
+        |> Process.Resources.from_map()
+
+      Core.with_context(:server, server_id, :write, fn ->
+        meta
+        |> ServerMeta.update(%{resources: new_resources})
+        |> DB.update!()
+      end)
+    end
   end
 
   # We were tasked with having a "complete" server. Let's make it complete, then

@@ -12,6 +12,6 @@ defmodule Game.Process.TOP.Supervisor do
   end
 
   def init(_) do
-    DynamicSupervisor.init(strategy: :one_for_one)
+    DynamicSupervisor.init(strategy: :one_for_one, max_restarts: 100)
   end
 end

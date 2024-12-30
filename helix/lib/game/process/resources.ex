@@ -95,9 +95,8 @@ defmodule Game.Process.Resources do
       if res_completed? do
         {:cont, true}
       else
-        # TODO: Test this branch
         diff = sub(objective, processed)
-        {:halt, {res, diff.res}}
+        {:halt, {false, {res, get_in(diff, [Access.key!(res)])}}}
       end
     end)
   end
@@ -145,8 +144,12 @@ defmodule Game.Process.Resources do
     |> then(&struct(__MODULE__, &1))
   end
 
-  def equal?(%__MODULE__{} = res_a, %__MODULE__{} = res_b),
-    do: dispatch_merge(:equal?, res_a, res_b)
+  def equal?(%__MODULE__{} = res_a, %__MODULE__{} = res_b) do
+    :equal?
+    |> dispatch_merge(res_a, res_b)
+    |> Map.from_struct()
+    |> Enum.all?(fn {_, equal?} -> equal? end)
+  end
 
   ##################################################################################################
   # Internal

@@ -34,9 +34,6 @@ defmodule Game.Process.TOP do
       {:ok, _} = TOP.Registry.fetch_or_create({server_id, universe, shard_id})
     end)
 
-    Process.put(:helix_universe, nil)
-    Process.put(:helix_universe_shard_id, nil)
-
     :ok
   end
 
@@ -50,7 +47,7 @@ defmodule Game.Process.TOP do
     GenServer.start_link(
       __MODULE__,
       {helix_universe, helix_universe_shard_id, server_id},
-      name: with_registry({helix_universe, helix_universe_shard_id, raw_id})
+      name: with_registry({raw_id, helix_universe, helix_universe_shard_id})
     )
   end
 
@@ -90,31 +87,36 @@ defmodule Game.Process.TOP do
 
     now = DateTime.utc_now() |> DateTime.to_unix(:millisecond)
 
-    if TOP.Scheduler.is_completed?(process) do
-      # The process has reached its target. We can delete it from the database and send SIGTERM
-      remaining_processes =
-        Core.with_context(:server, state.server_id, :write, fn ->
-          # TODO: Move to Svc layer
-          DB.delete(process)
+    case TOP.Scheduler.is_completed?(process) do
+      true ->
+        # The process has reached its target. We can delete it from the database and send SIGTERM
+        remaining_processes =
+          Core.with_context(:server, state.server_id, :write, fn ->
+            # TODO: Move to Svc layer
+            DB.delete(process)
+
+            # TODO: Move to Svc layer
+            DB.all(Game.Process)
+          end)
+
+        Core.with_context(:universe, :write, fn ->
+          # This is, of course, TODO. FeebDB needs to support delete based on query
+          # (aking to Repo.delete_all)
+          process_registry =
+            DB.all(ProcessRegistry)
+            |> Enum.find(&(&1.server_id == state.server_id && &1.process_id == process.id))
 
           # TODO: Move to Svc layer
-          DB.all(Game.Process)
+          DB.delete({:processes_registry, :delete}, process_registry, [state.server_id, process.id])
         end)
 
-      Core.with_context(:universe, :write, fn ->
-        # This is, of course, TODO. FeebDB needs to support delete based on query (aking to Repo.delete_all)
-        process_registry =
-          DB.all(ProcessRegistry)
-          |> Enum.find(&(&1.server_id == state.server_id && &1.process_id == process.id))
+        schedule(state, remaining_processes)
 
-        # TODO: Move to Svc layer
-        DB.delete({:processes_registry, :delete}, process_registry, [state.server_id, process.id])
-      end)
-
-      schedule(state, remaining_processes)
-    else
-      # Process hasn't really completed; warn and re-run the scheduler
-      raise "TODO"
+      {false, {resource, objective_left}} ->
+        # Process hasn't really completed; warn and re-run the scheduler
+        left = "there are #{inspect(objective_left)} units of #{resource} left to be processed"
+        Logger.warn("Attempted to complete process #{process.id.id} but it isn't finished: #{left}")
+        {:stop, :wrong_schedule, state}
     end
   end
 
@@ -144,8 +146,7 @@ defmodule Game.Process.TOP do
       case TOP.Scheduler.forecast(processes) do
         {:next, next_process} ->
           now = DateTime.utc_now() |> DateTime.to_unix(:millisecond)
-          # + 10
-          time_left = max(next_process.estimated_completion_ts - now, 0)
+          time_left = max(next_process.estimated_completion_ts - now + 10, 0)
 
           timer_ref = Process.send_after(self(), :next_process_completed, time_left)
           {:ok, {:next, time_left}, %{state | next: {next_process, time_left, timer_ref}}}

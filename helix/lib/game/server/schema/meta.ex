@@ -14,4 +14,9 @@ defmodule Game.ServerMeta do
     |> Schema.cast()
     |> Schema.create()
   end
+
+  def update(%_{} = meta, changes) do
+    meta
+    |> Schema.update(changes)
+  end
 end

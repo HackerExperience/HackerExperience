@@ -23,7 +23,8 @@ defmodule Game.Process.TOP.AllocatorTest do
       assert {:ok, allocated_processes} =
                Allocator.allocate(server.id, server_resources, [proc_1, proc_2])
 
-      assert [{_, alloc_1}, {_, alloc_2}] = Enum.sort_by(allocated_processes, fn {p, _} -> p.id end)
+      assert [%{next_allocation: alloc_1}, %{next_allocation: alloc_2}] =
+               Enum.sort_by(allocated_processes, fn p -> p.id end)
 
       # Each process received half of the available CPU
       assert alloc_1.cpu == Decimal.new(1000)

@@ -15,6 +15,7 @@ defmodule Game.Services.ProcessTest do
       registry_data =
         %{
           l_dynamic: [:cpu],
+          static: %{ram: 10},
           objective: %{cpu: 1000},
           tgt_log_id: log.id
         }

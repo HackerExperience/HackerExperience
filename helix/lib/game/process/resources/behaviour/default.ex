@@ -48,9 +48,7 @@ defmodule Game.Process.Resources.Behaviour.Default do
   def initial(_), do: build(@zero)
 
   def fmt_value(res, nil), do: initial(res)
-  def fmt_value(res, f) when is_float(f), do: fmt_value(res, Decimal.new("#{f}"))
-  def fmt_value(res, i) when is_integer(i), do: fmt_value(res, Decimal.new(i))
-  def fmt_value(_, %Decimal{} = v), do: v
+  def fmt_value(res, v), do: Renatils.Decimal.to_decimal(v)
 
   # Generic data manipulation
 
