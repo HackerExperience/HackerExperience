@@ -15,10 +15,10 @@ defmodule Game.Process do
     {:entity_id, ID.ref(:entity_id)},
     {:type, {:enum, values: @process_types}},
     # `data` is the actual process data (e.g. log edit I need the contents of the new log)
-    {:data, {:map, keys: :atom, after_read: :hydrate_data}},
+    {:data, {:map, load_structs: true, after_read: :hydrate_data}},
     # `registry` includes tgt_log_id, src_file_id etc (same data in ProcessRegistry)
-    {:registry, {:map, keys: :atom}},
-    {:resources, {:map, after_read: :format_resources}},
+    {:registry, {:map, load_structs: true}},
+    {:resources, {:map, load_structs: true, after_read: :format_resources}},
     {:inserted_at, {:datetime_utc, [precision: :millisecond], mod: :inserted_at}},
     {:last_checkpoint_ts, {:integer, nullable: true}},
     {:estimated_completion_ts, {:integer, nullable: true}},

@@ -17,7 +17,7 @@ defmodule Game.Log do
     {:id, ID.ref(:log_id)},
     {:revision_id, :integer},
     {:type, {:enum, values: @log_types}},
-    {:data, {:map, keys: :atom, after_read: :hydrate_data}},
+    {:data, {:map, load_structs: true, after_read: :hydrate_data}},
     {:inserted_at, {:datetime_utc, [precision: :millisecond], mod: :inserted_at}},
     {:server_id, {ID.ref(:server_id), virtual: :get_server_id}}
   ]

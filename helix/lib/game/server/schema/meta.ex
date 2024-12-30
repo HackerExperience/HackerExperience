@@ -6,7 +6,7 @@ defmodule Game.ServerMeta do
 
   @schema [
     {:id, ID.ref(:server_id)},
-    {:resources, {:map, keys: :atom}}
+    {:resources, {:map, load_structs: true}}
   ]
 
   def new(params) do
