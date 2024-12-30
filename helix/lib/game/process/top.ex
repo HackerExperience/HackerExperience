@@ -13,7 +13,6 @@ defmodule Game.Process.TOP do
 
   alias Feeb.DB
   alias Game.Services, as: Svc
-  alias Game.Process.Resources
   alias Game.{ProcessRegistry, Server}
   alias __MODULE__
 
@@ -85,8 +84,6 @@ defmodule Game.Process.TOP do
         Svc.Process.fetch!(by_id: process.id)
       end)
 
-    now = DateTime.utc_now() |> DateTime.to_unix(:millisecond)
-
     case TOP.Scheduler.is_completed?(process) do
       true ->
         # The process has reached its target. We can delete it from the database and send SIGTERM
@@ -114,8 +111,8 @@ defmodule Game.Process.TOP do
 
       {false, {resource, objective_left}} ->
         # Process hasn't really completed; warn and re-run the scheduler
-        left = "there are #{inspect(objective_left)} units of #{resource} left to be processed"
-        Logger.warn("Attempted to complete process #{process.id.id} but it isn't finished: #{left}")
+        i = "there are #{inspect(objective_left)} units of #{resource} left to be processed"
+        Logger.warning("Attempted to complete process #{process.id.id} but it isn't finished: #{i}")
         {:stop, :wrong_schedule, state}
     end
   end
@@ -133,7 +130,7 @@ defmodule Game.Process.TOP do
         # TODO: Hibernate? Kill TOP?
         {:noreply, new_state}
 
-      {:error, reason} ->
+      {:error, _reason} ->
         raise "TODO"
     end
   end

@@ -91,7 +91,7 @@ defmodule Game.Process.Resources do
     :completed?
     |> dispatch_merge(processed, objective)
     |> Map.from_struct()
-    |> Enum.reduce_while(true, fn {res, res_completed?}, acc ->
+    |> Enum.reduce_while(true, fn {res, res_completed?}, _acc ->
       if res_completed? do
         {:cont, true}
       else
@@ -135,14 +135,11 @@ defmodule Game.Process.Resources do
   def div(%__MODULE__{} = res_a, %__MODULE__{} = res_b),
     do: dispatch_merge(:div, res_a, res_b)
 
-  def min(%__MODULE__{} = res_a, %__MODULE__{} = res_b) do
-    :op_map
-    |> dispatch_merge(res_a, res_a, [&Kernel.min/2])
-    |> Map.from_struct()
-    |> Enum.reject(fn {res, val} -> val == call_resource(res, :initial, []) end)
-    |> Map.new()
-    |> then(&struct(__MODULE__, &1))
-  end
+  def min(%__MODULE__{} = res_a, %__MODULE__{} = res_b),
+    do: dispatch_merge(:op_map, res_a, res_b, [&Kernel.min/2])
+
+  def max(%__MODULE__{} = res_a, %__MODULE__{} = res_b),
+    do: dispatch_merge(:op_map, res_a, res_b, [&Kernel.max/2])
 
   def equal?(%__MODULE__{} = res_a, %__MODULE__{} = res_b) do
     :equal?
@@ -169,7 +166,7 @@ defmodule Game.Process.Resources do
     |> from_map()
   end
 
-  defp dispatch_value(method, resources, params \\ []) do
+  defp dispatch_value(method, resources, params) do
     method
     |> dispatch(resources, params)
     |> from_map()

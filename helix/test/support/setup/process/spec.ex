@@ -14,8 +14,6 @@ defmodule Test.Setup.Process.Spec do
   end
 
   def spec(:log_edit, server_id, opts) do
-    mod = LogEditProcess
-
     default_params = fn ->
       # This is actually TODO; it should come from a Setup.Log.Data util
       {log_type, log_data} = opts[:log_info] || {:local_login, %Game.Log.Data.EmptyData{}}

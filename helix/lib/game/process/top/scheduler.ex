@@ -22,9 +22,6 @@ defmodule Game.Process.TOP.Scheduler do
   end
 
   def simulate(%Process{next_allocation: next_alloc} = process, now) do
-    last_checkpoint = Process.get_last_checkpoint_ts(process)
-    diff = now - last_checkpoint
-
     if is_nil(process.resources.allocated) do
       Logger.debug("Process #{process.id.id} had its allocation defined")
     else
@@ -91,11 +88,6 @@ defmodule Game.Process.TOP.Scheduler do
   def forecast([]), do: :empty
 
   def forecast(processes) do
-    forecast_map =
-      %{
-        next_to_be_completed: nil
-      }
-
     Enum.reduce(processes, {nil, :infinity}, fn process, {_, cur_next_completion_ts} = acc ->
       true = not is_nil(process.estimated_completion_ts)
 
@@ -106,7 +98,7 @@ defmodule Game.Process.TOP.Scheduler do
       end
     end)
     |> case do
-      {%Process{} = next_process, next_ts} ->
+      {%Process{} = next_process, _next_ts} ->
         {:next, next_process}
 
       {nil, :infinity} ->
@@ -126,10 +118,9 @@ defmodule Game.Process.TOP.Scheduler do
       |> Decimal.new()
 
     # total_processed = processed + (allocated * last_checkpoint_diff)
-    total_processed =
-      (resources.allocated || Resources.initial())
-      |> Resources.map(&Decimal.mult(&1, diff_s))
-      |> Resources.sum(resources.processed || Resources.initial())
+    (resources.allocated || Resources.initial())
+    |> Resources.map(&Decimal.mult(&1, diff_s))
+    |> Resources.sum(resources.processed || Resources.initial())
   end
 
   # @docp Estimates time to complete the process

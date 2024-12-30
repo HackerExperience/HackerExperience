@@ -3,8 +3,6 @@ defmodule Game.Process.Supervisor do
 
   alias Game.Process.TOP
 
-  @registry_opts [keys: :unique, name: @registry_name, partitions: System.schedulers_online()]
-
   def start_link(_) do
     Supervisor.start_link(__MODULE__, [], name: __MODULE__)
   end

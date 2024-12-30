@@ -4,11 +4,9 @@ defmodule Game.Process.TOP.Allocator do
   """
 
   require Logger
-  alias Feeb.DB
   alias Game.Process.Resources
-  alias Game.{Process}
 
-  def allocate(server_id, %Resources{} = total_resources, processes) do
+  def allocate(_server_id, %Resources{} = total_resources, processes) do
     # Static allocation
     {static_resources_usage, statically_allocated_processes} = static_allocation(processes)
 
@@ -89,7 +87,7 @@ defmodule Game.Process.TOP.Allocator do
       limit = Resources.initial()
 
       # Now we take the naive allocated amount and apply the process limitations
-      proc_dynamic_alloc = Resources.min(naive_dynamic_alloc, limit)
+      proc_dynamic_alloc = Resources.max(naive_dynamic_alloc, limit)
 
       # Sums static and dynamic allocation, resulting on the final allocation
       proc_allocation = Resources.sum(proc_dynamic_alloc, proc_static_allocation)

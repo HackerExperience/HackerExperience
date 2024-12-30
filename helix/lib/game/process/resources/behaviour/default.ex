@@ -14,7 +14,7 @@ defmodule Game.Process.Resources.Behaviour.Default do
     end
   end
 
-  defmacro __before_compile__(env) do
+  defmacro __before_compile__(_) do
     # Modules `use`-ing this one will have an identical interface (delegated to here)
     for {fn_name, arity} <- unquote(__MODULE__).__info__(:functions) do
       case arity do
@@ -48,7 +48,7 @@ defmodule Game.Process.Resources.Behaviour.Default do
   def initial(_), do: build(@zero)
 
   def fmt_value(res, nil), do: initial(res)
-  def fmt_value(res, v), do: Renatils.Decimal.to_decimal(v)
+  def fmt_value(_, v), do: Renatils.Decimal.to_decimal(v)
 
   # Generic data manipulation
 

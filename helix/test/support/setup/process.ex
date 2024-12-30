@@ -1,7 +1,7 @@
 defmodule Test.Setup.Process do
   use Test.Setup.Definition
   alias Game.Process.{Executable, Resources}
-  alias Game.{Process, ProcessRegistry}
+  alias Game.{Process}
   alias Test.Setup.Process.Spec, as: ProcessSpecSetup
 
   @doc """
