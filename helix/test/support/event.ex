@@ -9,13 +9,16 @@ defmodule Test.Event do
     key_filter =
       cond do
         x_request_id = Keyword.get(opts, :x_request_id) ->
-          fn {{_, _, x_req_id}, _} -> x_req_id == x_request_id end
+          fn {{_, _, _, x_req_id}, _} -> x_req_id == x_request_id end
 
         request_id = Keyword.get(opts, :request_id) ->
-          fn {{_, req_id, _}, _} -> req_id == request_id end
+          fn {{_, _, req_id, _}, _} -> req_id == request_id end
+
+        server_id = Keyword.get(opts, :server_id) ->
+          fn {{_, s_id, _, _}, _} -> s_id == server_id end
 
         event_id = Keyword.get(opts, :event_id) ->
-          fn {{ev_id, _, _}, _} -> ev_id == event_id end
+          fn {{ev_id, _, _, _}, _} -> ev_id == event_id end
 
         true ->
           raise "You need to specify a filter for `wait_events/1`. Got: #{inspect(opts)}"
