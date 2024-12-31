@@ -23,6 +23,13 @@ defmodule Core.Event.Definition do
       Returns the event name.
       """
       def get_name, do: @name
+
+      if not Module.defines?(__MODULE__, {:get_handlers, 2}) do
+        @doc """
+        This module does not have any custom handlers.
+        """
+        def handlers(_, _), do: []
+      end
     end
   end
 end

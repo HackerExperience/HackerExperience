@@ -10,10 +10,6 @@ defmodule Test.LoggableEvent do
     |> Event.new()
   end
 
-  def handlers(_, _) do
-    []
-  end
-
   defmodule Loggable do
     use Core.Event.Loggable.Definition
     def log_map(event), do: event.data.log_map

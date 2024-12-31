@@ -31,8 +31,6 @@ defmodule Game.Events.Process do
       |> Event.new()
     end
 
-    def handlers(_, _), do: []
-
     defmodule Publishable do
       use Core.Event.Publishable.Definition
 
