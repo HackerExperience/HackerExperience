@@ -1,7 +1,7 @@
 defmodule Test.Event do
   @table :processed_events
 
-  alias Game.Process
+  alias Game.{Process, Server}
 
   def on_start do
     :ets.new(@table, [:set, :public, :named_table])
@@ -38,14 +38,30 @@ defmodule Test.Event do
         event_id = Keyword.get(opts, :event_id) ->
           fn {{ev_id, _, _, _}, _} -> ev_id == event_id end
 
+        event_name = Keyword.get(opts, :event_name) ->
+          fn {_, %{event: %{name: e_name}}} -> e_name == event_name end
+
         custom_filter = Keyword.get(opts, :filter) ->
           fn {key, value} -> custom_filter.(key, value) end
 
         true ->
-          raise "You need to specify a filter for `wait_events/1`. Got: #{inspect(opts)}"
+          raise "You need to specify a filter for `wait_events!/1`. Got: #{inspect(opts)}"
       end
 
     do_wait_events!(opts, key_filter, opts[:count] || 1)
+  end
+
+  def wait_event_on_server!(%Server.ID{} = server_id, event_name, count \\ 1) do
+    wait_events!(
+      filter: fn
+        {_, s_id, _, _}, %{event: %{name: e_name}} ->
+          s_id == server_id and e_name == event_name
+
+        _, _ ->
+          false
+      end,
+      count: count
+    )
   end
 
   def wait_process_completed_event!(%Process{id: process_id, server_id: server_id}) do

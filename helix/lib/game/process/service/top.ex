@@ -1,8 +1,7 @@
 defmodule Game.Services.TOP do
-  alias Game.Process.Executable
+  alias Game.Process.TOP
 
-  # TODO: Change to `defdelegate` if this ends up being the final implementation
-  def execute(process_mod, server_id, entity_id, params, meta) do
-    Executable.execute(process_mod, server_id, entity_id, params, meta)
+  def execute(process_mod, server_id, _entity_id, params, meta) do
+    TOP.execute(process_mod, server_id, params, meta)
   end
 end

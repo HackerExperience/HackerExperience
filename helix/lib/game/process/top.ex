@@ -14,7 +14,7 @@ defmodule Game.Process.TOP do
   alias Feeb.DB
   alias Core.Event
   alias Game.Services, as: Svc
-  alias Game.Process.Signalable
+  alias Game.Process.{Executable, Signalable}
   alias Game.{ProcessRegistry, Server}
   alias __MODULE__
 
@@ -54,6 +54,12 @@ defmodule Game.Process.TOP do
     )
   end
 
+  def execute(process_mod, server_id, params, meta) do
+    server_id
+    |> TOP.Registry.fetch!()
+    |> GenServer.call({:execute, process_mod, params, meta})
+  end
+
   # GenServer API
 
   def init({universe, universe_shard_id, server_id}) do
@@ -80,9 +86,33 @@ defmodule Game.Process.TOP do
         {DB.all(Game.Process), Svc.Server.get_meta(state.server_id)}
       end)
 
-    state
-    |> Map.put(:server_resources, meta.resources)
-    |> schedule(processes)
+    schedule =
+      state
+      |> Map.put(:server_resources, meta.resources)
+      |> run_schedule(processes, :boot)
+
+    {:noreply, schedule.state}
+  end
+
+  def handle_call({:execute, process_mod, params, meta}, _from, state) do
+    with {:ok, new_process, creation_events} =
+           Executable.execute(process_mod, state.server_id, state.entity_id, params, meta),
+         %{dropped: [], state: new_state} <-
+           run_schedule(state, state.server_id, :insert, creation_events) do
+      new_process =
+        Core.with_context(:server, state.server_id, :read, fn ->
+          # TODO: Process Service should be responsible for handling context
+          Svc.Process.fetch!(by_id: new_process.id)
+        end)
+
+      {:reply, {:ok, new_process}, new_state}
+    else
+      %{dropped: [_ | _], state: new_state} ->
+        {:reply, {:error, :overflow}, new_state}
+
+      {:error, _reason} ->
+        raise "TODO!"
+    end
   end
 
   def handle_info(:next_process_completed, %{next: {process, _, _}} = state) do
@@ -99,10 +129,10 @@ defmodule Game.Process.TOP do
           # signaled_event = ProcessSignaledEvent.new(process, :sigterm, :delete)
           remaining_processes = delete_completed_process(state.server_id, process)
 
-          # TODO: Emit `ProcessCompletedEvent` (and, say, TopRecalcado) *after* changing the
-          # internal state, to avoid race conditions. Use `handle_continue` for that
-          schedule(state, remaining_processes)
-          |> tap(fn _ -> Event.emit_async([process_completed_event]) end)
+          schedule =
+            run_schedule(state, remaining_processes, :completion, [process_completed_event])
+
+          {:noreply, schedule.state}
 
         {:retarget, _new_objective, _registry_changes} ->
           raise "TODO"
@@ -154,25 +184,35 @@ defmodule Game.Process.TOP do
     remaining_processes
   end
 
-  defp schedule(state, processes) do
-    case :timer.tc(fn -> do_schedule(state, processes) end) do
-      {duration, {:ok, {:next, time_left}, new_state}} ->
-        duration = get_duration(duration)
-        Logger.debug("Scheduled processes in #{duration}; will wake up in #{time_left}ms")
-        {:noreply, new_state}
+  defp run_schedule(state, processes_or_server_id, reason, events \\ [])
 
-      {duration, {:ok, :empty, new_state}} ->
-        duration = get_duration(duration)
-        Logger.debug("Scheduled processes in #{duration}; TOP is empty -- won't wake up")
-        # TODO: Hibernate? Kill TOP?
-        {:noreply, new_state}
+  defp run_schedule(state, %Server.ID{} = server_id, reason, events) do
+    processes =
+      Core.with_context(:server, server_id, :read, fn ->
+        DB.all(Game.Process)
+      end)
 
-      {:error, _reason} ->
-        raise "TODO"
-    end
+    run_schedule(state, processes, reason, events)
   end
 
-  defp do_schedule(%{server_id: server_id, server_resources: resources} = state, processes) do
+  defp run_schedule(state, processes, _reason, events) when is_list(processes) do
+    {duration, result} = :timer.tc(fn -> do_run_schedule(state, processes) end)
+
+    duration = get_duration(duration)
+
+    case result.state.next do
+      {_, time_left, _} ->
+        Logger.debug("Scheduled processes in #{duration}; will wake up in #{time_left}ms")
+
+      nil ->
+        Logger.debug("Scheduled processes in #{duration}; TOP is empty -- won't wake up")
+    end
+
+    Event.emit_async(result.events ++ events)
+    %{state: result.state, dropped: result.dropped}
+  end
+
+  defp do_run_schedule(%{server_id: server_id, server_resources: resources} = state, processes) do
     with {:ok, allocated_processes} <- TOP.Allocator.allocate(server_id, resources, processes),
          now = DateTime.utc_now() |> DateTime.to_unix(:millisecond),
          processes = Enum.map(allocated_processes, &TOP.Scheduler.simulate(&1, now)),
@@ -181,15 +221,26 @@ defmodule Game.Process.TOP do
         {:next, next_process} ->
           now = DateTime.utc_now() |> DateTime.to_unix(:millisecond)
           time_left = max(next_process.estimated_completion_ts - now + 10, 0)
-
           timer_ref = Process.send_after(self(), :next_process_completed, time_left)
-          {:ok, {:next, time_left}, %{state | next: {next_process, time_left, timer_ref}}}
+
+          %{
+            state: %{state | next: {next_process, time_left, timer_ref}},
+            dropped: [],
+            events: []
+          }
 
         :empty ->
-          {:ok, :empty, %{state | next: nil}}
+          # TODO: Hibernate? Kill TOP? if empty
+          %{
+            state: %{state | next: nil},
+            dropped: [],
+            events: []
+          }
       end
     else
       {:error, {:overflow, _overflowed_resources}} ->
+        # Returns: {:ok, <next>, <new_state>, <dropped>, top_recalcado_event}
+        # handle_allocation_overflow(state, processes, overflowed_resources)
         raise "TODO"
     end
   end

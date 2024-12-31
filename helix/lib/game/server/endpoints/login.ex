@@ -98,6 +98,11 @@ defmodule Game.Endpoint.Server.Login do
   defp resolve_bounce_hops(_, _, _), do: {:error, :cant_use_vpn_and_tunnel_at_same_time}
 
   def handle_request(request, _params, context, session) do
+    # TODO: This is temporary. ServerLogin should be wrapped in a process, in which case the tunnel
+    # creation happens upon ProcessCompletedEvent and the TOP handles the connection lifecycle.
+    Feeb.DB.commit()
+    Core.begin_context(:universe, :write)
+
     with {:ok, tunnel} <- Svc.Tunnel.create(context.parsed_links) do
       event =
         TunnelCreatedEvent.new(

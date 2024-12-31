@@ -77,8 +77,8 @@ defmodule Game.Endpoint.Log.Edit do
     meta = %{log: ctx.log, tunnel: ctx.tunnel}
 
     case Svc.TOP.execute(LogEditProcess, ctx.server.id, entity_id, process_params, meta) do
-      {:ok, process, events} ->
-        {:ok, %{request | result: %{process: process}, events: events}}
+      {:ok, process} ->
+        {:ok, %{request | result: %{process: process}}}
 
       {:error, reason} ->
         raise "Error creating log edit process: #{inspect(reason)}"
