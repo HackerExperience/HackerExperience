@@ -29,7 +29,7 @@ defmodule Core.Event do
   require Logger
   alias Feeb.DB
 
-  defstruct [:id, :data, :relay]
+  defstruct [:id, :name, :data, :relay]
 
   @env Mix.env()
 
@@ -54,6 +54,7 @@ defmodule Core.Event do
 
     %__MODULE__{
       id: "random_id",
+      name: ev_mod.get_name(),
       data: data,
       relay: Process.get(:helix_event_relay)
     }
