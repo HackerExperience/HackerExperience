@@ -93,6 +93,25 @@ defmodule Core.Event do
     |> emit()
   end
 
+  @doc """
+  Emits the given `events` in a separate process (supervised by TaskSupervisor).
+  """
+  def emit_async(events) when is_list(events) do
+    # TODO: Find a way to concentrate in a single module "dirty" state like this (see also TOP)
+    helix_universe = Process.get(:helix_universe)
+    helix_universe_shard_id = Process.get(:helix_universe_shard_id)
+
+    Task.Supervisor.async_nolink(
+      {:via, PartitionSupervisor, {Helix.TaskSupervisor, self()}},
+      fn ->
+        Process.put(:helix_universe, helix_universe)
+        Process.put(:helix_universe_shard_id, helix_universe_shard_id)
+
+        {:event_result, emit(events)}
+      end
+    )
+  end
+
   defp get_handlers(event) do
     custom_handlers = apply(event.data.__struct__, :handlers, [event.data, event])
 
