@@ -51,7 +51,7 @@ defmodule Test.Event do
     do_wait_events!(opts, key_filter, opts[:count] || 1)
   end
 
-  def wait_event_on_server!(%Server.ID{} = server_id, event_name, count \\ 1) do
+  def wait_events_on_server!(%Server.ID{} = server_id, event_name, count \\ 1) do
     wait_events!(
       filter: fn
         {_, s_id, _, _}, %{event: %{name: e_name}} ->
@@ -76,30 +76,34 @@ defmodule Test.Event do
     )
   end
 
-  defp do_wait_events!(original_opts, key_filter_fn, expected_count, attempts \\ 0) do
+  defp do_wait_events!(original_opts, key_filter_fn, expected_count, attempts \\ 0)
+       when is_integer(expected_count) do
     all_entries = :ets.tab2list(@table)
 
     results =
-      Enum.reduce_while(all_entries, [], fn {_key, %{event: event}} = entry, acc ->
+      Enum.reduce(all_entries, [], fn {_key, %{event: event}} = entry, acc ->
         if key_filter_fn.(entry) do
           new_acc = [event | acc]
 
           if length(new_acc) == expected_count do
-            {:halt, new_acc}
+            new_acc
           else
-            {:cont, new_acc}
+            new_acc
           end
         else
-          {:cont, acc}
+          acc
         end
       end)
 
     cond do
-      length(results) == expected_count ->
-        results
+      length(results) > expected_count ->
+        raise("You were expecting only #{expected_count} events, found #{length(results)}")
 
       attempts == 100 ->
         raise "Couldn't find the event you were waiting for. #{inspect(original_opts)}"
+
+      length(results) == expected_count ->
+        results
 
       true ->
         :timer.sleep(15)

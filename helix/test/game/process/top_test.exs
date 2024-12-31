@@ -179,6 +179,14 @@ defmodule Game.Process.TOPTest do
       Core.with_context(:universe, :read, fn ->
         assert [] = DB.all(ProcessRegistry)
       end)
+
+      # Server 1 had its TOP recalculated two times (when the first process completed and when the
+      # second process completed -- the boot recalculation did not trigger the event because no
+      # process had changed prior to that)
+      [_, _] = wait_events_on_server!(server_1.id, :top_recalcado, 2)
+
+      # Server 2, once (when its only process completed)
+      [_] = wait_events_on_server!(server_2.id, :top_recalcado, 1)
     end
   end
 

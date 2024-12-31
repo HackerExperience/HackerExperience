@@ -19,6 +19,7 @@ defmodule Game.Process.TOP do
   alias __MODULE__
 
   alias Game.Events.Process.Completed, as: ProcessCompletedEvent
+  alias Game.Events.TOP.Recalcado, as: TOPRecalcadoEvent
 
   # Public
 
@@ -72,6 +73,7 @@ defmodule Game.Process.TOP do
 
     data = %{
       server_id: server_id,
+      entity_id: nil,
       server_resources: nil,
       next: nil
     }
@@ -89,6 +91,7 @@ defmodule Game.Process.TOP do
     schedule =
       state
       |> Map.put(:server_resources, meta.resources)
+      |> Map.put(:entity_id, meta.entity_id)
       |> run_schedule(processes, :boot)
 
     {:noreply, schedule.state}
@@ -195,8 +198,8 @@ defmodule Game.Process.TOP do
     run_schedule(state, processes, reason, events)
   end
 
-  defp run_schedule(state, processes, _reason, events) when is_list(processes) do
-    {duration, result} = :timer.tc(fn -> do_run_schedule(state, processes) end)
+  defp run_schedule(state, processes, reason, events) when is_list(processes) do
+    {duration, result} = :timer.tc(fn -> do_run_schedule(state, processes, reason) end)
 
     duration = get_duration(duration)
 
@@ -212,11 +215,23 @@ defmodule Game.Process.TOP do
     %{state: result.state, dropped: result.dropped}
   end
 
-  defp do_run_schedule(%{server_id: server_id, server_resources: resources} = state, processes) do
+  defp do_run_schedule(
+         %{server_id: server_id, server_resources: resources} = state,
+         processes,
+         reason
+       ) do
     with {:ok, allocated_processes} <- TOP.Allocator.allocate(server_id, resources, processes),
          now = DateTime.utc_now() |> DateTime.to_unix(:millisecond),
          processes = Enum.map(allocated_processes, &TOP.Scheduler.simulate(&1, now)),
-         {:ok, _} <- TOP.Scheduler.update_modified_processes(server_id, processes) do
+         {:ok, modified_procs} <- TOP.Scheduler.update_modified_processes(server_id, processes) do
+      top_recalcado_event =
+        if reason != :boot or modified_procs == 0 do
+          TOPRecalcadoEvent.new(server_id, processes)
+        else
+          # We don't need to emit the TOPRecalcadoEvent if this TOP just booted and nothing changed
+          nil
+        end
+
       case TOP.Scheduler.forecast(processes) do
         {:next, next_process} ->
           now = DateTime.utc_now() |> DateTime.to_unix(:millisecond)
@@ -226,7 +241,7 @@ defmodule Game.Process.TOP do
           %{
             state: %{state | next: {next_process, time_left, timer_ref}},
             dropped: [],
-            events: []
+            events: [top_recalcado_event]
           }
 
         :empty ->
@@ -234,7 +249,7 @@ defmodule Game.Process.TOP do
           %{
             state: %{state | next: nil},
             dropped: [],
-            events: []
+            events: [top_recalcado_event]
           }
       end
     else
