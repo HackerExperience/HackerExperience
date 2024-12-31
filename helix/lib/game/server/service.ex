@@ -12,18 +12,18 @@ defmodule Game.Services.Server do
 
         # Create the shard, migrate and seed it with initial data
         Core.begin_context(:server, server_id, :write)
-        seed_new_server!(:server, server_id)
+        seed_server!(server_id, entity_id)
         DB.commit()
       end)
 
-      # Seed the new server with data (in the Universe shard)
-      seed_new_server!(:universe, server_id)
+      # Seed the Universe with required data for this Server to operate
+      seed_universe!(server_id)
 
       {:ok, server}
     end
   end
 
-  defp seed_new_server!(:server, server_id) do
+  defp seed_server!(%Server.ID{} = server_id, %Entity.ID{} = entity_id) do
     # TODO: I'm not yet sure where, but this config should be defined elsewhere
     initial_resources =
       %{
@@ -32,12 +32,12 @@ defmodule Game.Services.Server do
       }
       |> Process.Resources.from_map()
 
-    %{id: server_id, resources: initial_resources}
+    %{id: server_id, entity_id: entity_id, resources: initial_resources}
     |> ServerMeta.new()
     |> DB.insert!()
   end
 
-  defp seed_new_server!(:universe, server_id) do
+  defp seed_universe!(server_id) do
     # Make sure this server has a public connection to the Internet
     {:ok, _} =
       %{server_id: server_id, nip: NIP.new(0, Renatils.Random.ip())}

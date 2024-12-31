@@ -25,6 +25,7 @@ defmodule Game.Services.ServerTest do
       Core.with_context(:server, server.id, :write, fn ->
         assert [meta] = DB.all(Game.ServerMeta)
         assert meta.id == server.id
+        assert meta.entity_id == entity.id
         assert_decimal_eq(meta.resources.cpu, 1000)
         assert_decimal_eq(meta.resources.ram, 128)
       end)

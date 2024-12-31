@@ -1,4 +1,5 @@
 CREATE TABLE meta (
   id INTEGER PRIMARY KEY,
+  entity_id INTEGER NOT NULL,
   resources TEXT NOT NULL
 ) STRICT;
