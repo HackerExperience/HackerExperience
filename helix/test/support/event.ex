@@ -1,11 +1,29 @@
 defmodule Test.Event do
   @table :processed_events
 
+  alias Game.Process
+
   def on_start do
     :ets.new(@table, [:set, :public, :named_table])
   end
 
-  def wait_events(opts) do
+  @doc """
+  Waits for a particular event to complete, based on the filtering logic defined in `opts`.
+
+  Returns a list with the events found *or* raises. It should never return an empty list.
+
+  Filtering opts are:
+  - x_request_id
+  - request_id
+  - server_id
+  - event_id
+  - filter: Custom function that receives the {key, value} of each stored event and should
+            return `true` once it finds the event it's looking for.
+
+  Non filtering opts are:
+  - count: Number of events to wait for. Defaults to 1.
+  """
+  def wait_events!(opts) when is_list(opts) do
     key_filter =
       cond do
         x_request_id = Keyword.get(opts, :x_request_id) ->
@@ -20,14 +38,29 @@ defmodule Test.Event do
         event_id = Keyword.get(opts, :event_id) ->
           fn {{ev_id, _, _, _}, _} -> ev_id == event_id end
 
+        custom_filter = Keyword.get(opts, :filter) ->
+          fn {key, value} -> custom_filter.(key, value) end
+
         true ->
           raise "You need to specify a filter for `wait_events/1`. Got: #{inspect(opts)}"
       end
 
-    do_wait_events(opts, key_filter, opts[:count] || 1)
+    do_wait_events!(opts, key_filter, opts[:count] || 1)
   end
 
-  defp do_wait_events(original_opts, key_filter_fn, expected_count, attempts \\ 0) do
+  def wait_process_completed_event!(%Process{id: process_id, server_id: server_id}) do
+    wait_events!(
+      filter: fn
+        _, %{event: %{name: :process_completed}, data: %{process: process}} ->
+          process.server_id == server_id and process.id == process_id
+
+        _, _ ->
+          false
+      end
+    )
+  end
+
+  defp do_wait_events!(original_opts, key_filter_fn, expected_count, attempts \\ 0) do
     all_entries = :ets.tab2list(@table)
 
     results =
@@ -54,7 +87,7 @@ defmodule Test.Event do
 
       true ->
         :timer.sleep(15)
-        do_wait_events(original_opts, key_filter_fn, expected_count, attempts + 1)
+        do_wait_events!(original_opts, key_filter_fn, expected_count, attempts + 1)
     end
   end
 end

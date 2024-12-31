@@ -9,6 +9,7 @@ defmodule Core.Event.Definition do
   defmacro __using__(_) do
     quote do
       alias Core.Event
+      alias Game.Handlers
 
       @before_compile unquote(__MODULE__)
     end

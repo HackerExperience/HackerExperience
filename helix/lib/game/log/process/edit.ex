@@ -19,6 +19,21 @@ defmodule Game.Process.Log.Edit do
     |> Map.put(:log_type, String.to_existing_atom(raw.log_type))
   end
 
+  defmodule Processable do
+    def on_complete(_process) do
+      # TODO
+      # Svc.Log.create_revision()
+      :ok
+    end
+  end
+
+  defmodule Signalable do
+    def on_sigterm(_data, _process) do
+      # TODO: This is the default (meaning this callback can be removed)
+      :delete
+    end
+  end
+
   defmodule Resourceable do
     use Game.Process.Resourceable.Definition
 

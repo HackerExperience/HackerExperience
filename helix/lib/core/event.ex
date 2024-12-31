@@ -28,6 +28,7 @@ defmodule Core.Event do
 
   require Logger
   alias Feeb.DB
+  alias Renatils.Random
 
   defstruct [:id, :name, :data, :relay]
 
@@ -53,7 +54,7 @@ defmodule Core.Event do
       do: Logger.warning("No relay found for #{inspect(ev_mod)}")
 
     %__MODULE__{
-      id: "random_id",
+      id: Random.uuid(),
       name: ev_mod.get_name(),
       data: data,
       relay: Process.get(:helix_event_relay)

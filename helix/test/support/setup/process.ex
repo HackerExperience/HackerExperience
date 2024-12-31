@@ -6,13 +6,14 @@ defmodule Test.Setup.Process do
 
   @doc """
   Opts:
-  - type: Defines process type. A random type is picked if unset
+  - type: Defines process type. A random type is picked if unset.
   - spec: Custom opts for the `spec` implementation. Consult docs at `spec/2`. Opts include:
-    - params: Process params. If unset, per-process defaults are applied
-    - meta: Process meta. If unset, per-process defaults are applied (new data may be created)
-  - objective: Modify the process objective
+    - params: Process params. If unset, per-process defaults are applied.
+    - meta: Process meta. If unset, per-process defaults are applied (new data may be created).
+  - objective: Modify the process objective.
   - static: Modify the process static resources. Accepts: %{paused: R}, %{paused: R, running: R}
             or R. Any missing information will default to using the original process static.
+  - completed?: When true, the process is created with its `objective` goal already reached.
   """
   def new(server_id, opts \\ []) do
     spec_opts = (opts[:spec] || []) ++ [type: opts[:type]]

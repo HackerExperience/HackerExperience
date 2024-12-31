@@ -62,4 +62,26 @@ defmodule Game.Events.Process do
         do: %{player: entity_id}
     end
   end
+
+  # TODO: Should ProcessCompletedEvent be publishable? It may be how we tell the Client that
+  # a process finished processing. Then at some point it will receive another event with the
+  # actuall side-effect from whatever process was running.
+  defmodule Completed do
+    use Core.Event.Definition
+
+    alias Game.Process
+
+    defstruct [:process]
+
+    @name :process_completed
+
+    def new(process = %Process{}) do
+      %__MODULE__{process: process}
+      |> Event.new()
+    end
+
+    def handlers(_, _) do
+      [Handlers.Process.TOP]
+    end
+  end
 end

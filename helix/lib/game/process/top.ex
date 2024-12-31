@@ -12,9 +12,13 @@ defmodule Game.Process.TOP do
   require Logger
 
   alias Feeb.DB
+  alias Core.Event
   alias Game.Services, as: Svc
+  alias Game.Process.Signalable
   alias Game.{ProcessRegistry, Server}
   alias __MODULE__
+
+  alias Game.Events.Process.Completed, as: ProcessCompletedEvent
 
   # Public
 
@@ -57,6 +61,9 @@ defmodule Game.Process.TOP do
     Process.put(:helix_universe, universe)
     Process.put(:helix_universe_shard_id, universe_shard_id)
 
+    relay = Event.Relay.new(:top, %{server_id: server_id})
+    Process.put(:helix_event_relay, relay)
+
     data = %{
       server_id: server_id,
       server_resources: nil,
@@ -84,37 +91,67 @@ defmodule Game.Process.TOP do
         Svc.Process.fetch!(by_id: process.id)
       end)
 
-    case TOP.Scheduler.is_completed?(process) do
-      true ->
-        # The process has reached its target. We can delete it from the database and send SIGTERM
-        remaining_processes =
-          Core.with_context(:server, state.server_id, :write, fn ->
-            # TODO: Move to Svc layer
-            DB.delete(process)
+    with true <- TOP.Scheduler.is_completed?(process) do
+      process_completed_event = ProcessCompletedEvent.new(process)
 
-            # TODO: Move to Svc layer
-            DB.all(Game.Process)
-          end)
+      case Signalable.sigterm(process) do
+        :delete ->
+          # signaled_event = ProcessSignaledEvent.new(process, :sigterm, :delete)
+          remaining_processes = delete_completed_process(state.server_id, process)
 
-        Core.with_context(:universe, :write, fn ->
-          # This is, of course, TODO. FeebDB needs to support delete based on query
-          # (aking to Repo.delete_all)
-          process_registry =
-            DB.all(ProcessRegistry)
-            |> Enum.find(&(&1.server_id == state.server_id && &1.process_id == process.id))
+          # TODO: Emit `ProcessCompletedEvent` (and, say, TopRecalcado) *after* changing the
+          # internal state, to avoid race conditions. Use `handle_continue` for that
+          schedule(state, remaining_processes)
+          |> tap(fn _ -> Event.emit_async([process_completed_event]) end)
 
-          # TODO: Move to Svc layer
-          DB.delete({:processes_registry, :delete}, process_registry, [state.server_id, process.id])
-        end)
-
-        schedule(state, remaining_processes)
-
+        {:retarget, _new_objective, _registry_changes} ->
+          raise "TODO"
+      end
+    else
       {false, {resource, objective_left}} ->
         # Process hasn't really completed; warn and re-run the scheduler
         i = "there are #{inspect(objective_left)} units of #{resource} left to be processed"
         Logger.warning("Attempted to complete process #{process.id.id} but it isn't finished: #{i}")
         {:stop, :wrong_schedule, state}
     end
+  end
+
+  # Reference from `Event.emit_async/1`; it's safe to ignore it
+  def handle_info({_ref, {:event_result, _}}, state),
+    do: {:noreply, state}
+
+  # DOWN message from `Event.emit_async/1`; it's safe to ignore it
+  def handle_info({:DOWN, _, _, _, :normal}, state),
+    do: {:noreply, state}
+
+  def handle_info({:DOWN, _, _, _, _} = msg, state) do
+    Logger.warning("TOP #{inspect(self())} received abnormal DOWN message: #{inspect(msg)}")
+    {:noreply, state}
+  end
+
+  defp delete_completed_process(server_id, process) do
+    # The process has reached its target. We can delete it from the database and send SIGTERM
+    remaining_processes =
+      Core.with_context(:server, server_id, :write, fn ->
+        # TODO: Move to Svc layer
+        DB.delete(process)
+
+        # TODO: Move to Svc layer
+        DB.all(Game.Process)
+      end)
+
+    Core.with_context(:universe, :write, fn ->
+      # This is, of course, TODO. FeebDB needs to support delete based on query
+      # (akin to Repo.delete_all)
+      process_registry =
+        DB.all(ProcessRegistry)
+        |> Enum.find(&(&1.server_id == server_id && &1.process_id == process.id))
+
+      # TODO: Move to Svc layer
+      DB.delete({:processes_registry, :delete}, process_registry, [server_id, process.id])
+    end)
+
+    remaining_processes
   end
 
   defp schedule(state, processes) do

@@ -58,7 +58,8 @@ defmodule Test.Setup.Shared do
 
   # Events
 
-  defdelegate wait_events(opts), to: Test.Event
+  defdelegate wait_events!(opts), to: Test.Event
+  defdelegate wait_process_completed_event!(process_id), to: Test.Event
 
   # Misc
 

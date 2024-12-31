@@ -97,7 +97,16 @@ defmodule Game.Process.TOPTest do
 
       # Now we'll sleep for ~100ms. By then, `proc_s1_1` and `proc_s2` should be completed
       adhoc_checkpoint = DateTime.utc_now() |> DateTime.to_unix(:millisecond)
-      :timer.sleep(120)
+
+      # When the processes hit their target (in ~100ms), TOP emitted the ProcessCompletedEvent
+      assert [proc_s1_1_completed_event] = wait_process_completed_event!(proc_s1_1)
+      assert [proc_s2_completed_event] = wait_process_completed_event!(proc_s2)
+
+      assert proc_s1_1_completed_event.name == :process_completed
+      assert proc_s1_1_completed_event.data.process.id == proc_s1_1.id
+
+      assert proc_s2_completed_event.name == :process_completed
+      assert proc_s2_completed_event.data.process.id == proc_s2.id
 
       # Now the next process to be completed in server_1 is `proc_s1_2`
       top_1_pid = fetch_top_pid!(server_1.id, ctx)
@@ -153,8 +162,8 @@ defmodule Game.Process.TOPTest do
         assert proc_in_registry.process_id == proc_s1_2.id
       end)
 
-      # If we wait an extra 50ms, `proc_s1_2` should be completed too
-      :timer.sleep(60)
+      # If we wait an extra ~50ms, `proc_s1_2` should be completed too
+      assert [_process_completed_event] = wait_process_completed_event!(proc_s1_2)
 
       # No "next" process for TOP at `server_1`
       top_1_pid = fetch_top_pid!(server_1.id, ctx)
