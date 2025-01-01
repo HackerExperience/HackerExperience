@@ -36,7 +36,12 @@ defmodule Game.Process.TOP.Scheduler do
 
     # Estimated timestamp in which process will reach resource goal, at `next_alloc` rate
     completion_ts =
-      calculate_completion_ts(new_processed, next_alloc, process.resources.objective, now)
+      if process.status != :paused do
+        calculate_completion_ts(new_processed, next_alloc, process.resources.objective, now)
+      else
+        # Paused processes will never complete
+        nil
+      end
 
     new_resources =
       process.resources
@@ -94,12 +99,19 @@ defmodule Game.Process.TOP.Scheduler do
 
   def forecast(processes) do
     Enum.reduce(processes, {nil, :infinity}, fn process, {_, cur_next_completion_ts} = acc ->
-      true = not is_nil(process.estimated_completion_ts)
+      # Sanity check: every non-paused process *must* have an estimated completion TS
+      if process.status != :paused,
+        do: true = not is_nil(process.estimated_completion_ts)
 
-      if process.estimated_completion_ts <= cur_next_completion_ts do
-        {process, process.estimated_completion_ts}
-      else
-        acc
+      cond do
+        process.status == :paused ->
+          acc
+
+        process.estimated_completion_ts <= cur_next_completion_ts ->
+          {process, process.estimated_completion_ts}
+
+        true ->
+          acc
       end
     end)
     |> case do

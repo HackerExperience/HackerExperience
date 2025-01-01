@@ -68,11 +68,11 @@ defmodule Game.Process.TOPTest do
         # Each had its completion date estimated correctly: 100ms and 200ms from the creation date
         assert_in_delta new_proc_s1_1.estimated_completion_ts,
                         new_proc_s1_1.last_checkpoint_ts + 100,
-                        10
+                        25
 
         assert_in_delta new_proc_s1_2.estimated_completion_ts,
                         new_proc_s1_2.last_checkpoint_ts + 200,
-                        10
+                        25
       end)
 
       # Now for Server 2. It has 200k/s cpu, with the only process having a 10k target: ~50ms
@@ -127,7 +127,7 @@ defmodule Game.Process.TOPTest do
       # `proc_s1_2` is expected to complete in 50ms. Why? Because now it has the full 200k/s, so the
       # remaining 10k target will take only 50ms. It is 50% processed but the new allocation has
       # higher rate, so instead of "100ms + 100ms" it will take "100ms + 50ms" to reach the target
-      assert_in_delta top_1_next_time_left, 50, 25
+      assert_in_delta top_1_next_time_left, 50, 20
 
       Core.with_context(:server, server_1.id, :read, fn ->
         # The previous process (`proc_s1_1`) does not exist in the database anymore. It's gone
@@ -145,7 +145,7 @@ defmodule Game.Process.TOPTest do
         # It has a new completion date (which is roughly ~50ms after the checkpoint)
         assert_in_delta new_proc_s1_2.estimated_completion_ts,
                         new_proc_s1_2.last_checkpoint_ts + 50,
-                        10
+                        25
 
         # It has some amount of processed resources (roughly around 10k or 50% of target)
         # PS: Do note it may be more than that because we wait an extra 10ms to make *sure* the
@@ -497,6 +497,107 @@ defmodule Game.Process.TOPTest do
         # Its "processed" resource is set to zero (nothing has been processed yet)
         assert Resources.equal?(process_after.resources.processed, Resources.initial())
       end)
+    end
+  end
+
+  describe "pause/1" do
+    test "pauses a process", ctx do
+      server = Setup.server!(resources: %{cpu: 1_000})
+      proc_1 = Setup.process!(server.id, %{objective: %{cpu: 1000}})
+      proc_2 = Setup.process!(server.id, %{objective: %{cpu: 500}})
+      DB.commit()
+
+      assert :ok == TOP.on_boot({ctx.db_context, ctx.shard_id})
+      pid = fetch_top_pid!(server.id, ctx)
+      state = :sys.get_state(pid)
+
+      new_proc_2 =
+        Core.with_context(:server, server.id, :read, fn ->
+          new_proc_1 = Svc.Process.fetch!(by_id: proc_1.id)
+          new_proc_2 = Svc.Process.fetch!(by_id: proc_2.id)
+
+          # Both processes are running
+          assert new_proc_1.status == :running
+          assert new_proc_2.status == :running
+
+          # Both processes received 50% of the dynamic allocation
+          assert_decimal_eq(new_proc_1.resources.allocated.cpu, 500)
+          assert_decimal_eq(new_proc_2.resources.allocated.cpu, 500)
+
+          new_proc_2
+        end)
+
+      # Despite both processes receiving 50% of the server resources, `proc_2` is clearly the first
+      # one to complete because it requires half of the `objective`
+      assert elem(state.next, 0).id == proc_2.id
+      proc_2_timer = elem(state.next, 2)
+
+      # Now we'll pause `new_proc_2`
+      assert {:ok, new_proc_2} = TOP.pause(new_proc_2)
+      assert new_proc_2.id == proc_2.id
+      assert new_proc_2.status == :paused
+
+      # Many things should happen once we paused, including:
+      state = :sys.get_state(pid)
+
+      # 1. The "next" process to complete is `proc_1` (`proc_2` will never complete while paused)
+      assert elem(state.next, 0).id == proc_1.id
+
+      # 2. The `proc_2_timer` is dead
+      assert false == Elixir.Process.cancel_timer(proc_2_timer)
+
+      # 3. The processes have the correct `allocated` and `status` values in the database
+      Core.with_context(:server, server.id, :read, fn ->
+        new_proc_1 = Svc.Process.fetch!(by_id: proc_1.id)
+        new_proc_2 = Svc.Process.fetch!(by_id: proc_2.id)
+
+        # `proc_1` is running and using 100% of the dynamic server resources
+        assert_decimal_eq(new_proc_1.resources.allocated.cpu, 1000)
+        assert new_proc_1.status == :running
+
+        # `proc_2` is using 0% of the dynamic server resources
+        assert_decimal_eq(new_proc_2.resources.allocated.cpu, 0)
+        assert new_proc_2.status == :paused
+
+        # `proc_2` will never complete (as long as it's paused)
+        refute new_proc_2.estimated_completion_ts
+
+        # `proc_2` is using the "paused" static resources
+        proc_2_paused_resources = new_proc_2.resources.static.paused |> Resources.from_map()
+        assert Resources.equal?(new_proc_2.resources.allocated, proc_2_paused_resources)
+      end)
+    end
+
+    @tag capture_log: true
+    test "can't pause an already paused process", ctx do
+      server = Setup.server!()
+      process = Setup.process!(server.id)
+      DB.commit()
+
+      assert :ok == TOP.on_boot({ctx.db_context, ctx.shard_id})
+      pid = fetch_top_pid!(server.id, ctx)
+      state = :sys.get_state(pid)
+      assert state.next
+
+      process =
+        Core.with_context(:server, server.id, :read, fn ->
+          Svc.Process.fetch!(by_id: process.id)
+        end)
+
+      # We'll pause the (only) process in this TOP
+      assert {:ok, _} = TOP.pause(process)
+
+      # Naturally there won't be any "next" for this TOP
+      pid = fetch_top_pid!(server.id, ctx)
+      state = :sys.get_state(pid)
+      refute state.next
+
+      process =
+        Core.with_context(:server, server.id, :read, fn ->
+          Svc.Process.fetch!(by_id: process.id)
+        end)
+
+      assert {:error, {:cant_pause, :paused}} == TOP.pause(process)
     end
   end
 

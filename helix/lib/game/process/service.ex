@@ -4,6 +4,7 @@ defmodule Game.Services.Process do
 
   alias Game.Events.Process.Created, as: ProcessCreatedEvent
   alias Game.Events.Process.Completed, as: ProcessCompletedEvent
+  alias Game.Events.Process.Paused, as: ProcessPausedEvent
 
   def fetch(filter_params, opts \\ []) do
     filters = [
@@ -26,6 +27,32 @@ defmodule Game.Services.Process do
       {:ok, process, [event]}
     end
   end
+
+  def pause(%Process{status: :running} = process) do
+    result =
+      Core.with_context(:server, process.server_id, :write, fn ->
+        process
+        |> Process.update(%{status: :paused})
+        |> DB.update()
+      end)
+
+    case result do
+      {:ok, _} ->
+        new_process =
+          Core.with_context(:server, process.server_id, :read, fn ->
+            fetch!(by_id: process.id)
+          end)
+
+        event = ProcessPausedEvent.new(new_process)
+        {:ok, new_process, [event]}
+
+      {:error, _} = error ->
+        error
+    end
+  end
+
+  def pause(%Process{status: status}),
+    do: {:error, {:cant_pause, status}}
 
   def delete(%Process{} = process, reason) when reason in [:completed, :killed] do
     Core.with_context(:server, process.server_id, :write, fn ->

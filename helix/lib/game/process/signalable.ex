@@ -2,7 +2,8 @@ defmodule Game.Process.Signalable do
   alias Game.Process
 
   @signal_map %{
-    sigterm: :on_sigterm
+    sigterm: :on_sigterm,
+    sigstop: :on_sigstop
   }
 
   for {signal, callback} <- @signal_map do

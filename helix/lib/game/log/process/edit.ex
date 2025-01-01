@@ -32,6 +32,11 @@ defmodule Game.Process.Log.Edit do
       # TODO: This is the default (meaning this callback can be removed)
       :delete
     end
+
+    def on_sigstop(_, _) do
+      # TODO: This is the default (meaning this callback can be removed)
+      :pause
+    end
   end
 
   defmodule Resourceable do

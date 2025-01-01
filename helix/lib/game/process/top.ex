@@ -60,6 +60,12 @@ defmodule Game.Process.TOP do
     |> GenServer.call({:execute, process_mod, params, meta})
   end
 
+  def pause(%Process{server_id: server_id} = process) do
+    server_id
+    |> TOP.Registry.fetch!()
+    |> GenServer.call({:pause, process})
+  end
+
   def on_server_resources_changed(server_id) do
     server_id
     |> TOP.Registry.fetch!()
@@ -124,6 +130,21 @@ defmodule Game.Process.TOP do
 
       {:error, _reason} ->
         raise "TODO!"
+    end
+  end
+
+  def handle_call({:pause, process}, _from, state) do
+    with {:signal_action, :pause} <- {:signal_action, Signalable.sigstop(process)},
+         {:ok, paused_process, [process_paused_event]} <- Svc.Process.pause(process) do
+      result = run_schedule(state, state.server_id, {:pause, process.id}, [process_paused_event])
+      {:reply, {:ok, paused_process}, result.state}
+    else
+      {:signal_action, :noop} ->
+        {:reply, {:error, :rejected}, state}
+
+      {:error, reason} ->
+        Logger.error("Unable to pause process: #{inspect(reason)}")
+        {:reply, {:error, reason}, state}
     end
   end
 

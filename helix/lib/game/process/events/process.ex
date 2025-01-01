@@ -82,4 +82,19 @@ defmodule Game.Events.Process do
       [Handlers.Process.TOP]
     end
   end
+
+  defmodule Paused do
+    use Core.Event.Definition
+
+    alias Game.Process
+
+    defstruct [:process]
+
+    @name :process_paused
+
+    def new(process = %Process{status: :paused}) do
+      %__MODULE__{process: process}
+      |> Event.new()
+    end
+  end
 end

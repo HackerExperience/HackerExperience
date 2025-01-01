@@ -58,7 +58,13 @@ defmodule Game.Process.TOP.Allocator do
       Enum.reduce(allocated_processes, {initial, []}, fn {process, proc_static_allocation},
                                                          {shares, acc} ->
         # Calculates number of shares the process should receive
-        proc_shares = Resources.get_shares(process)
+        proc_shares =
+          if process.status != :paused do
+            Resources.get_shares(process)
+          else
+            # Paused processes receive no dynamic allocation (but they receive static allocation)
+            Resources.initial()
+          end
 
         # Accumulates total shares in use by the system
         shares = Resources.sum(shares, proc_shares)

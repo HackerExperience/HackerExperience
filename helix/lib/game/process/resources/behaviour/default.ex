@@ -67,10 +67,8 @@ defmodule Game.Process.Resources.Behaviour.Default do
   def reduce(_, v, acc, fun),
     do: fun.(v, acc)
 
-  def allocate_static(res, %{resources: %{static: static}}) do
-    # The concept of pausing a process is TODO
-    is_paused? = false
-    static_key = if is_paused?, do: :paused, else: :running
+  def allocate_static(res, %{status: status, resources: %{static: static}}) do
+    static_key = if status == :paused, do: :paused, else: :running
 
     static
     |> Map.fetch!(static_key)
