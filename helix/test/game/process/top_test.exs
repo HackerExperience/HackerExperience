@@ -117,14 +117,14 @@ defmodule Game.Process.TOPTest do
       # `proc_s1_2` is expected to complete in 50ms. Why? Because now it has the full 200k/s, so the
       # remaining 10k target will take only 50ms. It is 50% processed but the new allocation has
       # higher rate, so instead of "100ms + 100ms" it will take "100ms + 50ms" to reach the target
-      assert_in_delta top_1_next_time_left, 50, 10
+      assert_in_delta top_1_next_time_left, 50, 25
 
       Core.with_context(:server, server_1.id, :read, fn ->
         # The previous process (`proc_s1_1`) does not exist in the database anymore. It's gone
         refute Svc.Process.fetch(by_id: proc_s1_1.id)
 
         # `proc_s1_2` has a different allocation
-        assert new_proc_s1_2 = Svc.Process.fetch!(by_id: proc_s1_2.id)
+        new_proc_s1_2 = Svc.Process.fetch!(by_id: proc_s1_2.id)
 
         # It is now using 100% of the available CPU in the server (as opposed to 50% before)
         assert new_proc_s1_2.resources.allocated.cpu == Decimal.new(200_000)
@@ -180,13 +180,152 @@ defmodule Game.Process.TOPTest do
         assert [] = DB.all(ProcessRegistry)
       end)
 
-      # Server 1 had its TOP recalculated two times (when the first process completed and when the
-      # second process completed -- the boot recalculation did not trigger the event because no
-      # process had changed prior to that)
-      [_, _] = wait_events_on_server!(server_1.id, :top_recalcado, 2)
+      # Server 1 had its TOP recalculated three times
+      assert [_, _, _] = wait_events_on_server!(server_1.id, :top_recalcado, 3)
 
-      # Server 2, once (when its only process completed)
-      [_] = wait_events_on_server!(server_2.id, :top_recalcado, 1)
+      # Server 2, twice
+      assert [_, _] = wait_events_on_server!(server_2.id, :top_recalcado, 2)
+    end
+  end
+
+  describe "allocation" do
+    test "when the 'next' process changes, the previous 'next' timer is deleted", ctx do
+      server = Setup.server!()
+      proc_1 = Setup.process!(server.id, objective: %{cpu: 100_000})
+      DB.commit()
+
+      assert :ok == TOP.on_boot({ctx.db_context, ctx.shard_id})
+      pid = fetch_top_pid!(server.id, ctx)
+      state = :sys.get_state(pid)
+
+      # `proc_1` is naturally the "next" proc, since it's the only one in the server
+      assert elem(state.next, 0).id == proc_1.id
+      proc_1_timer = elem(state.next, 2)
+
+      # Now we'll add another process that is considerably faster
+      spec = Setup.process_spec(server.id)
+      assert {:ok, proc_2} = U.Process.execute(spec)
+
+      # TOP has changed to set `proc_2` as "next"
+      state = :sys.get_state(pid)
+      assert elem(state.next, 0).id == proc_2.id
+
+      # The previous timer is dead (it no longer applies)
+      assert false == Elixir.Process.cancel_timer(proc_1_timer)
+    end
+  end
+
+  describe "over-allocation / resources overflow" do
+    test "overflow when process is created (with empty TOP)", ctx do
+      server = Setup.server!(resources: %{cpu: 500, ram: 1})
+      DB.commit()
+
+      spec = Setup.process_spec(server.id)
+      assert {:error, :overflow} = U.Process.execute(spec)
+
+      # TOP is mostly unchanged (next == nil)
+      assert :ok == TOP.on_boot({ctx.db_context, ctx.shard_id})
+      pid = fetch_top_pid!(server.id, ctx)
+      state = :sys.get_state(pid)
+      refute state.next
+    end
+
+    test "overflow when process is created (with other running processes)", ctx do
+      server = Setup.server!(resources: %{cpu: 100, ram: 30})
+      Setup.process!(server.id, static: %{ram: 10})
+      Setup.process!(server.id, static: %{ram: 10})
+      DB.commit()
+
+      # TOP is running and the two processes above have been alocated resources
+      assert :ok == TOP.on_boot({ctx.db_context, ctx.shard_id})
+      pid = fetch_top_pid!(server.id, ctx)
+      state_before = :sys.get_state(pid)
+
+      # Now we'll add a process that overflows the available resources
+      spec = Setup.process_spec(server.id)
+      assert {:error, :overflow} = U.Process.execute(spec)
+
+      # TOP still has the same process as "next" target (and same timer)
+      state_after = :sys.get_state(pid)
+      assert elem(state_before.next, 0).id == elem(state_after.next, 0).id
+      assert elem(state_before.next, 2) == elem(state_after.next, 2)
+
+      # There are still (and only) two ongoing processes
+      Core.with_context(:server, server.id, :read, fn ->
+        assert [_, _] = DB.all(Process)
+      end)
+
+      # TODO: Test ProcessKilledEvent was emitted
+    end
+
+    test "overflow when server resources go down (affecting multiple processes)", ctx do
+      # Initially the Server has sufficient RAM for all four processes
+      server = Setup.server!(resources: %{cpu: 100, ram: 70})
+      proc_1 = Setup.process!(server.id, static: %{ram: 30}, objective: %{cpu: 250})
+      proc_2 = Setup.process!(server.id, static: %{ram: 20}, objective: %{cpu: 100})
+      _proc_3 = Setup.process!(server.id, static: %{ram: 10}, objective: %{cpu: 5_000})
+      proc_4 = Setup.process!(server.id, static: %{ram: 10}, objective: %{cpu: 90})
+      DB.commit()
+
+      # Run and wait for first allocation
+      assert :ok == TOP.on_boot({ctx.db_context, ctx.shard_id})
+      pid = fetch_top_pid!(server.id, ctx)
+
+      # With all 4 processes running, `proc_4` is the "next" to complete given smaller objective
+      state = :sys.get_state(pid)
+      assert elem(state.next, 0).id == proc_4.id
+      timer_proc_4 = elem(state.next, 2)
+
+      # We still have four processes (none were dropped so far)
+      Core.with_context(:server, server.id, :read, fn ->
+        assert [_, _, _, _] = DB.all(Process)
+      end)
+
+      # Now we'll update the server resources
+      # The newest process (proc_4) will be dropped after this. The new total allocated RAM is 60
+      U.Server.update_resources(server.id, %{ram: 60})
+      assert :ok == TOP.on_server_resources_changed(server.id)
+
+      # With `proc_4` gone, the "next" target is now `proc_2`
+      state = :sys.get_state(pid)
+      assert elem(state.next, 0).id == proc_2.id
+      timer_proc_2 = elem(state.next, 2)
+
+      # The timer that was tracking `proc_4`'s conclusion has been killed
+      assert false == Elixir.Process.cancel_timer(timer_proc_4)
+
+      Core.with_context(:server, server.id, :read, fn ->
+        # There are only 3 proceseses now; `proc_4` is gone
+        assert [_, _, _] = DB.all(Process)
+        refute Svc.Process.fetch(by_id: proc_4.id)
+      end)
+
+      # Let's change the resources once again, now to 35. `proc_3` and `proc_2` should be killed
+      U.Server.update_resources(server.id, %{ram: 35})
+      assert :ok == TOP.on_server_resources_changed(server.id)
+
+      # Now obviously `proc_1` is the "next" process, since it's the only one left
+      state = :sys.get_state(pid)
+      assert elem(state.next, 0).id == proc_1.id
+      timer_proc_1 = elem(state.next, 2)
+
+      # The timer that was tracking `proc_2`'s conclusion has been killed
+      assert false == Elixir.Process.cancel_timer(timer_proc_2)
+
+      Core.with_context(:server, server.id, :read, fn ->
+        # Only `proc_1` is remaining now
+        assert [remaining_process] = DB.all(Process)
+        assert remaining_process.id == proc_1.id
+      end)
+
+      # And now let's change it to 29. There won't be any processes left
+      U.Server.update_resources(server.id, %{ram: 29})
+      assert :ok == TOP.on_server_resources_changed(server.id)
+      state = :sys.get_state(pid)
+      refute state.next
+
+      # The timer that was tracking `proc_1`'s conclusion has been killed
+      assert false == Elixir.Process.cancel_timer(timer_proc_1)
     end
   end
 

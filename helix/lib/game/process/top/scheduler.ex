@@ -1,6 +1,7 @@
 defmodule Game.Process.TOP.Scheduler do
   require Logger
   alias Feeb.DB
+  alias Game.Services, as: Svc
   alias Game.Process.Resources
   alias Game.{Process}
 
@@ -104,6 +105,28 @@ defmodule Game.Process.TOP.Scheduler do
       {nil, :infinity} ->
         :empty
     end
+  end
+
+  def find_newest_using_resource(processes, resource_name) when is_list(processes) do
+    # Sort processes by creation date. IDs are sequential so we can use that instead of dates
+    processes
+    |> Enum.sort_by(& &1.id.id, :desc)
+    |> Enum.find(fn %{resources: %{allocated: %Resources{} = allocated}} ->
+      case get_in(allocated, [Access.key!(resource_name)]) do
+        %Decimal{} ->
+          true
+
+        nil ->
+          false
+      end
+    end)
+  end
+
+  def drop_processes(processes) do
+    Enum.reduce(processes, [], fn process, acc ->
+      {:ok, event} = Svc.Process.delete(process, :killed)
+      [event | acc]
+    end)
   end
 
   # defp calculate_total_processed(process, prev_processed, allocated, now) do

@@ -28,16 +28,17 @@ defmodule Test.Setup.Process.Spec do
     params = opts[:params] || default_params.()
     meta = opts[:meta] || default_meta.()
 
-    build_spec(LogEditProcess, params, meta)
+    build_spec(LogEditProcess, server_id, params, meta)
   end
 
-  defp build_spec(mod, params, meta) do
+  defp build_spec(mod, server_id, params, meta) do
     %{
       module: mod,
       type: mod.get_process_type(params, meta),
       data: mod.new(params, meta),
       params: params,
-      meta: meta
+      meta: meta,
+      server_id: server_id
     }
   end
 end

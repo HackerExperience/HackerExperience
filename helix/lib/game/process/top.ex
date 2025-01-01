@@ -15,10 +15,9 @@ defmodule Game.Process.TOP do
   alias Core.Event
   alias Game.Services, as: Svc
   alias Game.Process.{Executable, Signalable}
-  alias Game.{ProcessRegistry, Server}
+  alias Game.{Process, Server}
   alias __MODULE__
 
-  alias Game.Events.Process.Completed, as: ProcessCompletedEvent
   alias Game.Events.TOP.Recalcado, as: TOPRecalcadoEvent
 
   # Public
@@ -27,8 +26,8 @@ defmodule Game.Process.TOP do
   On application boot, instantiate the TOP for each in-game server with active processes.
   """
   def on_boot({universe, shard_id}) do
-    Process.put(:helix_universe, universe)
-    Process.put(:helix_universe_shard_id, shard_id)
+    Elixir.Process.put(:helix_universe, universe)
+    Elixir.Process.put(:helix_universe_shard_id, shard_id)
 
     :universe
     |> Core.with_context(:read, fn ->
@@ -61,15 +60,21 @@ defmodule Game.Process.TOP do
     |> GenServer.call({:execute, process_mod, params, meta})
   end
 
+  def on_server_resources_changed(server_id) do
+    server_id
+    |> TOP.Registry.fetch!()
+    |> GenServer.call({:on_server_resources_changed})
+  end
+
   # GenServer API
 
   def init({universe, universe_shard_id, server_id}) do
     # PS: shard_id may not be necessary here, but overall I think it's better to relay the full ctx
-    Process.put(:helix_universe, universe)
-    Process.put(:helix_universe_shard_id, universe_shard_id)
+    Elixir.Process.put(:helix_universe, universe)
+    Elixir.Process.put(:helix_universe_shard_id, universe_shard_id)
 
     relay = Event.Relay.new(:top, %{server_id: server_id})
-    Process.put(:helix_event_relay, relay)
+    Elixir.Process.put(:helix_event_relay, relay)
 
     data = %{
       server_id: server_id,
@@ -82,19 +87,23 @@ defmodule Game.Process.TOP do
   end
 
   def handle_continue(:bootstrap, state) do
-    # Here we fetch every process in said server
+    {state, processes} = fetch_initial_data(state)
+    schedule = run_schedule(state, processes, :boot)
+    {:noreply, schedule.state}
+  end
+
+  defp fetch_initial_data(state) do
     {processes, meta} =
       Core.with_context(:server, state.server_id, :read, fn ->
-        {DB.all(Game.Process), Svc.Server.get_meta(state.server_id)}
+        {DB.all(Process), Svc.Server.get_meta(state.server_id)}
       end)
 
-    schedule =
+    state =
       state
       |> Map.put(:server_resources, meta.resources)
       |> Map.put(:entity_id, meta.entity_id)
-      |> run_schedule(processes, :boot)
 
-    {:noreply, schedule.state}
+    {state, processes}
   end
 
   def handle_call({:execute, process_mod, params, meta}, _from, state) do
@@ -118,6 +127,12 @@ defmodule Game.Process.TOP do
     end
   end
 
+  def handle_call({:on_server_resources_changed}, _from, state) do
+    {state, processes} = fetch_initial_data(state)
+    schedule = run_schedule(state, processes, :resources_changed)
+    {:reply, :ok, schedule.state}
+  end
+
   def handle_info(:next_process_completed, %{next: {process, _, _}} = state) do
     process =
       Core.with_context(:server, state.server_id, :read, fn ->
@@ -125,12 +140,15 @@ defmodule Game.Process.TOP do
       end)
 
     with true <- TOP.Scheduler.is_completed?(process) do
-      process_completed_event = ProcessCompletedEvent.new(process)
-
       case Signalable.sigterm(process) do
         :delete ->
-          # signaled_event = ProcessSignaledEvent.new(process, :sigterm, :delete)
-          remaining_processes = delete_completed_process(state.server_id, process)
+          {:ok, process_completed_event} = Svc.Process.delete(process, :completed)
+
+          remaining_processes =
+            Core.with_context(:server, state.server_id, :read, fn ->
+              # TODO: Move to Svc layer
+              DB.all(Process)
+            end)
 
           schedule =
             run_schedule(state, remaining_processes, :completion, [process_completed_event])
@@ -162,37 +180,12 @@ defmodule Game.Process.TOP do
     {:noreply, state}
   end
 
-  defp delete_completed_process(server_id, process) do
-    # The process has reached its target. We can delete it from the database and send SIGTERM
-    remaining_processes =
-      Core.with_context(:server, server_id, :write, fn ->
-        # TODO: Move to Svc layer
-        DB.delete(process)
-
-        # TODO: Move to Svc layer
-        DB.all(Game.Process)
-      end)
-
-    Core.with_context(:universe, :write, fn ->
-      # This is, of course, TODO. FeebDB needs to support delete based on query
-      # (akin to Repo.delete_all)
-      process_registry =
-        DB.all(ProcessRegistry)
-        |> Enum.find(&(&1.server_id == server_id && &1.process_id == process.id))
-
-      # TODO: Move to Svc layer
-      DB.delete({:processes_registry, :delete}, process_registry, [server_id, process.id])
-    end)
-
-    remaining_processes
-  end
-
   defp run_schedule(state, processes_or_server_id, reason, events \\ [])
 
   defp run_schedule(state, %Server.ID{} = server_id, reason, events) do
     processes =
       Core.with_context(:server, server_id, :read, fn ->
-        DB.all(Game.Process)
+        DB.all(Process)
       end)
 
     run_schedule(state, processes, reason, events)
@@ -218,14 +211,16 @@ defmodule Game.Process.TOP do
   defp do_run_schedule(
          %{server_id: server_id, server_resources: resources} = state,
          processes,
-         reason
+         reason,
+         dropped_processes \\ []
        ) do
     with {:ok, allocated_processes} <- TOP.Allocator.allocate(server_id, resources, processes),
          now = DateTime.utc_now() |> DateTime.to_unix(:millisecond),
          processes = Enum.map(allocated_processes, &TOP.Scheduler.simulate(&1, now)),
-         {:ok, modified_procs} <- TOP.Scheduler.update_modified_processes(server_id, processes) do
+         {:ok, modified_procs} <- TOP.Scheduler.update_modified_processes(server_id, processes),
+         process_killed_events = TOP.Scheduler.drop_processes(dropped_processes) do
       top_recalcado_event =
-        if reason != :boot or modified_procs == 0 do
+        if reason != :boot or modified_procs > 0 do
           TOPRecalcadoEvent.new(server_id, processes)
         else
           # We don't need to emit the TOPRecalcadoEvent if this TOP just booted and nothing changed
@@ -236,28 +231,82 @@ defmodule Game.Process.TOP do
         {:next, next_process} ->
           now = DateTime.utc_now() |> DateTime.to_unix(:millisecond)
           time_left = max(next_process.estimated_completion_ts - now + 10, 0)
-          timer_ref = Process.send_after(self(), :next_process_completed, time_left)
+
+          timer_ref =
+            case state.next do
+              {current_next_process, current_time_left, current_timer_ref} ->
+                if current_next_process.id == next_process.id do
+                  current_timer_ref
+                else
+                  cancel_next_timer(current_timer_ref, current_time_left)
+                  create_next_timer(time_left)
+                end
+
+              nil ->
+                create_next_timer(time_left)
+            end
 
           %{
             state: %{state | next: {next_process, time_left, timer_ref}},
-            dropped: [],
-            events: [top_recalcado_event]
+            dropped: dropped_processes,
+            events: [top_recalcado_event | process_killed_events]
           }
 
         :empty ->
           # TODO: Hibernate? Kill TOP? if empty
           %{
             state: %{state | next: nil},
-            dropped: [],
-            events: [top_recalcado_event]
+            dropped: dropped_processes,
+            events: [top_recalcado_event | process_killed_events]
           }
       end
     else
-      {:error, {:overflow, _overflowed_resources}} ->
-        # Returns: {:ok, <next>, <new_state>, <dropped>, top_recalcado_event}
-        # handle_allocation_overflow(state, processes, overflowed_resources)
-        raise "TODO"
+      {:error, {:overflow, overflowed_resources}} ->
+        {new_processes, new_dropped} =
+          handle_allocation_overflow(state, processes, overflowed_resources)
+
+        do_run_schedule(state, new_processes, reason, new_dropped ++ dropped_processes)
     end
+  end
+
+  defp handle_allocation_overflow(state, processes, overflowed_resources) do
+    unallocated_process = Enum.find(processes, &is_nil(&1.resources.allocated))
+
+    case unallocated_process do
+      # We have unallocated process(es), so we'll start by simply dropping it
+      %Process{} ->
+        new_processes = processes -- [unallocated_process]
+        {new_processes, [unallocated_process]}
+
+      # We don't have unallocated processes, so we'll need to drop running processes. This can
+      # happen when: 1) Server resources changed or 2) Paused process being resumed.
+      nil ->
+        # Drop the newest process using the overflow resource. Not sure if that's the best
+        # heuristic; the alternative would be dropping the heaviest process instead.
+        dropped_process =
+          TOP.Scheduler.find_newest_using_resource(processes, List.first(overflowed_resources))
+
+        # Sanity check: we *have* to drop something; TOP.Scheduler *must* find a process to kill
+        true = not is_nil(dropped_process)
+
+        with {next_process, time_left, timer_ref} <- state.next,
+             true <- next_process.id == dropped_process.id do
+          # If the dropped process is the "next" one to complete, we need to cancel its timer
+          cancel_next_timer(timer_ref, time_left)
+        end
+
+        {processes -- [dropped_process], [dropped_process]}
+    end
+  end
+
+  defp create_next_timer(time_left) do
+    Elixir.Process.send_after(self(), :next_process_completed, time_left)
+  end
+
+  defp cancel_next_timer(timer_ref, time_left) do
+    # The cancelation may be async if the timer won't complete any time soon
+    async? = time_left > 50
+    Elixir.Process.cancel_timer(timer_ref, async: async?, info: false)
   end
 
   defp with_registry(key) do

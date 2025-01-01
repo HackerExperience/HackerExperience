@@ -1,6 +1,6 @@
 defmodule Test.Setup.Server do
   use Test.Setup.Definition
-  alias Game.{Process, Server, ServerMeta}
+  alias Game.{Server}
 
   @doc """
   Creates a Server entry with real shards.
@@ -95,22 +95,7 @@ defmodule Test.Setup.Server do
 
   defp maybe_update_resources(%Server.ID{} = server_id, opts) do
     if custom_resources = opts[:resources] do
-      meta = Svc.Server.get_meta(server_id)
-
-      new_resources =
-        meta.resources
-        |> Map.from_struct()
-        |> Enum.map(fn {res, v} ->
-          {res, custom_resources[res] |> Renatils.Decimal.to_decimal() || v}
-        end)
-        |> Map.new()
-        |> Process.Resources.from_map()
-
-      Core.with_context(:server, server_id, :write, fn ->
-        meta
-        |> ServerMeta.update(%{resources: new_resources})
-        |> DB.update!()
-      end)
+      U.Server.update_resources(server_id, custom_resources)
     end
   end
 

@@ -64,9 +64,7 @@ defmodule Game.Endpoint.Log.Edit do
     end
   end
 
-  def handle_request(request, _params, ctx, session) do
-    entity_id = session.data.entity_id
-
+  def handle_request(request, _params, ctx, _session) do
     # TODO
     process_params =
       %{
@@ -76,7 +74,7 @@ defmodule Game.Endpoint.Log.Edit do
 
     meta = %{log: ctx.log, tunnel: ctx.tunnel}
 
-    case Svc.TOP.execute(LogEditProcess, ctx.server.id, entity_id, process_params, meta) do
+    case Svc.TOP.execute(LogEditProcess, ctx.server.id, process_params, meta) do
       {:ok, process} ->
         {:ok, %{request | result: %{process: process}}}
 

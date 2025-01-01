@@ -1,7 +1,9 @@
 defmodule Game.Services.Process do
   alias Feeb.DB
   alias Game.{Process, ProcessRegistry}
+
   alias Game.Events.Process.Created, as: ProcessCreatedEvent
+  alias Game.Events.Process.Completed, as: ProcessCompletedEvent
 
   def fetch(filter_params, opts \\ []) do
     filters = [
@@ -23,6 +25,35 @@ defmodule Game.Services.Process do
       event = ProcessCreatedEvent.new(process, confirmed: false)
       {:ok, process, [event]}
     end
+  end
+
+  def delete(%Process{} = process, reason) when reason in [:completed, :killed] do
+    Core.with_context(:server, process.server_id, :write, fn ->
+      DB.delete!(process)
+    end)
+
+    Core.with_context(:universe, :write, fn ->
+      # This is, of course, TODO. FeebDB needs to support delete based on query
+      # (akin to Repo.delete_all)
+      process_registry =
+        DB.all(ProcessRegistry)
+        |> Enum.find(&(&1.server_id == process.server_id && &1.process_id == process.id))
+
+      DB.delete!({:processes_registry, :delete}, process_registry, [process.server_id, process.id])
+    end)
+
+    event =
+      case reason do
+        :completed ->
+          ProcessCompletedEvent.new(process)
+
+        :killed ->
+          # TODO
+          # ProcessKilledEvent.new(process)
+          nil
+      end
+
+    {:ok, event}
   end
 
   defp insert_process(server_id, entity_id, registry_data, {process_type, process_data}) do
