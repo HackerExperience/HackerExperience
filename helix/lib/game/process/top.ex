@@ -66,6 +66,12 @@ defmodule Game.Process.TOP do
     |> GenServer.call({:pause, process})
   end
 
+  def resume(%Process{server_id: server_id} = process) do
+    server_id
+    |> TOP.Registry.fetch!()
+    |> GenServer.call({:resume, process})
+  end
+
   def on_server_resources_changed(server_id) do
     server_id
     |> TOP.Registry.fetch!()
@@ -135,8 +141,15 @@ defmodule Game.Process.TOP do
 
   def handle_call({:pause, process}, _from, state) do
     with {:signal_action, :pause} <- {:signal_action, Signalable.sigstop(process)},
-         {:ok, paused_process, [process_paused_event]} <- Svc.Process.pause(process) do
+         {:ok, _, [process_paused_event]} <- Svc.Process.pause(process) do
       result = run_schedule(state, state.server_id, {:pause, process.id}, [process_paused_event])
+
+      # Fetch from disk the process we just paused because its allocation has changed
+      paused_process =
+        Core.with_context(:server, state.server_id, :read, fn ->
+          Svc.Process.fetch!(by_id: process.id)
+        end)
+
       {:reply, {:ok, paused_process}, result.state}
     else
       {:signal_action, :noop} ->
@@ -144,6 +157,31 @@ defmodule Game.Process.TOP do
 
       {:error, reason} ->
         Logger.error("Unable to pause process: #{inspect(reason)}")
+        {:reply, {:error, reason}, state}
+    end
+  end
+
+  def handle_call({:resume, process}, _from, state) do
+    with {:signal_action, :resume} <- {:signal_action, Signalable.sigcont(process)},
+         {:ok, _, [process_resumed_event]} <- Svc.Process.resume(process),
+         %{dropped: [], paused: [], state: new_state} <-
+           run_schedule(state, state.server_id, {:resume, process.id}, [process_resumed_event]) do
+      resumed_process =
+        Core.with_context(:server, state.server_id, :read, fn ->
+          Svc.Process.fetch!(by_id: process.id)
+        end)
+
+      {:reply, {:ok, resumed_process}, new_state}
+    else
+      {:signal_action, :noop} ->
+        {:reply, {:error, :rejected}, state}
+
+      # We were unable to resume this process because there are insufficient resources in the server
+      %{paused: [_ | _], state: new_state} ->
+        {:reply, {:error, :overflow}, new_state}
+
+      {:error, reason} ->
+        Logger.error("Unable to resume process: #{inspect(reason)}")
         {:reply, {:error, reason}, state}
     end
   end
@@ -225,15 +263,20 @@ defmodule Game.Process.TOP do
         Logger.debug("Scheduled processes in #{duration}; TOP is empty -- won't wake up")
     end
 
-    Event.emit_async(result.events ++ events)
-    %{state: result.state, dropped: result.dropped}
+    events
+    |> maybe_filter_out_resume_events(result.paused)
+    |> Kernel.++(result.events)
+    |> Event.emit_async()
+
+    %{state: result.state, dropped: result.dropped, paused: result.paused}
   end
 
   defp do_run_schedule(
          %{server_id: server_id, server_resources: resources} = state,
          processes,
          reason,
-         dropped_processes \\ []
+         dropped_processes \\ [],
+         paused_processes \\ []
        ) do
     with {:ok, allocated_processes} <- TOP.Allocator.allocate(server_id, resources, processes),
          now = DateTime.utc_now() |> DateTime.to_unix(:millisecond),
@@ -270,6 +313,7 @@ defmodule Game.Process.TOP do
           %{
             state: %{state | next: {next_process, time_left, timer_ref}},
             dropped: dropped_processes,
+            paused: paused_processes,
             events: [top_recalcado_event | process_killed_events]
           }
 
@@ -278,32 +322,48 @@ defmodule Game.Process.TOP do
           %{
             state: %{state | next: nil},
             dropped: dropped_processes,
+            paused: paused_processes,
             events: [top_recalcado_event | process_killed_events]
           }
       end
     else
       {:error, {:overflow, overflowed_resources}} ->
-        {new_processes, new_dropped} =
-          handle_allocation_overflow(state, processes, overflowed_resources)
+        {new_processes, new_dropped, new_paused} =
+          handle_allocation_overflow(state, processes, overflowed_resources, reason)
 
-        do_run_schedule(state, new_processes, reason, new_dropped ++ dropped_processes)
+        do_run_schedule(
+          state,
+          new_processes,
+          reason,
+          new_dropped ++ dropped_processes,
+          new_paused ++ paused_processes
+        )
     end
   end
 
-  defp handle_allocation_overflow(state, processes, overflowed_resources) do
-    unallocated_process = Enum.find(processes, &is_nil(&1.resources.allocated))
+  defp handle_allocation_overflow(state, processes, overflowed_resources, reason) do
+    cond do
+      # There was a recent paused process being resumed, which is likely the source of the overflow.
+      # Let's just "un-resume" it
+      process = find_recently_resumed_process(processes, reason) ->
+        # This scenario is a bit different. We won't *drop* the process, but rather *pause* it
+        {:ok, paused_process, _} = Svc.Process.pause(%{process | status: :running})
 
-    case unallocated_process do
-      # We have unallocated process(es), so we'll start by simply dropping it
-      %Process{} ->
-        new_processes = processes -- [unallocated_process]
-        {new_processes, [unallocated_process]}
+        new_processes =
+          Enum.map(processes, fn proc ->
+            if proc.id == paused_process.id, do: paused_process, else: proc
+          end)
 
-      # We don't have unallocated processes, so we'll need to drop running processes. This can
-      # happen when: 1) Server resources changed or 2) Paused process being resumed.
-      nil ->
-        # Drop the newest process using the overflow resource. Not sure if that's the best
-        # heuristic; the alternative would be dropping the heaviest process instead.
+        {new_processes, [], [paused_process]}
+
+      # We have an unallocated process, so we'll start by simply dropping it
+      process = Enum.find(processes, &is_nil(&1.resources.allocated)) ->
+        {processes -- [process], [process], []}
+
+      # We have overflow even though there are not unallocated or recently resumed processes. This
+      # is likely due to a recent downgrade in the server resources. Let's just recursively drop the
+      # newest processes until the overflow is resolved
+      true ->
         dropped_process =
           TOP.Scheduler.find_newest_using_resource(processes, List.first(overflowed_resources))
 
@@ -316,8 +376,31 @@ defmodule Game.Process.TOP do
           cancel_next_timer(timer_ref, time_left)
         end
 
-        {processes -- [dropped_process], [dropped_process]}
+        {processes -- [dropped_process], [dropped_process], []}
     end
+  end
+
+  defp find_recently_resumed_process(processes, {:resume, resumed_process_id}),
+    do: Enum.find(processes, &(&1.id == resumed_process_id))
+
+  defp find_recently_resumed_process(_, _),
+    do: nil
+
+  defp maybe_filter_out_resume_events(events, []), do: events
+
+  defp maybe_filter_out_resume_events(events, paused_processes) do
+    Enum.reduce(events, [], fn
+      %{name: :process_resumed, data: %{process: %{id: resumed_process_id}}} = event, acc ->
+        # If the process we just resumed was "re-paused", then drop the ProcessResumedEvent
+        if not Enum.any?(paused_processes, &(&1.id == resumed_process_id)) do
+          [event | acc]
+        else
+          acc
+        end
+
+      event, acc ->
+        [event | acc]
+    end)
   end
 
   defp create_next_timer(time_left) do

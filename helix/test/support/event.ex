@@ -51,6 +51,27 @@ defmodule Test.Event do
     do_wait_events!(opts, key_filter, opts[:count] || 1)
   end
 
+  def refute_events!(opts) when is_list(opts) do
+    try do
+      # With each attempt being 15ms, this will wait up to 45ms
+      events = wait_events!(opts ++ [max_attempts: 3])
+      raise "You didn't want me to, but I found the following events:\n\n #{inspect(events)}"
+    rescue
+      e in RuntimeError ->
+        cond do
+          e.message =~ "Couldn't find the event you were waiting for" ->
+            # That's exactly what `refute_events!` wants: the events to NOT be found
+            :ok
+
+          e.message =~ "You were expecting only" ->
+            raise e.message
+
+          true ->
+            raise e
+        end
+    end
+  end
+
   def wait_events_on_server!(%Server.ID{} = server_id, event_name, count \\ 1) do
     wait_events!(
       filter: fn
@@ -61,6 +82,18 @@ defmodule Test.Event do
           false
       end,
       count: count
+    )
+  end
+
+  def refute_events_on_server!(%Server.ID{} = server_id, event_name) do
+    refute_events!(
+      filter: fn
+        {_, s_id, _, _}, %{event: %{name: e_name}} ->
+          s_id == server_id and e_name == event_name
+
+        _, _ ->
+          false
+      end
     )
   end
 
@@ -99,7 +132,7 @@ defmodule Test.Event do
       length(results) > expected_count ->
         raise("You were expecting only #{expected_count} events, found #{length(results)}")
 
-      attempts == 100 ->
+      attempts == (original_opts[:max_attempts] || 100) ->
         raise "Couldn't find the event you were waiting for. #{inspect(original_opts)}"
 
       length(results) == expected_count ->

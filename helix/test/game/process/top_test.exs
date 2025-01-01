@@ -501,7 +501,7 @@ defmodule Game.Process.TOPTest do
   end
 
   describe "pause/1" do
-    test "pauses a process", ctx do
+    test "pauses a running process", ctx do
       server = Setup.server!(resources: %{cpu: 1_000})
       proc_1 = Setup.process!(server.id, %{objective: %{cpu: 1000}})
       proc_2 = Setup.process!(server.id, %{objective: %{cpu: 500}})
@@ -566,6 +566,10 @@ defmodule Game.Process.TOPTest do
         proc_2_paused_resources = new_proc_2.resources.static.paused |> Resources.from_map()
         assert Resources.equal?(new_proc_2.resources.allocated, proc_2_paused_resources)
       end)
+
+      # 4. The ProcessPausedEvent is emitted
+      assert [process_resumed_event] = wait_events_on_server!(server.id, :process_paused)
+      assert process_resumed_event.data.process.id == proc_2.id
     end
 
     @tag capture_log: true
@@ -598,6 +602,153 @@ defmodule Game.Process.TOPTest do
         end)
 
       assert {:error, {:cant_pause, :paused}} == TOP.pause(process)
+    end
+  end
+
+  describe "resume/1" do
+    test "resumes a paused process", ctx do
+      server = Setup.server!(resources: %{cpu: 1_000})
+      proc_1 = Setup.process!(server.id, %{objective: %{cpu: 1000}})
+      proc_2 = Setup.process!(server.id, %{objective: %{cpu: 500}})
+      DB.commit()
+
+      # We have two running processes, with `proc_2` being the "next"
+      assert :ok == TOP.on_boot({ctx.db_context, ctx.shard_id})
+      pid = fetch_top_pid!(server.id, ctx)
+      state = :sys.get_state(pid)
+      assert elem(state.next, 0).id == proc_2.id
+
+      # Let's pause `proc_2`
+      proc_2 =
+        Core.with_context(:server, server.id, :read, fn ->
+          Svc.Process.fetch!(by_id: proc_2.id)
+        end)
+
+      assert {:ok, proc_2} = TOP.pause(proc_2)
+      assert proc_2.status == :paused
+
+      # Naturally `proc_1` is the "next" now
+      state = :sys.get_state(pid)
+      assert elem(state.next, 0).id == proc_1.id
+      proc_1_timer = elem(state.next, 2)
+
+      # Let's resume `proc_2`
+      assert {:ok, proc_2} = TOP.resume(proc_2)
+      assert proc_2.status == :running
+
+      # `proc_2` is back as "next" target for the TOP
+      state = :sys.get_state(pid)
+      assert elem(state.next, 0).id == proc_2.id
+
+      # The old `proc_1_timer` was canceled
+      assert false == Elixir.Process.cancel_timer(proc_1_timer)
+
+      # The allocation is as expected (50% for each process)
+      Core.with_context(:server, server.id, :read, fn ->
+        new_proc_1 = Svc.Process.fetch!(by_id: proc_1.id)
+        new_proc_2 = Svc.Process.fetch!(by_id: proc_2.id)
+
+        # Both processes are running
+        assert new_proc_1.status == :running
+        assert new_proc_2.status == :running
+
+        # Both processes received 50% of the dynamic allocation
+        assert_decimal_eq(new_proc_1.resources.allocated.cpu, 500)
+        assert_decimal_eq(new_proc_2.resources.allocated.cpu, 500)
+      end)
+
+      # Emits the ProcessResumedEvent
+      assert [process_resumed_event] = wait_events_on_server!(server.id, :process_resumed)
+      assert process_resumed_event.data.process.id == proc_2.id
+    end
+
+    @tag capture_log: true
+    test "can't resume a non-paused process", ctx do
+      server = Setup.server!()
+      process = Setup.process!(server.id)
+      DB.commit()
+
+      assert {:error, {:cant_resume, :awaiting_allocation}} = TOP.resume(process)
+
+      assert :ok == TOP.on_boot({ctx.db_context, ctx.shard_id})
+
+      process =
+        Core.with_context(:server, server.id, :read, fn ->
+          Svc.Process.fetch!(by_id: process.id)
+        end)
+
+      assert {:error, {:cant_resume, :running}} = TOP.resume(process)
+    end
+
+    test "can't resume a process for which the server no longer has sufficient resources", ctx do
+      # Scenario: the static allocation for paused process is smaller than for a running process.
+      # The server had plenty of RAM when the process started, but after it was paused another
+      # process started running, occupying the remaining resources in the server. When the process
+      # is resumed, it needs more resources but the server can't handle it. The obvious solution
+      # is to undo the resume (instead of the default "drop the newest process" heuristic).
+      server = Setup.server!(resources: %{ram: 20})
+      proc_1 = Setup.process!(server.id, static: %{paused: %{ram: 10}, running: %{ram: 20}})
+      DB.commit()
+
+      # `proc_1` is running and using 20MB of RAM (100% of server's available RAM)
+      assert :ok == TOP.on_boot({ctx.db_context, ctx.shard_id})
+      pid = fetch_top_pid!(server.id, ctx)
+      state = :sys.get_state(pid)
+      assert elem(state.next, 0).id == proc_1.id
+
+      proc_1 =
+        Core.with_context(:server, server.id, :read, fn ->
+          Svc.Process.fetch!(by_id: proc_1.id)
+        end)
+
+      # Let's pause proc_1.
+      assert {:ok, proc_1} = TOP.pause(proc_1)
+      state = :sys.get_state(pid)
+      refute state.next
+
+      # `proc_1` is now using only 10MB of RAM
+      assert_decimal_eq(proc_1.resources.allocated.ram, 10)
+
+      # Now we add `proc_2` and `proc_3`, which use 7MB and 2MB respectively
+      Core.begin_context(:universe, :write)
+      proc_2 = Setup.process!(server.id, static: %{ram: 7})
+      proc_3 = Setup.process!(server.id, static: %{ram: 2})
+      DB.commit()
+
+      # Re-start the TOP for easy re-scheduling
+      Elixir.Process.exit(pid, :kill)
+      assert :ok == TOP.on_boot({ctx.db_context, ctx.shard_id})
+      pid = fetch_top_pid!(server.id, ctx)
+      state = :sys.get_state(pid)
+
+      # The "next" is anything but `proc_1`
+      refute elem(state.next, 0).id == proc_1.id
+
+      # Let's just make sure everything looks alright in the database
+      Core.with_context(:server, server.id, :read, fn ->
+        # There are 3 processes
+        assert [_, _, _] = DB.all(Process)
+
+        proc_1 = Svc.Process.fetch!(by_id: proc_1.id)
+        proc_2 = Svc.Process.fetch!(by_id: proc_2.id)
+        proc_3 = Svc.Process.fetch!(by_id: proc_3.id)
+
+        # `proc_1` is paused and the other two are running
+        assert proc_1.status == :paused
+        assert proc_2.status == :running
+        assert proc_3.status == :running
+      end)
+
+      # Let's resume `proc_1`. It should fail
+      assert {:error, :overflow} = TOP.resume(proc_1)
+
+      # Even if we try to resume it multiple times, it should keep failing
+      assert {:error, :overflow} = TOP.resume(proc_1)
+      assert {:error, :overflow} = TOP.resume(proc_1)
+      assert {:error, :overflow} = TOP.resume(proc_1)
+
+      # The ProcessResumedEvent was never emitted
+      refute_events_on_server!(server.id, :process_resumed)
     end
   end
 

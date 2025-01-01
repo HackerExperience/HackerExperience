@@ -97,4 +97,19 @@ defmodule Game.Events.Process do
       |> Event.new()
     end
   end
+
+  defmodule Resumed do
+    use Core.Event.Definition
+
+    alias Game.Process
+
+    defstruct [:process]
+
+    @name :process_resumed
+
+    def new(process = %Process{status: :awaiting_allocation}) do
+      %__MODULE__{process: process}
+      |> Event.new()
+    end
+  end
 end

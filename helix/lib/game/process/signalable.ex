@@ -3,7 +3,8 @@ defmodule Game.Process.Signalable do
 
   @signal_map %{
     sigterm: :on_sigterm,
-    sigstop: :on_sigstop
+    sigstop: :on_sigstop,
+    sigcont: :on_sigcont
   }
 
   for {signal, callback} <- @signal_map do

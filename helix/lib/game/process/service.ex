@@ -5,6 +5,7 @@ defmodule Game.Services.Process do
   alias Game.Events.Process.Created, as: ProcessCreatedEvent
   alias Game.Events.Process.Completed, as: ProcessCompletedEvent
   alias Game.Events.Process.Paused, as: ProcessPausedEvent
+  alias Game.Events.Process.Resumed, as: ProcessResumedEvent
 
   def fetch(filter_params, opts \\ []) do
     filters = [
@@ -53,6 +54,33 @@ defmodule Game.Services.Process do
 
   def pause(%Process{status: status}),
     do: {:error, {:cant_pause, status}}
+
+  def resume(%Process{status: :paused} = process) do
+    result =
+      Core.with_context(:server, process.server_id, :write, fn ->
+        # The resumed process will be allocated resources at the next TOP allocation
+        process
+        |> Process.update(%{status: :awaiting_allocation})
+        |> DB.update()
+      end)
+
+    case result do
+      {:ok, _} ->
+        new_process =
+          Core.with_context(:server, process.server_id, :read, fn ->
+            fetch!(by_id: process.id)
+          end)
+
+        event = ProcessResumedEvent.new(new_process)
+        {:ok, new_process, [event]}
+
+      {:error, _} = error ->
+        error
+    end
+  end
+
+  def resume(%Process{status: status}),
+    do: {:error, {:cant_resume, status}}
 
   def delete(%Process{} = process, reason) when reason in [:completed, :killed] do
     Core.with_context(:server, process.server_id, :write, fn ->

@@ -131,5 +131,5 @@ defmodule Game.Process.Resources.Behaviour.Default do
     do: true
 
   defp can_allocate?(res, %{processed: processed, objective: objective}),
-    do: Map.fetch!(objective, res) >= Map.get(processed, res, 0)
+    do: Decimal.gt?(Map.fetch!(objective, res), Map.get(processed, res, @zero))
 end
