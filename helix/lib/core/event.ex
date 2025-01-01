@@ -73,24 +73,23 @@ defmodule Core.Event do
   def emit(events) when is_list(events) do
     events
     |> Enum.reject(&is_nil/1)
-    |> Enum.reduce([], fn
-      %__MODULE__{} = event, acc ->
-        event
-        |> get_handlers()
-        |> Enum.reduce(acc, fn handler_mod, acc_events ->
-          # Before dispatching to the handler, `prepare_db/2` will start a transaction, unless
-          # instructed otherwise via the `on_prepare_db/2` behaviour callback.
-          prepare_db(handler_mod, event)
+    |> Enum.reduce([], fn %__MODULE__{} = event, acc ->
+      event
+      |> get_handlers()
+      |> Enum.reduce(acc, fn handler_mod, acc_events ->
+        # Before dispatching to the handler, `prepare_db/2` will start a transaction, unless
+        # instructed otherwise via the `on_prepare_db/2` behaviour callback.
+        prepare_db(handler_mod, event)
 
-          # Dispatch the event to the handler
-          {result, new_acc_events} = do_emit(handler_mod, event, acc_events)
+        # Dispatch the event to the handler
+        {result, new_acc_events} = do_emit(handler_mod, event, acc_events)
 
-          # After the event has been processed, teardown the DB transaction. By default, will COMMIT
-          # on success and ROLLBACK on failure, but the default behaviour can be changed based on the
-          # `teardown_db_on_success/2` and `teardown_db_on_failure/2` callbacks.
-          teardown_db(result, handler_mod, event)
-          new_acc_events
-        end)
+        # After the event has been processed, teardown the DB transaction. By default, will COMMIT
+        # on success and ROLLBACK on failure, but the default behaviour can be changed based on the
+        # `teardown_db_on_success/2` and `teardown_db_on_failure/2` callbacks.
+        teardown_db(result, handler_mod, event)
+        new_acc_events
+      end)
     end)
     # Emit any events that were created and returned by the handlers themselves
     |> emit()
