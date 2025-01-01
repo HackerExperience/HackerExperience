@@ -10,6 +10,8 @@ defmodule Game.Process do
     :log_edit
   ]
 
+  @statuses [:awaiting_allocation, :running, :paused]
+
   @schema [
     {:id, ID.ref(:process_id)},
     {:entity_id, ID.ref(:entity_id)},
@@ -18,6 +20,7 @@ defmodule Game.Process do
     {:data, {:map, load_structs: true, after_read: :hydrate_data}},
     # `registry` includes tgt_log_id, src_file_id etc (same data in ProcessRegistry)
     {:registry, {:map, load_structs: true}},
+    {:status, {:enum, values: @statuses}},
     {:resources, {:map, load_structs: true, after_read: :format_resources}},
     {:inserted_at, {:datetime_utc, [precision: :millisecond], mod: :inserted_at}},
     {:last_checkpoint_ts, {:integer, nullable: true}},

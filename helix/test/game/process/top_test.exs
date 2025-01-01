@@ -59,6 +59,12 @@ defmodule Game.Process.TOPTest do
         assert new_proc_s1_2.resources.allocated.cpu == Decimal.new(100_000)
         assert Resources.equal?(new_proc_s1_2.resources.processed, Resources.initial())
 
+        # The processes have the status changed from `awaiting_allocation` to `running`
+        assert proc_s1_1.status == :awaiting_allocation
+        assert proc_s1_1.status == :awaiting_allocation
+        assert new_proc_s1_1.status == :running
+        assert new_proc_s1_2.status == :running
+
         # Each had its completion date estimated correctly: 100ms and 200ms from the creation date
         assert_in_delta new_proc_s1_1.estimated_completion_ts,
                         new_proc_s1_1.last_checkpoint_ts + 100,
@@ -85,6 +91,10 @@ defmodule Game.Process.TOPTest do
         # New process has the expected allocation (as well as `processed`) in DB: 100% of the CPU!
         assert new_proc_s2.resources.allocated.cpu == Decimal.new(200_000)
         assert Resources.equal?(new_proc_s2.resources.processed, Resources.initial())
+
+        # It has the correct status flags
+        assert proc_s2.status == :awaiting_allocation
+        assert new_proc_s2.status == :running
 
         # Completion was estimated ~50ms after the creation date
         assert_in_delta new_proc_s2.estimated_completion_ts, new_proc_s2.last_checkpoint_ts + 50, 10

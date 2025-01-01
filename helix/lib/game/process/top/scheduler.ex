@@ -29,6 +29,8 @@ defmodule Game.Process.TOP.Scheduler do
       Logger.debug("Process #{process.id.id} had its allocation changed")
     end
 
+    new_status = if process.status == :awaiting_allocation, do: :running, else: process.status
+
     # Resources the process has processed up to this point
     new_processed = calculate_total_processed(process, now)
 
@@ -42,6 +44,7 @@ defmodule Game.Process.TOP.Scheduler do
       |> Map.put(:processed, new_processed)
 
     process
+    |> Map.put(:status, new_status)
     |> Map.put(:resources, new_resources)
     |> Map.put(:last_checkpoint_ts, now)
     |> Map.put(:estimated_completion_ts, completion_ts)
@@ -56,6 +59,7 @@ defmodule Game.Process.TOP.Scheduler do
     Enum.reduce_while(processes_to_update, {:ok, 0}, fn process, {:ok, total} ->
       changes =
         %{
+          status: process.status,
           resources: process.resources,
           last_checkpoint_ts: process.last_checkpoint_ts,
           estimated_completion_ts: process.estimated_completion_ts
