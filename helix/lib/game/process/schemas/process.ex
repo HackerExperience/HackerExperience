@@ -22,6 +22,7 @@ defmodule Game.Process do
     {:registry, {:map, load_structs: true}},
     {:status, {:enum, values: @statuses}},
     {:resources, {:map, load_structs: true, after_read: :format_resources}},
+    {:priority, :integer},
     {:inserted_at, {:datetime_utc, [precision: :millisecond], mod: :inserted_at}},
     {:last_checkpoint_ts, {:integer, nullable: true}},
     {:estimated_completion_ts, {:integer, nullable: true}},

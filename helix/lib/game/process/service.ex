@@ -127,7 +127,8 @@ defmodule Game.Services.Process do
           allocated: nil,
           # Similarly, it hasn't processed anything yet
           processed: nil
-        }
+        },
+        priority: 3
       }
       |> Process.new()
       |> DB.insert()

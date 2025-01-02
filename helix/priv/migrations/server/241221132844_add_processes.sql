@@ -6,6 +6,7 @@ CREATE TABLE processes (
   registry TEXT NOT NULL,
   status TEXT NOT NULL,
   resources TEXT NOT NULL,
+  priority INTEGER NOT NULL,
   inserted_at TEXT NOT NULL,
   last_checkpoint_ts INTEGER,
   estimated_completion_ts INTEGER

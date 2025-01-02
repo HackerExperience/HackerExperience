@@ -10,10 +10,11 @@ INSERT INTO processes (
   registry,
   status,
   resources,
+  priority,
   inserted_at,
   last_checkpoint_ts,
   estimated_completion_ts
   )
 VALUES
-  (?, ?, ?, ?, ?, ?, ?, ?, ?)
+  (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 RETURNING *;
