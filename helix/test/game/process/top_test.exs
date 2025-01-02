@@ -105,7 +105,7 @@ defmodule Game.Process.TOPTest do
         assert [_, _, _] = DB.all(ProcessRegistry)
       end)
 
-      # Now we'll sleep for ~100ms. By then, `proc_s1_1` and `proc_s2` should be completed
+      # Now we'll wait for the processes to complete
       adhoc_checkpoint = DateTime.utc_now() |> DateTime.to_unix(:millisecond)
 
       # When the processes hit their target (in ~100ms), TOP emitted the ProcessCompletedEvent
@@ -361,7 +361,7 @@ defmodule Game.Process.TOPTest do
       pid = fetch_top_pid!(server.id, ctx)
 
       # After some time has passed, all three processes are gone
-      :timer.sleep(100)
+      assert wait_events_on_server!(server.id, :process_completed, 3)
 
       Core.with_context(:universe, :read, fn ->
         assert [] = DB.all(ProcessRegistry)
@@ -408,8 +408,8 @@ defmodule Game.Process.TOPTest do
       pid_2 = fetch_top_pid!(server.id, ctx)
       refute pid_2 == pid
 
-      # Give ample time for the process to complete
-      :timer.sleep(100)
+      # Wait for process to be completed
+      assert wait_events_on_server!(server.id, :process_completed)
 
       # And now the process is gone
       top = :sys.get_state(pid_2)
