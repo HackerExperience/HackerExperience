@@ -47,12 +47,6 @@ defmodule Core.Event do
   Creates a new Event.t with the corresponding `data`.
   """
   def new(%ev_mod{} = data) do
-    relay = Process.get(:helix_event_relay)
-
-    # TODO: Only warn that relay is empty when emitting the events. This gets annoying on tests
-    if is_nil(relay),
-      do: Logger.warning("No relay found for #{inspect(ev_mod)}")
-
     %__MODULE__{
       id: Random.uuid(),
       name: ev_mod.get_name(),
@@ -74,6 +68,9 @@ defmodule Core.Event do
     events
     |> Enum.reject(&is_nil/1)
     |> Enum.reduce([], fn %__MODULE__{} = event, acc ->
+      if is_nil(event.relay),
+        do: Logger.warning("No relay found for #{inspect(event.__struct__)}")
+
       event
       |> get_handlers()
       |> Enum.reduce(acc, fn handler_mod, acc_events ->

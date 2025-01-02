@@ -19,9 +19,9 @@ defmodule Test.Setup.Process do
     spec_opts = (opts[:spec] || []) ++ [type: opts[:type]]
     spec = spec(server_id, spec_opts)
 
-    # Create the process using Executable
     %{entity_id: entity_id} = Svc.Server.fetch!(by_id: server_id)
 
+    # Create the process using Executable
     {:ok, process, _} =
       Executable.execute(spec.module, server_id, entity_id, spec.params, spec.meta)
 
