@@ -214,33 +214,30 @@ defmodule Game.Process.TOP do
   end
 
   def handle_info(:next_process_completed, %{next: {process, _, _}} = state) do
-    process =
-      Core.with_context(:server, state.server_id, :read, fn ->
-        Svc.Process.fetch!(by_id: process.id)
-      end)
+    process = refetch_process!(process)
 
-    with true <- TOP.Scheduler.is_completed?(process) do
-      case Signalable.sigterm(process) do
-        :delete ->
-          {:ok, process_completed_event} = Svc.Process.delete(process, :completed)
+    case {TOP.Scheduler.is_completed?(process), Signalable.sigterm(process)} do
+      # Process completed and we are supposed to delete it
+      {true, :delete} ->
+        {:ok, process_completed_event} = Svc.Process.delete(process, :completed)
 
-          remaining_processes =
-            Core.with_context(:server, state.server_id, :read, fn ->
-              # TODO: Move to Svc layer
-              DB.all(Process)
-            end)
+        remaining_processes =
+          Core.with_context(:server, state.server_id, :read, fn ->
+            # TODO: Move to Svc layer
+            DB.all(Process)
+          end)
 
-          schedule =
-            run_schedule(state, remaining_processes, :completion, [process_completed_event])
+        schedule =
+          run_schedule(state, remaining_processes, :completion, [process_completed_event])
 
-          {:noreply, schedule.state}
+        {:noreply, schedule.state}
 
-        {:retarget, _new_objective, _registry_changes} ->
-          raise "TODO"
-      end
-    else
-      {false, {resource, objective_left}} ->
-        # Process hasn't really completed; warn and re-run the scheduler
+      # Process completed and we have to retarget it
+      {true, {:retarget, _new_objective, _registry_changes}} ->
+        raise "TODO"
+
+      # Process hasn't really completed; warn and re-run the scheduler
+      {{false, {resource, objective_left}}, _} ->
         i = "there are #{inspect(objective_left)} units of #{resource} left to be processed"
         Logger.warning("Attempted to complete process #{process.id.id} but it isn't finished: #{i}")
         {:stop, :wrong_schedule, state}
