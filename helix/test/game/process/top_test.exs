@@ -54,9 +54,9 @@ defmodule Game.Process.TOPTest do
         refute proc_s1_2.resources.processed
 
         # The processes have the new resources set correctly in the database
-        assert new_proc_s1_1.resources.allocated.cpu == Decimal.new(100_000)
+        assert_decimal_eq(new_proc_s1_1.resources.allocated.cpu, Decimal.new(100_000))
         assert Resources.equal?(new_proc_s1_1.resources.processed, Resources.initial())
-        assert new_proc_s1_2.resources.allocated.cpu == Decimal.new(100_000)
+        assert_decimal_eq(new_proc_s1_2.resources.allocated.cpu, Decimal.new(100_000))
         assert Resources.equal?(new_proc_s1_2.resources.processed, Resources.initial())
 
         # The processes have the status changed from `awaiting_allocation` to `running`
@@ -89,7 +89,7 @@ defmodule Game.Process.TOPTest do
         refute proc_s2.resources.processed
 
         # New process has the expected allocation (as well as `processed`) in DB: 100% of the CPU!
-        assert new_proc_s2.resources.allocated.cpu == Decimal.new(200_000)
+        assert_decimal_eq(new_proc_s2.resources.allocated.cpu, Decimal.new(200_000))
         assert Resources.equal?(new_proc_s2.resources.processed, Resources.initial())
 
         # It has the correct status flags
@@ -137,7 +137,7 @@ defmodule Game.Process.TOPTest do
         new_proc_s1_2 = Svc.Process.fetch!(by_id: proc_s1_2.id)
 
         # It is now using 100% of the available CPU in the server (as opposed to 50% before)
-        assert new_proc_s1_2.resources.allocated.cpu == Decimal.new(200_000)
+        assert_decimal_eq(new_proc_s1_2.resources.allocated.cpu, Decimal.new(200_000))
 
         # It has a new checkpoint (which happened after our `adhoc_checkpoint`)
         assert new_proc_s1_2.last_checkpoint_ts >= adhoc_checkpoint
@@ -749,6 +749,57 @@ defmodule Game.Process.TOPTest do
 
       # The ProcessResumedEvent was never emitted
       refute_events_on_server!(server.id, :process_resumed)
+    end
+  end
+
+  describe "renice/2" do
+    test "changes the priority of the process", ctx do
+      %{server: server, entity: entity_1} = Setup.server(resources: %{cpu: 1000})
+      entity_2 = Setup.entity!()
+
+      proc_e1_1 = Setup.process!(server.id, entity_id: entity_1.id, priority: 9)
+      proc_e1_2 = Setup.process!(server.id, entity_id: entity_1.id, priority: 1)
+      proc_e2 = Setup.process!(server.id, entity_id: entity_2.id, priority: 99)
+      DB.commit()
+
+      # TOP started and `proc_e2` is the "next"
+      assert :ok == TOP.on_boot({ctx.db_context, ctx.shard_id})
+      pid = fetch_top_pid!(server.id, ctx)
+      state = :sys.get_state(pid)
+      assert elem(state.next, 0).id == proc_e2.id
+
+      # For context, here's the expected initial allocation:
+      Core.with_context(:server, server.id, :read, fn ->
+        proc_e1_1 = Svc.Process.fetch!(by_id: proc_e1_1.id)
+        proc_e1_2 = Svc.Process.fetch!(by_id: proc_e1_2.id)
+        proc_e2 = Svc.Process.fetch!(by_id: proc_e2.id)
+
+        # `entity_1` has access to 50% of the resources (500MHz). In a total of 9 + 1 = 10 shares,
+        # that's 50MHz per share. `entity_2` has access to a total of 500MHz. Expected allocation:
+        assert_decimal_eq(proc_e1_1.resources.allocated.cpu, 9 * 50)
+        assert_decimal_eq(proc_e1_2.resources.allocated.cpu, 1 * 50)
+        assert_decimal_eq(proc_e2.resources.allocated.cpu, 500)
+      end)
+
+      # Let's change the priority of `proc_e1_2` to be 11
+      assert {:ok, _} = TOP.renice(proc_e1_2, 11)
+
+      Core.with_context(:server, server.id, :read, fn ->
+        proc_e1_1 = Svc.Process.fetch!(by_id: proc_e1_1.id)
+        proc_e1_2 = Svc.Process.fetch!(by_id: proc_e1_2.id)
+        proc_e2 = Svc.Process.fetch!(by_id: proc_e2.id)
+
+        # Now `entity_1` has a total of 9 + 11 = 20 shares, which means 500 / 20 = 25mhz/share
+        assert_decimal_eq(proc_e1_1.resources.allocated.cpu, 9 * 25)
+        assert_decimal_eq(proc_e1_2.resources.allocated.cpu, 11 * 25)
+
+        # Process from `entity_2` remains unchanged
+        assert_decimal_eq(proc_e2.resources.allocated.cpu, 500)
+      end)
+
+      # A ProcessRenicedEvent was emitted
+      assert [event] = wait_events_on_server!(server.id, :process_reniced)
+      assert event.data.process.id == proc_e1_2.id
     end
   end
 

@@ -17,7 +17,7 @@ defmodule Test.Assertions do
     end
   end
 
-  defmacro assert_decimal_eq(a, b) do
+  defmacro assert_decimal_eq(a, b, threshold \\ "0.001") do
     quote do
       to_dec = fn
         %Decimal{} = v -> v
@@ -25,7 +25,7 @@ defmodule Test.Assertions do
         f when is_float(f) -> Decimal.new("#{f}")
       end
 
-      assert to_dec.(unquote(a)) == to_dec.(unquote(b))
+      assert Decimal.eq?(to_dec.(unquote(a)), to_dec.(unquote(b)), unquote(threshold))
     end
   end
 end

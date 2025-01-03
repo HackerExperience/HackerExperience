@@ -42,6 +42,11 @@ defmodule Game.Process.Log.Edit do
       # TODO: This is the default (meaning this callback can be removed)
       :resume
     end
+
+    def on_sig_renice(_, _) do
+      # TODO: This is the default (meaning this callback can be removed)
+      :renice
+    end
   end
 
   defmodule Resourceable do

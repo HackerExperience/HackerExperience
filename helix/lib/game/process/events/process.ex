@@ -112,4 +112,19 @@ defmodule Game.Events.Process do
       |> Event.new()
     end
   end
+
+  defmodule Reniced do
+    use Core.Event.Definition
+
+    alias Game.Process
+
+    defstruct [:process]
+
+    @name :process_reniced
+
+    def new(process = %Process{status: :running}) do
+      %__MODULE__{process: process}
+      |> Event.new()
+    end
+  end
 end

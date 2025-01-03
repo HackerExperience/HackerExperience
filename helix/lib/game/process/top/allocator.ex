@@ -6,7 +6,9 @@ defmodule Game.Process.TOP.Allocator do
   require Logger
   alias Game.Process.Resources
 
-  def allocate(_server_id, %Resources{} = total_resources, processes) do
+  def allocate(_, []), do: {:ok, []}
+
+  def allocate(%Resources{} = total_resources, processes) do
     # Static allocation
     {static_resources_usage, statically_allocated_processes} = static_allocation(processes)
 
@@ -53,38 +55,63 @@ defmodule Game.Process.TOP.Allocator do
   defp dynamic_allocation(available_resources, allocated_processes) do
     initial = Resources.initial()
 
-    # TODO: Add note about shares having to be per entity (not per server)
-    {total_shares, proc_shares} =
-      Enum.reduce(allocated_processes, {initial, []}, fn {process, proc_static_allocation},
-                                                         {shares, acc} ->
+    # How many different entities have active processes in this server. This will be used to
+    # calculate how many server resources should be reserved for each entity.
+    total_unique_entities =
+      Enum.reduce(allocated_processes, {0, %{}}, fn {process, _}, {acc_count, acc_entities} ->
+        if Map.has_key?(acc_entities, process.entity_id) do
+          {acc_count, acc_entities}
+        else
+          {acc_count + 1, Map.put(acc_entities, process.entity_id, true)}
+        end
+      end)
+      |> elem(0)
+
+    {total_entity_shares, proc_shares} =
+      Enum.reduce(allocated_processes, {%{}, []}, fn {process, proc_static_allocation},
+                                                     {acc_entity_shares, acc} ->
+        entity_shares = acc_entity_shares[process.entity_id] || initial
+
         # Calculates number of shares the process should receive
         proc_shares =
           if process.status != :paused do
             Resources.get_shares(process)
           else
             # Paused processes receive no dynamic allocation (but they receive static allocation)
-            Resources.initial()
+            initial
           end
 
-        # Accumulates total shares in use by the system
-        shares = Resources.sum(shares, proc_shares)
+        # Accumulates total shares in use by this entity
+        new_entity_shares = Resources.sum(entity_shares, proc_shares)
 
         # This 3-tuple represents what is the process, how many static resources
         # are allocated to it, and how many (dynamic) shares it should receive
         # TODO: Reconsider this tuple approach for a more "normalized" data. Maybe a struct?
         proc_share_info = [{process, proc_static_allocation, proc_shares}]
 
-        {shares, acc ++ proc_share_info}
+        {Map.put(acc_entity_shares, process.entity_id, new_entity_shares), acc ++ proc_share_info}
       end)
 
-    # Based on the total shares selected, figure out how many resources each
-    # share shall receive
-    resource_per_share =
-      Resources.resource_per_share(available_resources, total_shares)
+    # Each entity will be reserved its fair fraction of the total server resources
+    available_resources_per_entity =
+      Resources.map(available_resources, &Decimal.div(&1, total_unique_entities))
+
+    # Based on the total shares selected, figure out how many resources each share shall receive.
+    # Different entities may have different number of shares (due to different number of processes
+    # and/or processes with different priorities). However, the total resources each entity can use
+    # in the server is always the same. If we were to multiply resources_per_entity_share with
+    # entity_shares, we'd get the same value for every entity (available_resources_per_entity).
+    resource_per_entity_share =
+      Enum.map(total_entity_shares, fn {entity_id, entity_shares} ->
+        {entity_id, Resources.resource_per_share(available_resources_per_entity, entity_shares)}
+      end)
+      |> Map.new()
 
     # Dynamically allocate each process based on their shares * resource_per_share
     Enum.reduce(proc_shares, {initial, []}, fn {process, proc_static_allocation, proc_shares},
                                                {total_alloc, acc} ->
+      resource_per_share = Map.fetch!(resource_per_entity_share, process.entity_id)
+
       # Allocates dynamic resources. "Naive" because it has not taken into consideration the process
       # limitations yet
       naive_dynamic_alloc = Resources.allocate_dynamic(proc_shares, resource_per_share, process)

@@ -14,12 +14,19 @@ defmodule Test.Setup.Process do
   - static: Modify the process static resources. Accepts: %{paused: R}, %{paused: R, running: R}
             or R. Any missing information will default to using the original process static.
   - completed?: When true, the process is created with its `objective` goal already reached.
+  - entity_id: Entity who started this process.
+  - priority: Customize the process priority.
   """
   def new(server_id, opts \\ []) do
     spec_opts = (opts[:spec] || []) ++ [type: opts[:type]]
     spec = spec(server_id, spec_opts)
 
-    %{entity_id: entity_id} = Svc.Server.fetch!(by_id: server_id)
+    entity_id =
+      if opts[:entity_id] do
+        opts[:entity_id]
+      else
+        Svc.Server.fetch!(by_id: server_id).entity_id
+      end
 
     # Create the process using Executable
     {:ok, process, _} =
@@ -28,6 +35,7 @@ defmodule Test.Setup.Process do
     process =
       process
       |> maybe_update_resources(opts)
+      |> maybe_update_priority(opts)
       |> maybe_mark_as_complete(opts)
 
     %{
@@ -90,6 +98,14 @@ defmodule Test.Setup.Process do
       |> Map.put(:l_dynamic, opts[:l_dynamic] || process.resources.l_dynamic)
 
     update_and_fetch_process!(process, %{resources: new_resources})
+  end
+
+  defp maybe_update_priority(process, opts) do
+    if custom_priority = opts[:priority] do
+      update_and_fetch_process!(process, %{priority: custom_priority})
+    else
+      process
+    end
   end
 
   defp maybe_mark_as_complete(process, opts) do

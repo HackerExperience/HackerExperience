@@ -6,6 +6,7 @@ defmodule Game.Services.Process do
   alias Game.Events.Process.Completed, as: ProcessCompletedEvent
   alias Game.Events.Process.Paused, as: ProcessPausedEvent
   alias Game.Events.Process.Resumed, as: ProcessResumedEvent
+  alias Game.Events.Process.Reniced, as: ProcessRenicedEvent
 
   def fetch(filter_params, opts \\ []) do
     filters = [
@@ -81,6 +82,29 @@ defmodule Game.Services.Process do
 
   def resume(%Process{status: status}),
     do: {:error, {:cant_resume, status}}
+
+  def renice(%Process{status: :running} = process, priority) do
+    result =
+      Core.with_context(:server, process.server_id, :write, fn ->
+        process
+        |> Process.update(%{priority: priority})
+        |> DB.update()
+      end)
+
+    case result do
+      {:ok, _} ->
+        new_process =
+          Core.with_context(:server, process.server_id, :read, fn ->
+            fetch!(by_id: process.id)
+          end)
+
+        event = ProcessRenicedEvent.new(new_process)
+        {:ok, new_process, [event]}
+
+      {:error, _} = error ->
+        error
+    end
+  end
 
   def delete(%Process{} = process, reason) when reason in [:completed, :killed] do
     Core.with_context(:server, process.server_id, :write, fn ->

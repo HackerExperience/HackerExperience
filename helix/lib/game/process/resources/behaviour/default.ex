@@ -83,10 +83,7 @@ defmodule Game.Process.Resources.Behaviour.Default do
     end
   end
 
-  def get_shares(res, %{resources: %{l_dynamic: dynamic_res} = resources}) do
-    # This is todo; the process schema should have a numeric `priority` field
-    priority = 1
-
+  def get_shares(res, %{priority: priority, resources: %{l_dynamic: dynamic_res} = resources}) do
     with true <- res in dynamic_res,
          true <- can_allocate?(res, resources) do
       priority

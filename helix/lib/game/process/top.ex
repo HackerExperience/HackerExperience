@@ -72,6 +72,12 @@ defmodule Game.Process.TOP do
     |> GenServer.call({:resume, process})
   end
 
+  def renice(%Process{server_id: server_id} = process, priority) when is_integer(priority) do
+    server_id
+    |> TOP.Registry.fetch!()
+    |> GenServer.call({:renice, process, priority})
+  end
+
   def on_server_resources_changed(server_id) do
     server_id
     |> TOP.Registry.fetch!()
@@ -186,6 +192,21 @@ defmodule Game.Process.TOP do
     end
   end
 
+  def handle_call({:renice, process, priority}, _from, state) do
+    # Re-fetch the process inside the TOP to avoid race conditions
+    process = refetch_process!(process)
+
+    with {:signal_action, :renice} <- {:signal_action, Signalable.sig_renice(process)},
+         {:ok, process, [process_reniced_event]} <- Svc.Process.renice(process, priority) do
+      result = run_schedule(state, state.server_id, {:renice, process.id}, [process_reniced_event])
+      {:reply, {:ok, refetch_process!(process)}, result.state}
+    else
+      {:error, reason} ->
+        Logger.error("Unable to renice process: #{inspect(reason)}")
+        {:reply, {:error, reason}, state}
+    end
+  end
+
   def handle_call({:on_server_resources_changed}, _from, state) do
     {state, processes} = fetch_initial_data(state)
     schedule = run_schedule(state, processes, :resources_changed)
@@ -278,7 +299,7 @@ defmodule Game.Process.TOP do
          dropped_processes \\ [],
          paused_processes \\ []
        ) do
-    with {:ok, allocated_processes} <- TOP.Allocator.allocate(server_id, resources, processes),
+    with {:ok, allocated_processes} <- TOP.Allocator.allocate(resources, processes),
          now = DateTime.utc_now() |> DateTime.to_unix(:millisecond),
          processes = Enum.map(allocated_processes, &TOP.Scheduler.simulate(&1, now)),
          {:ok, modified_procs} <- TOP.Scheduler.update_modified_processes(server_id, processes),
@@ -411,6 +432,12 @@ defmodule Game.Process.TOP do
     # The cancelation may be async if the timer won't complete any time soon
     async? = time_left > 50
     Elixir.Process.cancel_timer(timer_ref, async: async?, info: false)
+  end
+
+  defp refetch_process!(%Process{id: process_id, server_id: server_id}) do
+    Core.with_context(:server, server_id, :read, fn ->
+      Svc.Process.fetch!(by_id: process_id)
+    end)
   end
 
   defp with_registry(key) do
