@@ -19,7 +19,7 @@ defmodule Game.Log do
     {:type, {:enum, values: @log_types}},
     {:data, {:map, load_structs: true, after_read: :hydrate_data}},
     {:inserted_at, {:datetime_utc, [precision: :millisecond], mod: :inserted_at}},
-    {:server_id, {ID.ref(:server_id), virtual: :get_server_id}}
+    {:server_id, {ID.ref(:server_id), virtual: true, after_read: :get_server_id}}
   ]
 
   def new(params) do
@@ -29,9 +29,9 @@ defmodule Game.Log do
     |> Schema.create()
   end
 
-  def get_server_id(_row, %{shard_id: raw_server_id}), do: Server.ID.from_external(raw_server_id)
+  def get_server_id(_, _row, %{shard_id: raw_server_id}), do: Server.ID.from_external(raw_server_id)
 
-  def hydrate_data(data, %{type: type}),
+  def hydrate_data(data, %{type: type}, _),
     do: data_mod(type).load!(data)
 
   def data_mod(:local_login), do: __MODULE__.Data.EmptyData

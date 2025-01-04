@@ -26,8 +26,8 @@ defmodule Game.Process do
     {:inserted_at, {:datetime_utc, [precision: :millisecond], mod: :inserted_at}},
     {:last_checkpoint_ts, {:integer, nullable: true}},
     {:estimated_completion_ts, {:integer, nullable: true}},
-    {:server_id, {ID.ref(:server_id), virtual: :get_server_id}},
-    {:next_allocation, {:map, virtual: nil}}
+    {:server_id, {ID.ref(:server_id), virtual: true, after_read: :get_server_id}},
+    {:next_allocation, {:map, virtual: true}}
   ]
 
   @derived_fields [:id]
@@ -45,10 +45,10 @@ defmodule Game.Process do
     |> Schema.update(changes)
   end
 
-  def hydrate_data(%process{} = data, _),
+  def hydrate_data(%process{} = data, _, _),
     do: apply(process, :on_db_load, [data])
 
-  def format_resources(resources, _) do
+  def format_resources(resources, _, _) do
     # TODO: This can be removed if I always insert correctly (and/or normalize the input)
     objective =
       case resources.objective do
@@ -64,7 +64,7 @@ defmodule Game.Process do
     |> Map.put(:objective, objective)
   end
 
-  def get_server_id(_, %{shard_id: raw_server_id}), do: Server.ID.from_external(raw_server_id)
+  def get_server_id(_, _, %{shard_id: raw_server_id}), do: Server.ID.from_external(raw_server_id)
 
   #
 
