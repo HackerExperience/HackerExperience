@@ -1,6 +1,9 @@
 defmodule Test.Setup.Process.Spec do
   use Test.Setup.Definition
+
   alias Game.Process.Log.Edit, as: LogEditProcess
+  alias Test.Process.NoopCPU, as: NoopCPUProcess
+  alias Test.Process.NoopDLK, as: NoopDLKProcess
 
   @implementations [
     :log_edit
@@ -12,6 +15,12 @@ defmodule Test.Setup.Process.Spec do
     |> List.first()
     |> spec(server_id, opts)
   end
+
+  def spec(:noop_cpu, server_id, _opts),
+    do: build_spec(NoopCPUProcess, server_id, %{}, %{})
+
+  def spec(:noop_dlk, server_id, _opts),
+    do: build_spec(NoopDLKProcess, server_id, %{}, %{})
 
   def spec(:log_edit, server_id, opts) do
     default_params = fn ->

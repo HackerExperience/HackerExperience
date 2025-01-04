@@ -12,7 +12,10 @@ defmodule Game.Process do
   @table :processes
 
   @process_types [
-    :log_edit
+    :log_edit,
+    # Below are test processes; they do not exist in production
+    :noop_cpu,
+    :noop_dlk
   ]
 
   @statuses [:awaiting_allocation, :running, :paused]

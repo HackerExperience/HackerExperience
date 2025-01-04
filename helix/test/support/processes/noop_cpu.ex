@@ -1,30 +1,23 @@
-defmodule Game.Process.Log.Edit do
+defmodule Test.Process.NoopCPU do
+  @moduledoc """
+  Test dummy process that does nothing upon completion. Uses CPU dynamically.
+  """
+
   use Game.Process.Definition
 
-  defstruct [:log_type, :log_data]
+  defstruct []
 
-  def new(%{type: log_type, data: log_data}, _) do
-    %__MODULE__{
-      log_type: log_type,
-      log_data: log_data
-    }
+  def new(_, _) do
+    true = Mix.env() == :test
+    %__MODULE__{}
   end
 
-  def get_process_type(_params, _meta) do
-    :log_edit
-  end
+  def get_process_type(_, _), do: :noop_cpu
 
-  def on_db_load(%__MODULE__{} = raw) do
-    raw
-    |> Map.put(:log_type, String.to_existing_atom(raw.log_type))
-  end
+  def on_db_load(%__MODULE__{} = data), do: data
 
   defmodule Processable do
-    def on_complete(_process) do
-      # TODO
-      # Svc.Log.create_revision()
-      :ok
-    end
+    def on_complete(_process), do: :ok
   end
 
   defmodule Signalable do
@@ -53,29 +46,13 @@ defmodule Game.Process.Log.Edit do
     use Game.Process.Resourceable.Definition
 
     def cpu(_factors, _params) do
-      # TODO
       5000
     end
 
     def dynamic(_, _), do: [:cpu]
-
-    def static(_, _) do
-      %{
-        paused: %{ram: 10},
-        running: %{ram: 20}
-      }
-    end
+    def static(_, _), do: %{paused: %{ram: 10}, running: %{ram: 20}}
   end
 
   defmodule Executable do
-    alias Game.Log
-
-    @type meta ::
-            %{
-              log: Log.t()
-            }
-
-    def target_log(_server_id, _entity_id, _params, %{log: log}, _),
-      do: log
   end
 end

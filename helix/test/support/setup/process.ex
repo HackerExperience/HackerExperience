@@ -6,7 +6,7 @@ defmodule Test.Setup.Process do
 
   @doc """
   Opts:
-  - type: Defines process type. A random type is picked if unset.
+  - type: Defines process type. NoopCPU is picked if unset.
   - spec: Custom opts for the `spec` implementation. Consult docs at `spec/2`. Opts include:
     - params: Process params. If unset, per-process defaults are applied.
     - meta: Process meta. If unset, per-process defaults are applied (new data may be created).
@@ -53,7 +53,7 @@ defmodule Test.Setup.Process do
   Retrieves every possible information from the process.
 
   Opts:
-  - type: Defines process type. If not set, a random process is used
+  - type: Defines process type. If not set, NoopCPU is used
   - params: Overwrites the process params. If nil, a per-process default is applied
   - meta: Overwrites the process meta. If nil, a per-process default is applied
   - <custom>: Each process may define their own custom opts for improved ergonomics
@@ -62,7 +62,7 @@ defmodule Test.Setup.Process do
     if opts[:type] do
       ProcessSpecSetup.spec(opts[:type], server_id, opts)
     else
-      ProcessSpecSetup.random(server_id, opts)
+      ProcessSpecSetup.spec(:noop_cpu, server_id, opts)
     end
   end
 
