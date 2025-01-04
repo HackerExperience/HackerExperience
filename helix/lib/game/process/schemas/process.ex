@@ -3,6 +3,11 @@ defmodule Game.Process do
   alias Game.Server
   alias __MODULE__
 
+  # TODO
+  @type t :: term
+
+  @type priority :: integer
+
   @context :server
   @table :processes
 

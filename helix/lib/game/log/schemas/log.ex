@@ -2,6 +2,9 @@ defmodule Game.Log do
   use Core.Schema
   alias Game.Server
 
+  # TODO
+  @type t :: term
+
   @context :server
   @table :logs
 

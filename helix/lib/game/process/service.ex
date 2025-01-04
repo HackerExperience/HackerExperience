@@ -83,6 +83,9 @@ defmodule Game.Services.Process do
   def resume(%Process{status: status}),
     do: {:error, {:cant_resume, status}}
 
+  @spec renice(Process.t(), Process.priority()) ::
+          {:ok, Process.t(), [ProcessRenicedEvent.t()]}
+          | {:error, term}
   def renice(%Process{status: :running} = process, priority) do
     result =
       Core.with_context(:server, process.server_id, :write, fn ->
@@ -105,6 +108,9 @@ defmodule Game.Services.Process do
         error
     end
   end
+
+  def renice(%Process{status: status}),
+    do: {:error, {:cant_renice, status}}
 
   def delete(%Process{} = process, reason) when reason in [:completed, :killed] do
     Core.with_context(:server, process.server_id, :write, fn ->

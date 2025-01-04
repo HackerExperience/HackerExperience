@@ -3,7 +3,7 @@ defmodule Game.Process.Resources.Behaviour.Default.Implementation do
 
   @behaviour Game.Process.Resources.Behaviour
 
-  @type t :: number
+  @type t :: Decimal.t()
 
   @zero Decimal.new(0)
 
@@ -59,7 +59,11 @@ defmodule Game.Process.Resources.Behaviour.Default.Implementation do
     res_per_share = div(res, available_resources, shares)
 
     # Ensure it's a valid value (not negative)
-    (res_per_share >= 0 && res_per_share) || 0.0
+    if Decimal.gt?(res_per_share, @zero) do
+      res_per_share
+    else
+      @zero
+    end
   end
 
   def overflow?(_, %Decimal{} = v), do: Decimal.lt?(v, @zero)

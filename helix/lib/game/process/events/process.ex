@@ -120,6 +120,9 @@ defmodule Game.Events.Process do
 
     defstruct [:process]
 
+    # TODO
+    @type t :: term
+
     @name :process_reniced
 
     def new(process = %Process{status: :running}) do

@@ -125,7 +125,7 @@ defmodule Game.Process.TOP do
   end
 
   def handle_call({:execute, process_mod, params, meta}, _from, state) do
-    with {:ok, new_process, creation_events} =
+    with {:ok, new_process, creation_events} <-
            Executable.execute(process_mod, state.server_id, state.entity_id, params, meta),
          %{dropped: [], state: new_state} <-
            run_schedule(state, state.server_id, :insert, creation_events) do
@@ -141,7 +141,7 @@ defmodule Game.Process.TOP do
         {:reply, {:error, :overflow}, new_state}
 
       {:error, _reason} ->
-        raise "TODO!"
+        {:reply, {:error, :internal}, state}
     end
   end
 

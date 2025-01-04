@@ -1,4 +1,5 @@
 defmodule Game.Process.Executable do
+  require Logger
   alias Game.Services, as: Svc
 
   def execute(process_mod, server_id, entity_id, params, meta) do
@@ -12,7 +13,8 @@ defmodule Game.Process.Executable do
         {:ok, process, events}
 
       {:error, reason} ->
-        raise "Failed to execute process: #{inspect(reason)}"
+        Logger.error("Failed to execute process: #{inspect(reason)}")
+        {:error, reason}
     end
   end
 
