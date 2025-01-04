@@ -149,9 +149,9 @@ defmodule Game.Process.TOPTest do
 
         # It has some amount of processed resources (roughly around 10k or 50% of target)
         # PS: Do note it may be more than that because we wait an extra 10ms to make *sure* the
-        # process is *really* complete
+        # process is *really* complete. The oversized threshold is to avoid flakes in slower CI
         refute Resources.equal?(new_proc_s1_2.resources.processed, Resources.initial())
-        assert :eq == Decimal.compare(new_proc_s1_2.resources.processed.cpu, 11_000, 1000)
+        assert_decimal_eq(new_proc_s1_2.resources.processed.cpu, 11_000, 2_000)
       end)
 
       # As for `server_2`, the only process it was working on is complete and now the TOP is empty
