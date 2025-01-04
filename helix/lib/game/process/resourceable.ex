@@ -13,7 +13,9 @@ defmodule Game.Process.Resourceable do
   defp objective(resourceable, args) do
     %{
       cpu: apply(resourceable, :cpu, args),
-      ram: apply(resourceable, :ram, args)
+      ram: apply(resourceable, :ram, args),
+      dlk: apply(resourceable, :dlk, args),
+      ulk: apply(resourceable, :ulk, args)
     }
     |> Enum.reject(fn {_, v} -> is_nil(v) end)
     |> Enum.into(%{})

@@ -27,8 +27,7 @@ defmodule Test.Process.NoopDLK do
   defmodule Resourceable do
     use Game.Process.Resourceable.Definition
 
-    def dlk(_factors, params) do
-      IO.inspect(params)
+    def dlk(_factors, _params) do
       5000
     end
 

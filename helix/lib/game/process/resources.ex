@@ -1,20 +1,26 @@
 defmodule Game.Process.Resources do
   @zero Decimal.new(0)
-  defstruct cpu: @zero, ram: @zero
+  defstruct cpu: @zero, ram: @zero, dlk: @zero, ulk: @zero
 
   @type t ::
           %__MODULE__{
-            cpu: number,
-            ram: number
+            cpu: Decimal.t(),
+            ram: Decimal.t(),
+            dlk: Decimal.t(),
+            ulk: Decimal.t()
           }
 
   @type name ::
           :cpu
           | :ram
+          | :dlk
+          | :ulk
 
   @resources [
     :cpu,
-    :ram
+    :ram,
+    :dlk,
+    :ulk
   ]
 
   @resources_modules Enum.map(@resources, fn resource ->
@@ -31,7 +37,9 @@ defmodule Game.Process.Resources do
   def from_map(resources) do
     %__MODULE__{
       ram: fmt_value(:ram, resources[:ram]),
-      cpu: fmt_value(:cpu, resources[:cpu])
+      cpu: fmt_value(:cpu, resources[:cpu]),
+      dlk: fmt_value(:dlk, resources[:dlk]),
+      ulk: fmt_value(:ulk, resources[:ulk])
     }
   end
 
