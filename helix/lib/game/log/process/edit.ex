@@ -28,25 +28,7 @@ defmodule Game.Process.Log.Edit do
   end
 
   defmodule Signalable do
-    def on_sigterm(_data, _process) do
-      # TODO: This is the default (meaning this callback can be removed)
-      :delete
-    end
-
-    def on_sigstop(_, _) do
-      # TODO: This is the default (meaning this callback can be removed)
-      :pause
-    end
-
-    def on_sigcont(_, _) do
-      # TODO: This is the default (meaning this callback can be removed)
-      :resume
-    end
-
-    def on_sig_renice(_, _) do
-      # TODO: This is the default (meaning this callback can be removed)
-      :renice
-    end
+    use Game.Process.Signalable.Definition
   end
 
   defmodule Resourceable do

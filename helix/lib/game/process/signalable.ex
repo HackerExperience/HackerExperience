@@ -25,7 +25,6 @@ defmodule Game.Process.Signalable do
     do: signal_handler(process, :on_sig_renice, args)
 
   def signal_handler(%Process{data: %process_mod{}} = process, callback, args) when is_list(args) do
-    # TODO: Defaults
     signalable = get_signalable(process_mod)
     apply(signalable, callback, [process.data, process | args])
   end
