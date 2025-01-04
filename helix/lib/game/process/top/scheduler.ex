@@ -145,7 +145,6 @@ defmodule Game.Process.TOP.Scheduler do
     end)
   end
 
-  # defp calculate_total_processed(process, prev_processed, allocated, now) do
   defp calculate_total_processed(%{resources: resources} = process, now) do
     last_checkpoint = Process.get_last_checkpoint_ts(process)
 

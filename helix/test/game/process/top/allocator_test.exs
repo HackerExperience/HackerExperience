@@ -107,6 +107,41 @@ defmodule Game.Process.TOP.AllocatorTest do
       assert_decimal_eq(proc_e2.next_allocation.cpu, 500)
     end
 
+    test "takes `limit` into consideration" do
+      %{server: server, meta: %{resources: server_resources}} =
+        Setup.server(resources: %{cpu: 1500})
+
+      # `proc_1` has a limit of 100MHz, whereas `proc_2` has a limit on DLK/ULK
+      proc_1 = Setup.process!(server.id, limit: %{cpu: 100})
+      proc_2 = Setup.process!(server.id, limit: %{cpu: 999_999})
+      proc_3 = Setup.process!(server.id, limit: %{dlk: 1, ulk: 1, ram: 1})
+
+      assert {:ok, result} = Allocator.allocate(server_resources, [proc_1, proc_2, proc_3])
+
+      proc_1 = Enum.find(result, &(&1.id == proc_1.id))
+      proc_2 = Enum.find(result, &(&1.id == proc_2.id))
+      proc_3 = Enum.find(result, &(&1.id == proc_3.id))
+
+      # `proc_1`'s CPU allocation was limitted to 100, even though it could get up to 500MHz
+      assert_decimal_eq(proc_1.next_allocation.cpu, 100)
+
+      # `proc_2`'s CPU got all the 500MHz it had access to, because its limit was higher than that
+      # PS: Read note at the end of the test
+      assert_decimal_eq(proc_2.next_allocation.cpu, 500)
+
+      # So did `proc_3`, which had no CPU limitations set
+      # PS: Read note at the end of the test
+      assert_decimal_eq(proc_3.next_allocation.cpu, 500)
+
+      # Notice that even though `proc_3` had RAM limitation of 1MB, it did not apply because the
+      # current allocation of 20MB comes from the static stage (minimum required allocation)
+      assert_decimal_eq(proc_3.next_allocation.ram, 20)
+
+      # NOTE: Server has 1500MHz of CPU, and yet a total of 500 + 500 + 100 = 1100MHz is being used.
+      # There are 400MHz unallocated CPU, which could be spread across each process. In order to
+      # support it, we need to do an extra pass on the processes after the dynamic allocation. TODO.
+    end
+
     test "returns an error when server resources are insufficient" do
       # The server only has 200MB available
       %{server: server, meta: %{resources: server_resources}} = Setup.server(resources: %{ram: 200})

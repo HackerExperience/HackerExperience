@@ -116,11 +116,10 @@ defmodule Game.Process.TOP.Allocator do
       # limitations yet
       naive_dynamic_alloc = Resources.allocate_dynamic(proc_shares, resource_per_share, process)
 
-      # Limit is TODO
-      limit = Resources.initial()
+      limit = process.resources.limit
 
       # Now we take the naive allocated amount and apply the process limitations
-      proc_dynamic_alloc = Resources.max(naive_dynamic_alloc, limit)
+      proc_dynamic_alloc = Resources.apply_limits(naive_dynamic_alloc, limit)
 
       # Sums static and dynamic allocation, resulting on the final allocation
       proc_allocation = Resources.sum(proc_dynamic_alloc, proc_static_allocation)

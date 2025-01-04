@@ -1,12 +1,15 @@
 defmodule Game.Process.Resourceable do
+  alias Game.Process.Resources
+
   def get_resources(resourceable, params) do
-    factors = %{to: :do}
-    args = [factors, params]
+    factors = %{todo: :factors}
+    args = [factors | params]
 
     %{
       objective: objective(resourceable, args),
       l_dynamic: l_dynamic(resourceable, args),
-      static: static(resourceable, args)
+      static: static(resourceable, args),
+      limit: limit(resourceable, args)
     }
   end
 
@@ -18,7 +21,7 @@ defmodule Game.Process.Resourceable do
       ulk: apply(resourceable, :ulk, args)
     }
     |> Enum.reject(fn {_, v} -> is_nil(v) end)
-    |> Enum.into(%{})
+    |> Resources.from_map()
   end
 
   defp l_dynamic(resourceable, args),
@@ -26,4 +29,7 @@ defmodule Game.Process.Resourceable do
 
   defp static(resourceable, args),
     do: apply(resourceable, :static, args)
+
+  defp limit(resourceable, args),
+    do: apply(resourceable, :limit, args) |> Resources.from_map()
 end

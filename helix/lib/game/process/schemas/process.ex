@@ -1,7 +1,6 @@
 defmodule Game.Process do
   use Core.Schema
   alias Game.Server
-  alias __MODULE__
 
   # TODO
   @type t :: term
@@ -57,19 +56,8 @@ defmodule Game.Process do
     do: apply(process, :on_db_load, [data])
 
   def format_resources(resources, _, _) do
-    # TODO: This can be removed if I always insert correctly (and/or normalize the input)
-    objective =
-      case resources.objective do
-        %_{} ->
-          resources.objective
-
-        %{} ->
-          Process.Resources.from_map(resources.objective)
-      end
-
     resources
     |> Map.put(:l_dynamic, Enum.map(resources.l_dynamic, &String.to_existing_atom/1))
-    |> Map.put(:objective, objective)
   end
 
   def get_server_id(_, _, %{shard_id: raw_server_id}), do: Server.ID.from_external(raw_server_id)

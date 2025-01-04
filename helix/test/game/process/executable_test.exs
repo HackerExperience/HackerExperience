@@ -3,6 +3,7 @@ defmodule Game.Process.ExecutableTest do
 
   alias Game.Process.Executable
   alias Game.Process.Log.Edit, as: LogEditProcess
+  alias Test.Process.NoopDLK, as: NoopDLKProcess
 
   setup [:with_game_db]
 
@@ -30,6 +31,19 @@ defmodule Game.Process.ExecutableTest do
       assert event.data.__struct__ == Game.Events.Process.Created
       assert event.data.process == process
       refute event.data.confirmed
+    end
+
+    test "stores the result of Resourceable's limit" do
+      %{server: server, entity: entity} = Setup.server()
+
+      meta = %{}
+      params = %{ulk_limit: 1000}
+
+      assert {:ok, process, _events} =
+               Executable.execute(NoopDLKProcess, server.id, entity.id, params, meta)
+
+      assert_decimal_eq(process.resources.limit.ulk, 1000)
+      assert_decimal_eq(process.resources.limit.cpu, 0)
     end
   end
 end

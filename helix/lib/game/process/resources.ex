@@ -124,6 +124,20 @@ defmodule Game.Process.Resources do
     end)
   end
 
+  def apply_limits(resources, limits) do
+    limitter = fn res_value, res_limit ->
+      # If the limit is zero, then there is effectively no limit and we should return `res_value`
+      if Decimal.eq?(res_limit, @zero) do
+        res_value
+      else
+        # On the other hand, if there is an actual limitation set, return whichever is smaller
+        Decimal.min(res_value, res_limit)
+      end
+    end
+
+    dispatch_merge(:op_map, resources, limits, [limitter])
+  end
+
   ##################################################################################################
   # Operations
   ##################################################################################################

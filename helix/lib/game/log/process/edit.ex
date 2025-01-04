@@ -34,14 +34,14 @@ defmodule Game.Process.Log.Edit do
   defmodule Resourceable do
     use Game.Process.Resourceable.Definition
 
-    def cpu(_factors, _params) do
+    def cpu(_factors, _params, _meta) do
       # TODO
       5000
     end
 
-    def dynamic(_, _), do: [:cpu]
+    def dynamic(_, _, _), do: [:cpu]
 
-    def static(_, _) do
+    def static(_, _, _) do
       %{
         paused: %{ram: 10},
         running: %{ram: 20}

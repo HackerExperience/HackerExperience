@@ -25,8 +25,7 @@ defmodule Game.Process.Executable do
 
     target_log = callback(executable, :target_log, args, callbacks)
 
-    # TODO: Executable.resources actually
-    resources_params = [meta]
+    resources_params = [[params, meta]]
     resources = get_resources(executable, resources_params)
 
     process_data = get_process_data(executable, params, meta)

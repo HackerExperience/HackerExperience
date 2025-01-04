@@ -27,12 +27,16 @@ defmodule Test.Process.NoopDLK do
   defmodule Resourceable do
     use Game.Process.Resourceable.Definition
 
-    def dlk(_factors, _params) do
+    def dlk(_factors, _params, _meta) do
       5000
     end
 
-    def dynamic(_, _), do: [:dlk]
-    def static(_, _), do: %{paused: %{ram: 10}, running: %{ram: 20}}
+    def dynamic(_, _, _), do: [:dlk]
+    def static(_, _, _), do: %{paused: %{ram: 10}, running: %{ram: 20}}
+
+    def limit(_, params, _) do
+      %{ulk: params[:ulk_limit] || 500}
+    end
   end
 
   defmodule Executable do

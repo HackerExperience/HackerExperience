@@ -7,13 +7,24 @@ defmodule Game.Process.Resourceable.Definition do
 
   defmacro __before_compile__(_) do
     # Ensure require definitions
-    required_definitions = [{:dynamic, 2}, {:static, 2}]
+    required_definitions = [{:dynamic, 3}, {:static, 3}]
 
-    definitions_block =
+    required_definitions_block =
       for {definition, arity} <- required_definitions do
         quote do
           if not Module.defines?(__MODULE__, {unquote(definition), unquote(arity)}) do
             raise "Missing function #{unquote(definition)} at #{__MODULE__}"
+          end
+        end
+      end
+
+    optional_definitions = [{:limit, quote(do: %{})}]
+
+    optional_definitions_block =
+      for {definition, default_value} <- optional_definitions do
+        quote do
+          if not Module.defines?(__MODULE__, {unquote(definition), 3}) do
+            def unquote(definition)(_, _, _), do: unquote(default_value)
           end
         end
       end
@@ -24,12 +35,12 @@ defmodule Game.Process.Resourceable.Definition do
     resources_block =
       for resource <- resources do
         quote do
-          if not Module.defines?(__MODULE__, {unquote(resource), 2}) do
-            def unquote(resource)(_, _), do: nil
+          if not Module.defines?(__MODULE__, {unquote(resource), 3}) do
+            def unquote(resource)(_, _, _), do: nil
           end
         end
       end
 
-    definitions_block ++ resources_block
+    required_definitions_block ++ optional_definitions_block ++ resources_block
   end
 end

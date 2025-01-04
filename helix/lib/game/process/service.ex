@@ -153,6 +153,7 @@ defmodule Game.Services.Process do
           l_dynamic: registry_data.l_dynamic,
           objective: registry_data.objective,
           static: registry_data.static,
+          limit: registry_data.limit,
           # When a process is created, it hasn't been allocated any resources yet
           allocated: nil,
           # Similarly, it hasn't processed anything yet

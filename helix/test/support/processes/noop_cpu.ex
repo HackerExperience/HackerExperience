@@ -27,12 +27,12 @@ defmodule Test.Process.NoopCPU do
   defmodule Resourceable do
     use Game.Process.Resourceable.Definition
 
-    def cpu(_factors, _params) do
+    def cpu(_factors, _params, _meta) do
       5000
     end
 
-    def dynamic(_, _), do: [:cpu]
-    def static(_, _), do: %{paused: %{ram: 10}, running: %{ram: 20}}
+    def dynamic(_, _, _), do: [:cpu]
+    def static(_, _, _), do: %{paused: %{ram: 10}, running: %{ram: 20}}
   end
 
   defmodule Executable do

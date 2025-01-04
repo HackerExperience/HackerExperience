@@ -17,7 +17,8 @@ defmodule Game.Services.ProcessTest do
           l_dynamic: [:cpu],
           static: %{ram: 10},
           objective: %{cpu: 1000},
-          tgt_log_id: log.id
+          tgt_log_id: log.id,
+          limit: %{}
         }
 
       # Using `LogEditProcess` as a sample process

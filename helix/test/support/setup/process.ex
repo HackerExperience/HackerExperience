@@ -90,11 +90,25 @@ defmodule Test.Setup.Process do
       end
     end
 
+    get_resource = fn key ->
+      case opts[key] do
+        %_{} = resources ->
+          resources
+
+        %{} = raw_resources ->
+          Resources.from_map(raw_resources)
+
+        nil ->
+          Map.fetch!(process.resources, key)
+      end
+    end
+
     new_resources =
       process.resources
-      |> Map.put(:objective, opts[:objective] || process.resources.objective)
-      |> Map.put(:allocated, opts[:allocated] || process.resources.allocated)
+      |> Map.put(:objective, get_resource.(:objective))
+      |> Map.put(:allocated, get_resource.(:allocated))
       |> Map.put(:static, gen_static_value.())
+      |> Map.put(:limit, get_resource.(:limit))
       |> Map.put(:l_dynamic, opts[:l_dynamic] || process.resources.l_dynamic)
 
     update_and_fetch_process!(process, %{resources: new_resources})
