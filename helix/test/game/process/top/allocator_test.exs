@@ -317,6 +317,35 @@ defmodule Game.Process.TOP.AllocatorTest do
       # to the point of diminishing returns for an overly complex implementation.
     end
 
+    test "processes with unrelated limits get their excess allocation correctly" do
+      %{server: server, meta: %{resources: server_resources}} =
+        Setup.server(resources: %{cpu: 900, dlk: 600})
+
+      proc_1 = Setup.process!(server.id, limit: %{ram: 200})
+      proc_2 = Setup.process!(server.id, limit: %{dlk: 200})
+      proc_3 = Setup.process!(server.id, limit: %{cpu: 200})
+      proc_4 = Setup.process!(server.id, type: :noop_dlk, limit: %{ulk: 200, dlk: 110})
+      proc_5 = Setup.process!(server.id, type: :noop_dlk, limit: %{cpu: 200, ram: 1})
+      proc_6 = Setup.process!(server.id, type: :noop_dlk, limit: %{dlk: 100, ulk: 500})
+
+      processes = [proc_1, proc_2, proc_3, proc_4, proc_5, proc_6]
+      assert {:ok, result} = Allocator.allocate(server_resources, processes)
+
+      proc_1 = Enum.find(result, &(&1.id == proc_1.id))
+      proc_2 = Enum.find(result, &(&1.id == proc_2.id))
+      proc_3 = Enum.find(result, &(&1.id == proc_3.id))
+      proc_4 = Enum.find(result, &(&1.id == proc_4.id))
+      proc_5 = Enum.find(result, &(&1.id == proc_5.id))
+      proc_6 = Enum.find(result, &(&1.id == proc_6.id))
+
+      assert_decimal_eq(proc_1.next_allocation.cpu, 350)
+      assert_decimal_eq(proc_2.next_allocation.cpu, 350)
+      assert_decimal_eq(proc_3.next_allocation.cpu, 200)
+      assert_decimal_eq(proc_4.next_allocation.dlk, 110)
+      assert_decimal_eq(proc_5.next_allocation.dlk, 390)
+      assert_decimal_eq(proc_6.next_allocation.dlk, 100)
+    end
+
     test "all processes limited (post dynamic allocation)" do
       %{server: server, meta: %{resources: server_resources}} = Setup.server(resources: %{cpu: 900})
 
