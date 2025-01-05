@@ -3,8 +3,12 @@ defmodule Game.Process.TOP.Allocator do
   Module responsible for allocating resources to the processes.
   """
 
+  use Docp
   require Logger
   alias Game.Process.Resources
+
+  @initial Resources.initial()
+  @zero Decimal.new(0)
 
   def allocate(_, []), do: {:ok, []}
 
@@ -19,20 +23,20 @@ defmodule Game.Process.TOP.Allocator do
     {dynamic_resources_usage, dynamically_allocated_processes} =
       dynamic_allocation(remaining_resources, statically_allocated_processes)
 
-    # TODO: Implement this once we add process limitations
-    # # Now we'll take another pass, in order to give a change for processes to
-    # # claim unused resources. This may happen when a resource is reserved to a
-    # # process, but the process does not allocate it due to upper limitations
-    # {remaining_resources_usage, allocated_processes} =
-    #   remaining_allocation(remaining_resources, allocated_processes)
-
     remaining_resources =
       Resources.sub(remaining_resources, dynamic_resources_usage)
+
+    # Excess allocation
+    {excess_resources_usage, fully_allocated_processes} =
+      excess_allocation(remaining_resources, dynamically_allocated_processes)
+
+    remaining_resources =
+      Resources.sub(remaining_resources, excess_resources_usage)
 
     case Resources.overflow?(remaining_resources) do
       # No overflow, we did it!
       false ->
-        {:ok, dynamically_allocated_processes}
+        {:ok, fully_allocated_processes}
 
       # We were unable to allocate these processes because the following resources overflowed
       {true, overflowed_resources} ->
@@ -129,5 +133,124 @@ defmodule Game.Process.TOP.Allocator do
 
       {total_alloc, [%{process | next_allocation: proc_allocation} | acc]}
     end)
+  end
+
+  defp excess_allocation(remaining_resources, allocated_processes) do
+    # Grab information about processes that have room for more resources
+    {total_dynamic_shares, limited_processes, unlimited_processes} =
+      Enum.reduce(allocated_processes, {@initial, %{}, %{}}, fn
+        process, {acc_total_dynamic_shares, acc_limited, acc_unlimited} = acc ->
+          case excess_lookup(process, acc_total_dynamic_shares) do
+            {:limited_unavailable, _, _, _} ->
+              acc
+
+            {:limited_available, allocation_available, shares, new_total_dynamic_shares} ->
+              new_acc_limited = Map.put(acc_limited, process.id, {shares, allocation_available})
+              {new_total_dynamic_shares, new_acc_limited, acc_unlimited}
+
+            {:unlimited, allocation_available, shares, new_total_dynamic_shares} ->
+              new_acc_unlimited = Map.put(acc_unlimited, process.id, {shares, allocation_available})
+              {new_total_dynamic_shares, acc_limited, new_acc_unlimited}
+          end
+      end)
+
+    # "Naive" amount that can be shared across every remaining process, based on how many processes
+    # using dynamic allocation of each resource are left. It's naive because the process may have a
+    # limit of its own, which would not allow the resources to be used in full
+    resource_per_process =
+      Resources.resource_per_share(remaining_resources, total_dynamic_shares)
+
+    # If the processes left to receive more allocation would receive zero additional allocation,
+    # we can skip the excess allocation entirely. This may happen when, for instance, we have
+    # available RAM in the server, but no processes are allocating RAM dynamically
+    perform_excess_allocation? =
+      not Resources.equal?(resource_per_process, @initial)
+
+    if perform_excess_allocation? do
+      Enum.reduce(allocated_processes, {@initial, []}, fn process, {total_alloc, acc} ->
+        case {unlimited_processes[process.id], limited_processes[process.id]} do
+          # The process is unlimited and will benefit from excess allocation
+          {{shares, available}, nil} ->
+            {new_total_alloc, process} =
+              do_excess_alloc(process, total_alloc, resource_per_process, shares, available)
+
+            {new_total_alloc, [process | acc]}
+
+          # The process is limited but has room for (some) excess allocation
+          {nil, {shares, available}} ->
+            {new_total_alloc, process} =
+              do_excess_alloc(process, total_alloc, resource_per_process, shares, available)
+
+            {new_total_alloc, [process | acc]}
+
+          # The process is limited has already been allocated in full; nothing to change
+          {nil, nil} ->
+            {total_alloc, [process | acc]}
+        end
+      end)
+    else
+      {@initial, allocated_processes}
+    end
+  end
+
+  defp do_excess_alloc(process, total_alloc, resource_per_process, shares, available_alloc) do
+    # Maximum amount of excess allocation we can provide to this process
+    naive_excess_allocation = Resources.mul(resource_per_process, shares)
+
+    # If the process is "unlimited", then we can apply as many resources as we have available
+    excess_allocation =
+      if available_alloc == :infinity do
+        naive_excess_allocation
+
+        # Process is limited, we can apply resources up to its own limit
+      else
+        Resources.min(naive_excess_allocation, available_alloc)
+      end
+
+    # New total allocation for the process, which takes into consideration the excess allocation
+    new_next_allocation = Resources.sum(process.next_allocation, excess_allocation)
+
+    # Accumulate total alloc, in order to know how many excess resources were used
+    total_alloc = Resources.sum(total_alloc, excess_allocation)
+
+    {total_alloc, %{process | next_allocation: new_next_allocation}}
+  end
+
+  @docp """
+  Grabs information about the process regarding its allocation status and how many resources can
+  still be allocated to it, if any.
+  """
+  defp excess_lookup(process, total_dynamic_shares) do
+    has_limit? = not Resources.equal?(process.resources.limit, @initial)
+    dynamic_resources = process.resources.l_dynamic
+
+    # Resources with a 1/0 value for each resource the process allocates dynamically
+    dynamic_shares =
+      @initial
+      |> Map.from_struct()
+      |> Enum.map(fn {res, _} ->
+        if res in dynamic_resources, do: {res, Decimal.new(1)}, else: {res, @zero}
+      end)
+      |> Resources.from_map()
+
+    new_total_dynamic_shares = Resources.sum(total_dynamic_shares, dynamic_shares)
+
+    if has_limit? do
+      allocation_available =
+        Resources.sub(process.resources.limit, process.next_allocation)
+        |> Map.from_struct()
+        |> Enum.map(fn {res, v} ->
+          if res not in dynamic_resources, do: {res, @zero}, else: {res, v}
+        end)
+        |> Resources.from_map()
+
+      if Resources.equal?(allocation_available, @initial) do
+        {:limited_unavailable, @initial, @initial, total_dynamic_shares}
+      else
+        {:limited_available, allocation_available, dynamic_shares, new_total_dynamic_shares}
+      end
+    else
+      {:unlimited, :infinity, dynamic_shares, new_total_dynamic_shares}
+    end
   end
 end

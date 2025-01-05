@@ -122,24 +122,18 @@ defmodule Game.Process.TOP.AllocatorTest do
       proc_2 = Enum.find(result, &(&1.id == proc_2.id))
       proc_3 = Enum.find(result, &(&1.id == proc_3.id))
 
-      # `proc_1`'s CPU allocation was limitted to 100, even though it could get up to 500MHz
+      # `proc_1`'s CPU allocation was limited to 100, even though it could get up to 500MHz
       assert_decimal_eq(proc_1.next_allocation.cpu, 100)
 
       # `proc_2`'s CPU got all the 500MHz it had access to, because its limit was higher than that
-      # PS: Read note at the end of the test
-      assert_decimal_eq(proc_2.next_allocation.cpu, 500)
+      assert_decimal_eq(proc_2.next_allocation.cpu, 700)
 
       # So did `proc_3`, which had no CPU limitations set
-      # PS: Read note at the end of the test
-      assert_decimal_eq(proc_3.next_allocation.cpu, 500)
+      assert_decimal_eq(proc_3.next_allocation.cpu, 700)
 
       # Notice that even though `proc_3` had RAM limitation of 1MB, it did not apply because the
       # current allocation of 20MB comes from the static stage (minimum required allocation)
       assert_decimal_eq(proc_3.next_allocation.ram, 20)
-
-      # NOTE: Server has 1500MHz of CPU, and yet a total of 500 + 500 + 100 = 1100MHz is being used.
-      # There are 400MHz unallocated CPU, which could be spread across each process. In order to
-      # support it, we need to do an extra pass on the processes after the dynamic allocation. TODO.
     end
 
     test "returns an error when server resources are insufficient" do
@@ -151,6 +145,149 @@ defmodule Game.Process.TOP.AllocatorTest do
       proc_2 = Setup.process!(server.id, static: %{ram: 150})
 
       assert {:error, {:overflow, [:ram]}} = Allocator.allocate(server_resources, [proc_1, proc_2])
+    end
+  end
+
+  # After the static and dynamic allocation, it's possible there are remaining resources. This could
+  # happen when one of the processes have upper limits. In this case, we want to do another pass and
+  # make sure the remaining resources are allocated. This can get particularly complex when multiple
+  # processes with different limits are at play. This group of tests ensure the feature is working
+  describe "allocate/2 - excess resources after dynamic allocation" do
+    test "multiple processes with different resources being limited" do
+      %{server: server, meta: %{resources: server_resources}} =
+        Setup.server(resources: %{cpu: 1000, dlk: 600})
+
+      # `proc_1` has a limit of 100MHz whereas `proc_2` has no limits. Server has 1000MHz. We
+      # expect `proc_1` to use 100MHz and `proc_2` to use 900MHz.
+      proc_1 = Setup.process!(server.id, limit: %{cpu: 100})
+      proc_2 = Setup.process!(server.id)
+
+      # `proc_3` has a DLK limit of 50Mbit, with `proc_4` and `proc_5` having no limits. With a
+      # total server bandwidth of 600Mbit, we get 50 + 275 + 275 respectively
+      proc_3 = Setup.process!(server.id, type: :noop_dlk, limit: %{dlk: 50})
+      proc_4 = Setup.process!(server.id, type: :noop_dlk, limit: %{})
+      proc_5 = Setup.process!(server.id, type: :noop_dlk, limit: %{})
+
+      processes = [proc_1, proc_2, proc_3, proc_4, proc_5]
+      assert {:ok, result} = Allocator.allocate(server_resources, processes)
+
+      proc_1 = Enum.find(result, &(&1.id == proc_1.id))
+      proc_2 = Enum.find(result, &(&1.id == proc_2.id))
+      proc_3 = Enum.find(result, &(&1.id == proc_3.id))
+      proc_4 = Enum.find(result, &(&1.id == proc_4.id))
+      proc_5 = Enum.find(result, &(&1.id == proc_5.id))
+
+      assert_decimal_eq(proc_1.next_allocation.cpu, 100)
+      assert_decimal_eq(proc_2.next_allocation.cpu, 900)
+      assert_decimal_eq(proc_3.next_allocation.dlk, 50)
+      assert_decimal_eq(proc_4.next_allocation.dlk, 275)
+      assert_decimal_eq(proc_5.next_allocation.dlk, 275)
+    end
+
+    test "multiple processes with different limits (smaller than dynamic share)" do
+      %{server: server, meta: %{resources: server_resources}} = Setup.server(resources: %{cpu: 900})
+
+      proc_1 = Setup.process!(server.id, limit: %{cpu: 100})
+      proc_2 = Setup.process!(server.id, limit: %{cpu: 150})
+      proc_3 = Setup.process!(server.id)
+
+      processes = [proc_1, proc_2, proc_3]
+      assert {:ok, result} = Allocator.allocate(server_resources, processes)
+
+      proc_1 = Enum.find(result, &(&1.id == proc_1.id))
+      proc_2 = Enum.find(result, &(&1.id == proc_2.id))
+      proc_3 = Enum.find(result, &(&1.id == proc_3.id))
+
+      assert_decimal_eq(proc_1.next_allocation.cpu, 100)
+      assert_decimal_eq(proc_2.next_allocation.cpu, 150)
+      assert_decimal_eq(proc_3.next_allocation.cpu, 650)
+    end
+
+    test "no (dynamic) resources left for excess allocation, despite processes having limits" do
+      %{server: server, meta: %{resources: server_resources}} = Setup.server(resources: %{cpu: 900})
+
+      # Each process has a limit of 500MHz, but with a server total of 900MHz, each one will get
+      # 450MHz from the dynamic stage. As such, the excess allocation should not be triggered
+      proc_1 = Setup.process!(server.id, limit: %{cpu: 500})
+      proc_2 = Setup.process!(server.id, limit: %{cpu: 500})
+
+      processes = [proc_1, proc_2]
+      assert {:ok, result} = Allocator.allocate(server_resources, processes)
+
+      proc_1 = Enum.find(result, &(&1.id == proc_1.id))
+      proc_2 = Enum.find(result, &(&1.id == proc_2.id))
+
+      assert_decimal_eq(proc_1.next_allocation.cpu, 450)
+      assert_decimal_eq(proc_2.next_allocation.cpu, 450)
+
+      # TODO: Add some internal flag to make sure `iterate_excess_allocation` was never triggered
+    end
+
+    test "multiple processes with higher limits (post dynamic allocation)" do
+      %{server: server, meta: %{resources: server_resources}} = Setup.server(resources: %{cpu: 900})
+
+      # Once `proc_1` hit its limit, there will be 900 - (200 + 300 + 300) = 100MHz left. These
+      # 100MHz will be split evenly at 50MHz/remaining proc, which will not exceed the 500MHz limit
+      proc_1 = Setup.process!(server.id, limit: %{cpu: 200})
+      proc_2 = Setup.process!(server.id, limit: %{cpu: 500})
+      proc_3 = Setup.process!(server.id)
+
+      processes = [proc_1, proc_2, proc_3]
+      assert {:ok, result} = Allocator.allocate(server_resources, processes)
+
+      proc_1 = Enum.find(result, &(&1.id == proc_1.id))
+      proc_2 = Enum.find(result, &(&1.id == proc_2.id))
+      proc_3 = Enum.find(result, &(&1.id == proc_3.id))
+
+      assert_decimal_eq(proc_1.next_allocation.cpu, 200)
+      assert_decimal_eq(proc_2.next_allocation.cpu, 350)
+      assert_decimal_eq(proc_3.next_allocation.cpu, 350)
+    end
+
+    test "multiple processes with smaller limits (post dynamic allocation)" do
+      %{server: server, meta: %{resources: server_resources}} = Setup.server(resources: %{cpu: 900})
+
+      # Once `proc_1` hit its limit, there will be 900 - (200 + 300 + 300) = 100MHz left. These
+      # 100MHz will be split evenly at 50MHz/remaining proc, but it can't be allocated evenly
+      # because `proc_2` has a limit of 310MHz
+      proc_1 = Setup.process!(server.id, limit: %{cpu: 200})
+      proc_2 = Setup.process!(server.id, limit: %{cpu: 310})
+      proc_3 = Setup.process!(server.id)
+
+      processes = [proc_1, proc_2, proc_3]
+      assert {:ok, result} = Allocator.allocate(server_resources, processes)
+
+      proc_1 = Enum.find(result, &(&1.id == proc_1.id))
+      proc_2 = Enum.find(result, &(&1.id == proc_2.id))
+      proc_3 = Enum.find(result, &(&1.id == proc_3.id))
+
+      assert_decimal_eq(proc_1.next_allocation.cpu, 200)
+      assert_decimal_eq(proc_2.next_allocation.cpu, 310)
+      assert_decimal_eq(proc_3.next_allocation.cpu, 350)
+
+      # Note that, in this scenario, `proc_3` should actually get 390. This can be achieved by
+      # performing the excess allocation recursively, until all processes are fully allocated or
+      # all server resources are fully utilised. I'll leave this as a TODO, since we are getting
+      # to the point of diminishing returns for an overly complex implementation.
+    end
+
+    test "all processes limited (post dynamic allocation)" do
+      %{server: server, meta: %{resources: server_resources}} = Setup.server(resources: %{cpu: 900})
+
+      proc_1 = Setup.process!(server.id, limit: %{cpu: 100})
+      proc_2 = Setup.process!(server.id, limit: %{cpu: 350})
+      proc_3 = Setup.process!(server.id, limit: %{cpu: 350})
+
+      processes = [proc_1, proc_2, proc_3]
+      assert {:ok, result} = Allocator.allocate(server_resources, processes)
+
+      proc_1 = Enum.find(result, &(&1.id == proc_1.id))
+      proc_2 = Enum.find(result, &(&1.id == proc_2.id))
+      proc_3 = Enum.find(result, &(&1.id == proc_3.id))
+
+      assert_decimal_eq(proc_1.next_allocation.cpu, 100)
+      assert_decimal_eq(proc_2.next_allocation.cpu, 350)
+      assert_decimal_eq(proc_3.next_allocation.cpu, 350)
     end
   end
 end

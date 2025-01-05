@@ -152,6 +152,11 @@ defmodule Game.Process.Resources do
   def sub(%__MODULE__{} = res_a, %__MODULE__{} = res_b),
     do: dispatch_merge(:sub, res_a, res_b)
 
+  @type mul(t, t) ::
+          t
+  def mul(%__MODULE__{} = res_a, %__MODULE__{} = res_b),
+    do: dispatch_merge(:mul, res_a, res_b)
+
   @type div(t, t) ::
           t
   def div(%__MODULE__{} = res_a, %__MODULE__{} = res_b),

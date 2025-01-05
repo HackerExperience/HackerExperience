@@ -82,7 +82,7 @@ defmodule Game.Process.Resources.Behaviour.Default.Implementation do
   def div(res, %Decimal{} = a, %Decimal{} = b),
     do: ResourceUtils.safe_div(a, b, fn -> initial(res) end)
 
-  def equal?(_, %Decimal{} = a, %Decimal{} = b), do: Decimal.eq?(a, b)
+  def equal?(_, %Decimal{} = a, %Decimal{} = b), do: Decimal.eq?(a, b, "0.0001")
 
   ##################################################################################################
   # Internal
