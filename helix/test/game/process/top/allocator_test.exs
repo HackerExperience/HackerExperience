@@ -34,6 +34,53 @@ defmodule Game.Process.TOP.AllocatorTest do
       assert_decimal_eq(alloc_2.ram, proc_2.resources.static.running.ram)
     end
 
+    test "takes `limit` into consideration" do
+      %{server: server, meta: %{resources: server_resources}} =
+        Setup.server(resources: %{cpu: 1500})
+
+      # `proc_1` has a limit of 100MHz, whereas `proc_2` has a limit on DLK/ULK
+      proc_1 = Setup.process!(server.id, limit: %{cpu: 100})
+      proc_2 = Setup.process!(server.id, limit: %{cpu: 999_999})
+      proc_3 = Setup.process!(server.id, limit: %{dlk: 1, ulk: 1, ram: 1})
+
+      assert {:ok, result} = Allocator.allocate(server_resources, [proc_1, proc_2, proc_3])
+
+      proc_1 = Enum.find(result, &(&1.id == proc_1.id))
+      proc_2 = Enum.find(result, &(&1.id == proc_2.id))
+      proc_3 = Enum.find(result, &(&1.id == proc_3.id))
+
+      # `proc_1`'s CPU allocation was limited to 100, even though it could get up to 500MHz
+      assert_decimal_eq(proc_1.next_allocation.cpu, 100)
+
+      # `proc_2`'s CPU got all the 500MHz it had access to, because its limit was higher than that
+      assert_decimal_eq(proc_2.next_allocation.cpu, 700)
+
+      # So did `proc_3`, which had no CPU limitations set
+      assert_decimal_eq(proc_3.next_allocation.cpu, 700)
+
+      # Notice that even though `proc_3` had RAM limitation of 1MB, it did not apply because the
+      # current allocation of 20MB comes from the static stage (minimum required allocation)
+      assert_decimal_eq(proc_3.next_allocation.ram, 20)
+    end
+
+    test "returns an error when server resources are insufficient" do
+      # The server only has 200MB available
+      %{server: server, meta: %{resources: server_resources}} = Setup.server(resources: %{ram: 200})
+
+      # Both servers need a minimum allocation of 250MB total
+      proc_1 = Setup.process!(server.id, static: %{ram: 100})
+      proc_2 = Setup.process!(server.id, static: %{ram: 150})
+
+      assert {:error, {:overflow, [:ram]}} = Allocator.allocate(server_resources, [proc_1, proc_2])
+    end
+  end
+
+  # During the dynamic allocation stage, we need to make sure each entity receives their fair share
+  # of resources. Let's imagine there are 2 entities making downloads in a single server, with 1
+  # entity making 10 downloads and another entity making a single download. Both entities will get
+  # 50% of the server's available bandwidth, with this being split evenly among each entity's
+  # processes
+  describe "allocate/2 - dynamic allocation with multiple entities" do
     test "splits shares among different entities (same priority)" do
       %{server: server, entity: entity_1, meta: %{resources: server_resources}} =
         Setup.server(resources: %{cpu: 1000})
@@ -107,44 +154,43 @@ defmodule Game.Process.TOP.AllocatorTest do
       assert_decimal_eq(proc_e2.next_allocation.cpu, 500)
     end
 
-    test "takes `limit` into consideration" do
-      %{server: server, meta: %{resources: server_resources}} =
-        Setup.server(resources: %{cpu: 1500})
+    test "takes into consideration resource type being used by each entity" do
+      # Scenario: We have 4 entities with processes in the server. 3 of them are using the DLK
+      # resource and 2 of them are using the CPU.
+      %{server: server, entity: entity_1, meta: %{resources: server_resources}} =
+        Setup.server(resources: %{cpu: 1000, dlk: 600})
 
-      # `proc_1` has a limit of 100MHz, whereas `proc_2` has a limit on DLK/ULK
-      proc_1 = Setup.process!(server.id, limit: %{cpu: 100})
-      proc_2 = Setup.process!(server.id, limit: %{cpu: 999_999})
-      proc_3 = Setup.process!(server.id, limit: %{dlk: 1, ulk: 1, ram: 1})
+      entity_2 = Setup.entity!()
+      entity_3 = Setup.entity!()
+      entity_4 = Setup.entity!()
 
-      assert {:ok, result} = Allocator.allocate(server_resources, [proc_1, proc_2, proc_3])
+      # Both entiteis will receive 500MHz each, with this total being shared evenly across the procs
+      proc_cpu_1 = Setup.process!(server.id, entity_id: entity_1.id)
+      proc_cpu_2 = Setup.process!(server.id, entity_id: entity_2.id)
 
-      proc_1 = Enum.find(result, &(&1.id == proc_1.id))
-      proc_2 = Enum.find(result, &(&1.id == proc_2.id))
-      proc_3 = Enum.find(result, &(&1.id == proc_3.id))
+      # Each entity will receive 200Mbps, with `proc_dlk_1` and `proc_dlk_2` sharing that evenly
+      # since they belong to the same entity
+      proc_dlk_1 = Setup.process!(server.id, entity_id: entity_2.id, type: :noop_dlk)
+      proc_dlk_2 = Setup.process!(server.id, entity_id: entity_2.id, type: :noop_dlk)
+      proc_dlk_3 = Setup.process!(server.id, entity_id: entity_3.id, type: :noop_dlk)
+      proc_dlk_4 = Setup.process!(server.id, entity_id: entity_4.id, type: :noop_dlk)
 
-      # `proc_1`'s CPU allocation was limited to 100, even though it could get up to 500MHz
-      assert_decimal_eq(proc_1.next_allocation.cpu, 100)
+      processes = [proc_cpu_1, proc_cpu_2, proc_dlk_1, proc_dlk_2, proc_dlk_3, proc_dlk_4]
+      assert {:ok, result} = Allocator.allocate(server_resources, processes)
 
-      # `proc_2`'s CPU got all the 500MHz it had access to, because its limit was higher than that
-      assert_decimal_eq(proc_2.next_allocation.cpu, 700)
+      proc_cpu_1 = Enum.find(result, &(&1.id == proc_cpu_1.id))
+      proc_cpu_2 = Enum.find(result, &(&1.id == proc_cpu_2.id))
+      proc_dlk_1 = Enum.find(result, &(&1.id == proc_dlk_1.id))
+      proc_dlk_2 = Enum.find(result, &(&1.id == proc_dlk_2.id))
+      proc_dlk_3 = Enum.find(result, &(&1.id == proc_dlk_3.id))
+      proc_dlk_4 = Enum.find(result, &(&1.id == proc_dlk_4.id))
 
-      # So did `proc_3`, which had no CPU limitations set
-      assert_decimal_eq(proc_3.next_allocation.cpu, 700)
-
-      # Notice that even though `proc_3` had RAM limitation of 1MB, it did not apply because the
-      # current allocation of 20MB comes from the static stage (minimum required allocation)
-      assert_decimal_eq(proc_3.next_allocation.ram, 20)
-    end
-
-    test "returns an error when server resources are insufficient" do
-      # The server only has 200MB available
-      %{server: server, meta: %{resources: server_resources}} = Setup.server(resources: %{ram: 200})
-
-      # Both servers need a minimum allocation of 250MB total
-      proc_1 = Setup.process!(server.id, static: %{ram: 100})
-      proc_2 = Setup.process!(server.id, static: %{ram: 150})
-
-      assert {:error, {:overflow, [:ram]}} = Allocator.allocate(server_resources, [proc_1, proc_2])
+      assert_decimal_eq(proc_cpu_1.next_allocation.cpu, 500)
+      assert_decimal_eq(proc_cpu_2.next_allocation.cpu, 500)
+      assert_decimal_eq(proc_dlk_1.next_allocation.dlk, 100)
+      assert_decimal_eq(proc_dlk_2.next_allocation.dlk, 100)
+      assert_decimal_eq(proc_dlk_3.next_allocation.dlk, 200)
+      assert_decimal_eq(proc_dlk_4.next_allocation.dlk, 200)
     end
   end
 
