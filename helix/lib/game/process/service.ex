@@ -4,6 +4,7 @@ defmodule Game.Services.Process do
 
   alias Game.Events.Process.Created, as: ProcessCreatedEvent
   alias Game.Events.Process.Completed, as: ProcessCompletedEvent
+  alias Game.Events.Process.Killed, as: ProcessKilledEvent
   alias Game.Events.Process.Paused, as: ProcessPausedEvent
   alias Game.Events.Process.Resumed, as: ProcessResumedEvent
   alias Game.Events.Process.Reniced, as: ProcessRenicedEvent
@@ -133,9 +134,7 @@ defmodule Game.Services.Process do
           ProcessCompletedEvent.new(process)
 
         :killed ->
-          # TODO
-          # ProcessKilledEvent.new(process)
-          nil
+          ProcessKilledEvent.new(process, reason)
       end
 
     {:ok, event}

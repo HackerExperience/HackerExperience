@@ -83,6 +83,21 @@ defmodule Game.Events.Process do
     end
   end
 
+  defmodule Killed do
+    use Core.Event.Definition
+
+    alias Game.Process
+
+    defstruct [:process, :reason]
+
+    @name :process_killed
+
+    def new(process = %Process{}, reason) when is_atom(reason) do
+      %__MODULE__{process: process, reason: reason}
+      |> Event.new()
+    end
+  end
+
   defmodule Paused do
     use Core.Event.Definition
 

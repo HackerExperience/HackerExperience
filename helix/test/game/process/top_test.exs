@@ -242,8 +242,8 @@ defmodule Game.Process.TOPTest do
 
     test "overflow when process is created (with other running processes)", ctx do
       server = Setup.server!(resources: %{cpu: 100, ram: 30})
-      Setup.process!(server.id, static: %{ram: 10})
-      Setup.process!(server.id, static: %{ram: 10})
+      proc_1 = Setup.process!(server.id, static: %{ram: 10})
+      proc_2 = Setup.process!(server.id, static: %{ram: 10})
       DB.commit()
 
       # TOP is running and the two processes above have been alocated resources
@@ -265,7 +265,11 @@ defmodule Game.Process.TOPTest do
         assert [_, _] = DB.all(Process)
       end)
 
-      # TODO: Test ProcessKilledEvent was emitted
+      assert [process_killed_event] = wait_events_on_server!(server.id, :process_killed)
+      # The process that was killed is not `proc_1` or `proc_2`, but rather the new one that we
+      # attempted to execute. We don't have access to its ID within this test, though
+      assert process_killed_event.data.process.id not in [proc_1.id, proc_2.id]
+      assert process_killed_event.data.reason == :killed
     end
 
     test "overflow when server resources go down (affecting multiple processes)", ctx do
