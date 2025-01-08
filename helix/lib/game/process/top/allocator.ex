@@ -1,6 +1,118 @@
 defmodule Game.Process.TOP.Allocator do
   @moduledoc """
   Module responsible for allocating resources to the processes.
+
+  # The allocation algorithm
+
+  Allocation can be broken down in three major steps:
+
+  1. Static allocation
+  2. Dynamic allocation
+  3. Excess allocation
+
+  Once all processes have gone through the 3 steps, we make sure the allocated resources do not
+  exceed the available resources in the server (overflow).
+
+  By the end of the execution, in the success case, we'll return a list of process with the
+  `next_allocation` field set to what should be considered the new allocation for the process. This
+  module is pure: it makes no database operations. It's up to the consumer of this module (the TOP)
+  to persist the allocation.
+
+  ## Step 1 - Static allocation
+
+  The first step allocates "static resources", that is, a mandatory, minimum set of resources that
+  must be consumed by each process during its lifetime.
+
+  It is static because it does not vary based on how many resources are available in the server. It
+  is mandatory because, if the server does not have sufficient resources to fulfill the static
+  allocation, then an overflow will happen.
+
+  Each process can define the static resources, and they can be different based on whether the
+  process is paused or running.
+
+  Most commonly, you'll see RAM being used as static resource, as that is the main hardware resource
+  used to limit the number of processes a server can hold at any given time.
+
+  ## Step 2 - Dynamic allocation
+
+  The dynamic allocation happens after the static allocation and will optimistically reserve all
+  of the remaining server resources to the processes.
+
+  Each process will want to allocate a specific set of "dynamic" resources (defined by the
+  `dynamic/3` callback of the process Resourceable). For example, a process that is downloading a
+  file will want to use the DLK resource dynamically. In this scenario, if this is the only process
+  using DLK in the server, it should receive 100% of the available DLK in the server.
+
+  The dynamic allocation step is meant to be fair: each unique *entity* with processes in the
+  server will receive one share of the available resources.
+
+  Example: 1 entity with any number of processes: this entity can dynamically allocate 100% of the
+  remaining server resources. If a second entity starts a process, then each entity is entitled to
+  50% of the server resources. If a third entity joins the party, each will now get 33% and so on.
+
+  From the resources reserved to the entity, one process may be given higher priority than another.
+  That's where `priority` (sometimes referred to as "nice") comes in: an entity can "redirect" the
+  dynamically allocated resources to a particular process by assigning a high priority to it.
+
+  Notice that the priority only affects the allocation of resources within the *entity's* available
+  pool of resources. Increasing priority of a process should never "steal" resources that are
+  reserved to another entity.
+
+  Remember when I said that the dynamic allocation is "optimistic"? Well, that's what I meant by it:
+  each entity is *reserved* a share of the remaining resources, but it may not use them fully.
+
+  Examples of partial utilization include:
+
+  1. All processes from Entity E1 use only resource R1. The resources R2..Rn that were reserved to
+     E1 are never allocated.
+  2. Some processes from Entity E1 have an upper limit (defined by the `limit/3` callback of
+     Resourceable) that is lower than the reserved amount of the corresponding resource.
+  3. All processes from entity E1 are paused.
+
+  The example 1 above is actually handled at the dynamic step: the total server resources are shared
+  evenly based on the number of dynamically allocated resources per unique entity. The remaining
+  examples, however, could lead to the scenario where not all of the reserved resources are
+  allocated, which leads us to the next step.
+
+  ## Step 3 - Excess allocation
+
+  The excess allocation happens after the dynamic allocation, and will optimistically allocate the
+  remaining reserved-but-not-allocated resources from the dynamic step. Refer to the documentation
+  of the Dynamic Allocation step for some example scenarios where this could happen.
+
+  Excess allocation is essentially a no-op if the dynamic allocation successfully allocated all of
+  the server resources (which is obvious -- there was no excess, so there is no excess allocation).
+
+  Similar to the dynamic allocation, the excess allocation step also tries to be fair: it looks at
+  how many processes, from all entities, would benefit from the excess allocation and tries to
+  allocate the remaining resources evenly (regardless of priority).
+
+  Note that the process priority does not influence excess allocation. Priority is only taken into
+  consideration during the dynamic allocation step.
+
+  The processes that could benefit from excess allocation are:
+
+  - Unlimited processes (i.e. processes that have no upper limit).
+  - Limited processes that have not reached the upper limit.
+
+  Processes that do not receive excess allocation are:
+
+  - Limited processes who already hit the upper limit of their allocation.
+  - Processes that use dynamic resources for which there was no excess[0].
+
+  [0] - It's entirely possible that some resources were fully allocated in the dynamic allocation
+  step, whereas some resources were only partially allocated and are in excess.
+
+  You may have noticed I said that the excess allocation is also optimistic. Maybe a more accurate
+  description is that the excess allocation step does not try to be perfect. It could be improved,
+  but at least for the time being I'm explicitly *not* making it perfect for simplicity sake.
+
+  There are scenarios in which the excess allocation is not fully utilized by one process, but could
+  benefit another process. At the moment, when this happen, the resource is left unallocated.
+
+  A solution to this would be to recursively perform the excess allocation step until either all
+  server resources are fully allocated or all processes have hit their respective upper limit. This
+  is a non-goal for now.
   """
 
   use Docp
