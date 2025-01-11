@@ -200,7 +200,7 @@ defmodule Game.Process.TOPTest do
 
   describe "allocation" do
     test "when the 'next' process changes, the previous 'next' timer is deleted", ctx do
-      server = Setup.server!()
+      %{server: server, entity: entity} = Setup.server()
       proc_1 = Setup.process!(server.id, objective: %{cpu: 100_000})
       DB.commit()
 
@@ -213,7 +213,7 @@ defmodule Game.Process.TOPTest do
       proc_1_timer = elem(state.next, 2)
 
       # Now we'll add another process that is considerably faster
-      spec = Setup.process_spec(server.id)
+      spec = Setup.process_spec(server.id, entity.id)
       assert {:ok, proc_2} = U.Process.execute(spec)
 
       # TOP has changed to set `proc_2` as "next"
@@ -227,10 +227,10 @@ defmodule Game.Process.TOPTest do
 
   describe "over-allocation / resources overflow" do
     test "overflow when process is created (with empty TOP)", ctx do
-      server = Setup.server!(resources: %{cpu: 500, ram: 1})
+      %{server: server, entity: entity} = Setup.server(resources: %{cpu: 500, ram: 1})
       DB.commit()
 
-      spec = Setup.process_spec(server.id)
+      spec = Setup.process_spec(server.id, entity.id)
       assert {:error, :overflow} = U.Process.execute(spec)
 
       # TOP is mostly unchanged (next == nil)
@@ -241,7 +241,7 @@ defmodule Game.Process.TOPTest do
     end
 
     test "overflow when process is created (with other running processes)", ctx do
-      server = Setup.server!(resources: %{cpu: 100, ram: 30})
+      %{server: server, entity: entity} = Setup.server(resources: %{cpu: 100, ram: 30})
       proc_1 = Setup.process!(server.id, static: %{ram: 10})
       proc_2 = Setup.process!(server.id, static: %{ram: 10})
       DB.commit()
@@ -252,7 +252,7 @@ defmodule Game.Process.TOPTest do
       state_before = :sys.get_state(pid)
 
       # Now we'll add a process that overflows the available resources
-      spec = Setup.process_spec(server.id)
+      spec = Setup.process_spec(server.id, entity.id)
       assert {:error, :overflow} = U.Process.execute(spec)
 
       # TOP still has the same process as "next" target (and same timer)

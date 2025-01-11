@@ -14,19 +14,19 @@ defmodule Test.Setup.Process do
   - static: Modify the process static resources. Accepts: %{paused: R}, %{paused: R, running: R}
             or R. Any missing information will default to using the original process static.
   - completed?: When true, the process is created with its `objective` goal already reached.
-  - entity_id: Entity who started this process.
+  - entity_id: Entity who started this process. Defaults to the owner of the server.
   - priority: Customize the process priority.
   """
   def new(server_id, opts \\ []) do
-    spec_opts = (opts[:spec] || []) ++ [type: opts[:type]]
-    spec = spec(server_id, spec_opts)
-
     entity_id =
       if opts[:entity_id] do
         opts[:entity_id]
       else
         Svc.Server.fetch!(by_id: server_id).entity_id
       end
+
+    spec_opts = (opts[:spec] || []) ++ [type: opts[:type]]
+    spec = spec(server_id, entity_id, spec_opts)
 
     # Create the process using Executable
     {:ok, process, _} =
@@ -58,11 +58,11 @@ defmodule Test.Setup.Process do
   - meta: Overwrites the process meta. If nil, a per-process default is applied
   - <custom>: Each process may define their own custom opts for improved ergonomics
   """
-  def spec(server_id, opts \\ []) do
+  def spec(server_id, entity_id, opts \\ []) do
     if opts[:type] do
-      ProcessSpecSetup.spec(opts[:type], server_id, opts)
+      ProcessSpecSetup.spec(opts[:type], server_id, entity_id, opts)
     else
-      ProcessSpecSetup.spec(:noop_cpu, server_id, opts)
+      ProcessSpecSetup.spec(:noop_cpu, server_id, entity_id, opts)
     end
   end
 
