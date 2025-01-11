@@ -1,6 +1,7 @@
 defmodule Game.Process do
   use Core.Schema
   alias Game.Server
+  alias __MODULE__
 
   # TODO
   @type t :: term
@@ -41,9 +42,8 @@ defmodule Game.Process do
   @derived_fields [:id]
 
   def new(params) do
-    # TODO: Validate that `data` is correct (similar go Log schema)
-
     params
+    |> validate_data_struct!()
     |> Schema.cast()
     |> Schema.create()
   end
@@ -70,4 +70,17 @@ defmodule Game.Process do
 
   def get_last_checkpoint_ts(%_{last_checkpoint_ts: ts}) when is_integer(ts),
     do: ts
+
+  #
+
+  def process_mod(:log_edit), do: Process.Log.Edit
+  def process_mod(:noop_cpu), do: Test.Process.NoopCPU
+  def process_mod(:noop_dlk), do: Test.Process.NoopDLK
+
+  defp validate_data_struct!(params) do
+    # Sanity check: ensure that the process "data" belongs to the expected process type
+    %struct{} = params.data
+    true = struct == process_mod(params.type) || raise "Bad process data: #{inspect(params)}"
+    params
+  end
 end
