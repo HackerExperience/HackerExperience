@@ -118,13 +118,15 @@ defmodule Game.Process.TOP.Allocator do
   use Docp
   require Logger
   alias Game.Process.Resources
+  alias Game.Process
 
   @initial Resources.initial()
   @zero Decimal.new(0)
 
-  def allocate(_, []), do: {:ok, []}
-
-  def allocate(%Resources{} = total_resources, processes) do
+  @spec allocate(total_server_resources :: Resources.t(), [Process.t()]) ::
+          {:ok, [Process.t()]}
+          | {:error, {:overflow, [Resources.name()]}}
+  def allocate(%Resources{} = total_resources, [_ | _] = processes) do
     # Static allocation
     {static_resources_usage, statically_allocated_processes} = static_allocation(processes)
 
@@ -155,6 +157,8 @@ defmodule Game.Process.TOP.Allocator do
         {:error, {:overflow, overflowed_resources}}
     end
   end
+
+  def allocate(_, []), do: {:ok, []}
 
   defp static_allocation(processes) do
     Enum.reduce(processes, {@initial, []}, fn process, {allocated, acc} ->

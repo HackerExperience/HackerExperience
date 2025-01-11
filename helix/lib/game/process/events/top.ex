@@ -9,9 +9,14 @@ defmodule Game.Events.TOP do
     """
     use Core.Event.Definition
 
-    alias Game.Server
+    alias Game.{Process, Server}
 
     defstruct [:server_id, :processes]
+
+    @type t :: %__MODULE__{
+            server_id: Server.id(),
+            processes: [Process.t()]
+          }
 
     @name :top_recalcado
 

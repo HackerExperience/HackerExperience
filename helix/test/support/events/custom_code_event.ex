@@ -8,6 +8,8 @@ defmodule Test.CustomCodeEvent do
 
   defstruct [:callback]
 
+  @type t :: term
+
   @name :test_custom_code
 
   def new(callback) do

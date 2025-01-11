@@ -32,6 +32,15 @@ defmodule Core.Event do
 
   defstruct [:id, :name, :data, :relay]
 
+  @type t :: t(struct)
+
+  @type t(data_type) :: %__MODULE__{
+          id: String.t(),
+          name: atom(),
+          data: data_type,
+          relay: term
+        }
+
   @env Mix.env()
 
   @native_triggers [

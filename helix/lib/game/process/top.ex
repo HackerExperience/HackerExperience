@@ -8,17 +8,56 @@ defmodule Game.Process.TOP do
   """
 
   use GenServer
+  use Docp
 
   require Logger
 
   alias Feeb.DB
   alias Core.Event
   alias Game.Services, as: Svc
-  alias Game.Process.{Executable, Signalable}
-  alias Game.{Process, Server}
+  alias Game.Process.{Executable, Resources, Signalable}
+  alias Game.{Entity, Process, Server}
   alias __MODULE__
 
   alias Game.Events.TOP.Recalcado, as: TOPRecalcadoEvent
+
+  @typedocp "Post-initialization GenServer state"
+  @typep state ::
+           %{
+             server_id: Server.id(),
+             entity_id: Entity.id(),
+             server_resources: Resources.t(),
+             next: Process.t() | nil
+           }
+
+  @typedocp "GenServer state before the bootstrap phase"
+  @typep initial_state ::
+           %{
+             server_id: Server.id(),
+             entity_id: nil,
+             server_resources: nil,
+             next: nil
+           }
+
+  @typedocp """
+  Reasons that led the Scheduler to be triggered.
+
+  - boot: when the TOP first starts up.
+  - insert: when a new process is added to the TOP.
+  - completion: when a process reaches its objective.
+  - resources_changed: when the total available server resources changed.
+  - resume: when a process is resumed.
+  - pause: when a process is paused.
+  - renice: when a process has its priority changed.
+  """
+  @typep scheduler_run_reason ::
+           :boot
+           | :insert
+           | :completion
+           | :resources_changed
+           | {:resume, Process.id()}
+           | {:pause, Process.id()}
+           | {:renice, Process.id()}
 
   # Public
 
@@ -54,30 +93,44 @@ defmodule Game.Process.TOP do
     )
   end
 
+  @spec execute(module, Server.id(), map, map) ::
+          {:ok, Process.t()}
+          | {:error, :overflow | :internal}
   def execute(process_mod, server_id, params, meta) do
     server_id
     |> TOP.Registry.fetch!()
     |> GenServer.call({:execute, process_mod, params, meta})
   end
 
+  @spec pause(Process.t()) ::
+          {:ok, Process.t()}
+          | {:error, :rejected | term}
   def pause(%Process{server_id: server_id} = process) do
     server_id
     |> TOP.Registry.fetch!()
     |> GenServer.call({:pause, process})
   end
 
+  @spec resume(Process.t()) ::
+          {:ok, Process.t()}
+          | {:error, :rejected | :overflow | term}
   def resume(%Process{server_id: server_id} = process) do
     server_id
     |> TOP.Registry.fetch!()
     |> GenServer.call({:resume, process})
   end
 
+  @spec renice(Process.t(), Process.priority()) ::
+          {:ok, Process.t()}
+          | {:error, term}
   def renice(%Process{server_id: server_id} = process, priority) when is_integer(priority) do
     server_id
     |> TOP.Registry.fetch!()
     |> GenServer.call({:renice, process, priority})
   end
 
+  @spec on_server_resources_changed(Server.id()) ::
+          :ok
   def on_server_resources_changed(server_id) do
     server_id
     |> TOP.Registry.fetch!()
@@ -110,6 +163,8 @@ defmodule Game.Process.TOP do
     {:noreply, schedule.state}
   end
 
+  @spec fetch_initial_data(initial_state) ::
+          {state, [Process.t()]}
   defp fetch_initial_data(state) do
     {processes, meta} =
       Core.with_context(:server, state.server_id, :read, fn ->
@@ -140,7 +195,8 @@ defmodule Game.Process.TOP do
       %{dropped: [_ | _], state: new_state} ->
         {:reply, {:error, :overflow}, new_state}
 
-      {:error, _reason} ->
+      {:error, reason} ->
+        Logger.error("Failed to execute process: #{inspect(reason)}")
         {:reply, {:error, :internal}, state}
     end
   end
@@ -268,6 +324,8 @@ defmodule Game.Process.TOP do
     run_schedule(state, processes, reason, events)
   end
 
+  @spec run_schedule(state, [Process.t()], scheduler_run_reason, [Event.t()]) ::
+          %{state: state, dropped: [Process.t()], paused: [Process.t()]}
   defp run_schedule(state, processes, reason, events) when is_list(processes) do
     {duration, result} = :timer.tc(fn -> do_run_schedule(state, processes, reason) end)
 
@@ -289,6 +347,14 @@ defmodule Game.Process.TOP do
     %{state: result.state, dropped: result.dropped, paused: result.paused}
   end
 
+  @spec do_run_schedule(
+          state,
+          [Process.t()],
+          scheduler_run_reason,
+          dropped_processes :: [Process.t()],
+          paused_processes :: [Process.t()]
+        ) ::
+          %{state: state, dropped: [Process.t()], paused: [Process.t()], events: [term]}
   defp do_run_schedule(
          %{server_id: server_id, server_resources: resources} = state,
          processes,

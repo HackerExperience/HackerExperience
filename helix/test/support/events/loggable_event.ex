@@ -3,6 +3,8 @@ defmodule Test.LoggableEvent do
 
   defstruct [:log_map]
 
+  @type t :: term
+
   @name :test_loggable_event
 
   def new(log_map) do

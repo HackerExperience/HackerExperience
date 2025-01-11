@@ -5,6 +5,8 @@ defmodule Game.Events.Player.IndexRequested do
 
   defstruct [:player_id]
 
+  @type t :: term
+
   @name :index_requested
 
   def new(player_id) do

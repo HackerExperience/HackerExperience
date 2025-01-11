@@ -21,6 +21,11 @@ defmodule Game.Events.Process do
 
     defstruct [:process, :confirmed]
 
+    @type t :: %__MODULE__{
+            process: Process.t(),
+            confirmed: boolean
+          }
+
     @name :process_created
 
     def new(process = %Process{}, confirmed: confirmed) do
@@ -71,6 +76,10 @@ defmodule Game.Events.Process do
 
     defstruct [:process]
 
+    @type t :: %__MODULE__{
+            process: Process.t()
+          }
+
     @name :process_completed
 
     def new(process = %Process{}) do
@@ -90,6 +99,11 @@ defmodule Game.Events.Process do
 
     defstruct [:process, :reason]
 
+    @type t :: %__MODULE__{
+            process: Process.t(),
+            reason: atom
+          }
+
     @name :process_killed
 
     def new(process = %Process{}, reason) when is_atom(reason) do
@@ -104,6 +118,10 @@ defmodule Game.Events.Process do
     alias Game.Process
 
     defstruct [:process]
+
+    @type t :: %__MODULE__{
+            process: Process.t()
+          }
 
     @name :process_paused
 
@@ -120,6 +138,10 @@ defmodule Game.Events.Process do
 
     defstruct [:process]
 
+    @type t :: %__MODULE__{
+            process: Process.t()
+          }
+
     @name :process_resumed
 
     def new(process = %Process{status: :awaiting_allocation}) do
@@ -135,8 +157,9 @@ defmodule Game.Events.Process do
 
     defstruct [:process]
 
-    # TODO
-    @type t :: term
+    @type t :: %__MODULE__{
+            process: Process.t()
+          }
 
     @name :process_reniced
 

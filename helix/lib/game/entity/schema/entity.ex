@@ -1,6 +1,8 @@
 defmodule Game.Entity do
   use Core.Schema
 
+  @type id :: __MODULE__.ID.t()
+
   @context :game
   @table :entities
 

@@ -1,6 +1,6 @@
 defmodule Game.Services.Process do
   alias Feeb.DB
-  alias Game.{Process, ProcessRegistry}
+  alias Game.{Entity, Process, ProcessRegistry, Server}
 
   alias Game.Events.Process.Created, as: ProcessCreatedEvent
   alias Game.Events.Process.Completed, as: ProcessCompletedEvent
@@ -23,6 +23,9 @@ defmodule Game.Services.Process do
     |> Core.Fetch.assert_non_empty_result!(filter_params, opts)
   end
 
+  @spec create(Server.id(), Entity.id(), map, term) ::
+          {:ok, Process.t(), [ProcessCreatedEvent.event()]}
+          | {:error, term}
   def create(server_id, entity_id, registry_data, process_info) do
     with {:ok, process} <- insert_process(server_id, entity_id, registry_data, process_info),
          {:ok, _registry} <- insert_registry(process, registry_data) do
@@ -31,6 +34,9 @@ defmodule Game.Services.Process do
     end
   end
 
+  @spec pause(Process.t()) ::
+          {:ok, Process.t(), [ProcessPausedEvent.event()]}
+          | {:error, term}
   def pause(%Process{status: :running} = process) do
     result =
       Core.with_context(:server, process.server_id, :write, fn ->
@@ -57,6 +63,9 @@ defmodule Game.Services.Process do
   def pause(%Process{status: status}),
     do: {:error, {:cant_pause, status}}
 
+  @spec resume(Process.t()) ::
+          {:ok, Process.t(), [ProcessResumedEvent.event()]}
+          | {:error, term}
   def resume(%Process{status: :paused} = process) do
     result =
       Core.with_context(:server, process.server_id, :write, fn ->
@@ -85,7 +94,7 @@ defmodule Game.Services.Process do
     do: {:error, {:cant_resume, status}}
 
   @spec renice(Process.t(), Process.priority()) ::
-          {:ok, Process.t(), [ProcessRenicedEvent.t()]}
+          {:ok, Process.t(), [ProcessRenicedEvent.event()]}
           | {:error, term}
   def renice(%Process{status: :running} = process, priority) do
     result =
@@ -113,6 +122,8 @@ defmodule Game.Services.Process do
   def renice(%Process{status: status}),
     do: {:error, {:cant_renice, status}}
 
+  @spec delete(Process.t(), atom) ::
+          {:ok, ProcessCompletedEvent.event() | ProcessKilledEvent.event()}
   def delete(%Process{} = process, reason) when reason in [:completed, :killed] do
     Core.with_context(:server, process.server_id, :write, fn ->
       DB.delete!(process)

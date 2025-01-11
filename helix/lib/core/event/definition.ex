@@ -17,6 +17,11 @@ defmodule Core.Event.Definition do
 
   defmacro __before_compile__(_) do
     quote do
+      @doctype """
+      This is the Core.Event.t type, with the actual event struct wrapped within the `:data` field.
+      """
+      @type event :: Core.Event.t(t)
+
       @name || raise "You must specify the event name via @name"
 
       @doc """

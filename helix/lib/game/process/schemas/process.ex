@@ -4,6 +4,7 @@ defmodule Game.Process do
 
   # TODO
   @type t :: term
+  @type id :: __MODULE__.ID.t()
 
   @type priority :: integer
 
