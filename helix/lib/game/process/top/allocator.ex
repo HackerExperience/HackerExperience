@@ -180,7 +180,7 @@ defmodule Game.Process.TOP.Allocator do
         uniq_resources_in_use =
           Enum.reduce(entity_allocated_processes, [], fn {process, _}, iacc ->
             # TODO: This will break in the event of multiple resources
-            [res] = process.resources.l_dynamic
+            [res] = process.resources.dynamic
             if res not in iacc, do: [res | iacc], else: iacc
           end)
 
@@ -341,7 +341,7 @@ defmodule Game.Process.TOP.Allocator do
   """
   defp excess_lookup(process, total_dynamic_shares) do
     has_limit? = not Resources.equal?(process.resources.limit, @initial)
-    dynamic_resources = process.resources.l_dynamic
+    dynamic_resources = process.resources.dynamic
 
     # Resources with a 1/0 value for each resource the process allocates dynamically
     dynamic_shares =

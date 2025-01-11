@@ -45,7 +45,7 @@ defmodule Game.Process.Resources.Behaviour.Default.Implementation do
 
   @spec allocate_dynamic(name, v, v, Process.t()) ::
           v
-  def allocate_dynamic(res, shares, res_per_share, %{resources: %{l_dynamic: dynamic_res}}) do
+  def allocate_dynamic(res, shares, res_per_share, %{resources: %{dynamic: dynamic_res}}) do
     if res in dynamic_res do
       mul(res, shares, res_per_share)
     else
@@ -55,7 +55,7 @@ defmodule Game.Process.Resources.Behaviour.Default.Implementation do
 
   @spec get_shares(name, Process.t()) ::
           v
-  def get_shares(res, %{priority: priority, resources: %{l_dynamic: dynamic_res} = resources}) do
+  def get_shares(res, %{priority: priority, resources: %{dynamic: dynamic_res} = resources}) do
     with true <- res in dynamic_res,
          true <- can_allocate?(res, resources) do
       priority

@@ -14,7 +14,7 @@ defmodule Game.Services.ProcessTest do
       # TODO: This test is wrong, overall. I should generate the params the same way Executable does
       registry_data =
         %{
-          l_dynamic: [:cpu],
+          dynamic: [:cpu],
           static: %{ram: 10},
           objective: %{cpu: 1000},
           tgt_log_id: log.id,

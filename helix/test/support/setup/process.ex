@@ -109,7 +109,7 @@ defmodule Test.Setup.Process do
       |> Map.put(:allocated, get_resource.(:allocated))
       |> Map.put(:static, gen_static_value.())
       |> Map.put(:limit, get_resource.(:limit))
-      |> Map.put(:l_dynamic, opts[:l_dynamic] || process.resources.l_dynamic)
+      |> Map.put(:dynamic, opts[:dynamic] || process.resources.dynamic)
 
     update_and_fetch_process!(process, %{resources: new_resources})
   end

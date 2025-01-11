@@ -7,7 +7,7 @@ defmodule Game.Process.Resourceable do
 
     %{
       objective: objective(resourceable, args),
-      l_dynamic: l_dynamic(resourceable, args),
+      dynamic: dynamic(resourceable, args),
       static: static(resourceable, args),
       limit: limit(resourceable, args)
     }
@@ -24,7 +24,7 @@ defmodule Game.Process.Resourceable do
     |> Resources.from_map()
   end
 
-  defp l_dynamic(resourceable, args),
+  defp dynamic(resourceable, args),
     do: apply(resourceable, :dynamic, args)
 
   defp static(resourceable, args),

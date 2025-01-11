@@ -160,7 +160,7 @@ defmodule Game.Services.Process do
         registry: get_registry_params(registry_data),
         status: :awaiting_allocation,
         resources: %{
-          l_dynamic: registry_data.l_dynamic,
+          dynamic: registry_data.dynamic,
           objective: registry_data.objective,
           static: registry_data.static,
           limit: registry_data.limit,
