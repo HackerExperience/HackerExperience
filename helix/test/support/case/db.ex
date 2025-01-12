@@ -15,6 +15,8 @@ defmodule Test.DBCase do
       alias Feeb.DB
 
       # Common Core/Game aliases
+      alias Core.ID
+      alias Core.NIP
       alias Game.Services, as: Svc
     end
   end

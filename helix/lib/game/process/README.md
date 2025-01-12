@@ -18,10 +18,11 @@ Let's use the LogEditProcess as example here.
 
 A Process is first started by an explicit in-game action, arriving in the backend in the form of an HTTP request.
 
-The corresponding endpoint (`Endpoint.Log.Edit`) will call `Process.TOP.execute/4`, passing in the following information:
+The corresponding endpoint (`Endpoint.Log.Edit`) will call `Process.TOP.execute/5`, passing in the following information:
 
 - process module (`LogEditProcess`)
 - server in which the process is taking place
+- entity which started the process
 - process params (extracted from the request params)
 - process meta (gathered from the request context)
 

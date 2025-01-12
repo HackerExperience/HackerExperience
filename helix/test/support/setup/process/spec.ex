@@ -58,6 +58,7 @@ defmodule Test.Setup.Process.Spec do
       params: params,
       meta: meta,
       server_id: server_id,
+      entity_id: entity_id,
       registry_data: registry_data,
       process_info: process_info
     }

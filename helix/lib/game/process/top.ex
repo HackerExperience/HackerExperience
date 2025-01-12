@@ -93,13 +93,13 @@ defmodule Game.Process.TOP do
     )
   end
 
-  @spec execute(module, Server.id(), map, map) ::
+  @spec execute(module, Server.id(), Entity.id(), map, map) ::
           {:ok, Process.t()}
           | {:error, :overflow | :internal}
-  def execute(process_mod, server_id, params, meta) do
+  def execute(process_mod, server_id, entity_id, params, meta) do
     server_id
     |> TOP.Registry.fetch!()
-    |> GenServer.call({:execute, process_mod, params, meta})
+    |> GenServer.call({:execute, process_mod, entity_id, params, meta})
   end
 
   @spec pause(Process.t()) ::
@@ -179,9 +179,9 @@ defmodule Game.Process.TOP do
     {state, processes}
   end
 
-  def handle_call({:execute, process_mod, params, meta}, _from, state) do
+  def handle_call({:execute, process_mod, entity_id, params, meta}, _from, state) do
     with {:ok, new_process, creation_events} <-
-           Executable.execute(process_mod, state.server_id, state.entity_id, params, meta),
+           Executable.execute(process_mod, state.server_id, entity_id, params, meta),
          %{dropped: [], state: new_state} <-
            run_schedule(state, state.server_id, :insert, creation_events) do
       new_process =

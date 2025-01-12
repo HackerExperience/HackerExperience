@@ -46,6 +46,8 @@ defmodule Game.Endpoint.Log.EditTest do
         assert process.registry.tgt_log_id == log.id
       end)
 
+      # TODO: Once implemented, test that the log actually got edited
+
       receive do
         {:event, event} ->
           assert event.name == "process_created"

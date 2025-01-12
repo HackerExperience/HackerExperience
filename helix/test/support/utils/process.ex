@@ -12,5 +12,5 @@ defmodule Test.Utils.Process do
   end
 
   def execute(spec, _) when is_map(spec),
-    do: Svc.TOP.execute(spec.module, spec.server_id, spec.params, spec.meta)
+    do: Svc.TOP.execute(spec.module, spec.server_id, spec.entity_id, spec.params, spec.meta)
 end
