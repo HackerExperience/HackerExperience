@@ -1,6 +1,8 @@
 defmodule Game.Server do
   use Core.Schema
 
+  @type id :: __MODULE__.ID.t()
+
   @context :game
   @table :servers
 

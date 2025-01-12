@@ -5,14 +5,14 @@ defmodule Game.Events.Player.IndexRequested do
 
   defstruct [:player_id]
 
+  @type t :: term
+
   @name :index_requested
 
   def new(player_id) do
     %__MODULE__{player_id: player_id}
     |> Event.new()
   end
-
-  def handlers(_, _), do: []
 
   defmodule Publishable do
     use Core.Event.Publishable.Definition

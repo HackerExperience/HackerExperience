@@ -3,15 +3,13 @@ defmodule Test.LoggableEvent do
 
   defstruct [:log_map]
 
+  @type t :: term
+
   @name :test_loggable_event
 
   def new(log_map) do
     %__MODULE__{log_map: log_map}
     |> Event.new()
-  end
-
-  def handlers(_, _) do
-    []
   end
 
   defmodule Loggable do

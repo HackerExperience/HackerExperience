@@ -6,6 +6,13 @@ defmodule Game.Events.Network.TunnelCreated do
 
   defstruct [:tunnel, :player_id, :gateway_id, :endpoint_id]
 
+  @type t :: %__MODULE__{
+          tunnel: Tunnel.t(),
+          player_id: Player.id(),
+          gateway_id: Server.id(),
+          endpoint_id: Server.id()
+        }
+
   @name :tunnel_created
 
   def new(
@@ -22,8 +29,6 @@ defmodule Game.Events.Network.TunnelCreated do
     }
     |> Event.new()
   end
-
-  def handlers(_, _), do: []
 
   defmodule Publishable do
     use Core.Event.Publishable.Definition

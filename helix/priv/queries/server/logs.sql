@@ -10,5 +10,8 @@
 -- :fetch_by_id_and_revision_id
 SELECT * FROM logs WHERE id = ? AND revision_id = ?;
 
+-- :fetch_latest_by_id
+SELECT * FROM logs WHERE id = ? ORDER BY revision_id DESC LIMIT 1;
+
 -- :get_last_inserted_id
 SELECT MAX(id) FROM logs LIMIT 1;

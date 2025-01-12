@@ -28,8 +28,18 @@ defmodule Core.Event do
 
   require Logger
   alias Feeb.DB
+  alias Renatils.Random
 
-  defstruct [:id, :data, :relay]
+  defstruct [:id, :name, :data, :relay]
+
+  @type t :: t(struct)
+
+  @type t(data_type) :: %__MODULE__{
+          id: String.t(),
+          name: atom(),
+          data: data_type,
+          relay: term
+        }
 
   @env Mix.env()
 
@@ -46,13 +56,9 @@ defmodule Core.Event do
   Creates a new Event.t with the corresponding `data`.
   """
   def new(%ev_mod{} = data) do
-    relay = Process.get(:helix_event_relay)
-
-    if is_nil(relay),
-      do: Logger.warning("No relay found for #{inspect(ev_mod)}")
-
     %__MODULE__{
-      id: "random_id",
+      id: Random.uuid(),
+      name: ev_mod.get_name(),
       data: data,
       relay: Process.get(:helix_event_relay)
     }
@@ -69,7 +75,11 @@ defmodule Core.Event do
 
   def emit(events) when is_list(events) do
     events
+    |> Enum.reject(&is_nil/1)
     |> Enum.reduce([], fn %__MODULE__{} = event, acc ->
+      if is_nil(event.relay),
+        do: Logger.warning("No relay found for #{inspect(event.__struct__)}")
+
       event
       |> get_handlers()
       |> Enum.reduce(acc, fn handler_mod, acc_events ->
@@ -89,6 +99,25 @@ defmodule Core.Event do
     end)
     # Emit any events that were created and returned by the handlers themselves
     |> emit()
+  end
+
+  @doc """
+  Emits the given `events` in a separate process (supervised by TaskSupervisor).
+  """
+  def emit_async(events) when is_list(events) do
+    # TODO: Find a way to concentrate in a single module "dirty" state like this (see also TOP)
+    helix_universe = Process.get(:helix_universe)
+    helix_universe_shard_id = Process.get(:helix_universe_shard_id)
+
+    Task.Supervisor.async_nolink(
+      {:via, PartitionSupervisor, {Helix.TaskSupervisor, self()}},
+      fn ->
+        Process.put(:helix_universe, helix_universe)
+        Process.put(:helix_universe_shard_id, helix_universe_shard_id)
+
+        {:event_result, emit(events)}
+      end
+    )
   end
 
   defp get_handlers(event) do

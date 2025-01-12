@@ -39,12 +39,19 @@ defmodule Core do
   If you don't want to commit, use `DB.with_context/1` directly (or add `with_context_no_commit/3`)
   """
   def with_context(:universe, access_type, callback) do
-    DB.with_context(fn ->
-      Core.begin_context(:universe, access_type)
-      result = callback.()
-      DB.commit()
-      result
-    end)
+    ctx = DB.LocalState.get_current_context()
+
+    if ctx && ctx.context in [:singleplayer, :multiplayer] && ctx.access_type == access_type do
+      # Already in the requested context, so do nothing special. Caller is responsible for COMMITing
+      callback.()
+    else
+      DB.with_context(fn ->
+        Core.begin_context(:universe, access_type)
+        result = callback.()
+        DB.commit()
+        result
+      end)
+    end
   end
 
   def with_context(:server, server_id, access_type, callback) do

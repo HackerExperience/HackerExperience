@@ -11,7 +11,7 @@ defmodule Core.Event.Handler.Test do
   end
 
   def on_event(%ev_mod{} = data, ev) do
-    key = {ev.id, ev.relay.request_id, ev.relay.x_request_id}
+    key = {ev.id, ev.relay.server_id, ev.relay.request_id, ev.relay.x_request_id}
     :ets.insert(@table, {key, %{event: ev, mod: ev_mod, data: data}})
     :ok
   end

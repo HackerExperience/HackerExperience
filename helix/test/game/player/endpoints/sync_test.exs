@@ -122,9 +122,9 @@ defmodule Game.Endpoint.Player.SyncTest do
     # This is a hack for the async nature of SSE requests. A successful SSE request will block
     # indefinitely. For these tests, we want the test to proceed once we know the SSE connection has
     # been established. We know that's the case once the outgoing events generated within the Sync
-    # request are emitted and fully processed, which is what `wait_events` ensures! As a result,
-    # once `wait_events/1` returns, we know the SSE process is ready and we can proceed testing.
-    wait_events(x_request_id: x_request_id)
+    # request are emitted and fully processed, which is what `wait_events!` ensures! As a result,
+    # once `wait_events!/1` returns, we know the SSE process is ready and we can proceed testing.
+    wait_events!(x_request_id: x_request_id)
   end
 
   defp make_sse_request_sync(jwt, shard_id, x_request_id \\ nil) do

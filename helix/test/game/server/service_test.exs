@@ -23,8 +23,11 @@ defmodule Game.Services.ServerTest do
 
       # We can connect to the newly created Server shard
       Core.with_context(:server, server.id, :write, fn ->
-        # TODO: Query S.meta and other seed data
-        assert true
+        assert [meta] = DB.all(Game.ServerMeta)
+        assert meta.id == server.id
+        assert meta.entity_id == entity.id
+        assert_decimal_eq(meta.resources.cpu, 1000)
+        assert_decimal_eq(meta.resources.ram, 128)
       end)
 
       # Every server is created with a working NetworkConnection over the internet

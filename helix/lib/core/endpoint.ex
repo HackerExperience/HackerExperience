@@ -10,7 +10,7 @@ defmodule Core.Endpoint do
   - `raw_value` is `nil` when it is not nullable.
   - `raw_value` is of a type different than the one expected by `id_mod`.
   """
-  def cast_id(field, raw_value, mod, opts) do
+  def cast_id(field, raw_value, mod, opts \\ []) do
     id_mod = Module.concat(mod, ID)
 
     case id_mod.from_endpoint(raw_value, opts) do

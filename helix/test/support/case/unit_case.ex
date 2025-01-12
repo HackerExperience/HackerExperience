@@ -9,7 +9,7 @@ defmodule Test.UnitCase do
     quote do
       import ExUnit.CaptureLog
       import Test.Setup.Shared
-      # import Test.Assertions
+      import Test.Assertions
       # import Test.Finders
       # import Test.Utils
 

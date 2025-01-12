@@ -1,7 +1,7 @@
 -- This is an auto-generated file; manual changes will be overwritten!
 
 
-module API.Events.Types exposing (IdxEndpoint, IdxGateway, IdxLog, IdxPlayer, IdxTunnel, IndexRequested, TunnelCreated)
+module API.Events.Types exposing (IdxEndpoint, IdxGateway, IdxLog, IdxPlayer, IdxTunnel, IndexRequested, ProcessCreated, TunnelCreated)
 
 import Game.Model.NIP as NIP exposing (NIP(..))
 import Game.Model.ServerID as ServerID exposing (ServerID(..))
@@ -13,7 +13,7 @@ import Game.Model.TunnelID as TunnelID exposing (TunnelID(..))
 
 ## Aliases
 
-@docs IdxEndpoint, IdxGateway, IdxLog, IdxPlayer, IdxTunnel, IndexRequested, TunnelCreated
+@docs IdxEndpoint, IdxGateway, IdxLog, IdxPlayer, IdxTunnel, IndexRequested, ProcessCreated, TunnelCreated
 
 -}
 type alias TunnelCreated =
@@ -23,6 +23,10 @@ type alias TunnelCreated =
     , target_nip : NIP
     , tunnel_id : TunnelID
     }
+
+
+type alias ProcessCreated =
+    { id : Int, type_ : String }
 
 
 type alias IndexRequested =

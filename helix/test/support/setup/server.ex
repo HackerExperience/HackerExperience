@@ -1,6 +1,6 @@
 defmodule Test.Setup.Server do
   use Test.Setup.Definition
-  alias Game.Server
+  alias Game.{Server}
 
   @doc """
   Creates a Server entry with real shards.
@@ -9,6 +9,7 @@ defmodule Test.Setup.Server do
     opts
     |> get_source_entity()
     |> new_server(opts)
+    |> with_custom_data(opts)
     |> gather_server_data(opts)
   end
 
@@ -19,6 +20,7 @@ defmodule Test.Setup.Server do
   def new_full(opts \\ []) do
     opts
     |> new()
+    |> with_custom_data(opts)
     |> create_server_data(opts)
     |> gather_server_data(opts)
   end
@@ -85,6 +87,18 @@ defmodule Test.Setup.Server do
     %{server: server, entity: entity}
   end
 
+  defp with_custom_data(%{server: server} = related, opts) do
+    maybe_update_resources(server.id, opts)
+
+    related
+  end
+
+  defp maybe_update_resources(%Server.ID{} = server_id, opts) do
+    if custom_resources = opts[:resources] do
+      U.Server.update_resources(server_id, custom_resources)
+    end
+  end
+
   # We were tasked with having a "complete" server. Let's make it complete, then
   defp create_server_data(%{server: _server, entity: _entity} = related, _opts) do
     # TODO: No longer creating a NIP because that's automatic, but here is where I'd create more
@@ -97,5 +111,6 @@ defmodule Test.Setup.Server do
 
     related
     |> Map.merge(%{nip: network_connection.nip})
+    |> Map.merge(%{meta: Svc.Server.get_meta(server.id)})
   end
 end

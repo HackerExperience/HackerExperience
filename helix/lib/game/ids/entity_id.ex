@@ -3,6 +3,8 @@ defmodule Game.Entity.ID do
   Because Player/Entity IDs are interchangeable, we don't use the generic macros for them.
   """
 
+  alias Game.Player
+
   @behaviour Feeb.DB.Type.Behaviour
   @type t :: %__MODULE__{id: integer}
 
@@ -10,6 +12,7 @@ defmodule Game.Entity.ID do
 
   def new(id) when is_integer(id), do: %__MODULE__{id: id}
   def new(%__MODULE__{} = id), do: id
+  def new(%Player.ID{id: raw_id}), do: %__MODULE__{id: raw_id}
 
   @impl true
   def sqlite_type, do: :integer

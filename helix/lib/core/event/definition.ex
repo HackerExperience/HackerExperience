@@ -9,6 +9,7 @@ defmodule Core.Event.Definition do
   defmacro __using__(_) do
     quote do
       alias Core.Event
+      alias Game.Handlers
 
       @before_compile unquote(__MODULE__)
     end
@@ -16,12 +17,24 @@ defmodule Core.Event.Definition do
 
   defmacro __before_compile__(_) do
     quote do
+      @doctype """
+      This is the Core.Event.t type, with the actual event struct wrapped within the `:data` field.
+      """
+      @type event :: Core.Event.t(t)
+
       @name || raise "You must specify the event name via @name"
 
       @doc """
       Returns the event name.
       """
       def get_name, do: @name
+
+      if not Module.defines?(__MODULE__, {:get_handlers, 2}) do
+        @doc """
+        This module does not have any custom handlers.
+        """
+        def handlers(_, _), do: []
+      end
     end
   end
 end

@@ -1,6 +1,8 @@
 defmodule Game.Tunnel do
   use Core.Schema
 
+  @type t :: term
+
   @context :game
   @table :tunnels
 

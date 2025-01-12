@@ -57,16 +57,37 @@ defmodule Test.SetupTest do
 
   describe "Setup.server/1" do
     test "creates all related data" do
-      assert %{entity: entity, player: player, server: server} = Setup.server()
+      assert %{entity: entity, player: player, server: server, meta: meta, nip: nip} =
+               Setup.server()
+
       assert player.id.id == entity.id.id
       assert server.entity_id == entity.id
 
       # Shards were created
       assert_player_shard(player.id)
       assert_server_shard(server.id)
+
+      # Creates a NetworkConnection for the server
+      assert [nc] = DB.all(Game.NetworkConnection)
+      assert nc.server_id == server.id
+      assert nc.nip == nip
+
+      # Creates the meta entry for the server
+      assert meta == Svc.Server.get_meta(server.id)
+    end
+
+    test "supports custom resources being specified" do
+      %{meta: %{resources: default_initial_resources}} = Setup.server()
+
+      # The "ram" resource was modified, whereas the "cpu" resource remained unchanged
+      assert %{meta: meta} = Setup.server(resources: %{ram: 999})
+      assert meta.resources.cpu == default_initial_resources.cpu
+      assert meta.resources.ram == Decimal.new(999)
+      assert meta.resources.__struct__ == Game.Process.Resources
     end
 
     test "respects the `entity`/`entity_id` opt" do
+      # Flaky counter: 1 (unique constraint failed: meta.id) when creating `server_1`
       entity = Setup.entity_lite!()
       server_1 = Setup.server!(entity: entity)
       server_2 = Setup.server!(entity_id: entity.id)
@@ -93,6 +114,14 @@ defmodule Test.SetupTest do
       server_2 = Setup.server_lite!(entity_id: entity.id)
       assert server_1.entity_id == entity.id
       assert server_2.entity_id == entity.id
+    end
+  end
+
+  describe "Setup.process/1" do
+    test "allows user to modify the process objective" do
+      server = Setup.server!()
+      process = Setup.process!(server.id, objective: %{cpu: 123})
+      assert_decimal_eq(process.resources.objective.cpu, 123)
     end
   end
 

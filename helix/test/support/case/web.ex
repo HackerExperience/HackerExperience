@@ -15,6 +15,8 @@ defmodule Test.WebCase do
       alias Test.Setup
       alias Test.Utils, as: U
 
+      alias Core.ID
+      alias Core.NIP
       alias Game.Services, as: Svc
     end
   end

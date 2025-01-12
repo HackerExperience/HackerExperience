@@ -129,22 +129,11 @@ defmodule Webserver.Dispatcher do
   defp emit_events(%{events: []}), do: :ok
 
   defp emit_events(%{events: events} = req) when is_list(events) do
-    # TODO: Find a way to synchronously wait events to finish executing (for tests)
-
-    # TODO: Find a way to concentrate in a single module "dirty" state like this
-    helix_universe_shard_id = req.session.shard_id
-    helix_universe = Process.get(:helix_universe)
+    # TODO: Find a way to concentrate in a single module "dirty" state like this (see also TOP)
+    Process.put(:helix_universe_shard_id, req.session.shard_id)
 
     # TODO: Test how the async process handles the parent request dying. This doesn't happen in the
     # SSE request because, in that case, the process lives indefinitely (see `:start_sse` above)
-    Task.Supervisor.async_nolink(
-      {:via, PartitionSupervisor, {Helix.TaskSupervisor, self()}},
-      fn ->
-        Process.put(:helix_universe, helix_universe)
-        Process.put(:helix_universe_shard_id, helix_universe_shard_id)
-
-        {:event_result, Event.emit(events)}
-      end
-    )
+    Event.emit_async(events)
   end
 end

@@ -47,8 +47,7 @@ defmodule Game.Endpoint.Server.Login do
   end
 
   def get_context(request, %{source_nip: source_nip, target_nip: target_nip} = params, session) do
-    with true <- true,
-         {:ok, bounce_hops} <- resolve_bounce_hops(params[:tunnel_id], params[:vpn_id], source_nip),
+    with {:ok, bounce_hops} <- resolve_bounce_hops(params[:tunnel_id], params[:vpn_id], source_nip),
          {true, %{route_map: %{gateway: gateway, endpoint: endpoint} = route_map}} <-
            Henforcers.Network.can_resolve_route?(source_nip, target_nip, bounce_hops),
 
@@ -99,6 +98,11 @@ defmodule Game.Endpoint.Server.Login do
   defp resolve_bounce_hops(_, _, _), do: {:error, :cant_use_vpn_and_tunnel_at_same_time}
 
   def handle_request(request, _params, context, session) do
+    # TODO: This is temporary. ServerLogin should be wrapped in a process, in which case the tunnel
+    # creation happens upon ProcessCompletedEvent and the TOP handles the connection lifecycle.
+    Feeb.DB.commit()
+    Core.begin_context(:universe, :write)
+
     with {:ok, tunnel} <- Svc.Tunnel.create(context.parsed_links) do
       event =
         TunnelCreatedEvent.new(

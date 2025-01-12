@@ -225,7 +225,7 @@ defmodule Game.Endpoint.Server.LoginTest do
                  x_request_id: x_request_id
                )
 
-      wait_events(x_request_id: x_request_id)
+      wait_events!(x_request_id: x_request_id)
 
       # Gateway -> OtherHop
       Core.with_context(:server, gateway.id, :read, fn ->

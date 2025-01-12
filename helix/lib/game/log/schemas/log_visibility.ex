@@ -10,7 +10,7 @@ defmodule Game.LogVisibility do
     {:log_id, ID.ref(:log_id)},
     {:revision_id, :integer},
     {:inserted_at, {:datetime_utc, [precision: :millisecond], mod: :inserted_at}},
-    {:entity_id, {ID.ref(:entity_id), virtual: :get_entity_id}}
+    {:entity_id, {ID.ref(:entity_id), virtual: true, after_read: :get_entity_id}}
   ]
 
   def new(params) do
@@ -19,5 +19,5 @@ defmodule Game.LogVisibility do
     |> Schema.create()
   end
 
-  def get_entity_id(_, %{shard_id: raw_entity_id}), do: Entity.ID.from_external(raw_entity_id)
+  def get_entity_id(_, _, %{shard_id: raw_entity_id}), do: Entity.ID.from_external(raw_entity_id)
 end
