@@ -20,6 +20,8 @@ defmodule Game.Process.Log.Edit do
   end
 
   defmodule Processable do
+    use Game.Process.Processable.Definition
+
     def on_complete(_process) do
       # TODO
       # Svc.Log.create_revision()

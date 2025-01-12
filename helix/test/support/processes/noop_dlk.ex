@@ -17,6 +17,7 @@ defmodule Test.Process.NoopDLK do
   def on_db_load(%__MODULE__{} = data), do: data
 
   defmodule Processable do
+    use Game.Process.Processable.Definition
     def on_complete(_process), do: :ok
   end
 
