@@ -5,7 +5,7 @@ defmodule Game.Process.Executable do
   def execute(process_mod, server_id, entity_id, params, meta) do
     executable = get_executable(process_mod)
     args = [server_id, entity_id, params, meta]
-    {registry_data, process_info} = get_params(executable, args)
+    {registry_data, process_info} = get_registry_params(executable, args)
 
     case Svc.Process.create(server_id, entity_id, registry_data, process_info) do
       {:ok, process, events} ->
@@ -21,7 +21,7 @@ defmodule Game.Process.Executable do
   This function is public for test utils; but within the scope of this module (and of any production
   code) it is private.
   """
-  def get_params(executable, args = [_, _, params, meta]) do
+  def get_registry_params(executable, args = [_, _, params, meta]) do
     callbacks = get_implemented_callbacks(executable)
 
     # Custom pre-hook

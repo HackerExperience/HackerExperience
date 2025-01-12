@@ -49,7 +49,7 @@ defmodule Test.Setup.Process.Spec do
     executable = Module.concat(mod, :Executable)
 
     {registry_data, process_info} =
-      Executable.get_params(executable, [server_id, entity_id, params, meta])
+      Executable.get_registry_params(executable, [server_id, entity_id, params, meta])
 
     %{
       module: mod,
