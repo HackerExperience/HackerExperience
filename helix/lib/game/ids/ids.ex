@@ -1,5 +1,7 @@
 defmodule Game.Connection.ID, do: use(Core.ID)
 defmodule Game.ConnectionGroup.ID, do: use(Core.ID)
+defmodule Game.File.ID, do: use(Core.ID)
+defmodule Game.Installation.ID, do: use(Core.ID)
 defmodule Game.Log.ID, do: use(Core.ID)
 defmodule Game.Process.ID, do: use(Core.ID)
 defmodule Game.Server.ID, do: use(Core.ID)
