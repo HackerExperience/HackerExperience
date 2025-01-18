@@ -10,6 +10,8 @@ defmodule Game.Endpoint.File.Install do
   alias Game.Henforcers
   alias Game.{File}
 
+  alias Game.Process.File.Install, as: FileInstallProcess
+
   def input_spec do
     selection(
       schema(%{
@@ -52,26 +54,22 @@ defmodule Game.Endpoint.File.Install do
   end
 
   def handle_request(request, _params, ctx, _session) do
-    process_params =
+    process_params = %{}
+
+    meta =
       %{
         file: ctx.file,
         server: ctx.server,
         entity_id: ctx.entity_id
       }
 
-    meta = %{}
+    case Svc.TOP.execute(FileInstallProcess, ctx.server.id, ctx.entity_id, process_params, meta) do
+      {:ok, process} ->
+        {:ok, %{request | result: %{process: process}}}
 
-    # # TODO
-    # case Svc.TOP.execute(FileInstallProcess, ctx.server.id, ctx.entity_id, process_params, meta) do
-    #   {:ok, process} ->
-    #     {:ok, %{request | result: %{process: process}}}
-
-    #   {:error, reason} ->
-    #     raise "Error installing file: #{inspect(reason)}"
-    # end
-
-    # TODO; this is a placeholder that will be replaced by the actual FileInstallProcess result
-    {:ok, %{request | result: %{process: %{id: %Game.Process.ID{id: 1}}}}}
+      {:error, reason} ->
+        raise "Error installing file: #{inspect(reason)}"
+    end
   end
 
   def render_response(request, %{process: process}, _) do

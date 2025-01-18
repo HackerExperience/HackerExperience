@@ -14,10 +14,19 @@ defmodule Game.Endpoint.File.InstallTest do
       file = Setup.file!(gateway.id)
       DB.commit()
 
-      assert {:ok, %{status: 200, data: _data}} =
+      assert {:ok, %{status: 200, data: data}} =
                post(build_path(gtw_nip, file.id), %{}, shard_id: shard_id, token: jwt)
 
-      # TODO: Assert that the process was created
+      assert [registry] = U.get_all_process_registries()
+      assert registry.process_id.id == data.process_id
+      assert registry.entity_id.id == player.id.id
+      assert registry.server_id == gateway.id
+
+      assert [process] = U.get_all_processes(gateway.id)
+      assert process.type == :file_install
+      assert process.data.file_id == file.id
+
+      # TODO: Assert / add support for source|target_file_id
     end
 
     @tag :skip
