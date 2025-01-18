@@ -29,10 +29,14 @@ defmodule Test.Setup do
   defdelegate tunnel_lite!(opts \\ []), to: S.Tunnel, as: :new_lite!
 
   # Server
+  defdelegate file(server_id, opts \\ []), to: S.File, as: :new
+  defdelegate file!(server_id, opts \\ []), to: S.File, as: :new!
   defdelegate log(server_id, opts \\ []), to: S.Log, as: :new
   defdelegate log!(server_id, opts \\ []), to: S.Log, as: :new!
 
   # Player
+  defdelegate file_visibility(player_id, opts \\ []), to: S.File, as: :new_visibility
+  defdelegate file_visibility!(player_id, opts \\ []), to: S.File, as: :new_visibility!
   defdelegate log_visibility(player_id, opts \\ []), to: S.Log, as: :new_visibility
   defdelegate log_visibility!(player_id, opts \\ []), to: S.Log, as: :new_visibility!
 
