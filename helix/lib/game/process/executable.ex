@@ -2,6 +2,8 @@ defmodule Game.Process.Executable do
   require Logger
   alias Game.Services, as: Svc
 
+  # NOTE/TODO: At the moment, I fail to see a reason for having both `params` and `meta`. Why not
+  # merge them in a single variable? Merge them or document why the decoupling is necessary.
   def execute(process_mod, server_id, entity_id, params, meta) do
     executable = get_executable(process_mod)
     args = [server_id, entity_id, params, meta]
