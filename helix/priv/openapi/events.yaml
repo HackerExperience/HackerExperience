@@ -21,8 +21,8 @@ components:
     IdxGateway:
       type: object
       required:
-        - tunnels
         - logs
+        - tunnels
         - nip
         - id
       properties:
@@ -30,14 +30,14 @@ components:
           type: integer
         nip:
           type: string
-        logs:
-          type: array
-          items:
-            $ref: '#/components/schemas/IdxLog'
         tunnels:
           type: array
           items:
             $ref: '#/components/schemas/IdxTunnel'
+        logs:
+          type: array
+          items:
+            $ref: '#/components/schemas/IdxLog'
     IdxLog:
       type: object
       required:
@@ -54,20 +54,20 @@ components:
     IdxPlayer:
       type: object
       required:
-        - endpoints
-        - gateways
         - mainframe_id
+        - gateways
+        - endpoints
       properties:
-        mainframe_id:
-          type: integer
-        gateways:
-          type: array
-          items:
-            $ref: '#/components/schemas/IdxGateway'
         endpoints:
           type: array
           items:
             $ref: '#/components/schemas/IdxEndpoint'
+        gateways:
+          type: array
+          items:
+            $ref: '#/components/schemas/IdxGateway'
+        mainframe_id:
+          type: integer
     IdxTunnel:
       type: object
       required:

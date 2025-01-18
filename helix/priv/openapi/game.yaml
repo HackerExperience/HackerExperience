@@ -4,6 +4,17 @@ info:
   title: Game API
 components:
   responses:
+    FileInstallOkResponse:
+      description: TODO description
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - data
+            properties:
+              data:
+                $ref: '#/components/schemas/FileInstallOutput'
     GenericBadRequestResponse:
       description: TODO
       content:
@@ -51,7 +62,37 @@ components:
             properties:
               data:
                 $ref: '#/components/schemas/ServerLoginOutput'
+  requestBodies:
+    FileInstallRequest:
+      description: TODO description
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/FileInstallInput'
+    PlayerSyncRequest:
+      description: TODO description
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/PlayerSyncInput'
+    ServerLoginRequest:
+      description: TODO description
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ServerLoginInput'
   schemas:
+    FileInstallInput:
+      type: object
+      required: []
+      properties: {}
+    FileInstallOutput:
+      type: object
+      required: []
+      properties: {}
     GenericBadRequest:
       type: object
       required:
@@ -90,21 +131,6 @@ components:
       type: object
       required: []
       properties: {}
-  requestBodies:
-    PlayerSyncRequest:
-      description: TODO description
-      required: true
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/PlayerSyncInput'
-    ServerLoginRequest:
-      description: TODO description
-      required: true
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/ServerLoginInput'
   securitySchemes:
     AuthorizationToken:
       in: header
@@ -123,6 +149,29 @@ paths:
       operationId: PlayerSync
       requestBody:
         $ref: '#/components/requestBodies/PlayerSyncRequest'
+  /v1/server/{nip}/file/{file_id}/install:
+    post:
+      parameters:
+        - in: path
+          name: nip
+          description: ''
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: file_id
+          description: ''
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          $ref: '#/components/responses/FileInstallOkResponse'
+      security:
+        - AuthorizationToken: []
+      operationId: FileInstall
+      requestBody:
+        $ref: '#/components/requestBodies/FileInstallRequest'
   /v1/server/{nip}/login/{target_nip}:
     post:
       parameters:
@@ -141,8 +190,8 @@ paths:
       responses:
         '200':
           $ref: '#/components/responses/ServerLoginOkResponse'
+      security:
+        - AuthorizationToken: []
       operationId: ServerLogin
       requestBody:
         $ref: '#/components/requestBodies/ServerLoginRequest'
-      security:
-        - AuthorizationToken: []

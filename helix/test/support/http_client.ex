@@ -72,6 +72,17 @@ defmodule Test.HTTPClient do
   # defp parse_response({_, %Req.Response{status: status, body: ""}}),
   #   do: %{status: status, raw_body: "", body: nil, data: nil, error: nil} |> wrap_response(status)
 
+  defp parse_response({_, %Req.Response{status: 404, body: ""}}) do
+    %{
+      status: 404,
+      raw_body: "",
+      body: nil,
+      data: nil,
+      error: nil
+    }
+    |> wrap_response(404)
+  end
+
   defp parse_response({_, %Req.Response{status: status, body: raw_body}}) when is_map(raw_body) do
     body = Renatils.Map.atomify_keys(raw_body)
 

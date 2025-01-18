@@ -27,6 +27,10 @@ defmodule Game.Webserver.Spec do
       {Endpoint.Server.Login, :post} => %{
         path: "/v1/server/{nip}/login/{target_nip}",
         responses: [200]
+      },
+      {Endpoint.File.Install, :post} => %{
+        path: "/v1/server/{nip}/file/{file_id}/install",
+        responses: [200]
       }
     }
   end

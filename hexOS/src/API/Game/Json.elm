@@ -2,10 +2,12 @@
 
 
 module API.Game.Json exposing
-    ( encodeGenericBadRequest, encodeGenericBadRequestResponse, encodeGenericError, encodeGenericErrorResponse
+    ( encodeFileInstallInput, encodeFileInstallOkResponse, encodeFileInstallOutput, encodeFileInstallRequest
+    , encodeGenericBadRequest, encodeGenericBadRequestResponse, encodeGenericError, encodeGenericErrorResponse
     , encodeGenericUnauthorizedResponse, encodePlayerSyncInput, encodePlayerSyncOkResponse
     , encodePlayerSyncOutput, encodePlayerSyncRequest, encodeServerLoginInput, encodeServerLoginOkResponse
     , encodeServerLoginOutput, encodeServerLoginRequest
+    , decodeFileInstallInput, decodeFileInstallOkResponse, decodeFileInstallOutput, decodeFileInstallRequest
     , decodeGenericBadRequest, decodeGenericBadRequestResponse, decodeGenericError, decodeGenericErrorResponse
     , decodeGenericUnauthorizedResponse, decodePlayerSyncInput, decodePlayerSyncOkResponse
     , decodePlayerSyncOutput, decodePlayerSyncRequest, decodeServerLoginInput, decodeServerLoginOkResponse
@@ -17,6 +19,7 @@ module API.Game.Json exposing
 
 ## Encoders
 
+@docs encodeFileInstallInput, encodeFileInstallOkResponse, encodeFileInstallOutput, encodeFileInstallRequest
 @docs encodeGenericBadRequest, encodeGenericBadRequestResponse, encodeGenericError, encodeGenericErrorResponse
 @docs encodeGenericUnauthorizedResponse, encodePlayerSyncInput, encodePlayerSyncOkResponse
 @docs encodePlayerSyncOutput, encodePlayerSyncRequest, encodeServerLoginInput, encodeServerLoginOkResponse
@@ -25,6 +28,7 @@ module API.Game.Json exposing
 
 ## Decoders
 
+@docs decodeFileInstallInput, decodeFileInstallOkResponse, decodeFileInstallOutput, decodeFileInstallRequest
 @docs decodeGenericBadRequest, decodeGenericBadRequestResponse, decodeGenericError, decodeGenericErrorResponse
 @docs decodeGenericUnauthorizedResponse, decodePlayerSyncInput, decodePlayerSyncOkResponse
 @docs decodePlayerSyncOutput, decodePlayerSyncRequest, decodeServerLoginInput, decodeServerLoginOkResponse
@@ -159,6 +163,26 @@ encodeGenericBadRequest rec =
         )
 
 
+decodeFileInstallOutput : Json.Decode.Decoder API.Game.Types.FileInstallOutput
+decodeFileInstallOutput =
+    Json.Decode.succeed {}
+
+
+encodeFileInstallOutput : API.Game.Types.FileInstallOutput -> Json.Encode.Value
+encodeFileInstallOutput rec =
+    Json.Encode.object []
+
+
+decodeFileInstallInput : Json.Decode.Decoder API.Game.Types.FileInstallInput
+decodeFileInstallInput =
+    Json.Decode.succeed {}
+
+
+encodeFileInstallInput : API.Game.Types.FileInstallInput -> Json.Encode.Value
+encodeFileInstallInput rec =
+    Json.Encode.object []
+
+
 decodeServerLoginOkResponse : Json.Decode.Decoder API.Game.Types.ServerLoginOkResponse
 decodeServerLoginOkResponse =
     Json.Decode.succeed
@@ -233,6 +257,22 @@ encodeGenericBadRequestResponse rec =
     Json.Encode.object [ ( "error", encodeGenericBadRequest rec.error ) ]
 
 
+decodeFileInstallOkResponse : Json.Decode.Decoder API.Game.Types.FileInstallOkResponse
+decodeFileInstallOkResponse =
+    Json.Decode.succeed
+        (\data -> { data = data })
+        |> OpenApi.Common.jsonDecodeAndMap
+            (Json.Decode.field
+                "data"
+                decodeFileInstallOutput
+            )
+
+
+encodeFileInstallOkResponse : API.Game.Types.FileInstallOkResponse -> Json.Encode.Value
+encodeFileInstallOkResponse rec =
+    Json.Encode.object [ ( "data", encodeFileInstallOutput rec.data ) ]
+
+
 decodeServerLoginRequest : Json.Decode.Decoder API.Game.Types.ServerLoginRequest
 decodeServerLoginRequest =
     decodeServerLoginInput
@@ -251,3 +291,13 @@ decodePlayerSyncRequest =
 encodePlayerSyncRequest : API.Game.Types.PlayerSyncRequest -> Json.Encode.Value
 encodePlayerSyncRequest =
     encodePlayerSyncInput
+
+
+decodeFileInstallRequest : Json.Decode.Decoder API.Game.Types.FileInstallRequest
+decodeFileInstallRequest =
+    decodeFileInstallInput
+
+
+encodeFileInstallRequest : API.Game.Types.FileInstallRequest -> Json.Encode.Value
+encodeFileInstallRequest =
+    encodeFileInstallInput

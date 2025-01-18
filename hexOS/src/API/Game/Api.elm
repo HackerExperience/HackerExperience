@@ -1,14 +1,14 @@
 -- This is an auto-generated file; manual changes will be overwritten!
 
 
-module API.Game.Api exposing (playerSyncTask, serverLoginTask)
+module API.Game.Api exposing (fileInstallTask, playerSyncTask, serverLoginTask)
 
 {-|
 
 
 ## Operations
 
-@docs playerSyncTask, serverLoginTask
+@docs fileInstallTask, playerSyncTask, serverLoginTask
 
 -}
 
@@ -48,6 +48,39 @@ playerSyncTask config =
                 API.Game.Json.decodePlayerSyncOkResponse
         , body =
             Http.jsonBody (API.Game.Json.encodePlayerSyncRequest config.body)
+        , timeout = Nothing
+        }
+
+
+fileInstallTask :
+    { server : String
+    , authorization : { authorization : String }
+    , body : API.Game.Types.FileInstallRequest
+    , params : { nip : NIP, file_id : String }
+    }
+    -> Task.Task (OpenApi.Common.Error API.Game.Types.FileInstall_Error String) API.Game.Types.FileInstallOkResponse
+fileInstallTask config =
+    Http.task
+        { url =
+            Url.Builder.crossOrigin
+                config.server
+                [ "v1"
+                , "server"
+                , NIP.toString config.params.nip
+                , "file"
+                , config.params.file_id
+                , "install"
+                ]
+                []
+        , method = "POST"
+        , headers =
+            [ Http.header "Authorization" config.authorization.authorization ]
+        , resolver =
+            OpenApi.Common.jsonResolverCustom
+                (Dict.fromList [])
+                API.Game.Json.decodeFileInstallOkResponse
+        , body =
+            Http.jsonBody (API.Game.Json.encodeFileInstallRequest config.body)
         , timeout = Nothing
         }
 

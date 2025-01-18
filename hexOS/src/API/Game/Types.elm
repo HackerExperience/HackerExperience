@@ -2,7 +2,12 @@
 
 
 module API.Game.Types exposing
-    ( GenericBadRequest
+    ( FileInstallInput
+    , FileInstallOkResponse
+    , FileInstallOutput
+    , FileInstallRequest
+    , FileInstall_Error
+    , GenericBadRequest
     , GenericBadRequestResponse
     , GenericError
     , GenericErrorResponse
@@ -29,18 +34,23 @@ import Game.Model.TunnelID as TunnelID exposing (TunnelID(..))
 
 ## Aliases
 
-@docs GenericBadRequest, GenericBadRequestResponse, GenericError, GenericErrorResponse
-@docs GenericUnauthorizedResponse, PlayerSyncInput, PlayerSyncOkResponse, PlayerSyncOutput, PlayerSyncRequest
-@docs ServerLoginInput, ServerLoginOkResponse, ServerLoginOutput, ServerLoginRequest
+@docs FileInstallInput, FileInstallOkResponse, FileInstallOutput, FileInstallRequest, GenericBadRequest
+@docs GenericBadRequestResponse, GenericError, GenericErrorResponse, GenericUnauthorizedResponse
+@docs PlayerSyncInput, PlayerSyncOkResponse, PlayerSyncOutput, PlayerSyncRequest, ServerLoginInput
+@docs ServerLoginOkResponse, ServerLoginOutput, ServerLoginRequest
 
 
 ## Errors
 
-@docs PlayerSync_Error, ServerLogin_Error
+@docs FileInstall_Error, PlayerSync_Error, ServerLogin_Error
 
 -}
 type PlayerSync_Error
     = PlayerSync_400 GenericBadRequestResponse
+
+
+type alias FileInstall_Error =
+    Never
 
 
 type alias ServerLogin_Error =
@@ -71,6 +81,14 @@ type alias GenericBadRequest =
     { details : Maybe String, msg : String }
 
 
+type alias FileInstallOutput =
+    {}
+
+
+type alias FileInstallInput =
+    {}
+
+
 type alias ServerLoginOkResponse =
     { data : ServerLoginOutput }
 
@@ -91,9 +109,17 @@ type alias GenericBadRequestResponse =
     { error : GenericBadRequest }
 
 
+type alias FileInstallOkResponse =
+    { data : FileInstallOutput }
+
+
 type alias ServerLoginRequest =
     ServerLoginInput
 
 
 type alias PlayerSyncRequest =
     PlayerSyncInput
+
+
+type alias FileInstallRequest =
+    FileInstallInput
