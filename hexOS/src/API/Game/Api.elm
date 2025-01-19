@@ -1,14 +1,14 @@
 -- This is an auto-generated file; manual changes will be overwritten!
 
 
-module API.Game.Api exposing (fileInstallTask, playerSyncTask, serverLoginTask)
+module API.Game.Api exposing (fileDeleteTask, fileInstallTask, playerSyncTask, serverLoginTask)
 
 {-|
 
 
 ## Operations
 
-@docs fileInstallTask, playerSyncTask, serverLoginTask
+@docs fileDeleteTask, fileInstallTask, playerSyncTask, serverLoginTask
 
 -}
 
@@ -48,6 +48,39 @@ playerSyncTask config =
                 API.Game.Json.decodePlayerSyncOkResponse
         , body =
             Http.jsonBody (API.Game.Json.encodePlayerSyncRequest config.body)
+        , timeout = Nothing
+        }
+
+
+fileDeleteTask :
+    { server : String
+    , authorization : { authorization : String }
+    , body : API.Game.Types.FileDeleteRequest
+    , params : { nip : NIP, file_id : String }
+    }
+    -> Task.Task (OpenApi.Common.Error API.Game.Types.FileDelete_Error String) API.Game.Types.FileDeleteOkResponse
+fileDeleteTask config =
+    Http.task
+        { url =
+            Url.Builder.crossOrigin
+                config.server
+                [ "v1"
+                , "server"
+                , NIP.toString config.params.nip
+                , "file"
+                , config.params.file_id
+                , "delete"
+                ]
+                []
+        , method = "POST"
+        , headers =
+            [ Http.header "Authorization" config.authorization.authorization ]
+        , resolver =
+            OpenApi.Common.jsonResolverCustom
+                (Dict.fromList [])
+                API.Game.Json.decodeFileDeleteOkResponse
+        , body =
+            Http.jsonBody (API.Game.Json.encodeFileDeleteRequest config.body)
         , timeout = Nothing
         }
 

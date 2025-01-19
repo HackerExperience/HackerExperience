@@ -2,7 +2,12 @@
 
 
 module API.Game.Types exposing
-    ( FileInstallInput
+    ( FileDeleteInput
+    , FileDeleteOkResponse
+    , FileDeleteOutput
+    , FileDeleteRequest
+    , FileDelete_Error
+    , FileInstallInput
     , FileInstallOkResponse
     , FileInstallOutput
     , FileInstallRequest
@@ -34,19 +39,24 @@ import Game.Model.TunnelID as TunnelID exposing (TunnelID(..))
 
 ## Aliases
 
-@docs FileInstallInput, FileInstallOkResponse, FileInstallOutput, FileInstallRequest, GenericBadRequest
-@docs GenericBadRequestResponse, GenericError, GenericErrorResponse, GenericUnauthorizedResponse
-@docs PlayerSyncInput, PlayerSyncOkResponse, PlayerSyncOutput, PlayerSyncRequest, ServerLoginInput
-@docs ServerLoginOkResponse, ServerLoginOutput, ServerLoginRequest
+@docs FileDeleteInput, FileDeleteOkResponse, FileDeleteOutput, FileDeleteRequest, FileInstallInput
+@docs FileInstallOkResponse, FileInstallOutput, FileInstallRequest, GenericBadRequest, GenericBadRequestResponse
+@docs GenericError, GenericErrorResponse, GenericUnauthorizedResponse, PlayerSyncInput, PlayerSyncOkResponse
+@docs PlayerSyncOutput, PlayerSyncRequest, ServerLoginInput, ServerLoginOkResponse, ServerLoginOutput
+@docs ServerLoginRequest
 
 
 ## Errors
 
-@docs FileInstall_Error, PlayerSync_Error, ServerLogin_Error
+@docs FileDelete_Error, FileInstall_Error, PlayerSync_Error, ServerLogin_Error
 
 -}
 type PlayerSync_Error
     = PlayerSync_400 GenericBadRequestResponse
+
+
+type alias FileDelete_Error =
+    Never
 
 
 type alias FileInstall_Error =
@@ -89,6 +99,14 @@ type alias FileInstallInput =
     {}
 
 
+type alias FileDeleteOutput =
+    {}
+
+
+type alias FileDeleteInput =
+    { tunnel_id : Maybe TunnelID }
+
+
 type alias ServerLoginOkResponse =
     { data : ServerLoginOutput }
 
@@ -113,6 +131,10 @@ type alias FileInstallOkResponse =
     { data : FileInstallOutput }
 
 
+type alias FileDeleteOkResponse =
+    { data : FileDeleteOutput }
+
+
 type alias ServerLoginRequest =
     ServerLoginInput
 
@@ -123,3 +145,7 @@ type alias PlayerSyncRequest =
 
 type alias FileInstallRequest =
     FileInstallInput
+
+
+type alias FileDeleteRequest =
+    FileDeleteInput

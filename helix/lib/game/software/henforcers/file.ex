@@ -65,4 +65,12 @@ defmodule Game.Henforcers.File do
       Henforcer.success(%{file: file, entity: entity, visibility: visibility})
     end
   end
+
+  def can_delete?(%Server{} = server, %Entity.ID{} = entity_id, %File.ID{} = file_id) do
+    with {true, %{entity: entity}} <- Henforcers.Entity.entity_exists?(entity_id),
+         {true, %{file: file}} <- Henforcers.File.file_exists?(file_id, server),
+         {true, %{visibility: visibility}} <- Henforcers.File.is_visible?(file, entity_id) do
+      Henforcer.success(%{file: file, entity: entity, visibility: visibility})
+    end
+  end
 end
