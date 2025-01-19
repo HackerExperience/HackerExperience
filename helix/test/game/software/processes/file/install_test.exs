@@ -38,5 +38,26 @@ defmodule Game.Process.File.InstallTest do
       assert event.data.installation == installation
       assert event.data.process == process
     end
+
+    test "fails if Player has no Visibility over File" do
+      server = Setup.server!()
+      # This `file` is in the same Server but with no visibility
+      file = Setup.file!(server.id)
+      %{process: process} = Setup.process(server.id, type: :file_install, spec: [file: file])
+      DB.commit()
+
+      assert {{:error, event}, log} =
+               with_log(fn -> FileInstallProcess.Processable.on_complete(process) end)
+
+      assert event.name == :file_install_failed
+      assert event.data.process == process
+      assert event.data.reason == "file_not_found"
+
+      assert log =~ "Unable to install file: file_not_found"
+
+      # If we suddenly start having Visibility into the File, then we can complete the process
+      Setup.file_visibility!(server.entity_id, server_id: server.id, file_id: file.id)
+      assert {:ok, _} = FileInstallProcess.Processable.on_complete(process)
+    end
   end
 end

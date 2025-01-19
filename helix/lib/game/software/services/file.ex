@@ -16,6 +16,16 @@ defmodule Game.Services.File do
     |> Core.Fetch.assert_non_empty_result!(filter_params, opts)
   end
 
+  def fetch_visibility(entity_id, filter_params, opts \\ []) do
+    filters = [
+      by_file: &query_visibility_by_file/1
+    ]
+
+    Core.with_context(:player, entity_id, :read, fn ->
+      Core.Fetch.query(filter_params, opts, filters)
+    end)
+  end
+
   def install_file(%File{} = file) do
     %{
       file_type: file.type,
@@ -29,4 +39,7 @@ defmodule Game.Services.File do
 
   # TODO
   defp get_memory_usage(%File{} = _file), do: 5
+
+  defp query_visibility_by_file(%File{} = file),
+    do: DB.one({:file_visibilities, :fetch}, [file.server_id, file.id])
 end

@@ -40,7 +40,9 @@ defmodule Test.HTTPClient do
     header_name =
       if is_lobby_request(partial_url), do: "test-lobby-shard-id", else: "test-game-shard-id"
 
-    put_header(req, header_name, "#{Keyword.fetch!(opts, :shard_id)}")
+    shard_id = opts[:shard_id] || Process.get(:helix_universe_shard_id) || raise "Missing shard_id"
+
+    put_header(req, header_name, "#{shard_id}")
   end
 
   defp add_authorization_header(req, opts) do

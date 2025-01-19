@@ -30,16 +30,16 @@ defmodule Game.Process.File.Install do
       with {true, %{server: server}} <- Henforcers.Server.server_exists?(process.server_id),
            {true, _} <- Henforcers.Server.server_belongs_to_entity?(server, process.entity_id),
            {true, %{file: file}} <- Henforcers.File.file_exists?(file_id, server),
-           # TODO: Assert visibility
-           true <- true,
+           {true, _} <- Henforcers.File.is_visible?(file, process.entity_id),
            {:ok, installation} <- Svc.File.install_file(file) do
         Core.commit()
         {:ok, FileInstalledEvent.new(installation, file, process)}
       else
         {false, henforcer_error, _} ->
           Core.rollback()
-          Logger.error("Unable to install file: #{inspect(henforcer_error)}")
-          {:error, FileInstallFailedEvent.new("#{inspect(henforcer_error)}", process)}
+          reason = format_henforcer_error(henforcer_error)
+          Logger.error("Unable to install file: #{reason}")
+          {:error, FileInstallFailedEvent.new(reason, process)}
 
         {:error, reason} ->
           Core.rollback()
@@ -47,6 +47,10 @@ defmodule Game.Process.File.Install do
           {:error, FileInstallFailedEvent.new(:internal, process)}
       end
     end
+
+    defp format_henforcer_error({:file, :not_found}), do: "file_not_found"
+    defp format_henforcer_error({:file_visibility, :not_found}), do: "file_not_found"
+    defp format_henforcer_error(unhandled_error), do: "#{inspect(unhandled_error)}"
   end
 
   defmodule Signalable do

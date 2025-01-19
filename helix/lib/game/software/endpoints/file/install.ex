@@ -40,8 +40,7 @@ defmodule Game.Endpoint.File.Install do
     with {true, %{server: server}} <- Henforcers.Network.nip_exists?(params.nip),
          {true, _} <- Henforcers.Server.server_belongs_to_entity?(server, session.data.entity_id),
          {true, %{file: file}} <- Henforcers.File.file_exists?(params.file_id, server),
-         # TODO: Check entity has visibility to File
-         true <- true do
+         {true, _} <- Henforcers.File.is_visible?(file, session.data.entity_id) do
       context =
         %{
           file: file,
@@ -50,6 +49,10 @@ defmodule Game.Endpoint.File.Install do
         }
 
       {:ok, %{request | context: context}}
+    else
+      {false, henforcer_error, _} ->
+        error_msg = format_henforcer_error(henforcer_error)
+        {:error, %{request | response: {400, error_msg}}}
     end
   end
 
@@ -73,4 +76,7 @@ defmodule Game.Endpoint.File.Install do
   def render_response(request, %{process: process}, _) do
     {:ok, %{request | response: {200, %{process_id: process.id |> ID.to_external()}}}}
   end
+
+  defp format_henforcer_error({:file, :not_found}), do: "file_not_found"
+  defp format_henforcer_error({:file_visibility, :not_found}), do: "file_not_found"
 end
