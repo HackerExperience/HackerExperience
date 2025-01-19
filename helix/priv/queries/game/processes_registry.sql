@@ -14,9 +14,17 @@ SELECT server_id FROM processes_registry GROUP BY server_id;
 
 -- :__insert
 INSERT INTO processes_registry
-  (server_id, process_id, entity_id, tgt_log_id, inserted_at)
+  (
+    server_id,
+    process_id,
+    entity_id,
+    tgt_log_id,
+    src_file_id,
+    tgt_file_id,
+    inserted_at
+  )
 VALUES
-  (?, ?, ?, ?, ?)
+  (?, ?, ?, ?, ?, ?, ?)
 RETURNING *;
 
 --------------------------------------------------------------------------------

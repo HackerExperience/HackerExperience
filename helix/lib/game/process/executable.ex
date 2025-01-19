@@ -30,6 +30,8 @@ defmodule Game.Process.Executable do
     custom = callback(executable, :custom, args, callbacks)
     args = args ++ [custom]
 
+    source_file = callback(executable, :source_file, args, callbacks)
+    target_file = callback(executable, :target_file, args, callbacks)
     target_log = callback(executable, :target_log, args, callbacks)
 
     resources_params = [[params, meta]]
@@ -42,6 +44,8 @@ defmodule Game.Process.Executable do
     registry_data =
       %{}
       |> Map.merge(target_log)
+      |> Map.merge(source_file)
+      |> Map.merge(target_file)
       |> Map.merge(resources)
 
     {registry_data, process_info}

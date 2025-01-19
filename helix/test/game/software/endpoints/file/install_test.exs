@@ -21,12 +21,12 @@ defmodule Game.Endpoint.File.InstallTest do
       assert registry.process_id.id == data.process_id
       assert registry.entity_id.id == player.id.id
       assert registry.server_id == gateway.id
+      assert registry.src_file_id == file.id
 
       assert [process] = U.get_all_processes(gateway.id)
       assert process.type == :file_install
       assert process.data.file_id == file.id
-
-      # TODO: Assert / add support for source|target_file_id
+      assert process.registry.src_file_id == file.id
     end
 
     @tag :skip
