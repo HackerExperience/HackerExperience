@@ -1,6 +1,6 @@
 defmodule Game.Services.File do
   alias Feeb.DB
-  alias Game.{File, FileVisibility, Installation, Server}
+  alias Game.{File, Installation}
 
   def fetch(filter_params, opts \\ []) do
     filters = [

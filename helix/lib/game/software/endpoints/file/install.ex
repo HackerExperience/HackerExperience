@@ -38,16 +38,9 @@ defmodule Game.Endpoint.File.Install do
 
   def get_context(request, params, session) do
     with {true, %{server: server}} <- Henforcers.Network.nip_exists?(params.nip),
-         {true, _} <- Henforcers.Server.server_belongs_to_entity?(server, session.data.entity_id),
-         {true, %{file: file}} <- Henforcers.File.file_exists?(params.file_id, server),
-         {true, _} <- Henforcers.File.is_visible?(file, session.data.entity_id) do
-      context =
-        %{
-          file: file,
-          server: server,
-          entity_id: session.data.entity_id
-        }
-
+         {true, %{file: file, entity: entity}} <-
+           Henforcers.File.can_install?(server, session.data.entity_id, params.file_id) do
+      context = %{file: file, server: server, entity: entity}
       {:ok, %{request | context: context}}
     else
       {false, henforcer_error, _} ->
@@ -64,7 +57,7 @@ defmodule Game.Endpoint.File.Install do
         file: ctx.file
       }
 
-    case Svc.TOP.execute(FileInstallProcess, ctx.server.id, ctx.entity_id, process_params, meta) do
+    case Svc.TOP.execute(FileInstallProcess, ctx.server.id, ctx.entity.id, process_params, meta) do
       {:ok, process} ->
         {:ok, %{request | result: %{process: process}}}
 
@@ -77,6 +70,7 @@ defmodule Game.Endpoint.File.Install do
     {:ok, %{request | response: {200, %{process_id: process.id |> ID.to_external()}}}}
   end
 
+  defp format_henforcer_error({:nip, :not_found}), do: "nip_not_found"
   defp format_henforcer_error({:file, :not_found}), do: "file_not_found"
   defp format_henforcer_error({:file_visibility, :not_found}), do: "file_not_found"
 end

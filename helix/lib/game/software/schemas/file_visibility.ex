@@ -2,6 +2,8 @@ defmodule Game.FileVisibility do
   use Core.Schema
   alias Game.Entity
 
+  @type t :: term()
+
   @context :player
   @table :file_visibilities
 

@@ -49,7 +49,7 @@ defmodule Game.Endpoint.Log.Edit do
 
   def get_context(request, %{is_local?: true} = params, session) do
     with {true, %{server: server}} <- Henforcers.Network.nip_exists?(params.nip),
-         {true, _} <- Henforcers.Server.server_belongs_to_entity?(server, session.data.entity_id),
+         {true, _} <- Henforcers.Server.belongs_to_entity?(server, session.data.entity_id),
          {true, %{log: log}} <- Henforcers.Log.log_exists?(params.log_id, nil, server),
          # TODO: Check entity has visibility (access) on this log
          true <- true do

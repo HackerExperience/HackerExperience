@@ -1,10 +1,11 @@
 defmodule Game.Henforcers.File do
   alias Core.Henforcer
+  alias Game.Henforcers
   alias Game.Services, as: Svc
   alias Game.{Entity, File, FileVisibility, Server}
 
   @type file_exists_relay :: %{file: File.t()}
-  @type file_exists_error :: {false, {:file, :not_Found}, %{}}
+  @type file_exists_error :: {false, {:file, :not_found}, %{}}
 
   @doc """
   Checks whether the given File exists.
@@ -25,7 +26,7 @@ defmodule Game.Henforcers.File do
   end
 
   @type is_visible_relay :: %{visibility: FileVisibility.t()}
-  @type is_visible_error :: {:file_visibility, :not_found}
+  @type is_visible_error :: {false, {:file_visibility, :not_found}, %{}}
 
   @doc """
   Henforces that the given `entity_id` has Visibility into the given `file`.
@@ -40,6 +41,28 @@ defmodule Game.Henforcers.File do
 
       nil ->
         Henforcer.fail({:file_visibility, :not_found})
+    end
+  end
+
+  @type can_install_relay :: %{visibility: FileVisibility.t(), file: File.t(), entity: Entity.t()}
+  @type can_install_error ::
+          Henforcers.Server.belongs_to_entity_error()
+          | file_exists_error
+          | is_visible_error
+
+  @doc """
+  Aggregator that henforces that the given Entity can install the given File in the given Server.
+
+  Used by the corresponding Endpoint and Process (FileInstallEndpoint and FileInstallProcess).
+  """
+  @spec can_install?(Server.t(), Entity.id(), File.id()) ::
+          {true, can_install_relay}
+          | can_install_error
+  def can_install?(%Server{} = server, %Entity.ID{} = entity_id, %File.ID{} = file_id) do
+    with {true, %{entity: entity}} <- Henforcers.Server.belongs_to_entity?(server, entity_id),
+         {true, %{file: file}} <- Henforcers.File.file_exists?(file_id, server),
+         {true, %{visibility: visibility}} <- Henforcers.File.is_visible?(file, entity_id) do
+      Henforcer.success(%{file: file, entity: entity, visibility: visibility})
     end
   end
 end

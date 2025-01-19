@@ -25,12 +25,9 @@ defmodule Game.Process.File.Install do
     def on_complete(%{registry: %{src_file_id: %File.ID{} = file_id}} = process) do
       Core.begin_context(:server, process.server_id, :write)
 
-      # TODO: Consider moving this Henforcer block into a "shared" top-level Henforcer to avoid
-      # duplication with the Endpoint Henforcers.
       with {true, %{server: server}} <- Henforcers.Server.server_exists?(process.server_id),
-           {true, _} <- Henforcers.Server.server_belongs_to_entity?(server, process.entity_id),
-           {true, %{file: file}} <- Henforcers.File.file_exists?(file_id, server),
-           {true, _} <- Henforcers.File.is_visible?(file, process.entity_id),
+           {true, %{file: file}} <-
+             Henforcers.File.can_install?(server, process.entity_id, file_id),
            {:ok, installation} <- Svc.File.install_file(file) do
         Core.commit()
         {:ok, FileInstalledEvent.new(installation, file, process)}
