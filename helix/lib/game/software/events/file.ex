@@ -16,7 +16,7 @@ defmodule Game.Events.File do
     @type t :: %__MODULE__{
             file: File.t(),
             installation: Installation.t(),
-            process: Process.t()
+            process: Process.t(:file_install)
           }
 
     @name :file_installed
@@ -77,9 +77,9 @@ defmodule Game.Events.File do
     defstruct [:reason, :process]
 
     @type t :: %__MODULE__{
-            process: Process.t(),
             # TODO: Narrow down possible reasons
-            reason: term()
+            reason: term,
+            process: Process.t(:file_install)
           }
 
     @name :file_install_failed

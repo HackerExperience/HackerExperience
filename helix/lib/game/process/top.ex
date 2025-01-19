@@ -27,7 +27,7 @@ defmodule Game.Process.TOP do
              server_id: Server.id(),
              entity_id: Entity.id(),
              server_resources: Resources.t(),
-             next: Process.t() | nil
+             next: {Process.t(), time_left_ms :: integer, reference} | nil
            }
 
   @typedocp "GenServer state before the bootstrap phase"

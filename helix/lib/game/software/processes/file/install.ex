@@ -19,6 +19,9 @@ defmodule Game.Process.File.Install do
     alias Game.Events.File.Installed, as: FileInstalledEvent
     alias Game.Events.File.InstallFailed, as: FileInstallFailedEvent
 
+    @spec on_complete(Process.t(:file_install)) ::
+            {:ok, FileInstalledEvent.event()}
+            | {:error, FileInstallFailedEvent.event()}
     def on_complete(%{registry: %{src_file_id: %File.ID{} = file_id}} = process) do
       Core.begin_context(:server, process.server_id, :write)
 
@@ -31,17 +34,17 @@ defmodule Game.Process.File.Install do
            true <- true,
            {:ok, installation} <- Svc.File.install_file(file) do
         Core.commit()
-        {:ok, [FileInstalledEvent.new(installation, file, process)]}
+        {:ok, FileInstalledEvent.new(installation, file, process)}
       else
         {false, henforcer_error, _} ->
           Core.rollback()
           Logger.error("Unable to install file: #{inspect(henforcer_error)}")
-          {:error, [FileInstallFailedEvent.new("#{inspect(henforcer_error)}", process)]}
+          {:error, FileInstallFailedEvent.new("#{inspect(henforcer_error)}", process)}
 
         {:error, reason} ->
           Core.rollback()
           Logger.error("Unable to install file: #{inspect(reason)}")
-          {:error, [FileInstallFailedEvent.new(:internal, process)]}
+          {:error, FileInstallFailedEvent.new(:internal, process)}
       end
     end
   end

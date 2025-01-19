@@ -3,8 +3,26 @@ defmodule Game.Process do
   alias Game.Server
   alias __MODULE__
 
-  # TODO
-  @type t :: term
+  @type t :: t(atom())
+  @type t(process_type) ::
+          %__MODULE__{
+            id: id,
+            entity_id: term,
+            type: process_type,
+            data: struct,
+            registry: map,
+            status: term,
+            resources: map,
+            priority: integer,
+            inserted_at: DateTime.t(),
+            last_checkpoint_ts: integer | nil,
+            estimated_completion_ts: integer | nil,
+            server_id: Server.ID.t(),
+            next_allocation: map | :unchanged | :updated | nil,
+            __meta__: term,
+            __private__: term
+          }
+
   @type id :: __MODULE__.ID.t()
 
   @type priority :: integer

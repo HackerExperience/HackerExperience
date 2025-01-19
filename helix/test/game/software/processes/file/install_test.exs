@@ -21,7 +21,7 @@ defmodule Game.Process.File.InstallTest do
       end)
 
       # Simulate Process being completed
-      assert {:ok, [event]} = FileInstallProcess.Processable.on_complete(process)
+      assert {:ok, event} = FileInstallProcess.Processable.on_complete(process)
 
       # After the process has completed, we now do have an Installation for this particular File
       Core.begin_context(:server, server.id, :read)

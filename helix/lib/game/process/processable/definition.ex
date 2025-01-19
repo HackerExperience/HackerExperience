@@ -3,6 +3,7 @@ defmodule Game.Process.Processable.Definition do
     quote do
       alias Game.Henforcers
       alias Game.Services, as: Svc
+      alias Game.Process
 
       @before_compile unquote(__MODULE__)
     end
