@@ -58,9 +58,7 @@ defmodule Game.Endpoint.File.Install do
 
     meta =
       %{
-        file: ctx.file,
-        server: ctx.server,
-        entity_id: ctx.entity_id
+        file: ctx.file
       }
 
     case Svc.TOP.execute(FileInstallProcess, ctx.server.id, ctx.entity_id, process_params, meta) do

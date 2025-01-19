@@ -1,6 +1,8 @@
 defmodule Game.Process.File.Install do
   use Game.Process.Definition
 
+  require Logger
+
   alias Game.{File}
 
   defstruct [:file_id]
@@ -14,9 +16,33 @@ defmodule Game.Process.File.Install do
   defmodule Processable do
     use Game.Process.Processable.Definition
 
-    def on_complete(_process) do
-      # TODO: Create an Installation for the File
-      :ok
+    alias Game.Events.File.Installed, as: FileInstalledEvent
+    alias Game.Events.File.InstallFailed, as: FileInstallFailedEvent
+
+    def on_complete(%{registry: %{src_file_id: %File.ID{} = file_id}} = process) do
+      Core.begin_context(:server, process.server_id, :write)
+
+      # TODO: Consider moving this Henforcer block into a "shared" top-level Henforcer to avoid
+      # duplication with the Endpoint Henforcers.
+      with {true, %{server: server}} <- Henforcers.Server.server_exists?(process.server_id),
+           {true, _} <- Henforcers.Server.server_belongs_to_entity?(server, process.entity_id),
+           {true, %{file: file}} <- Henforcers.File.file_exists?(file_id, server),
+           # TODO: Assert visibility
+           true <- true,
+           {:ok, installation} <- Svc.File.install_file(file) do
+        Core.commit()
+        {:ok, [FileInstalledEvent.new(installation, file, process)]}
+      else
+        {false, henforcer_error, _} ->
+          Core.rollback()
+          Logger.error("Unable to install file: #{inspect(henforcer_error)}")
+          {:error, [FileInstallFailedEvent.new("#{inspect(henforcer_error)}", process)]}
+
+        {:error, reason} ->
+          Core.rollback()
+          Logger.error("Unable to install file: #{inspect(reason)}")
+          {:error, [FileInstallFailedEvent.new(:internal, process)]}
+      end
     end
   end
 

@@ -81,6 +81,10 @@ defmodule Core do
     end
   end
 
+  def commit, do: DB.commit()
+
+  def rollback, do: DB.rollback()
+
   @docp """
   It is possible than the context we need is already the context we are currently in. That's what
   this function does: it returns `true` if we can reuse the current context, `false` otherwise.

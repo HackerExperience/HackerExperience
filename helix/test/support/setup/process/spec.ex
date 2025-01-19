@@ -3,11 +3,13 @@ defmodule Test.Setup.Process.Spec do
 
   alias Game.Process.Executable
 
+  alias Game.Process.File.Install, as: FileInstallProcess
   alias Game.Process.Log.Edit, as: LogEditProcess
   alias Test.Process.NoopCPU, as: NoopCPUProcess
   alias Test.Process.NoopDLK, as: NoopDLKProcess
 
   @implementations [
+    :ile_install,
     :log_edit
   ]
 
@@ -22,10 +24,23 @@ defmodule Test.Setup.Process.Spec do
   end
 
   def spec(:noop_cpu, server_id, entity_id, _opts),
-    do: build_spec(NoopCPUProcess, server_id, entity_id, %{}, %{})
+    do: build_spec(NoopCPUProcess, server_id, entity_id, %{}, %{}, %{})
 
   def spec(:noop_dlk, server_id, entity_id, _opts),
-    do: build_spec(NoopDLKProcess, server_id, entity_id, %{}, %{})
+    do: build_spec(NoopDLKProcess, server_id, entity_id, %{}, %{}, %{})
+
+  def spec(:file_install, server_id, entity_id, opts) do
+    file = opts[:file] || S.file!(server_id, visible_by: entity_id)
+
+    default_meta = %{file: file}
+    default_params = %{}
+
+    params = opts[:params] || default_params
+    meta = opts[:meta] || default_meta
+    relay = %{file: file}
+
+    build_spec(FileInstallProcess, server_id, entity_id, params, meta, relay)
+  end
 
   def spec(:log_edit, server_id, entity_id, opts) do
     default_params = fn ->
@@ -42,10 +57,10 @@ defmodule Test.Setup.Process.Spec do
     params = opts[:params] || default_params.()
     meta = opts[:meta] || default_meta.()
 
-    build_spec(LogEditProcess, server_id, entity_id, params, meta)
+    build_spec(LogEditProcess, server_id, entity_id, params, meta, %{})
   end
 
-  defp build_spec(mod, server_id, entity_id, params, meta) do
+  defp build_spec(mod, server_id, entity_id, params, meta, relay) do
     executable = Module.concat(mod, :Executable)
 
     {registry_data, process_info} =
@@ -62,5 +77,6 @@ defmodule Test.Setup.Process.Spec do
       registry_data: registry_data,
       process_info: process_info
     }
+    |> Map.merge(relay)
   end
 end

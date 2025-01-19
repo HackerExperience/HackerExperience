@@ -1,6 +1,9 @@
 defmodule Game.Process.Processable.Definition do
   defmacro __using__(_) do
     quote do
+      alias Game.Henforcers
+      alias Game.Services, as: Svc
+
       @before_compile unquote(__MODULE__)
     end
   end

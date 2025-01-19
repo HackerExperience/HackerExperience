@@ -1,6 +1,9 @@
 defmodule Game.Installation do
   use Core.Schema
 
+  # TODO
+  @type t :: term()
+
   @context :server
   @table :installations
 
