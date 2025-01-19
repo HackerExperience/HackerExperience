@@ -2,6 +2,8 @@ defmodule Game.Tunnel do
   use Core.Schema
 
   @type t :: term
+  @type id :: __MODULE__.ID.t()
+  @type idt :: t | id
 
   @context :game
   @table :tunnels
