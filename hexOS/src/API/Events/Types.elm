@@ -1,7 +1,18 @@
 -- This is an auto-generated file; manual changes will be overwritten!
 
 
-module API.Events.Types exposing (IdxEndpoint, IdxGateway, IdxLog, IdxPlayer, IdxTunnel, IndexRequested, ProcessCreated, TunnelCreated)
+module API.Events.Types exposing
+    ( FileInstallFailed
+    , FileInstalled
+    , IdxEndpoint
+    , IdxGateway
+    , IdxLog
+    , IdxPlayer
+    , IdxTunnel
+    , IndexRequested
+    , ProcessCreated
+    , TunnelCreated
+    )
 
 import Game.Model.NIP as NIP exposing (NIP(..))
 import Game.Model.ServerID as ServerID exposing (ServerID(..))
@@ -13,7 +24,8 @@ import Game.Model.TunnelID as TunnelID exposing (TunnelID(..))
 
 ## Aliases
 
-@docs IdxEndpoint, IdxGateway, IdxLog, IdxPlayer, IdxTunnel, IndexRequested, ProcessCreated, TunnelCreated
+@docs FileInstallFailed, FileInstalled, IdxEndpoint, IdxGateway, IdxLog, IdxPlayer, IdxTunnel, IndexRequested
+@docs ProcessCreated, TunnelCreated
 
 -}
 type alias TunnelCreated =
@@ -31,6 +43,18 @@ type alias ProcessCreated =
 
 type alias IndexRequested =
     { player : IdxPlayer }
+
+
+type alias FileInstalled =
+    { file_name : String
+    , installation_id : Int
+    , memory_usage : Int
+    , process_id : Int
+    }
+
+
+type alias FileInstallFailed =
+    { process_id : Int, reason : String }
 
 
 type alias IdxTunnel =

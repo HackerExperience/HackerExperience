@@ -2,10 +2,10 @@
 
 
 module API.Events.Json exposing
-    ( encodeIdxEndpoint, encodeIdxGateway, encodeIdxLog, encodeIdxPlayer, encodeIdxTunnel, encodeIndexRequested
-    , encodeProcessCreated, encodeTunnelCreated
-    , decodeIdxEndpoint, decodeIdxGateway, decodeIdxLog, decodeIdxPlayer, decodeIdxTunnel, decodeIndexRequested
-    , decodeProcessCreated, decodeTunnelCreated
+    ( encodeFileInstallFailed, encodeFileInstalled, encodeIdxEndpoint, encodeIdxGateway, encodeIdxLog
+    , encodeIdxPlayer, encodeIdxTunnel, encodeIndexRequested, encodeProcessCreated, encodeTunnelCreated
+    , decodeFileInstallFailed, decodeFileInstalled, decodeIdxEndpoint, decodeIdxGateway, decodeIdxLog
+    , decodeIdxPlayer, decodeIdxTunnel, decodeIndexRequested, decodeProcessCreated, decodeTunnelCreated
     )
 
 {-|
@@ -13,14 +13,14 @@ module API.Events.Json exposing
 
 ## Encoders
 
-@docs encodeIdxEndpoint, encodeIdxGateway, encodeIdxLog, encodeIdxPlayer, encodeIdxTunnel, encodeIndexRequested
-@docs encodeProcessCreated, encodeTunnelCreated
+@docs encodeFileInstallFailed, encodeFileInstalled, encodeIdxEndpoint, encodeIdxGateway, encodeIdxLog
+@docs encodeIdxPlayer, encodeIdxTunnel, encodeIndexRequested, encodeProcessCreated, encodeTunnelCreated
 
 
 ## Decoders
 
-@docs decodeIdxEndpoint, decodeIdxGateway, decodeIdxLog, decodeIdxPlayer, decodeIdxTunnel, decodeIndexRequested
-@docs decodeProcessCreated, decodeTunnelCreated
+@docs decodeFileInstallFailed, decodeFileInstalled, decodeIdxEndpoint, decodeIdxGateway, decodeIdxLog
+@docs decodeIdxPlayer, decodeIdxTunnel, decodeIndexRequested, decodeProcessCreated, decodeTunnelCreated
 
 -}
 
@@ -108,6 +108,63 @@ decodeIndexRequested =
 encodeIndexRequested : API.Events.Types.IndexRequested -> Json.Encode.Value
 encodeIndexRequested rec =
     Json.Encode.object [ ( "player", encodeIdxPlayer rec.player ) ]
+
+
+decodeFileInstalled : Json.Decode.Decoder API.Events.Types.FileInstalled
+decodeFileInstalled =
+    Json.Decode.succeed
+        (\file_name installation_id memory_usage process_id ->
+            { file_name = file_name
+            , installation_id = installation_id
+            , memory_usage = memory_usage
+            , process_id = process_id
+            }
+        )
+        |> OpenApi.Common.jsonDecodeAndMap
+            (Json.Decode.field "file_name" Json.Decode.string)
+        |> OpenApi.Common.jsonDecodeAndMap
+            (Json.Decode.field
+                "installation_id"
+                Json.Decode.int
+            )
+        |> OpenApi.Common.jsonDecodeAndMap
+            (Json.Decode.field
+                "memory_usage"
+                Json.Decode.int
+            )
+        |> OpenApi.Common.jsonDecodeAndMap
+            (Json.Decode.field
+                "process_id"
+                Json.Decode.int
+            )
+
+
+encodeFileInstalled : API.Events.Types.FileInstalled -> Json.Encode.Value
+encodeFileInstalled rec =
+    Json.Encode.object
+        [ ( "file_name", Json.Encode.string rec.file_name )
+        , ( "installation_id", Json.Encode.int rec.installation_id )
+        , ( "memory_usage", Json.Encode.int rec.memory_usage )
+        , ( "process_id", Json.Encode.int rec.process_id )
+        ]
+
+
+decodeFileInstallFailed : Json.Decode.Decoder API.Events.Types.FileInstallFailed
+decodeFileInstallFailed =
+    Json.Decode.succeed
+        (\process_id reason -> { process_id = process_id, reason = reason })
+        |> OpenApi.Common.jsonDecodeAndMap
+            (Json.Decode.field "process_id" Json.Decode.int)
+        |> OpenApi.Common.jsonDecodeAndMap
+            (Json.Decode.field "reason" Json.Decode.string)
+
+
+encodeFileInstallFailed : API.Events.Types.FileInstallFailed -> Json.Encode.Value
+encodeFileInstallFailed rec =
+    Json.Encode.object
+        [ ( "process_id", Json.Encode.int rec.process_id )
+        , ( "reason", Json.Encode.string rec.reason )
+        ]
 
 
 decodeIdxTunnel : Json.Decode.Decoder API.Events.Types.IdxTunnel
