@@ -55,22 +55,21 @@ defmodule Game.Henforcers.File do
 
   Used by the corresponding Endpoint and Process (FileInstallEndpoint and FileInstallProcess).
   """
-  @spec can_install?(Server.t(), Entity.id(), File.id()) ::
+  @spec can_install?(Server.t(), Entity.t(), File.id()) ::
           {true, can_install_relay}
           | can_install_error
-  def can_install?(%Server{} = server, %Entity.ID{} = entity_id, %File.ID{} = file_id) do
-    with {true, %{entity: entity}} <- Henforcers.Server.belongs_to_entity?(server, entity_id),
-         {true, %{file: file}} <- Henforcers.File.file_exists?(file_id, server),
-         {true, %{visibility: visibility}} <- Henforcers.File.is_visible?(file, entity_id) do
-      Henforcer.success(%{file: file, entity: entity, visibility: visibility})
+  def can_install?(%Server{} = server, %Entity{} = entity, %File.ID{} = file_id) do
+    with {true, %{entity: entity}} <- Henforcers.Server.belongs_to_entity?(server, entity),
+         {true, %{file: file}} <- file_exists?(file_id, server),
+         {true, %{visibility: visibility}} <- is_visible?(file, entity.id) do
+      Henforcer.success(%{file: file, visibility: visibility})
     end
   end
 
-  def can_delete?(%Server{} = server, %Entity.ID{} = entity_id, %File.ID{} = file_id) do
-    with {true, %{entity: entity}} <- Henforcers.Entity.entity_exists?(entity_id),
-         {true, %{file: file}} <- Henforcers.File.file_exists?(file_id, server),
-         {true, %{visibility: visibility}} <- Henforcers.File.is_visible?(file, entity_id) do
-      Henforcer.success(%{file: file, entity: entity, visibility: visibility})
+  def can_delete?(%Server{} = server, %Entity{} = entity, %File.ID{} = file_id) do
+    with {true, %{file: file}} <- file_exists?(file_id, server),
+         {true, %{visibility: visibility}} <- is_visible?(file, entity.id) do
+      Henforcer.success(%{file: file, visibility: visibility})
     end
   end
 end

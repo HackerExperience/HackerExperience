@@ -26,8 +26,8 @@ defmodule Game.Process.File.Install do
       Core.begin_context(:server, process.server_id, :write)
 
       with {true, %{server: server}} <- Henforcers.Server.server_exists?(process.server_id),
-           {true, %{file: file}} <-
-             Henforcers.File.can_install?(server, process.entity_id, file_id),
+           {true, %{entity: entity}} <- Henforcers.Entity.entity_exists?(process.entity_id),
+           {true, %{file: file}} <- Henforcers.File.can_install?(server, entity, file_id),
            {:ok, installation} <- Svc.File.install_file(file) do
         Core.commit()
         {:ok, FileInstalledEvent.new(installation, file, process)}

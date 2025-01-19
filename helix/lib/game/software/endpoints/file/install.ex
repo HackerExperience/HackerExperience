@@ -37,10 +37,13 @@ defmodule Game.Endpoint.File.Install do
   end
 
   def get_context(request, params, session) do
-    with {true, %{server: server}} <- Henforcers.Network.nip_exists?(params.nip),
-         {true, %{file: file, entity: entity}} <-
-           Henforcers.File.can_install?(server, session.data.entity_id, params.file_id) do
-      context = %{file: file, server: server, entity: entity}
+    entity_id = session.data.entity_id
+    %{nip: nip, file_id: file_id} = params
+
+    with {true, %{entity: entity, target: target_server}} <-
+           Henforcers.Server.has_access?(entity_id, nip, nil),
+         {true, %{file: file}} <- Henforcers.File.can_install?(target_server, entity, file_id) do
+      context = %{file: file, server: target_server, entity: entity}
       {:ok, %{request | context: context}}
     else
       {false, henforcer_error, _} ->
