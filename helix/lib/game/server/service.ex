@@ -53,7 +53,9 @@ defmodule Game.Services.Server do
       by_id: {:one, {:servers, :fetch}}
     ]
 
-    Core.Fetch.query(filter_params, opts, filters)
+    Core.with_context(:universe, :read, fn ->
+      Core.Fetch.query(filter_params, opts, filters)
+    end)
   end
 
   def fetch!(filter_params, opts \\ []) do

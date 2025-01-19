@@ -1,4 +1,5 @@
 defmodule Core do
+  use Docp
   alias Feeb.DB
 
   # TODO: Consider a more specific API, like `begin_universe/1` and `begin_player/2`
@@ -39,9 +40,7 @@ defmodule Core do
   If you don't want to commit, use `DB.with_context/1` directly (or add `with_context_no_commit/3`)
   """
   def with_context(:universe, access_type, callback) do
-    ctx = DB.LocalState.get_current_context()
-
-    if ctx && ctx.context in [:singleplayer, :multiplayer] && ctx.access_type == access_type do
+    if can_reuse_current_context?([:singleplayer, :multiplayer], access_type) do
       # Already in the requested context, so do nothing special. Caller is responsible for COMMITing
       callback.()
     else
@@ -55,10 +54,7 @@ defmodule Core do
   end
 
   def with_context(:server, server_id, access_type, callback) do
-    ctx = DB.LocalState.get_current_context()
-
-    if ctx && ctx.context in [:sp_server, :mp_server] && ctx.shard_id == server_id.id &&
-         ctx.access_type == access_type do
+    if can_reuse_current_context?([:sp_server, :mp_server], access_type) do
       # Already in the requested context, so do nothing special. Caller is responsible for COMMITing
       callback.()
     else
@@ -72,10 +68,7 @@ defmodule Core do
   end
 
   def with_context(:player, player_id, access_type, callback) do
-    ctx = DB.LocalState.get_current_context()
-
-    if ctx && ctx.context in [:sp_player, :mp_player] && ctx.shard_id == player_id.id &&
-         ctx.access_type == access_type do
+    if can_reuse_current_context?([:sp_player, :mp_player], access_type) do
       # Already in the requested context, so do nothing special. Caller is responsible for COMMITing
       callback.()
     else
@@ -85,6 +78,37 @@ defmodule Core do
         DB.commit()
         result
       end)
+    end
+  end
+
+  @docp """
+  It is possible than the context we need is already the context we are currently in. That's what
+  this function does: it returns `true` if we can reuse the current context, `false` otherwise.
+
+  We can reuse the current context if:
+  - It is the same context we want (`expected_contexts`).
+  - Its access type is a "superset" of the `expected_access_type`:
+    - If we want :read and we are currently in :write, that's okay.
+    - If we want :read and we are currently in :read, that's okay.
+    - If we want :write and we are currently in :write, that's okay.
+    - If we want :write and we are currently in :read, that's NOT okay and we can't re-use it.
+  """
+  defp can_reuse_current_context?(expected_contexts, expected_access_type) do
+    ctx = DB.LocalState.get_current_context()
+
+    cond do
+      is_nil(ctx) ->
+        false
+
+      ctx.context not in expected_contexts ->
+        false
+
+      ctx.access_type == :read and expected_access_type == :write ->
+        # Despite being in the same context, we need to upgrade the access type from read to write
+        false
+
+      :else ->
+        true
     end
   end
 
