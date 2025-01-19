@@ -119,4 +119,120 @@ defmodule Game.Events.File do
         do: %{player: entity_id}
     end
   end
+
+  defmodule Deleted do
+    @moduledoc """
+    The FileDeletedEvent is emitted after a File is deleted, which is the direct result of a
+    FileDeleteProcess reaching completion.
+
+    This event is published to the Client.
+    """
+
+    use Core.Event.Definition
+
+    alias Game.{File, Process}
+
+    defstruct [:file, :process]
+
+    @type t :: %__MODULE__{
+            file: File.t(),
+            process: Process.t(:file_install)
+          }
+
+    @name :file_deleted
+
+    def new(file = %File{}, process = %Process{}) do
+      %__MODULE__{file: file, process: process}
+      |> Event.new()
+    end
+
+    defmodule Publishable do
+      use Core.Event.Publishable.Definition
+
+      def spec do
+        selection(
+          schema(%{
+            file_id: integer(),
+            process_id: integer()
+          }),
+          [:file_id, :process_id]
+        )
+      end
+
+      def generate_payload(%{data: %{process: process, file: file}}) do
+        payload =
+          %{
+            file_id: file.id,
+            process_id: process.id
+          }
+
+        {:ok, payload}
+      end
+
+      @doc """
+      Only the Process owner receives this event.
+      """
+      def whom_to_publish(%{data: %{process: %{entity_id: entity_id}}}),
+        do: %{player: entity_id}
+    end
+  end
+
+  defmodule DeleteFailed do
+    @moduledoc """
+    The FileDeletedFailedEvent is emitted when the attempt to delete a file has failed. This may
+    happen during the execution of a FileDeleteProcess or at its completion if the prerequisites
+    are not met.
+
+    This event is published to the Client.
+    """
+
+    use Core.Event.Definition
+
+    alias Game.{Process}
+
+    defstruct [:reason, :process]
+
+    @type t :: %__MODULE__{
+            # TODO: Narrow down possible reasons
+            reason: term,
+            process: Process.t(:file_delete)
+          }
+
+    @name :file_delete_failed
+
+    def new(reason, %Process{} = process) do
+      %__MODULE__{reason: reason, process: process}
+      |> Event.new()
+    end
+
+    defmodule Publishable do
+      use Core.Event.Publishable.Definition
+
+      def spec do
+        selection(
+          schema(%{
+            reason: binary(),
+            process_id: integer()
+          }),
+          [:reason, :process_id]
+        )
+      end
+
+      def generate_payload(%{data: %{reason: reason, process: process}}) do
+        payload =
+          %{
+            reason: reason,
+            process_id: process.id
+          }
+
+        {:ok, payload}
+      end
+
+      @doc """
+      Only the Process owner receives this event.
+      """
+      def whom_to_publish(%{data: %{process: %{entity_id: entity_id}}}),
+        do: %{player: entity_id}
+    end
+  end
 end

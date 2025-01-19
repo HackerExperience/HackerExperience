@@ -3,6 +3,7 @@ defmodule Test.Setup.Process.Spec do
 
   alias Game.Process.Executable
 
+  alias Game.Process.File.Delete, as: FileDeleteProcess
   alias Game.Process.File.Install, as: FileInstallProcess
   alias Game.Process.Log.Edit, as: LogEditProcess
   alias Test.Process.NoopCPU, as: NoopCPUProcess
@@ -28,6 +29,19 @@ defmodule Test.Setup.Process.Spec do
 
   def spec(:noop_dlk, server_id, entity_id, _opts),
     do: build_spec(NoopDLKProcess, server_id, entity_id, %{}, %{}, %{})
+
+  def spec(:file_delete, server_id, entity_id, opts) do
+    file = opts[:file] || S.file!(server_id, visible_by: entity_id)
+
+    default_meta = %{file: file}
+    default_params = %{}
+
+    params = opts[:params] || default_params
+    meta = opts[:meta] || default_meta
+    relay = %{file: file}
+
+    build_spec(FileDeleteProcess, server_id, entity_id, params, meta, relay)
+  end
 
   def spec(:file_install, server_id, entity_id, opts) do
     file = opts[:file] || S.file!(server_id, visible_by: entity_id)

@@ -81,6 +81,26 @@ components:
           type: string
         source_nip:
           type: string
+    file_delete_failed:
+      type: object
+      required:
+        - process_id
+        - reason
+      properties:
+        reason:
+          type: string
+        process_id:
+          type: integer
+    file_deleted:
+      type: object
+      required:
+        - process_id
+        - file_id
+      properties:
+        file_id:
+          type: integer
+        process_id:
+          type: integer
     file_install_failed:
       type: object
       required:

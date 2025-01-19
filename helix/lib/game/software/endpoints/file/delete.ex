@@ -62,16 +62,13 @@ defmodule Game.Endpoint.File.Delete do
         file: ctx.file
       }
 
-    # TODO
-    # case Svc.TOP.execute(FileDeleteProcess, ctx.server.id, ctx.entity.id, process_params, meta) do
-    #   {:ok, process} ->
-    #     {:ok, %{request | result: %{process: process}}}
+    case Svc.TOP.execute(FileDeleteProcess, ctx.server.id, ctx.entity.id, process_params, meta) do
+      {:ok, process} ->
+        {:ok, %{request | result: %{process: process}}}
 
-    #   {:error, reason} ->
-    #     raise "Error deleteing file: #{inspect(reason)}"
-    # end
-
-    {:ok, %{request | result: %{process: %{id: %Game.Process.ID{id: 1}}}}}
+      {:error, reason} ->
+        raise "Error deleteing file: #{inspect(reason)}"
+    end
   end
 
   def render_response(request, %{process: process}, _) do

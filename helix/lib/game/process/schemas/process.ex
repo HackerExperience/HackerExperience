@@ -31,6 +31,7 @@ defmodule Game.Process do
   @table :processes
 
   @process_types [
+    :file_delete,
     :file_install,
     :log_edit,
     # Below are test processes; they do not exist in production
@@ -92,6 +93,7 @@ defmodule Game.Process do
 
   #
 
+  def process_mod(:file_delete), do: Process.File.Delete
   def process_mod(:file_install), do: Process.File.Install
   def process_mod(:log_edit), do: Process.Log.Edit
   def process_mod(:noop_cpu), do: Test.Process.NoopCPU

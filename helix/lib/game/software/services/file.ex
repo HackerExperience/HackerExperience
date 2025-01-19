@@ -37,6 +37,10 @@ defmodule Game.Services.File do
     |> DB.insert()
   end
 
+  def delete(%File{} = file) do
+    DB.delete(file)
+  end
+
   # TODO
   defp get_memory_usage(%File{} = _file), do: 5
 
