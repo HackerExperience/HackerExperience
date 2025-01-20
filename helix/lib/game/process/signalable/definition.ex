@@ -16,12 +16,29 @@ defmodule Game.Process.Signalable.Definition do
         {:on_sig_tgt_file_deleted, quote(do: :noop)}
       ]
 
-    for {definition, default_value} <- signal_handlers do
+    valid_handler_names = Enum.map(signal_handlers, &elem(&1, 0))
+
+    # Make sure the user is not defining an unknown signal (e.g. due to typos)
+    validation_block =
       quote do
-        if not Module.defines?(__MODULE__, {unquote(definition), 2}) do
-          def unquote(definition)(_, _), do: unquote(default_value)
+        Module.definitions_in(__MODULE__, :def)
+        |> Enum.each(fn {fun, arity} ->
+          if arity != 2, do: raise("Invalid arity on Signalable: #{inspect(fun)}")
+
+          if fun not in unquote(valid_handler_names),
+            do: raise("Invalid Signalable function: #{inspect(fun)}")
+        end)
+      end
+
+    defaults_block =
+      for {definition, default_value} <- signal_handlers do
+        quote do
+          if not Module.defines?(__MODULE__, {unquote(definition), 2}) do
+            def unquote(definition)(_, _), do: unquote(default_value)
+          end
         end
       end
-    end
+
+    [validation_block] ++ defaults_block
   end
 end
