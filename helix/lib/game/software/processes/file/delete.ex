@@ -53,7 +53,12 @@ defmodule Game.Process.File.Delete do
   defmodule Signalable do
     use Game.Process.Signalable.Definition
 
-    # TODO: Kill process when target file is deleted
+    @doc """
+    The File we were about to delete was deleted in the meantime. Let's just kill this process (with
+    the message that *this* process failed, because even though its final goal was reached, it was
+    not reached by this process).
+    """
+    def on_sig_tgt_file_deleted(_, _), do: :delete
   end
 
   defmodule Resourceable do

@@ -146,6 +146,8 @@ defmodule Game.Events.File do
       |> Event.new()
     end
 
+    def handlers(_, _), do: [Handlers.File]
+
     defmodule Publishable do
       use Core.Event.Publishable.Definition
 
