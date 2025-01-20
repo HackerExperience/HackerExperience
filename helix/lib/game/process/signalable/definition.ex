@@ -11,7 +11,9 @@ defmodule Game.Process.Signalable.Definition do
         {:on_sigterm, quote(do: :delete)},
         {:on_sigstop, quote(do: :pause)},
         {:on_sigcont, quote(do: :resume)},
-        {:on_sig_renice, quote(do: :renice)}
+        {:on_sig_renice, quote(do: :renice)},
+        {:on_sig_src_file_deleted, quote(do: :noop)},
+        {:on_sig_tgt_file_deleted, quote(do: :noop)}
       ]
 
     for {definition, default_value} <- signal_handlers do

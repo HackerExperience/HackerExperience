@@ -53,7 +53,10 @@ defmodule Game.Process.File.Install do
   defmodule Signalable do
     use Game.Process.Signalable.Definition
 
-    # TODO: Kill process when source file is deleted
+    @doc """
+    If the File we are about to install was deleted, then we have no option but to kill ourselves.
+    """
+    def on_sig_src_file_deleted(_, _), do: :delete
   end
 
   defmodule Resourceable do

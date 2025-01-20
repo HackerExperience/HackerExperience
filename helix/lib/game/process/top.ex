@@ -58,6 +58,7 @@ defmodule Game.Process.TOP do
            | {:resume, Process.id()}
            | {:pause, Process.id()}
            | {:renice, Process.id()}
+           | {:killed, Process.id()}
 
   # Public
 
@@ -127,6 +128,18 @@ defmodule Game.Process.TOP do
     server_id
     |> TOP.Registry.fetch!()
     |> GenServer.call({:renice, process, priority})
+  end
+
+  @doc """
+  Delivers the given Signal to the given Process, performing whatever action was returned by the
+  process' Signalable.
+  """
+  @spec signal(Process.t(), Signalable.signal(), term) ::
+          {:ok, Signalable.action()}
+  def signal(%Process{server_id: server_id} = process, signal, xargs \\ []) do
+    server_id
+    |> TOP.Registry.fetch!()
+    |> GenServer.call({:signal, process, signal, xargs})
   end
 
   @spec on_server_resources_changed(Server.id()) ::
@@ -263,6 +276,27 @@ defmodule Game.Process.TOP do
     end
   end
 
+  def handle_call({:signal, process, signal, xargs}, _from, state) do
+    action = apply(Signalable, signal, [process, xargs])
+
+    {should_reschedule?, reschedule_reason, signal_events} =
+      case action do
+        :delete ->
+          {:ok, process_killed_event} = Svc.Process.delete(process, :killed)
+          {true, {:killed, process.id}, [process_killed_event]}
+
+        :noop ->
+          {false, nil, []}
+      end
+
+    if should_reschedule? do
+      result = run_schedule(state, state.server_id, reschedule_reason, signal_events)
+      {:reply, {:ok, action}, result.state}
+    else
+      {:reply, {:ok, action}, state}
+    end
+  end
+
   def handle_call({:on_server_resources_changed}, _from, state) do
     {state, processes} = fetch_initial_data(state)
     schedule = run_schedule(state, processes, :resources_changed)
@@ -369,7 +403,7 @@ defmodule Game.Process.TOP do
          process_killed_events = TOP.Scheduler.drop_processes(dropped_processes) do
       top_recalcado_event =
         if reason != :boot or modified_procs > 0 do
-          TOPRecalcadoEvent.new(server_id, processes)
+          TOPRecalcadoEvent.new(server_id, processes, reason)
         else
           # We don't need to emit the TOPRecalcadoEvent if this TOP just booted and nothing changed
           nil

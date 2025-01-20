@@ -11,17 +11,18 @@ defmodule Game.Events.TOP do
 
     alias Game.{Process, Server}
 
-    defstruct [:server_id, :processes]
+    defstruct [:server_id, :processes, :reason]
 
     @type t :: %__MODULE__{
             server_id: Server.id(),
-            processes: [Process.t()]
+            processes: [Process.t()],
+            reason: term
           }
 
     @name :top_recalcado
 
-    def new(%Server.ID{} = server_id, processes) when is_list(processes) do
-      %__MODULE__{server_id: server_id, processes: processes}
+    def new(%Server.ID{} = server_id, processes, reason) when is_list(processes) do
+      %__MODULE__{server_id: server_id, processes: processes, reason: reason}
       |> Event.new()
     end
 

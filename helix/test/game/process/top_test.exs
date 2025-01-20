@@ -807,6 +807,42 @@ defmodule Game.Process.TOPTest do
     end
   end
 
+  describe "signal/3" do
+    test "delivers a signal to the process" do
+      %{server: server} = Setup.server()
+      %{process: process} = Setup.process(server.id, type: :file_install)
+      DB.commit()
+
+      # Sending a SIG_TGT_FILE_DELETED to a FileInstallProcess performs a noop since it's irrelevant
+      # for that particular process
+      assert {:ok, :noop} = TOP.signal(process, :sig_tgt_file_deleted)
+
+      # When we send a SIG_SRC_FILE_DELETED to a FileInstallProcess, it gets deleted
+      assert {:ok, :delete} = TOP.signal(process, :sig_src_file_deleted)
+
+      # Indeed, we can see it no longer exists
+      Core.with_context(:server, server.id, :read, fn ->
+        assert [] = DB.all(Process)
+      end)
+
+      # And neither does the Registry
+      Core.with_context(:universe, :read, fn ->
+        assert [] = DB.all(ProcessRegistry)
+      end)
+
+      # A ProcessKilledEvent was emitted
+      assert [process_killed_event] = wait_events_on_server!(server.id, :process_killed)
+      assert process_killed_event.name == :process_killed
+      assert process_killed_event.data.process.id == process.id
+
+      # We got two TopRecalcadoEvents, one for the Boot (because it allocated the Process we just
+      # created) and another one for the killing
+      top_recalcado_events = wait_events_on_server!(server.id, :top_recalcado, 2)
+      assert Enum.find(top_recalcado_events, &(&1.data.reason == :boot))
+      assert Enum.find(top_recalcado_events, &(&1.data.reason == {:killed, process.id}))
+    end
+  end
+
   defp fetch_top_pid!(server_id, %{db_context: db_context, shard_id: shard_id}) do
     [{pid, _}] = Registry.lookup(TOP.Registry.name(), {server_id.id, db_context, shard_id})
     pid
