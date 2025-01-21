@@ -23,6 +23,20 @@ defmodule Game.Services.Process do
     |> Core.Fetch.assert_non_empty_result!(filter_params, opts)
   end
 
+  @doc """
+  Returns a list of ProcessRegistry matching the given filters.
+  """
+  @spec list_registry(list) ::
+          [ProcessRegistry.t()]
+  def list_registry(filter_params, opts \\ []) do
+    filters = [
+      by_src_file_id: {:all, {:processes_registry, :by_src_file_id}},
+      by_tgt_file_id: {:all, {:processes_registry, :by_tgt_file_id}}
+    ]
+
+    Core.Fetch.query(filter_params, opts, filters)
+  end
+
   @spec create(Server.id(), Entity.id(), map, term) ::
           {:ok, Process.t(), [ProcessCreatedEvent.event()]}
           | {:error, term}

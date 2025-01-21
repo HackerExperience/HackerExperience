@@ -1,6 +1,9 @@
 defmodule Game.ProcessRegistry do
   use Core.Schema
 
+  # TODO
+  @type t :: term
+
   # NOTE: I'm adding ProcessRegistry to the Universe shard, but theoretically it could be stored
   # elsewhere, including its own shard or even Redis. It just so happens that I *think* every time
   # we make changes to the ProcessRegistry, we need to make changes to the Universe too.

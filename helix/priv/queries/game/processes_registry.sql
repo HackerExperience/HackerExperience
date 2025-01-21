@@ -8,6 +8,12 @@ SELECT * FROM processes_registry WHERE server_id = ? AND process_id = ?;
 -- :servers_with_processes
 SELECT server_id FROM processes_registry GROUP BY server_id;
 
+-- :by_src_file_id
+SELECT * FROM processes_registry WHERE src_file_id = ?;
+
+-- :by_tgt_file_id
+SELECT * FROM processes_registry WHERE tgt_file_id = ?;
+
 --------------------------------------------------------------------------------
 ----------------------------------- INSERTS ------------------------------------
 --------------------------------------------------------------------------------
