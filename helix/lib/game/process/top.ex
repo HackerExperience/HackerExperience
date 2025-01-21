@@ -12,7 +12,6 @@ defmodule Game.Process.TOP do
 
   require Logger
 
-  alias Feeb.DB
   alias Core.Event
   alias Game.Services, as: Svc
   alias Game.Process.{Executable, Resources, Signalable}
@@ -71,7 +70,7 @@ defmodule Game.Process.TOP do
 
     :universe
     |> Core.with_context(:read, fn ->
-      DB.all({:processes_registry, :servers_with_processes}, [], format: :type)
+      Svc.Process.list_registry(query: :servers_with_processes)
     end)
     |> Enum.each(fn %{server_id: server_id} ->
       {:ok, _} = TOP.Registry.fetch_or_create({server_id, universe, shard_id})
@@ -181,7 +180,7 @@ defmodule Game.Process.TOP do
   defp fetch_initial_data(state) do
     {processes, meta} =
       Core.with_context(:server, state.server_id, :read, fn ->
-        {DB.all(Process), Svc.Server.get_meta(state.server_id)}
+        {Svc.Process.list(query: :all), Svc.Server.get_meta(state.server_id)}
       end)
 
     state =
@@ -313,8 +312,7 @@ defmodule Game.Process.TOP do
 
         remaining_processes =
           Core.with_context(:server, state.server_id, :read, fn ->
-            # TODO: Move to Svc layer
-            DB.all(Process)
+            Svc.Process.list(query: :all)
           end)
 
         schedule =
@@ -352,7 +350,7 @@ defmodule Game.Process.TOP do
   defp run_schedule(state, %Server.ID{} = server_id, reason, events) do
     processes =
       Core.with_context(:server, server_id, :read, fn ->
-        DB.all(Process)
+        Svc.Process.list(query: :all)
       end)
 
     run_schedule(state, processes, reason, events)

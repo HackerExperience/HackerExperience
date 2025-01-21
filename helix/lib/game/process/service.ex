@@ -24,12 +24,24 @@ defmodule Game.Services.Process do
   end
 
   @doc """
+  Returns a list of Process matching the given filters.
+  """
+  def list(filter_params, opts \\ []) do
+    filters = [
+      query: &query/1
+    ]
+
+    Core.Fetch.query(filter_params, opts, filters)
+  end
+
+  @doc """
   Returns a list of ProcessRegistry matching the given filters.
   """
   @spec list_registry(list) ::
           [ProcessRegistry.t()]
   def list_registry(filter_params, opts \\ []) do
     filters = [
+      query: &registry_query/1,
       by_src_file_id: {:all, {:processes_registry, :by_src_file_id}},
       by_tgt_file_id: {:all, {:processes_registry, :by_tgt_file_id}}
     ]
@@ -189,6 +201,12 @@ defmodule Game.Services.Process do
       |> DB.insert()
     end)
   end
+
+  defp query(:all),
+    do: DB.all({:processes, :__all}, [])
+
+  defp registry_query(:servers_with_processes),
+    do: DB.all({:processes_registry, :servers_with_processes}, [], format: :type)
 
   defp insert_registry(%Process{} = process, registry_data) do
     Core.with_context(:universe, :write, fn ->
