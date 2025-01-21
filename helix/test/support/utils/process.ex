@@ -5,14 +5,12 @@ defmodule Test.Utils.Process do
 
   def get_all_process_registries do
     Core.with_context(:universe, :read, fn ->
-      DB.all(Game.ProcessRegistry)
+      Svc.Process.list_registry(query: :all)
     end)
   end
 
   def get_all_processes(%Server.ID{} = server_id) do
-    Core.with_context(:server, server_id, :read, fn ->
-      DB.all(Game.Process)
-    end)
+    Svc.Process.list(server_id, query: :all)
   end
 
   def execute(server_id_or_spec, optional_opts \\ [])

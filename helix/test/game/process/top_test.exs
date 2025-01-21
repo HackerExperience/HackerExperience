@@ -43,37 +43,35 @@ defmodule Game.Process.TOPTest do
       assert top_1_next_proc.id == proc_s1_1.id
 
       # We can see that proc_s1_1 and proc_s1_2 have been correctly allocated resources in DB
-      Core.with_context(:server, server_1.id, :read, fn ->
-        new_proc_s1_1 = Svc.Process.fetch!(by_id: proc_s1_1.id)
-        new_proc_s1_2 = Svc.Process.fetch!(by_id: proc_s1_2.id)
+      new_proc_s1_1 = Svc.Process.fetch!(server_1.id, by_id: proc_s1_1.id)
+      new_proc_s1_2 = Svc.Process.fetch!(server_1.id, by_id: proc_s1_2.id)
 
-        # The processes had no allocation/processed resources right after creation
-        refute proc_s1_1.resources.allocated
-        refute proc_s1_1.resources.processed
-        refute proc_s1_2.resources.allocated
-        refute proc_s1_2.resources.processed
+      # The processes had no allocation/processed resources right after creation
+      refute proc_s1_1.resources.allocated
+      refute proc_s1_1.resources.processed
+      refute proc_s1_2.resources.allocated
+      refute proc_s1_2.resources.processed
 
-        # The processes have the new resources set correctly in the database
-        assert_decimal_eq(new_proc_s1_1.resources.allocated.cpu, Decimal.new(100_000))
-        assert Resources.equal?(new_proc_s1_1.resources.processed, Resources.initial())
-        assert_decimal_eq(new_proc_s1_2.resources.allocated.cpu, Decimal.new(100_000))
-        assert Resources.equal?(new_proc_s1_2.resources.processed, Resources.initial())
+      # The processes have the new resources set correctly in the database
+      assert_decimal_eq(new_proc_s1_1.resources.allocated.cpu, Decimal.new(100_000))
+      assert Resources.equal?(new_proc_s1_1.resources.processed, Resources.initial())
+      assert_decimal_eq(new_proc_s1_2.resources.allocated.cpu, Decimal.new(100_000))
+      assert Resources.equal?(new_proc_s1_2.resources.processed, Resources.initial())
 
-        # The processes have the status changed from `awaiting_allocation` to `running`
-        assert proc_s1_1.status == :awaiting_allocation
-        assert proc_s1_1.status == :awaiting_allocation
-        assert new_proc_s1_1.status == :running
-        assert new_proc_s1_2.status == :running
+      # The processes have the status changed from `awaiting_allocation` to `running`
+      assert proc_s1_1.status == :awaiting_allocation
+      assert proc_s1_1.status == :awaiting_allocation
+      assert new_proc_s1_1.status == :running
+      assert new_proc_s1_2.status == :running
 
-        # Each had its completion date estimated correctly: 100ms and 200ms from the creation date
-        assert_in_delta new_proc_s1_1.estimated_completion_ts,
-                        new_proc_s1_1.last_checkpoint_ts + 100,
-                        25
+      # Each had its completion date estimated correctly: 100ms and 200ms from the creation date
+      assert_in_delta new_proc_s1_1.estimated_completion_ts,
+                      new_proc_s1_1.last_checkpoint_ts + 100,
+                      25
 
-        assert_in_delta new_proc_s1_2.estimated_completion_ts,
-                        new_proc_s1_2.last_checkpoint_ts + 200,
-                        25
-      end)
+      assert_in_delta new_proc_s1_2.estimated_completion_ts,
+                      new_proc_s1_2.last_checkpoint_ts + 200,
+                      25
 
       # Now for Server 2. It has 200k/s cpu, with the only process having a 10k target: ~50ms
       {top_2_next_proc, _time_left, _timer_ref} = top_2.next
@@ -81,29 +79,25 @@ defmodule Game.Process.TOPTest do
       # That's what happened: the "next" process is `proc_s2` (the only one)
       assert top_2_next_proc.id == proc_s2.id
 
-      Core.with_context(:server, server_2.id, :read, fn ->
-        [new_proc_s2] = DB.all(Process)
+      [new_proc_s2] = U.get_all_processes(server_2.id)
 
-        # No resource allocation when it was originally created
-        refute proc_s2.resources.allocated
-        refute proc_s2.resources.processed
+      # No resource allocation when it was originally created
+      refute proc_s2.resources.allocated
+      refute proc_s2.resources.processed
 
-        # New process has the expected allocation (as well as `processed`) in DB: 100% of the CPU!
-        assert_decimal_eq(new_proc_s2.resources.allocated.cpu, Decimal.new(200_000))
-        assert Resources.equal?(new_proc_s2.resources.processed, Resources.initial())
+      # New process has the expected allocation (as well as `processed`) in DB: 100% of the CPU!
+      assert_decimal_eq(new_proc_s2.resources.allocated.cpu, Decimal.new(200_000))
+      assert Resources.equal?(new_proc_s2.resources.processed, Resources.initial())
 
-        # It has the correct status flags
-        assert proc_s2.status == :awaiting_allocation
-        assert new_proc_s2.status == :running
+      # It has the correct status flags
+      assert proc_s2.status == :awaiting_allocation
+      assert new_proc_s2.status == :running
 
-        # Completion was estimated ~50ms after the creation date
-        assert_in_delta new_proc_s2.estimated_completion_ts, new_proc_s2.last_checkpoint_ts + 50, 10
-      end)
+      # Completion was estimated ~50ms after the creation date
+      assert_in_delta new_proc_s2.estimated_completion_ts, new_proc_s2.last_checkpoint_ts + 50, 10
 
       # All 3 processes can be found in the ProcessRegistry
-      Core.with_context(:universe, :read, fn ->
-        assert [_, _, _] = DB.all(ProcessRegistry)
-      end)
+      assert [_, _, _] = U.get_all_process_registries()
 
       # Now we'll wait for the processes to complete
       adhoc_checkpoint = DateTime.utc_now() |> DateTime.to_unix(:millisecond)
@@ -129,48 +123,43 @@ defmodule Game.Process.TOPTest do
       # higher rate, so instead of "100ms + 100ms" it will take "100ms + 50ms" to reach the target
       assert_in_delta top_1_next_time_left, 50, 20
 
-      Core.with_context(:server, server_1.id, :read, fn ->
-        # The previous process (`proc_s1_1`) does not exist in the database anymore. It's gone
-        refute Svc.Process.fetch(by_id: proc_s1_1.id)
+      # The previous process (`proc_s1_1`) does not exist in the database anymore. It's gone
+      refute Svc.Process.fetch(server_1.id, by_id: proc_s1_1.id)
 
-        # `proc_s1_2` has a different allocation
-        new_proc_s1_2 = Svc.Process.fetch!(by_id: proc_s1_2.id)
+      # `proc_s1_2` has a different allocation
+      new_proc_s1_2 = Svc.Process.fetch!(server_1.id, by_id: proc_s1_2.id)
 
-        # It is now using 100% of the available CPU in the server (as opposed to 50% before)
-        assert_decimal_eq(new_proc_s1_2.resources.allocated.cpu, Decimal.new(200_000))
+      # It is now using 100% of the available CPU in the server (as opposed to 50% before)
+      assert_decimal_eq(new_proc_s1_2.resources.allocated.cpu, Decimal.new(200_000))
 
-        # It has a new checkpoint (which happened after our `adhoc_checkpoint`)
-        assert new_proc_s1_2.last_checkpoint_ts >= adhoc_checkpoint
+      # It has a new checkpoint (which happened after our `adhoc_checkpoint`)
+      assert new_proc_s1_2.last_checkpoint_ts >= adhoc_checkpoint
 
-        # It has a new completion date (which is roughly ~50ms after the checkpoint)
-        assert_in_delta new_proc_s1_2.estimated_completion_ts,
-                        new_proc_s1_2.last_checkpoint_ts + 50,
-                        25
+      # It has a new completion date (which is roughly ~50ms after the checkpoint)
+      assert_in_delta new_proc_s1_2.estimated_completion_ts,
+                      new_proc_s1_2.last_checkpoint_ts + 50,
+                      25
 
-        # It has some amount of processed resources (roughly around 10k or 50% of target)
-        # PS: Do note it may be more than that because we wait an extra 10ms to make *sure* the
-        # process is *really* complete. The oversized threshold is to avoid flakes in slower CI
-        refute Resources.equal?(new_proc_s1_2.resources.processed, Resources.initial())
-        assert_decimal_eq(new_proc_s1_2.resources.processed.cpu, 11_000, 2_000)
-      end)
+      # It has some amount of processed resources (roughly around 10k or 50% of target)
+      # PS: Do note it may be more than that because we wait an extra 10ms to make *sure* the
+      # process is *really* complete. The oversized threshold is to avoid flakes in slower CI
+      refute Resources.equal?(new_proc_s1_2.resources.processed, Resources.initial())
+      assert_decimal_eq(new_proc_s1_2.resources.processed.cpu, 11_000, 2_000)
 
       # As for `server_2`, the only process it was working on is complete and now the TOP is empty
       top_2_pid = fetch_top_pid!(server_2.id, ctx)
       top_2 = :sys.get_state(top_2_pid)
       refute top_2.next
 
-      Core.with_context(:server, server_2.id, :read, fn ->
-        # The previous process (`proc_s2`) is gone
-        refute Svc.Process.fetch(by_id: proc_s2.id)
-      end)
+      # The previous process (`proc_s2`) is gone
+      refute Svc.Process.fetch(server_2.id, by_id: proc_s2.id)
 
       # The completed processes are gone from the ProcessRegistry
-      Core.with_context(:universe, :read, fn ->
-        assert [proc_in_registry] = DB.all(ProcessRegistry)
-        # The only process in registry is `proc_s1_2`, which is the only one running at this point
-        assert proc_in_registry.server_id == server_1.id
-        assert proc_in_registry.process_id == proc_s1_2.id
-      end)
+      assert [proc_in_registry] = U.get_all_process_registries()
+
+      # The only process in registry is `proc_s1_2`, which is the only one running at this point
+      assert proc_in_registry.server_id == server_1.id
+      assert proc_in_registry.process_id == proc_s1_2.id
 
       # If we wait an extra ~50ms, `proc_s1_2` should be completed too
       assert [_process_completed_event] = wait_process_completed_event!(proc_s1_2)
@@ -181,14 +170,10 @@ defmodule Game.Process.TOPTest do
       refute top_1.next
 
       # Process is gone from the database
-      Core.with_context(:server, server_1.id, :read, fn ->
-        refute Svc.Process.fetch(by_id: proc_s1_2.id)
-      end)
+      refute Svc.Process.fetch(server_1.id, by_id: proc_s1_2.id)
 
       # Nothing left in the Registry
-      Core.with_context(:universe, :read, fn ->
-        assert [] = DB.all(ProcessRegistry)
-      end)
+      assert [] = U.get_all_process_registries()
 
       # Server 1 had its TOP recalculated three times
       assert [_, _, _] = wait_events_on_server!(server_1.id, :top_recalcado, 3)
@@ -308,11 +293,9 @@ defmodule Game.Process.TOPTest do
       # The timer that was tracking `proc_4`'s conclusion has been killed
       assert false == Elixir.Process.cancel_timer(timer_proc_4)
 
-      Core.with_context(:server, server.id, :read, fn ->
-        # There are only 3 proceseses now; `proc_4` is gone
-        assert [_, _, _] = DB.all(Process)
-        refute Svc.Process.fetch(by_id: proc_4.id)
-      end)
+      # There are only 3 proceseses now; `proc_4` is gone
+      assert [_, _, _] = U.get_all_processes(server.id)
+      refute Svc.Process.fetch(server.id, by_id: proc_4.id)
 
       # Let's change the resources once again, now to 35. `proc_3` and `proc_2` should be killed
       U.Server.update_resources(server.id, %{ram: 35})
@@ -326,11 +309,9 @@ defmodule Game.Process.TOPTest do
       # The timer that was tracking `proc_2`'s conclusion has been killed
       assert false == Elixir.Process.cancel_timer(timer_proc_2)
 
-      Core.with_context(:server, server.id, :read, fn ->
-        # Only `proc_1` is remaining now
-        assert [remaining_process] = DB.all(Process)
-        assert remaining_process.id == proc_1.id
-      end)
+      # Only `proc_1` is remaining now
+      assert [remaining_process] = U.get_all_processes(server.id)
+      assert remaining_process.id == proc_1.id
 
       # And now let's change it to 29. There won't be any processes left
       U.Server.update_resources(server.id, %{ram: 29})
@@ -486,21 +467,19 @@ defmodule Game.Process.TOPTest do
       assert next_process.id == process_before.id
 
       # The process was allocated some resources and a completion estimate
-      Core.with_context(:server, server.id, :read, fn ->
-        [process_after] = DB.all(Process)
-        assert process_after.id == process_before.id
+      [process_after] = U.get_all_processes(server.id)
+      assert process_after.id == process_before.id
 
-        # Initially, the process had no resources allocated. Now it does
-        refute process_before.resources.allocated
-        assert process_after.resources.allocated
+      # Initially, the process had no resources allocated. Now it does
+      refute process_before.resources.allocated
+      assert process_after.resources.allocated
 
-        # Similarly, it has a "last checkpoint time" as well as an estimated completion date
-        assert process_after.last_checkpoint_ts
-        assert process_after.estimated_completion_ts
+      # Similarly, it has a "last checkpoint time" as well as an estimated completion date
+      assert process_after.last_checkpoint_ts
+      assert process_after.estimated_completion_ts
 
-        # Its "processed" resource is set to zero (nothing has been processed yet)
-        assert Resources.equal?(process_after.resources.processed, Resources.initial())
-      end)
+      # Its "processed" resource is set to zero (nothing has been processed yet)
+      assert Resources.equal?(process_after.resources.processed, Resources.initial())
     end
   end
 
@@ -515,21 +494,16 @@ defmodule Game.Process.TOPTest do
       pid = fetch_top_pid!(server.id, ctx)
       state = :sys.get_state(pid)
 
-      new_proc_2 =
-        Core.with_context(:server, server.id, :read, fn ->
-          new_proc_1 = Svc.Process.fetch!(by_id: proc_1.id)
-          new_proc_2 = Svc.Process.fetch!(by_id: proc_2.id)
+      new_proc_1 = Svc.Process.fetch!(server.id, by_id: proc_1.id)
+      new_proc_2 = Svc.Process.fetch!(server.id, by_id: proc_2.id)
 
-          # Both processes are running
-          assert new_proc_1.status == :running
-          assert new_proc_2.status == :running
+      # Both processes are running
+      assert new_proc_1.status == :running
+      assert new_proc_2.status == :running
 
-          # Both processes received 50% of the dynamic allocation
-          assert_decimal_eq(new_proc_1.resources.allocated.cpu, 500)
-          assert_decimal_eq(new_proc_2.resources.allocated.cpu, 500)
-
-          new_proc_2
-        end)
+      # Both processes received 50% of the dynamic allocation
+      assert_decimal_eq(new_proc_1.resources.allocated.cpu, 500)
+      assert_decimal_eq(new_proc_2.resources.allocated.cpu, 500)
 
       # Despite both processes receiving 50% of the server resources, `proc_2` is clearly the first
       # one to complete because it requires half of the `objective`
@@ -551,25 +525,23 @@ defmodule Game.Process.TOPTest do
       assert false == Elixir.Process.cancel_timer(proc_2_timer)
 
       # 3. The processes have the correct `allocated` and `status` values in the database
-      Core.with_context(:server, server.id, :read, fn ->
-        new_proc_1 = Svc.Process.fetch!(by_id: proc_1.id)
-        new_proc_2 = Svc.Process.fetch!(by_id: proc_2.id)
+      new_proc_1 = Svc.Process.fetch!(server.id, by_id: proc_1.id)
+      new_proc_2 = Svc.Process.fetch!(server.id, by_id: proc_2.id)
 
-        # `proc_1` is running and using 100% of the dynamic server resources
-        assert_decimal_eq(new_proc_1.resources.allocated.cpu, 1000)
-        assert new_proc_1.status == :running
+      # `proc_1` is running and using 100% of the dynamic server resources
+      assert_decimal_eq(new_proc_1.resources.allocated.cpu, 1000)
+      assert new_proc_1.status == :running
 
-        # `proc_2` is using 0% of the dynamic server resources
-        assert_decimal_eq(new_proc_2.resources.allocated.cpu, 0)
-        assert new_proc_2.status == :paused
+      # `proc_2` is using 0% of the dynamic server resources
+      assert_decimal_eq(new_proc_2.resources.allocated.cpu, 0)
+      assert new_proc_2.status == :paused
 
-        # `proc_2` will never complete (as long as it's paused)
-        refute new_proc_2.estimated_completion_ts
+      # `proc_2` will never complete (as long as it's paused)
+      refute new_proc_2.estimated_completion_ts
 
-        # `proc_2` is using the "paused" static resources
-        proc_2_paused_resources = new_proc_2.resources.static.paused |> Resources.from_map()
-        assert Resources.equal?(new_proc_2.resources.allocated, proc_2_paused_resources)
-      end)
+      # `proc_2` is using the "paused" static resources
+      proc_2_paused_resources = new_proc_2.resources.static.paused |> Resources.from_map()
+      assert Resources.equal?(new_proc_2.resources.allocated, proc_2_paused_resources)
 
       # 4. The ProcessPausedEvent is emitted
       assert [process_resumed_event] = wait_events_on_server!(server.id, :process_paused)
@@ -587,12 +559,8 @@ defmodule Game.Process.TOPTest do
       state = :sys.get_state(pid)
       assert state.next
 
-      process =
-        Core.with_context(:server, server.id, :read, fn ->
-          Svc.Process.fetch!(by_id: process.id)
-        end)
-
       # We'll pause the (only) process in this TOP
+      process = Svc.Process.fetch!(server.id, by_id: process.id)
       assert {:ok, _} = TOP.pause(process)
 
       # Naturally there won't be any "next" for this TOP
@@ -600,11 +568,8 @@ defmodule Game.Process.TOPTest do
       state = :sys.get_state(pid)
       refute state.next
 
-      process =
-        Core.with_context(:server, server.id, :read, fn ->
-          Svc.Process.fetch!(by_id: process.id)
-        end)
-
+      # Can't pause a paused process
+      process = Svc.Process.fetch!(server.id, by_id: process.id)
       assert {:error, {:cant_pause, :paused}} == TOP.pause(process)
     end
   end
@@ -623,11 +588,7 @@ defmodule Game.Process.TOPTest do
       assert elem(state.next, 0).id == proc_2.id
 
       # Let's pause `proc_2`
-      proc_2 =
-        Core.with_context(:server, server.id, :read, fn ->
-          Svc.Process.fetch!(by_id: proc_2.id)
-        end)
-
+      proc_2 = Svc.Process.fetch!(server.id, by_id: proc_2.id)
       assert {:ok, proc_2} = TOP.pause(proc_2)
       assert proc_2.status == :paused
 
@@ -648,18 +609,16 @@ defmodule Game.Process.TOPTest do
       assert false == Elixir.Process.cancel_timer(proc_1_timer)
 
       # The allocation is as expected (50% for each process)
-      Core.with_context(:server, server.id, :read, fn ->
-        new_proc_1 = Svc.Process.fetch!(by_id: proc_1.id)
-        new_proc_2 = Svc.Process.fetch!(by_id: proc_2.id)
+      new_proc_1 = Svc.Process.fetch!(server.id, by_id: proc_1.id)
+      new_proc_2 = Svc.Process.fetch!(server.id, by_id: proc_2.id)
 
-        # Both processes are running
-        assert new_proc_1.status == :running
-        assert new_proc_2.status == :running
+      # Both processes are running
+      assert new_proc_1.status == :running
+      assert new_proc_2.status == :running
 
-        # Both processes received 50% of the dynamic allocation
-        assert_decimal_eq(new_proc_1.resources.allocated.cpu, 500)
-        assert_decimal_eq(new_proc_2.resources.allocated.cpu, 500)
-      end)
+      # Both processes received 50% of the dynamic allocation
+      assert_decimal_eq(new_proc_1.resources.allocated.cpu, 500)
+      assert_decimal_eq(new_proc_2.resources.allocated.cpu, 500)
 
       # Emits the ProcessResumedEvent
       assert [process_resumed_event] = wait_events_on_server!(server.id, :process_resumed)
@@ -676,11 +635,7 @@ defmodule Game.Process.TOPTest do
 
       assert :ok == TOP.on_boot({ctx.db_context, ctx.shard_id})
 
-      process =
-        Core.with_context(:server, server.id, :read, fn ->
-          Svc.Process.fetch!(by_id: process.id)
-        end)
-
+      process = Svc.Process.fetch!(server.id, by_id: process.id)
       assert {:error, {:cant_resume, :running}} = TOP.resume(process)
     end
 
@@ -700,10 +655,7 @@ defmodule Game.Process.TOPTest do
       state = :sys.get_state(pid)
       assert elem(state.next, 0).id == proc_1.id
 
-      proc_1 =
-        Core.with_context(:server, server.id, :read, fn ->
-          Svc.Process.fetch!(by_id: proc_1.id)
-        end)
+      proc_1 = Svc.Process.fetch!(server.id, by_id: proc_1.id)
 
       # Let's pause proc_1.
       assert {:ok, proc_1} = TOP.pause(proc_1)
@@ -729,19 +681,17 @@ defmodule Game.Process.TOPTest do
       refute elem(state.next, 0).id == proc_1.id
 
       # Let's just make sure everything looks alright in the database
-      Core.with_context(:server, server.id, :read, fn ->
-        # There are 3 processes
-        assert [_, _, _] = DB.all(Process)
+      # There are 3 processes
+      assert [_, _, _] = U.get_all_processes(server.id)
 
-        proc_1 = Svc.Process.fetch!(by_id: proc_1.id)
-        proc_2 = Svc.Process.fetch!(by_id: proc_2.id)
-        proc_3 = Svc.Process.fetch!(by_id: proc_3.id)
+      proc_1 = Svc.Process.fetch!(server.id, by_id: proc_1.id)
+      proc_2 = Svc.Process.fetch!(server.id, by_id: proc_2.id)
+      proc_3 = Svc.Process.fetch!(server.id, by_id: proc_3.id)
 
-        # `proc_1` is paused and the other two are running
-        assert proc_1.status == :paused
-        assert proc_2.status == :running
-        assert proc_3.status == :running
-      end)
+      # `proc_1` is paused and the other two are running
+      assert proc_1.status == :paused
+      assert proc_2.status == :running
+      assert proc_3.status == :running
 
       # Let's resume `proc_1`. It should fail
       assert {:error, :overflow} = TOP.resume(proc_1)
@@ -773,33 +723,29 @@ defmodule Game.Process.TOPTest do
       assert elem(state.next, 0).id == proc_e2.id
 
       # For context, here's the expected initial allocation:
-      Core.with_context(:server, server.id, :read, fn ->
-        proc_e1_1 = Svc.Process.fetch!(by_id: proc_e1_1.id)
-        proc_e1_2 = Svc.Process.fetch!(by_id: proc_e1_2.id)
-        proc_e2 = Svc.Process.fetch!(by_id: proc_e2.id)
+      proc_e1_1 = Svc.Process.fetch!(server.id, by_id: proc_e1_1.id)
+      proc_e1_2 = Svc.Process.fetch!(server.id, by_id: proc_e1_2.id)
+      proc_e2 = Svc.Process.fetch!(server.id, by_id: proc_e2.id)
 
-        # `entity_1` has access to 50% of the resources (500MHz). In a total of 9 + 1 = 10 shares,
-        # that's 50MHz per share. `entity_2` has access to a total of 500MHz. Expected allocation:
-        assert_decimal_eq(proc_e1_1.resources.allocated.cpu, 9 * 50)
-        assert_decimal_eq(proc_e1_2.resources.allocated.cpu, 1 * 50)
-        assert_decimal_eq(proc_e2.resources.allocated.cpu, 500)
-      end)
+      # `entity_1` has access to 50% of the resources (500MHz). In a total of 9 + 1 = 10 shares,
+      # that's 50MHz per share. `entity_2` has access to a total of 500MHz. Expected allocation:
+      assert_decimal_eq(proc_e1_1.resources.allocated.cpu, 9 * 50)
+      assert_decimal_eq(proc_e1_2.resources.allocated.cpu, 1 * 50)
+      assert_decimal_eq(proc_e2.resources.allocated.cpu, 500)
 
       # Let's change the priority of `proc_e1_2` to be 11
       assert {:ok, _} = TOP.renice(proc_e1_2, 11)
 
-      Core.with_context(:server, server.id, :read, fn ->
-        proc_e1_1 = Svc.Process.fetch!(by_id: proc_e1_1.id)
-        proc_e1_2 = Svc.Process.fetch!(by_id: proc_e1_2.id)
-        proc_e2 = Svc.Process.fetch!(by_id: proc_e2.id)
+      proc_e1_1 = Svc.Process.fetch!(server.id, by_id: proc_e1_1.id)
+      proc_e1_2 = Svc.Process.fetch!(server.id, by_id: proc_e1_2.id)
+      proc_e2 = Svc.Process.fetch!(server.id, by_id: proc_e2.id)
 
-        # Now `entity_1` has a total of 9 + 11 = 20 shares, which means 500 / 20 = 25mhz/share
-        assert_decimal_eq(proc_e1_1.resources.allocated.cpu, 9 * 25)
-        assert_decimal_eq(proc_e1_2.resources.allocated.cpu, 11 * 25)
+      # Now `entity_1` has a total of 9 + 11 = 20 shares, which means 500 / 20 = 25mhz/share
+      assert_decimal_eq(proc_e1_1.resources.allocated.cpu, 9 * 25)
+      assert_decimal_eq(proc_e1_2.resources.allocated.cpu, 11 * 25)
 
-        # Process from `entity_2` remains unchanged
-        assert_decimal_eq(proc_e2.resources.allocated.cpu, 500)
-      end)
+      # Process from `entity_2` remains unchanged
+      assert_decimal_eq(proc_e2.resources.allocated.cpu, 500)
 
       # A ProcessRenicedEvent was emitted
       assert [event] = wait_events_on_server!(server.id, :process_reniced)

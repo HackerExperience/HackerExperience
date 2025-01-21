@@ -152,7 +152,7 @@ defmodule Test.Setup.Process do
       |> Process.update(changes)
       |> DB.update!()
 
-      Svc.Process.fetch!(by_id: process.id)
+      Svc.Process.fetch!(process.server_id, by_id: process.id)
     end)
   end
 end

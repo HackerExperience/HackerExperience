@@ -9,35 +9,74 @@ defmodule Game.Services.Process do
   alias Game.Events.Process.Resumed, as: ProcessResumedEvent
   alias Game.Events.Process.Reniced, as: ProcessRenicedEvent
 
-  def fetch(filter_params, opts \\ []) do
+  @doc """
+  Fetches a Process matching the given filters.
+  """
+  @spec fetch(Server.id(), list, list) ::
+          Process.t() | nil
+  def fetch(%Server.ID{} = server_id, filter_params, opts \\ []) do
     filters = [
       by_id: {:one, {:processes, :fetch}}
     ]
 
-    Core.Fetch.query(filter_params, opts, filters)
+    Core.with_context(:server, server_id, :read, fn ->
+      Core.Fetch.query(filter_params, opts, filters)
+    end)
   end
 
-  def fetch!(filter_params, opts \\ []) do
-    filter_params
-    |> fetch(opts)
+  @doc """
+  Fetches a Process matching the given filters. The Process must exist or it will raise an error.
+  """
+  @spec fetch!(Server.id(), list, list) ::
+          Process.t() | no_return
+  def fetch!(%Server.ID{} = server_id, filter_params, opts \\ []) do
+    server_id
+    |> fetch(filter_params, opts)
     |> Core.Fetch.assert_non_empty_result!(filter_params, opts)
   end
 
   @doc """
   Returns a list of Process matching the given filters.
   """
-  def list(filter_params, opts \\ []) do
+  def list(%Server.ID{} = server_id, filter_params, opts \\ []) do
     filters = [
       query: &query/1
+    ]
+
+    Core.with_context(:server, server_id, :read, fn ->
+      Core.Fetch.query(filter_params, opts, filters)
+    end)
+  end
+
+  @doc """
+  Fetches a ProcessRegistry matching the given filters.
+  """
+  @spec fetch_registry(list, list) ::
+          ProcessRegistry.t() | nil
+  def fetch_registry(filter_params, opts \\ []) do
+    filters = [
+      by_process: &query_registry_by_process/1
     ]
 
     Core.Fetch.query(filter_params, opts, filters)
   end
 
   @doc """
+  Fetches a ProcessRegistry matching the given filters. The ProcessRegistry must exist or it will
+  raise an error.
+  """
+  @spec fetch_registry!(list, list) ::
+          ProcessRegistry.t() | no_return
+  def fetch_registry!(filter_params, opts \\ []) do
+    filter_params
+    |> fetch_registry(opts)
+    |> Core.Fetch.assert_non_empty_result!(filter_params, opts)
+  end
+
+  @doc """
   Returns a list of ProcessRegistry matching the given filters.
   """
-  @spec list_registry(list) ::
+  @spec list_registry(list, list) ::
           [ProcessRegistry.t()]
   def list_registry(filter_params, opts \\ []) do
     filters = [
@@ -73,11 +112,7 @@ defmodule Game.Services.Process do
 
     case result do
       {:ok, _} ->
-        new_process =
-          Core.with_context(:server, process.server_id, :read, fn ->
-            fetch!(by_id: process.id)
-          end)
-
+        new_process = fetch!(process.server_id, by_id: process.id)
         event = ProcessPausedEvent.new(new_process)
         {:ok, new_process, [event]}
 
@@ -103,11 +138,7 @@ defmodule Game.Services.Process do
 
     case result do
       {:ok, _} ->
-        new_process =
-          Core.with_context(:server, process.server_id, :read, fn ->
-            fetch!(by_id: process.id)
-          end)
-
+        new_process = fetch!(process.server_id, by_id: process.id)
         event = ProcessResumedEvent.new(new_process)
         {:ok, new_process, [event]}
 
@@ -132,11 +163,7 @@ defmodule Game.Services.Process do
 
     case result do
       {:ok, _} ->
-        new_process =
-          Core.with_context(:server, process.server_id, :read, fn ->
-            fetch!(by_id: process.id)
-          end)
-
+        new_process = fetch!(process.server_id, by_id: process.id)
         event = ProcessRenicedEvent.new(new_process)
         {:ok, new_process, [event]}
 
@@ -156,12 +183,8 @@ defmodule Game.Services.Process do
     end)
 
     Core.with_context(:universe, :write, fn ->
-      # This is, of course, TODO. FeebDB needs to support delete based on query
-      # (akin to Repo.delete_all)
-      process_registry =
-        DB.all(ProcessRegistry)
-        |> Enum.find(&(&1.server_id == process.server_id && &1.process_id == process.id))
-
+      # This is TODO. FeebDB needs to support delete based on query (like Repo.delete_all)
+      process_registry = fetch_registry!(by_process: process)
       DB.delete!({:processes_registry, :delete}, process_registry, [process.server_id, process.id])
     end)
 
@@ -207,6 +230,12 @@ defmodule Game.Services.Process do
 
   defp registry_query(:servers_with_processes),
     do: DB.all({:processes_registry, :servers_with_processes}, [], format: :type)
+
+  defp registry_query(:all),
+    do: DB.all({:processes_registry, :__all}, [])
+
+  defp query_registry_by_process(%Process{id: process_id, server_id: server_id}),
+    do: DB.one({:processes_registry, :fetch}, [server_id, process_id])
 
   defp insert_registry(%Process{} = process, registry_data) do
     Core.with_context(:universe, :write, fn ->

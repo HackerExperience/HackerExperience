@@ -5,6 +5,9 @@
 -- :__fetch
 SELECT * FROM processes_registry WHERE server_id = ? AND process_id = ?;
 
+-- :__all
+SELECT * FROM processes_registry;
+
 -- :servers_with_processes
 SELECT server_id FROM processes_registry GROUP BY server_id;
 

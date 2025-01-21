@@ -179,9 +179,7 @@ defmodule Game.Process.TOP do
           {state, [Process.t()]}
   defp fetch_initial_data(state) do
     {processes, meta} =
-      Core.with_context(:server, state.server_id, :read, fn ->
-        {Svc.Process.list(query: :all), Svc.Server.get_meta(state.server_id)}
-      end)
+      {Svc.Process.list(state.server_id, query: :all), Svc.Server.get_meta(state.server_id)}
 
     state =
       state
@@ -196,12 +194,7 @@ defmodule Game.Process.TOP do
            Executable.execute(process_mod, state.server_id, entity_id, params, meta),
          %{dropped: [], state: new_state} <-
            run_schedule(state, state.server_id, :insert, creation_events) do
-      new_process =
-        Core.with_context(:server, state.server_id, :read, fn ->
-          # TODO: Process Service should be responsible for handling context
-          Svc.Process.fetch!(by_id: new_process.id)
-        end)
-
+      new_process = Svc.Process.fetch!(state.server_id, by_id: new_process.id)
       {:reply, {:ok, new_process}, new_state}
     else
       %{dropped: [_ | _], state: new_state} ->
@@ -217,14 +210,7 @@ defmodule Game.Process.TOP do
     with {:signal_action, :pause} <- {:signal_action, Signalable.sigstop(process)},
          {:ok, _, [process_paused_event]} <- Svc.Process.pause(process) do
       result = run_schedule(state, state.server_id, {:pause, process.id}, [process_paused_event])
-
-      # Fetch from disk the process we just paused because its allocation has changed
-      paused_process =
-        Core.with_context(:server, state.server_id, :read, fn ->
-          Svc.Process.fetch!(by_id: process.id)
-        end)
-
-      {:reply, {:ok, paused_process}, result.state}
+      {:reply, {:ok, refetch_process!(process)}, result.state}
     else
       {:signal_action, :noop} ->
         {:reply, {:error, :rejected}, state}
@@ -240,12 +226,7 @@ defmodule Game.Process.TOP do
          {:ok, _, [process_resumed_event]} <- Svc.Process.resume(process),
          %{dropped: [], paused: [], state: new_state} <-
            run_schedule(state, state.server_id, {:resume, process.id}, [process_resumed_event]) do
-      resumed_process =
-        Core.with_context(:server, state.server_id, :read, fn ->
-          Svc.Process.fetch!(by_id: process.id)
-        end)
-
-      {:reply, {:ok, resumed_process}, new_state}
+      {:reply, {:ok, refetch_process!(process)}, new_state}
     else
       {:signal_action, :noop} ->
         {:reply, {:error, :rejected}, state}
@@ -309,11 +290,7 @@ defmodule Game.Process.TOP do
       # Process completed and we are supposed to delete it
       {true, :delete} ->
         {:ok, process_completed_event} = Svc.Process.delete(process, :completed)
-
-        remaining_processes =
-          Core.with_context(:server, state.server_id, :read, fn ->
-            Svc.Process.list(query: :all)
-          end)
+        remaining_processes = Svc.Process.list(state.server_id, query: :all)
 
         schedule =
           run_schedule(state, remaining_processes, :completion, [process_completed_event])
@@ -348,11 +325,7 @@ defmodule Game.Process.TOP do
   defp run_schedule(state, processes_or_server_id, reason, events \\ [])
 
   defp run_schedule(state, %Server.ID{} = server_id, reason, events) do
-    processes =
-      Core.with_context(:server, server_id, :read, fn ->
-        Svc.Process.list(query: :all)
-      end)
-
+    processes = Svc.Process.list(server_id, query: :all)
     run_schedule(state, processes, reason, events)
   end
 
@@ -530,9 +503,7 @@ defmodule Game.Process.TOP do
   end
 
   defp refetch_process!(%Process{id: process_id, server_id: server_id}) do
-    Core.with_context(:server, server_id, :read, fn ->
-      Svc.Process.fetch!(by_id: process_id)
-    end)
+    Svc.Process.fetch!(server_id, by_id: process_id)
   end
 
   defp with_registry(key) do

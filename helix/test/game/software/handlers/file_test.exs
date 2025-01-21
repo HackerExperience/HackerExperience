@@ -32,19 +32,15 @@ defmodule Game.Handlers.FileTest do
       # Wait for TOP to process each signal
       wait_events_on_server!(server.id, :process_killed, 2)
 
-      Core.with_context(:server, server.id, :read, fn ->
-        # By now, `proc_install` anjd `proc_delete` should have been killed
-        refute Svc.Process.fetch(by_id: proc_install.id)
-        refute Svc.Process.fetch(by_id: proc_delete.id)
+      # By now, `proc_install` anjd `proc_delete` should have been killed
+      refute Svc.Process.fetch(server.id, by_id: proc_install.id)
+      refute Svc.Process.fetch(server.id, by_id: proc_delete.id)
 
-        # But `other_process` should remain unchanged
-        assert Svc.Process.fetch(by_id: other_process.id)
-      end)
+      # But `other_process` should remain unchanged
+      assert Svc.Process.fetch(server.id, by_id: other_process.id)
 
       # There is only 1 process in the Registry (`other_process`)
-      Core.with_context(:universe, :read, fn ->
-        assert [_] = DB.all(Game.ProcessRegistry)
-      end)
+      assert [_] = U.get_all_process_registries()
     end
   end
 end
