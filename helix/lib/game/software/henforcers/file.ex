@@ -14,15 +14,13 @@ defmodule Game.Henforcers.File do
           {true, file_exists_relay}
           | file_exists_error
   def file_exists?(%File.ID{} = file_id, %Server{} = server) do
-    Core.with_context(:server, server.id, :read, fn ->
-      case Svc.File.fetch(by_id: file_id) do
-        %File{} = file ->
-          Henforcer.success(%{file: file})
+    case Svc.File.fetch(server.id, by_id: file_id) do
+      %File{} = file ->
+        Henforcer.success(%{file: file})
 
-        nil ->
-          Henforcer.fail({:file, :not_found})
-      end
-    end)
+      nil ->
+        Henforcer.fail({:file, :not_found})
+    end
   end
 
   @type is_visible_relay :: %{visibility: FileVisibility.t()}

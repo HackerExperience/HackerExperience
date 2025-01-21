@@ -1,22 +1,24 @@
 defmodule Game.Services.File do
   alias Feeb.DB
-  alias Game.{File, Installation}
+  alias Game.{Entity, File, Installation, Server}
 
-  def fetch(filter_params, opts \\ []) do
+  def fetch(%Server.ID{} = server_id, filter_params, opts \\ []) do
     filters = [
       by_id: {:one, {:files, :fetch}}
     ]
 
-    Core.Fetch.query(filter_params, opts, filters)
+    Core.with_context(:server, server_id, :read, fn ->
+      Core.Fetch.query(filter_params, opts, filters)
+    end)
   end
 
-  def fetch!(filter_params, opts \\ []) do
-    filter_params
-    |> fetch(opts)
+  def fetch!(%Server.ID{} = server_id, filter_params, opts \\ []) do
+    server_id
+    |> fetch(filter_params, opts)
     |> Core.Fetch.assert_non_empty_result!(filter_params, opts)
   end
 
-  def fetch_visibility(entity_id, filter_params, opts \\ []) do
+  def fetch_visibility(%Entity.ID{} = entity_id, filter_params, opts \\ []) do
     filters = [
       by_file: &query_visibility_by_file/1
     ]
