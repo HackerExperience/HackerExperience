@@ -1,6 +1,8 @@
 defmodule Game.Player do
   use Core.Schema
 
+  # TODO
+  @type t :: term
   @type id :: __MODULE__.ID.t()
 
   @context :game

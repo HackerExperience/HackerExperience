@@ -164,8 +164,8 @@ defmodule Game.Events.File do
       def generate_payload(%{data: %{process: process, file: file}}) do
         payload =
           %{
-            file_id: file.id,
-            process_id: process.id
+            file_id: file.id |> ID.to_external(),
+            process_id: process.id |> ID.to_external()
           }
 
         {:ok, payload}
