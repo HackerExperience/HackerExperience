@@ -38,15 +38,12 @@ defmodule Game.Index.Log do
           index
   def index(entity_id, server_id) do
     # Get all logs that `entity_id` can see in `server_id`
-    visible_logs =
-      Core.with_context(:player, entity_id, :read, fn ->
-        Svc.Log.list(visible_on_server: server_id)
-      end)
+    visible_logs = Svc.Log.list_visibility(entity_id, visible_on_server: server_id)
 
-    # Fetch each visible log
+    # Fetch each visible log. Handle the DB context outside to avoid excessive context switching
     Core.with_context(:server, server_id, :read, fn ->
       Enum.map(visible_logs, fn [log_id, revision_id] ->
-        Svc.Log.fetch(by_id_and_revision_id: {log_id, revision_id})
+        Svc.Log.fetch(server_id, by_id_and_revision_id: {log_id, revision_id})
       end)
     end)
   end

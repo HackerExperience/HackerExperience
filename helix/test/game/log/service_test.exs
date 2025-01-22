@@ -14,10 +14,7 @@ defmodule Game.Services.LogTest do
       visibility_2 = Setup.log_visibility!(entity.id, server_id: server.id)
       _visibility_in_another_server = Setup.log_visibility!(Setup.entity!().id)
 
-      rows =
-        Core.with_context(:player, entity.id, :read, fn ->
-          Svc.Log.list(visible_on_server: server.id)
-        end)
+      rows = Svc.Log.list_visibility(entity.id, visible_on_server: server.id)
 
       # Only the two visibilities in `server.id` were found
       assert [visibility_1.log_id.id, visibility_1.revision_id] ==
