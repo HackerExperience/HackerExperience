@@ -87,10 +87,14 @@ defmodule Game.Process.File.DeleteTest do
       proc_completed_sse = U.wait_sse_event!("process_completed")
       assert proc_completed_sse.data.process_id == proc_delete.id.id
 
+      U.sleep_on_ci(500)
+
       # Then he is notified about the side-effect of the process completion
       file_deleted_sse = U.wait_sse_event!("file_deleted")
       assert file_deleted_sse.data.file_id == file.id.id
       assert file_deleted_sse.data.process_id == proc_delete.id.id
+
+      U.sleep_on_ci(500)
 
       # And then he is notified about `proc_install` being killed
       process_killed_sse = U.wait_sse_event!("process_killed")

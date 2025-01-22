@@ -77,6 +77,7 @@ defmodule Test.Utils.SSEListener do
 
   defp event_from_payload(raw_payload) do
     raw_payload
+    |> IO.inspect()
     |> String.slice(6..-1//1)
     |> String.replace("\n\n", "")
     |> :json.decode()

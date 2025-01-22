@@ -5,6 +5,9 @@ jobs:
   tests:
     runs-on: ubuntu-24.04
 
+    env:
+      IS_CI: true
+
     defaults:
       run:
         working-directory: ./hexOS
@@ -36,6 +39,9 @@ jobs:
 
   linters:
     runs-on: ubuntu-24.04
+
+    env:
+      IS_CI: true
 
     defaults:
       run:
@@ -70,6 +76,9 @@ jobs:
 
   build:
     runs-on: ubuntu-24.04
+
+    env:
+      IS_CI: true
 
     defaults:
       run:
