@@ -2,6 +2,10 @@ defmodule Test.Utils.SSEListener do
   alias Game.Player
   alias Test.Utils, as: U
 
+  @doc """
+  Starts a Sync request (using cURL in a separate process) and sends to the `test_pid` any SSE
+  messages it receives.
+  """
   def start(%{shard_id: shard_id, db_context: db_context}, %Player{} = player, opts \\ []) do
     jwt = U.jwt_token(uid: player.external_id)
 
@@ -43,6 +47,18 @@ defmodule Test.Utils.SSEListener do
     after
       500 ->
         raise "SSE did not set up correctly"
+    end
+  end
+
+  @doc """
+  Waits for the Event that was handled by `start/2`.
+  """
+  def wait_sse_event!(name) do
+    receive do
+      {:event, %{name: ^name} = event} ->
+        event
+    after
+      500 -> raise "SSE event #{name} never arrived"
     end
   end
 

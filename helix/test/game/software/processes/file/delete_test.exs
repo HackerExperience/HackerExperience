@@ -55,4 +55,76 @@ defmodule Game.Process.File.DeleteTest do
       assert {:ok, _} = FileDeleteProcess.Processable.on_complete(process)
     end
   end
+
+  describe "E2E" do
+    @tag capture_log: true
+    test "upon completion, deletes affected processes and submits events to player(s)", ctx do
+      player = Setup.player!()
+      server = Setup.server!(entity_id: player.id)
+
+      # Player is deleting `File`. This process already reached its objective
+      %{process: proc_delete, spec: %{file: file}} =
+        Setup.process(server.id, type: :file_delete, entity_id: player.id, completed?: true)
+
+      # Player is also installing the same `File`. Process hasn't reached objective yet
+      %{process: proc_install} =
+        Setup.process(server.id, type: :file_install, entity_id: player.id, spec: [file: file])
+
+      DB.commit()
+
+      U.start_sse_listener(ctx, player, total_expected_events: 3)
+
+      # Initially we had two running processes
+      assert [_, _] = U.get_all_process_registries()
+
+      # TODO: Turn this into a util. Like: U.simulate_process_completion
+      # Run TOP so `proc_delete` can be processed accordingly
+      assert :ok == Game.Process.TOP.on_boot({ctx.db_context, ctx.shard_id})
+
+      # First the Client is notified about the process being complete
+      proc_completed_sse = U.wait_sse_event!("process_completed")
+      assert proc_completed_sse.data.process_id == proc_delete.id.id
+
+      # Then he is notified about the side-effect of the process completion
+      file_deleted_sse = U.wait_sse_event!("file_deleted")
+      assert file_deleted_sse.data.file_id == file.id.id
+      assert file_deleted_sse.data.process_id == proc_delete.id.id
+
+      # And then he is notified about `proc_install` being killed
+      process_killed_sse = U.wait_sse_event!("process_killed")
+      assert process_killed_sse.data.process_id == proc_install.id.id
+      assert process_killed_sse.data.reason == "killed"
+
+      # Now we have no running processes! `proc_install` was killed due to the source file being deleted
+      assert [] == U.get_all_process_registries()
+    end
+
+    @tag capture_log: true
+    test "publishes a Failed event if preconditions are not met at completion time", ctx do
+      player = Setup.player!()
+
+      # There ISN'T a Tunnel from Gateway -> Endpoint
+      %{server: _gateway} = Setup.server(entity_id: player.id)
+      %{server: endpoint} = Setup.server()
+
+      # Player is deleting `File` within Endpoint. This process already reached its objective
+      %{process: proc_delete, spec: %{file: file}} =
+        Setup.process(endpoint.id, type: :file_delete, entity_id: player.id, completed?: true)
+
+      # The File exists in the Endpoint server, obviously
+      assert file.server_id == endpoint.id
+
+      DB.commit()
+
+      U.start_sse_listener(ctx, player, total_expected_events: 2)
+
+      # TODO: Turn this into a util. Like: U.simulate_process_completion
+      assert :ok == Game.Process.TOP.on_boot({ctx.db_context, ctx.shard_id})
+
+      proc_completed_event = U.wait_sse_event!("process_completed")
+      assert proc_completed_event.data.process_id == proc_delete.id.id
+
+      # file_delete_failed_event = U.wait_sse_event!("file_delete_failed")
+    end
+  end
 end

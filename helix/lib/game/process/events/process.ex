@@ -66,10 +66,22 @@ defmodule Game.Events.Process do
     end
   end
 
-  # TODO: Should ProcessCompletedEvent be publishable? It may be how we tell the Client that
-  # a process finished processing. Then at some point it will receive another event with the
-  # actuall side-effect from whatever process was running.
   defmodule Completed do
+    @moduledoc """
+    ProcessCompletedEvent is emitted after a Process reached its objective and was "processed" by
+    the TOP. At this point, the Process no longer exists in the Database, it is gone! The TOPHandler
+    will pick this process and trigger the `Processable.on_complete/1` logic in the corresponding
+    process.
+
+    This event is published to the Client. A Client that receives this process knows that the
+    Process is complete (and therefore should no longer show up in the TaskManager), but that's it.
+    Soon, another event will be sent with more details about the side-effect/implications of this
+    process completion. That's the responsibility of the `Processable.on_complete/1` trigger.
+
+    Notice that even though the Process completed, it's entirely possible that its intended side
+    effect was *not* reached successfully, for a variety of Process-specific reasons.
+    """
+
     use Core.Event.Definition
 
     alias Game.Process
@@ -90,6 +102,26 @@ defmodule Game.Events.Process do
     def handlers(_, _) do
       [Handlers.Process.TOP]
     end
+
+    defmodule Publishable do
+      use Core.Event.Publishable.Definition
+
+      def spec do
+        selection(
+          schema(%{process_id: integer()}),
+          [:process_id]
+        )
+      end
+
+      def generate_payload(%{data: %{process: process}}),
+        do: {:ok, %{process_id: process.id |> ID.to_external()}}
+
+      @doc """
+      Only the Process owner receives this event.
+      """
+      def whom_to_publish(%{data: %{process: %{entity_id: entity_id}}}),
+        do: %{player: entity_id}
+    end
   end
 
   defmodule Killed do
@@ -109,6 +141,29 @@ defmodule Game.Events.Process do
     def new(process = %Process{}, reason) when is_atom(reason) do
       %__MODULE__{process: process, reason: reason}
       |> Event.new()
+    end
+
+    defmodule Publishable do
+      use Core.Event.Publishable.Definition
+
+      def spec do
+        selection(
+          schema(%{
+            process_id: integer(),
+            reason: binary()
+          }),
+          [:process_id, :reason]
+        )
+      end
+
+      def generate_payload(%{data: %{process: process, reason: reason}}),
+        do: {:ok, %{process_id: process.id |> ID.to_external(), reason: "#{reason}"}}
+
+      @doc """
+      Only the Process owner receives this event.
+      """
+      def whom_to_publish(%{data: %{process: %{entity_id: entity_id}}}),
+        do: %{player: entity_id}
     end
   end
 
