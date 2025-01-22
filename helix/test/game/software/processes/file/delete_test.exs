@@ -80,6 +80,9 @@ defmodule Game.Process.File.DeleteTest do
       # Complete the Process
       U.simulate_process_completion(proc_delete)
 
+      # Wait until everything finished processing
+      wait_events_on_server!(server.id, :process_killed, 1)
+
       # First the Client is notified about the process being complete
       proc_completed_sse = U.wait_sse_event!("process_completed")
       assert proc_completed_sse.data.process_id == proc_delete.id.id
@@ -119,6 +122,9 @@ defmodule Game.Process.File.DeleteTest do
 
       # Complete the Process
       U.simulate_process_completion(proc_delete)
+
+      # Wait until everything finished processing
+      wait_events_on_server!(endpoint.id, :process_completed, 1)
 
       proc_completed_event = U.wait_sse_event!("process_completed")
       assert proc_completed_event.data.process_id == proc_delete.id.id
