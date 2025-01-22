@@ -3,9 +3,10 @@ defmodule Test.Utils do
 
   defdelegate jwt_token(opts \\ []), to: U.Token, as: :generate
   defdelegate start_sse_listener(ctx, player, opts \\ []), to: U.SSEListener, as: :start
-  defdelegate wait_sse_event!(event_name), to: U.SSEListener, as: :wait_sse_event!
+  defdelegate wait_sse_event!(event_name), to: U.SSEListener
 
   # Processes
-  defdelegate get_all_process_registries, to: U.Process, as: :get_all_process_registries
-  defdelegate get_all_processes(server_id), to: U.Process, as: :get_all_processes
+  defdelegate get_all_process_registries, to: U.Process
+  defdelegate get_all_processes(server_id), to: U.Process
+  defdelegate simulate_process_completion(process), to: U.Process
 end

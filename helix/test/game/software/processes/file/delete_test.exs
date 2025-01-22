@@ -77,9 +77,8 @@ defmodule Game.Process.File.DeleteTest do
       # Initially we had two running processes
       assert [_, _] = U.get_all_process_registries()
 
-      # TODO: Turn this into a util. Like: U.simulate_process_completion
-      # Run TOP so `proc_delete` can be processed accordingly
-      assert :ok == Game.Process.TOP.on_boot({ctx.db_context, ctx.shard_id})
+      # Complete the Process
+      U.simulate_process_completion(proc_delete)
 
       # First the Client is notified about the process being complete
       proc_completed_sse = U.wait_sse_event!("process_completed")
@@ -118,8 +117,8 @@ defmodule Game.Process.File.DeleteTest do
 
       U.start_sse_listener(ctx, player, total_expected_events: 2)
 
-      # TODO: Turn this into a util. Like: U.simulate_process_completion
-      assert :ok == Game.Process.TOP.on_boot({ctx.db_context, ctx.shard_id})
+      # Complete the Process
+      U.simulate_process_completion(proc_delete)
 
       proc_completed_event = U.wait_sse_event!("process_completed")
       assert proc_completed_event.data.process_id == proc_delete.id.id

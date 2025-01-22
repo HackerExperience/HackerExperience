@@ -122,7 +122,7 @@ defmodule Test.Setup.Process do
     end
   end
 
-  defp maybe_mark_as_complete(process, opts) do
+  def maybe_mark_as_complete(process, opts) do
     if opts[:completed?] || opts[:completed] do
       now = DateTime.utc_now() |> DateTime.to_unix(:millisecond)
 
