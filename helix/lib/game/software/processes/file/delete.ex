@@ -27,7 +27,7 @@ defmodule Game.Process.File.Delete do
 
       Core.begin_context(:server, process.server_id, :write)
 
-      with {true, %{entity: entity, server: server}} <-
+      with {true, %{entity: entity, target: server}} <-
              Henforcers.Server.has_access?(process.entity_id, process.server_id, source_tunnel_id),
            {true, %{file: file}} <- Henforcers.File.can_delete?(server, entity, file_id),
            {:ok, _} <- Svc.File.delete(file) do
