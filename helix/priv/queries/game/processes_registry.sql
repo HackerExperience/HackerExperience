@@ -17,6 +17,9 @@ SELECT * FROM processes_registry WHERE src_file_id = ?;
 -- :by_tgt_file_id
 SELECT * FROM processes_registry WHERE tgt_file_id = ?;
 
+-- :by_src_tunnel_id
+SELECT * FROM processes_registry WHERE src_tunnel_id = ?;
+
 --------------------------------------------------------------------------------
 ----------------------------------- INSERTS ------------------------------------
 --------------------------------------------------------------------------------
@@ -27,13 +30,14 @@ INSERT INTO processes_registry
     server_id,
     process_id,
     entity_id,
-    tgt_log_id,
     src_file_id,
     tgt_file_id,
+    tgt_log_id,
+    src_tunnel_id,
     inserted_at
   )
 VALUES
-  (?, ?, ?, ?, ?, ?, ?)
+  (?, ?, ?, ?, ?, ?, ?, ?)
 RETURNING *;
 
 --------------------------------------------------------------------------------

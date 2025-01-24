@@ -14,9 +14,10 @@ defmodule Game.ProcessRegistry do
     {:server_id, ID.ref(:server_id)},
     {:process_id, ID.ref(:process_id)},
     {:entity_id, ID.ref(:entity_id)},
-    {:tgt_log_id, {ID.ref(:log_id), nullable: true}},
     {:src_file_id, {ID.ref(:file_id), nullable: true}},
     {:tgt_file_id, {ID.ref(:file_id), nullable: true}},
+    {:tgt_log_id, {ID.ref(:log_id), nullable: true}},
+    {:src_tunnel_id, {ID.ref(:tunnel_id), nullable: true}},
     {:inserted_at, {:datetime_utc, [precision: :millisecond], mod: :inserted_at}}
   ]
 

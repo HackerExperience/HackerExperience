@@ -33,6 +33,7 @@ defmodule Game.Process.Executable do
     source_file = callback(executable, :source_file, args, callbacks)
     target_file = callback(executable, :target_file, args, callbacks)
     target_log = callback(executable, :target_log, args, callbacks)
+    source_tunnel = callback(executable, :source_tunnel, args, callbacks)
 
     resources_params = [[params, meta]]
     resources = get_resources(executable, resources_params)
@@ -43,9 +44,10 @@ defmodule Game.Process.Executable do
 
     registry_data =
       %{}
-      |> Map.merge(target_log)
       |> Map.merge(source_file)
       |> Map.merge(target_file)
+      |> Map.merge(target_log)
+      |> Map.merge(source_tunnel)
       |> Map.merge(resources)
 
     {registry_data, process_info}
