@@ -109,16 +109,28 @@ defmodule Game.Process.File.DeleteTest do
     test "publishes a Failed event if preconditions are not met at completion time", ctx do
       player = Setup.player!()
 
-      # There ISN'T a Tunnel from Gateway -> Endpoint
-      %{server: _gateway} = Setup.server(entity_id: player.id)
-      %{server: endpoint} = Setup.server()
+      # There is a Tunnel from Gateway -> Endpoint
+      %{nip: gtw_nip} = Setup.server(entity_id: player.id)
+      %{nip: endp_nip, server: endpoint} = Setup.server()
+      tunnel = Setup.tunnel!(source_nip: gtw_nip, target_nip: endp_nip)
 
       # Player is deleting `File` within Endpoint. This process already reached its objective
       %{process: proc_delete, spec: %{file: file}} =
-        Setup.process(endpoint.id, type: :file_delete, entity_id: player.id, completed?: true)
+        Setup.process(endpoint.id,
+          type: :file_delete,
+          entity_id: player.id,
+          completed?: true,
+          spec: [tunnel: tunnel]
+        )
 
       # The File exists in the Endpoint server, obviously
       assert file.server_id == endpoint.id
+
+      # Moments prior to the completion, the Tunnel was closed!
+      # TODO: Move this to a util
+      tunnel
+      |> Game.Tunnel.update(%{status: :closed})
+      |> DB.update!()
 
       DB.commit()
 
@@ -130,10 +142,12 @@ defmodule Game.Process.File.DeleteTest do
       # Wait until everything finished processing
       wait_events_on_server!(endpoint.id, :process_completed, 1)
 
-      proc_completed_event = U.wait_sse_event!("process_completed")
-      assert proc_completed_event.data.process_id == proc_delete.id.id
+      proc_completed_sse = U.wait_sse_event!("process_completed")
+      assert proc_completed_sse.data.process_id == proc_delete.id.id
 
-      # file_delete_failed_event = U.wait_sse_event!("file_delete_failed")
+      file_delete_failed_sse = U.wait_sse_event!("file_delete_failed")
+      assert file_delete_failed_sse.data.process_id == proc_delete.id.id
+      assert file_delete_failed_sse.data.reason == "tunnel_not_found"
     end
   end
 end

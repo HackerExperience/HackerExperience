@@ -65,10 +65,11 @@ defmodule Game.Henforcers.Server do
           | Henforcers.Network.tunnel_exists_error()
           | Henforcers.Network.nip_exists_error()
           | belongs_to_entity_error
+          | server_exists_error
 
   @doc """
-  Henforces that the given Entity has access to the given Server (represented by its NIP). This can
-  be either for local access (no Tunnel set) or remote access (with Tunnel).
+  Henforces that the given Entity has access to the given Server (represented by its ID or NIP).
+  This can be either for local access (no Tunnel set) or remote access (with Tunnel).
 
   For local access, Entity will always have access as long as the Server is actually hers.
 
@@ -76,26 +77,37 @@ defmodule Game.Henforcers.Server do
   - The given Tunnel is open
   - The Tunnel belongs to Entity
   - The Tunnel originates in a Server owned by Entity
-  - The Tunnel targets the `nip` that the Entity is trying to access
+  - The Tunnel targets the Server that the Entity is trying to access
   """
-  @spec has_access?(Entity.idt(), NIP.t(), Tunnel.idt() | nil) ::
+  @spec has_access?(Entity.idt(), Server.idt() | NIP.t(), Tunnel.idt() | nil) ::
           {true, has_access_relay}
           | has_access_error
-  def has_access?(%Entity.ID{} = entity_id, nip, tunnel_id) do
+  def has_access?(%Entity.ID{} = entity_id, server_or_nip, tunnel) do
     with {true, %{entity: entity}} <- Henforcers.Entity.entity_exists?(entity_id) do
-      has_access?(entity, nip, tunnel_id)
+      has_access?(entity, server_or_nip, tunnel)
     end
   end
 
-  def has_access?(entity, nip, %Tunnel.ID{} = tunnel_id) do
+  def has_access?(entity, server_or_nip, %Tunnel.ID{} = tunnel_id) do
     with {true, %{tunnel: tunnel}} <- Henforcers.Network.tunnel_exists?(tunnel_id) do
-      has_access?(entity, nip, tunnel)
+      has_access?(entity, server_or_nip, tunnel)
     end
   end
 
-  def has_access?(%Entity{} = entity, %NIP{} = nip, nil) do
-    with {true, %{server: server}} <- Henforcers.Network.nip_exists?(nip),
-         {true, _} <- belongs_to_entity?(server, entity) do
+  def has_access?(entity, %NIP{} = nip, tunnel) do
+    with {true, %{server: server}} <- Henforcers.Network.nip_exists?(nip) do
+      has_access?(entity, server, tunnel)
+    end
+  end
+
+  def has_access?(entity, %Server.ID{} = server_id, tunnel) do
+    with {true, %{server: server}} <- server_exists?(server_id) do
+      has_access?(entity, server, tunnel)
+    end
+  end
+
+  def has_access?(%Entity{} = entity, %Server{} = server, nil) do
+    with {true, _} <- belongs_to_entity?(server, entity) do
       %{
         gateway: server,
         endpoint: nil,
@@ -108,11 +120,11 @@ defmodule Game.Henforcers.Server do
     end
   end
 
-  def has_access?(%Entity{} = entity, %NIP{} = nip, %Tunnel{} = tunnel) do
-    with true <- tunnel.target_nip == nip || :invalid_tunnel,
-         true <- tunnel.status == :open || :invalid_tunnel,
+  def has_access?(%Entity{} = entity, %Server{} = server, %Tunnel{} = tunnel) do
+    with true <- tunnel.status == :open || :invalid_tunnel,
          {true, %{server: endpoint}} <- Henforcers.Network.nip_exists?(tunnel.target_nip),
          {true, %{server: gateway}} <- Henforcers.Network.nip_exists?(tunnel.source_nip),
+         true <- endpoint.id == server.id || :invalid_tunnel,
          true <- gateway.entity_id == entity.id || :invalid_tunnel do
       %{
         gateway: gateway,

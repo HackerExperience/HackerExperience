@@ -11,7 +11,9 @@ defmodule Game.Services.Tunnel do
       by_id: {:one, {:tunnels, :fetch}}
     ]
 
-    Core.Fetch.query(filter_params, opts, filters)
+    Core.with_context(:universe, :read, fn ->
+      Core.Fetch.query(filter_params, opts, filters)
+    end)
   end
 
   def list(filter_params, opts \\ []) do
@@ -19,7 +21,9 @@ defmodule Game.Services.Tunnel do
       by_source_nip: {:all, {:tunnels, :by_source_nip}}
     ]
 
-    Core.Fetch.query(filter_params, opts, filters)
+    Core.with_context(:universe, :read, fn ->
+      Core.Fetch.query(filter_params, opts, filters)
+    end)
   end
 
   def list_links(filter_params, opts \\ []) do
@@ -27,7 +31,9 @@ defmodule Game.Services.Tunnel do
       on_tunnel: {:all, {:tunnel_links, :by_tunnel_id}}
     ]
 
-    Core.Fetch.query(filter_params, opts, filters)
+    Core.with_context(:universe, :read, fn ->
+      Core.Fetch.query(filter_params, opts, filters)
+    end)
   end
 
   @doc """

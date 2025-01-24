@@ -22,11 +22,13 @@ defmodule Game.Process.File.Delete do
     @spec on_complete(Process.t(:file_delete)) ::
             {:ok, FileDeletedEvent.event()}
             | {:error, FileDeleteFailedEvent.event()}
-    def on_complete(%{registry: %{tgt_file_id: %File.ID{} = file_id}} = process) do
+    def on_complete(%{registry: %{tgt_file_id: file_id}} = process) do
+      source_tunnel_id = process.registry[:src_tunnel_id]
+
       Core.begin_context(:server, process.server_id, :write)
 
-      with {true, %{server: server}} <- Henforcers.Server.server_exists?(process.server_id),
-           {true, %{entity: entity}} <- Henforcers.Entity.entity_exists?(process.entity_id),
+      with {true, %{entity: entity, server: server}} <-
+             Henforcers.Server.has_access?(process.entity_id, process.server_id, source_tunnel_id),
            {true, %{file: file}} <- Henforcers.File.can_delete?(server, entity, file_id),
            {:ok, _} <- Svc.File.delete(file) do
         Core.commit()
@@ -45,6 +47,7 @@ defmodule Game.Process.File.Delete do
       end
     end
 
+    defp format_henforcer_error({:tunnel, :not_found}), do: "tunnel_not_found"
     defp format_henforcer_error({:file, :not_found}), do: "file_not_found"
     defp format_henforcer_error({:file_visibility, :not_found}), do: "file_not_found"
     defp format_henforcer_error(unhandled_error), do: "#{inspect(unhandled_error)}"

@@ -224,7 +224,7 @@ defmodule Game.Events.File do
         payload =
           %{
             reason: reason,
-            process_id: process.id
+            process_id: process.id |> ID.to_external()
           }
 
         {:ok, payload}

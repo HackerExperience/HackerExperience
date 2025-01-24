@@ -42,10 +42,10 @@ defmodule Game.Endpoint.File.Delete do
     entity_id = session.data.entity_id
     %{nip: nip, file_id: file_id, tunnel_id: tunnel_id} = params
 
-    with {true, %{entity: entity, target: target_server}} <-
+    with {true, %{entity: entity, target: target_server, tunnel: tunnel}} <-
            Henforcers.Server.has_access?(entity_id, nip, tunnel_id),
          {true, %{file: file}} <- Henforcers.File.can_delete?(target_server, entity, file_id) do
-      context = %{file: file, server: target_server, entity: entity}
+      context = %{file: file, server: target_server, entity: entity, tunnel: tunnel}
       {:ok, %{request | context: context}}
     else
       {false, henforcer_error, _} ->
@@ -59,7 +59,8 @@ defmodule Game.Endpoint.File.Delete do
 
     meta =
       %{
-        file: ctx.file
+        file: ctx.file,
+        tunnel: ctx.tunnel
       }
 
     case Svc.TOP.execute(FileDeleteProcess, ctx.server.id, ctx.entity.id, process_params, meta) do

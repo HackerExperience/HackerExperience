@@ -32,4 +32,9 @@ defmodule Game.Tunnel do
     # |> validate_context([&no_cyclic_tunnel/1])
     |> Schema.create()
   end
+
+  def update(%_{} = tunnel, changes) do
+    tunnel
+    |> Schema.update(changes)
+  end
 end
