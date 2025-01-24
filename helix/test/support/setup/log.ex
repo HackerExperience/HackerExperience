@@ -51,6 +51,7 @@ defmodule Test.Setup.Log do
       id: Kw.get(opts, :id, Random.int()),
       revision_id: Kw.get(opts, :revision_id, 1),
       type: Kw.get(opts, :type, :local_login),
+      direction: Kw.get(opts, :direction, :self),
       data: Kw.get(opts, :data, %Log.Data.EmptyData{})
     }
   end

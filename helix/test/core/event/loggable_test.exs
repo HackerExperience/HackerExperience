@@ -13,9 +13,10 @@ defmodule Core.Event.LoggableTest do
       log_map =
         %{
           entity_id: entity.id,
-          server_id: server.id,
-          type: :local_login,
-          data: %{}
+          target_id: server.id,
+          type: :server_login,
+          data: %{},
+          tunnel_id: nil
         }
 
       # Emit the `Test.LoggableEvent`, which will relay the given `log_map` for Loggable
@@ -27,7 +28,8 @@ defmodule Core.Event.LoggableTest do
       # The log was correctly created in the server
       Core.with_context(:server, server.id, :read, fn ->
         assert [log] = DB.all(Log)
-        assert log.type == :local_login
+        assert log.type == :server_login
+        assert log.direction == :self
         assert log.data == %Log.Data.EmptyData{}
         assert log.server_id == server.id
         assert log.revision_id == 1
@@ -53,32 +55,37 @@ defmodule Core.Event.LoggableTest do
       log_map =
         %{
           entity_id: entity.id,
-          gateway_id: gateway.id,
-          endpoint_id: endpoint.id,
+          target_id: endpoint.id,
           tunnel_id: tunnel.id,
-          type_gateway: :remote_login_gateway,
-          data_gateway: %{nip: "$access_point"},
-          type_endpoint: :remote_login_endpoint,
-          data_endpoint: %{nip: "$exit_node"}
+          type: :server_login,
+          data: %{
+            gateway: %{nip: "$access_point"},
+            endpoint: %{nip: "$exit_node"}
+          }
         }
 
       # Emit the Event with the above `log_map` for Loggable to process
-      capture_log(fn ->
-        event = Test.LoggableEvent.new(log_map)
-        Event.emit([event])
-      end)
+      log =
+        capture_log(fn ->
+          event = Test.LoggableEvent.new(log_map)
+          Event.emit([event])
+        end)
+
+      refute log =~ "[error]"
 
       # The logs were created correctly in the gateway...
       Core.with_context(:server, gateway.id, :read, fn ->
         assert [log] = DB.all(Log)
-        assert log.type == :remote_login_gateway
+        assert log.type == :server_login
+        assert log.direction == :to_ap
         assert log.data.nip == endp_nip
       end)
 
       # And in the endpoint
       Core.with_context(:server, endpoint.id, :read, fn ->
         assert [log] = DB.all(Log)
-        assert log.type == :remote_login_endpoint
+        assert log.type == :server_login
+        assert log.direction == :from_en
         assert log.data.nip == gtw_nip
       end)
 
@@ -102,13 +109,13 @@ defmodule Core.Event.LoggableTest do
       log_map =
         %{
           entity_id: entity.id,
-          gateway_id: gateway.id,
-          endpoint_id: endpoint.id,
+          target_id: endpoint.id,
           tunnel_id: tunnel.id,
-          type_gateway: :remote_login_gateway,
-          data_gateway: %{nip: "$access_point"},
-          type_endpoint: :remote_login_endpoint,
-          data_endpoint: %{nip: "$exit_node"}
+          type: :server_login,
+          data: %{
+            gateway: %{nip: "$access_point"},
+            endpoint: %{nip: "$exit_node"}
+          }
         }
 
       # Emit the Event with the above `log_map` for Loggable to process
@@ -120,7 +127,8 @@ defmodule Core.Event.LoggableTest do
       # The logs were created in the gateway...
       Core.with_context(:server, gateway.id, :read, fn ->
         assert [log] = DB.all(Log)
-        assert log.type == :remote_login_gateway
+        assert log.type == :server_login
+        assert log.direction == :to_ap
         # Notice the outgoing address is the hop (AP)
         assert log.data.nip == hop_nip
       end)
@@ -128,7 +136,8 @@ defmodule Core.Event.LoggableTest do
       # And in the endpoint
       Core.with_context(:server, endpoint.id, :read, fn ->
         assert [log] = DB.all(Log)
-        assert log.type == :remote_login_endpoint
+        assert log.type == :server_login
+        assert log.direction == :from_en
         # Notice the incoming address is the hop (EN)
         assert log.data.nip == hop_nip
       end)
@@ -137,6 +146,7 @@ defmodule Core.Event.LoggableTest do
       Core.with_context(:server, hop.id, :read, fn ->
         assert [log] = DB.all(Log)
         assert log.type == :connection_proxied
+        assert log.direction == :hop
         # Notice that in this scenario hop acts as AccessPoint and Exit Node
         assert log.data.from_nip == gtw_nip
         assert log.data.to_nip == endp_nip
@@ -163,13 +173,13 @@ defmodule Core.Event.LoggableTest do
       log_map =
         %{
           entity_id: entity.id,
-          gateway_id: gateway.id,
-          endpoint_id: endpoint.id,
+          target_id: endpoint.id,
           tunnel_id: tunnel.id,
-          type_gateway: :remote_login_gateway,
-          data_gateway: %{nip: "$access_point"},
-          type_endpoint: :remote_login_endpoint,
-          data_endpoint: %{nip: "$exit_node"}
+          type: :server_login,
+          data: %{
+            gateway: %{nip: "$access_point"},
+            endpoint: %{nip: "$exit_node"}
+          }
         }
 
       # Emit the Event with the above `log_map` for Loggable to process
@@ -181,14 +191,16 @@ defmodule Core.Event.LoggableTest do
       # The logs were created in the gateway...
       Core.with_context(:server, gateway.id, :read, fn ->
         assert [log] = DB.all(Log)
-        assert log.type == :remote_login_gateway
+        assert log.type == :server_login
+        assert log.direction == :to_ap
         assert log.data.nip == access_point_nip
       end)
 
       # And in the endpoint
       Core.with_context(:server, endpoint.id, :read, fn ->
         assert [log] = DB.all(Log)
-        assert log.type == :remote_login_endpoint
+        assert log.type == :server_login
+        assert log.direction == :from_en
         assert log.data.nip == exit_node_nip
       end)
 
@@ -196,6 +208,7 @@ defmodule Core.Event.LoggableTest do
       Core.with_context(:server, access_point.id, :read, fn ->
         assert [log] = DB.all(Log)
         assert log.type == :connection_proxied
+        assert log.direction == :hop
         # By definition, AccessPoint is the hop in which the Gateway IP address shows up
         assert log.data.from_nip == gtw_nip
         assert log.data.to_nip == exit_node_nip
@@ -204,6 +217,7 @@ defmodule Core.Event.LoggableTest do
       Core.with_context(:server, exit_node.id, :read, fn ->
         assert [log] = DB.all(Log)
         assert log.type == :connection_proxied
+        assert log.direction == :hop
         # By definition, ExitNode is the hop in which the Endpoint IP address shows up
         assert log.data.from_nip == access_point_nip
         assert log.data.to_nip == endp_nip

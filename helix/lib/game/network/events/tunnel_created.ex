@@ -77,13 +77,13 @@ defmodule Game.Events.Network.TunnelCreated do
     def log_map(event) do
       %{
         entity_id: event.data.entity_id,
-        gateway_id: event.data.gateway_id,
-        endpoint_id: event.data.endpoint_id,
+        target_id: event.data.endpoint_id,
         tunnel_id: event.data.tunnel.id,
-        type_gateway: :remote_login_gateway,
-        data_gateway: %{nip: "$access_point"},
-        type_endpoint: :remote_login_endpoint,
-        data_endpoint: %{nip: "$exit_node"}
+        type: :server_login,
+        data: %{
+          gateway: %{nip: "$access_point"},
+          endpoint: %{nip: "$exit_node"}
+        }
       }
     end
   end

@@ -230,7 +230,8 @@ defmodule Game.Endpoint.Server.LoginTest do
       # Gateway -> OtherHop
       Core.with_context(:server, gateway.id, :read, fn ->
         assert [log] = DB.all(Log)
-        assert log.type == :remote_login_gateway
+        assert log.type == :server_login
+        assert log.direction == :to_ap
         assert log.data.nip == other_hop_nip
       end)
 
@@ -238,6 +239,7 @@ defmodule Game.Endpoint.Server.LoginTest do
       Core.with_context(:server, other_hop.id, :read, fn ->
         assert [log] = DB.all(Log)
         assert log.type == :connection_proxied
+        assert log.direction == :hop
         assert log.data.from_nip == gtw_nip
         assert log.data.to_nip == other_endp_nip
       end)
@@ -246,6 +248,7 @@ defmodule Game.Endpoint.Server.LoginTest do
       Core.with_context(:server, other_endpoint.id, :read, fn ->
         assert [log] = DB.all(Log)
         assert log.type == :connection_proxied
+        assert log.direction == :hop
         assert log.data.from_nip == other_hop_nip
         assert log.data.to_nip == endp_nip
       end)
@@ -253,7 +256,8 @@ defmodule Game.Endpoint.Server.LoginTest do
       # OtherHop -> Endpoint
       Core.with_context(:server, endpoint.id, :read, fn ->
         assert [log] = DB.all(Log)
-        assert log.type == :remote_login_endpoint
+        assert log.type == :server_login
+        assert log.direction == :from_en
         assert log.data.nip == other_endp_nip
       end)
 
