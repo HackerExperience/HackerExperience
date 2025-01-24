@@ -32,6 +32,8 @@ defmodule Game.Process.Executable do
 
     source_file = callback(executable, :source_file, args, callbacks)
     target_file = callback(executable, :target_file, args, callbacks)
+    source_installation = callback(executable, :source_installation, args, callbacks)
+    target_installation = callback(executable, :target_installation, args, callbacks)
     target_log = callback(executable, :target_log, args, callbacks)
     source_tunnel = callback(executable, :source_tunnel, args, callbacks)
 
@@ -46,6 +48,8 @@ defmodule Game.Process.Executable do
       %{}
       |> Map.merge(source_file)
       |> Map.merge(target_file)
+      |> Map.merge(source_installation)
+      |> Map.merge(target_installation)
       |> Map.merge(target_log)
       |> Map.merge(source_tunnel)
       |> Map.merge(resources)

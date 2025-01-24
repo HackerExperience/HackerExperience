@@ -6,6 +6,8 @@ defmodule Game.Process.Executable.Defaults do
 
   def source_file(_, _, _, _, _), do: nil
   def target_file(_, _, _, _, _), do: nil
+  def source_installation(_, _, _, _, _), do: nil
+  def target_installation(_, _, _, _, _), do: nil
   def target_log(_, _, _, _, _), do: nil
 
   @doc """
