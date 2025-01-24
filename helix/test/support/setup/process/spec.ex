@@ -59,8 +59,10 @@ defmodule Test.Setup.Process.Spec do
   def spec(:log_edit, server_id, entity_id, opts) do
     default_params = fn ->
       # This is actually TODO; it should come from a Setup.Log.Data util
-      {log_type, log_data} = opts[:log_info] || {:local_login, %Game.Log.Data.EmptyData{}}
-      %{type: log_type, data: log_data}
+      {log_type, direction, log_data} =
+        opts[:log_info] || {:server_login, :self, %Game.Log.Data.EmptyData{}}
+
+      %{type: log_type, direction: direction, data: log_data}
     end
 
     default_meta = fn ->

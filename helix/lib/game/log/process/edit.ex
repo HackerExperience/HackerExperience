@@ -1,11 +1,12 @@
 defmodule Game.Process.Log.Edit do
   use Game.Process.Definition
 
-  defstruct [:log_type, :log_data]
+  defstruct [:log_type, :log_direction, :log_data]
 
-  def new(%{type: log_type, data: log_data}, _) do
+  def new(%{type: log_type, direction: log_direction, data: log_data}, _) do
     %__MODULE__{
       log_type: log_type,
+      log_direction: log_direction,
       log_data: log_data
     }
   end
@@ -17,6 +18,7 @@ defmodule Game.Process.Log.Edit do
   def on_db_load(%__MODULE__{} = raw) do
     raw
     |> Map.put(:log_type, String.to_existing_atom(raw.log_type))
+    |> Map.put(:log_direction, String.to_existing_atom(raw.log_direction))
   end
 
   defmodule Processable do

@@ -29,7 +29,7 @@ defmodule Game.Services.LogTest do
     test "inserts the log entry and corresponding visibility" do
       %{server: server, entity: entity} = Setup.server()
 
-      log_params = %{type: :local_login, data: %Log.Data.EmptyData{}}
+      log_params = %{type: :server_login, direction: :self, data: %Log.Data.EmptyData{}}
       assert {:ok, log_1} = Svc.Log.create_new(entity.id, server.id, log_params)
       assert {:ok, log_2} = Svc.Log.create_new(entity.id, server.id, log_params)
 
@@ -40,7 +40,8 @@ defmodule Game.Services.LogTest do
 
         # Has the correct data
         assert log_1.server_id == server.id
-        assert log_1.type == :local_login
+        assert log_1.type == :server_login
+        assert log_1.direction == :self
         assert log_1.data == %Log.Data.EmptyData{}
 
         # It's a brand new log, so revision is always 1

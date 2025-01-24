@@ -69,7 +69,8 @@ defmodule Game.Endpoint.Log.Edit do
     # TODO
     process_params =
       %{
-        type: :local_login,
+        type: :server_login,
+        direction: :self,
         data: %{}
       }
 
