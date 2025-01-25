@@ -1,4 +1,5 @@
 defmodule Test.Utils.SSEListener do
+  use Docp
   alias Game.Player
   alias Test.Utils, as: U
 
@@ -28,7 +29,8 @@ defmodule Test.Utils.SSEListener do
           # This first event (the index payload from IndexRequested) is sent as a separate message
           # because, usually, the test does not care about it. It simply is an "automatic" event
           # that comes up every time we establish the SSE connection.
-          send(test_pid, {:index, event_from_payload(index_payload)})
+          [index_event] = get_events_from_payload(index_payload)
+          send(test_pid, {:index, index_event})
 
           # From now on, loop `total_expected_event` times and notify each event to the test
           loop_notify_events(port, test_pid, opts[:total_expected_events] || 1)
@@ -66,8 +68,13 @@ defmodule Test.Utils.SSEListener do
     if total_to_notify > total_notified do
       receive do
         {^port, {:data, sse_payload}} ->
-          send(test_pid, {:event, event_from_payload(sse_payload)})
-          loop_notify_events(port, test_pid, total_to_notify, total_notified + 1)
+          events = get_events_from_payload(sse_payload)
+
+          Enum.each(events, fn event ->
+            send(test_pid, {:event, event})
+          end)
+
+          loop_notify_events(port, test_pid, total_to_notify, total_notified + Enum.count(events))
       after
         1000 ->
           raise "No event received after 1s (inside loop)"
@@ -75,11 +82,19 @@ defmodule Test.Utils.SSEListener do
     end
   end
 
-  defp event_from_payload(raw_payload) do
+  @docp """
+  It is possible that multiple events are batched and sent in a single SSE payload, which is why
+  this function needs to return a list of events.
+  """
+  defp get_events_from_payload(raw_payload) do
     raw_payload
-    |> String.slice(6..-1//1)
-    |> String.replace("\n\n", "")
-    |> :json.decode()
-    |> Renatils.Map.atomify_keys()
+    |> String.split("\n\n")
+    |> Enum.reject(&(&1 == ""))
+    |> Enum.map(fn single_raw_payload ->
+      single_raw_payload
+      |> String.slice(6..-1//1)
+      |> :json.decode()
+      |> Renatils.Map.atomify_keys()
+    end)
   end
 end

@@ -93,8 +93,7 @@ defmodule Game.Process.File.DeleteTest do
   describe "E2E" do
     @tag capture_log: true
     test "upon completion, deletes affected processes and submits events to player(s)", ctx do
-      player = Setup.player!()
-      server = Setup.server!(entity_id: player.id)
+      %{player: player, server: server} = Setup.player()
 
       # Player is deleting `File`. This process already reached its objective
       %{process: proc_delete, spec: %{file: file}} =
@@ -114,21 +113,14 @@ defmodule Game.Process.File.DeleteTest do
       # Complete the Process
       U.simulate_process_completion(proc_delete)
 
-      # Wait until everything finished processing
-      wait_events_on_server!(server.id, :process_killed, 1)
-
       # First the Client is notified about the process being complete
       proc_completed_sse = U.wait_sse_event!("process_completed")
       assert proc_completed_sse.data.process_id == proc_delete.id.id
-
-      U.sleep_on_ci(500)
 
       # Then he is notified about the side-effect of the process completion
       file_deleted_sse = U.wait_sse_event!("file_deleted")
       assert file_deleted_sse.data.file_id == file.id.id
       assert file_deleted_sse.data.process_id == proc_delete.id.id
-
-      U.sleep_on_ci(500)
 
       # And then he is notified about `proc_install` being killed
       process_killed_sse = U.wait_sse_event!("process_killed")
@@ -239,9 +231,6 @@ defmodule Game.Process.File.DeleteTest do
 
       # Complete the Process
       U.simulate_process_completion(proc_delete)
-
-      # Wait until everything finished processing
-      wait_events_on_server!(endpoint.id, :process_completed, 1)
 
       proc_completed_sse = U.wait_sse_event!("process_completed")
       assert proc_completed_sse.data.process_id == proc_delete.id.id

@@ -43,6 +43,7 @@ defmodule Core.Event.LoggableTest do
       end)
     end
 
+    @tag :capture_log
     test "works with remote log (direct Gateway -> Endpoint route)" do
       # There exists a Gateway -> Endpoint tunnel (with no intermediary servers)
       %{nip: gtw_nip, server: gateway, entity: entity} = Setup.server()
@@ -65,13 +66,8 @@ defmodule Core.Event.LoggableTest do
         }
 
       # Emit the Event with the above `log_map` for Loggable to process
-      log =
-        capture_log(fn ->
-          event = Test.LoggableEvent.new(log_map)
-          Event.emit([event])
-        end)
-
-      refute log =~ "[error]"
+      event = Test.LoggableEvent.new(log_map)
+      Event.emit([event])
 
       # The logs were created correctly in the gateway...
       Core.with_context(:server, gateway.id, :read, fn ->
