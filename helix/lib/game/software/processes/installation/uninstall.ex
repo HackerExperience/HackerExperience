@@ -22,17 +22,12 @@ defmodule Game.Process.Installation.Uninstall do
     @spec on_complete(Process.t(:installation_uninstall)) ::
             {:ok, InstallationUninstalledEvent.event()}
             | {:error, InstallationUninstallFailedEvent.event()}
-    def on_complete(
-          %{
-            server_id: server_id,
-            entity_id: entity_id,
-            registry: %{tgt_installation_id: %Installation.ID{} = installation_id}
-          } = process
-        ) do
+    def on_complete(%{registry: %{tgt_installation_id: installation_id}} = process) do
       Core.begin_context(:server, process.server_id, :write)
 
-      with {true, %{installation: installation}} <-
-             Henforcers.Installation.can_uninstall?(server_id, entity_id, installation_id),
+      with {true, %{entity: entity, target: server}} <- Henforcers.Server.has_access?(process),
+           {true, %{installation: installation}} <-
+             Henforcers.Installation.can_uninstall?(server, entity, installation_id),
            {:ok, _} <- Svc.Installation.uninstall(installation) do
         Core.commit()
         {:ok, InstallationUninstalledEvent.new(installation, process)}

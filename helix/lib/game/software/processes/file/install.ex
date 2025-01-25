@@ -22,16 +22,11 @@ defmodule Game.Process.File.Install do
     @spec on_complete(Process.t(:file_install)) ::
             {:ok, FileInstalledEvent.event()}
             | {:error, FileInstallFailedEvent.event()}
-    def on_complete(
-          %{
-            server_id: server_id,
-            entity_id: entity_id,
-            registry: %{src_file_id: %File.ID{} = file_id}
-          } = process
-        ) do
+    def on_complete(%{registry: %{src_file_id: %File.ID{} = file_id}} = process) do
       Core.begin_context(:server, process.server_id, :write)
 
-      with {true, %{file: file}} <- Henforcers.File.can_install?(server_id, entity_id, file_id),
+      with {true, %{entity: entity, target: server}} <- Henforcers.Server.has_access?(process),
+           {true, %{file: file}} <- Henforcers.File.can_install?(server, entity, file_id),
            {:ok, installation} <- Svc.File.install_file(file) do
         Core.commit()
         {:ok, FileInstalledEvent.new(installation, file, process)}

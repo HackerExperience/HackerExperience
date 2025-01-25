@@ -1,6 +1,5 @@
 defmodule Game.Henforcers.File do
   alias Core.Henforcer
-  alias Game.Henforcers
   alias Game.Services, as: Svc
   alias Game.{Entity, File, FileVisibility, Server}
 
@@ -44,16 +43,11 @@ defmodule Game.Henforcers.File do
 
   @type can_install_relay :: %{
           visibility: FileVisibility.t(),
-          file: File.t(),
-          entity: Entity.t(),
-          server: Server.t()
+          file: File.t()
         }
   @type can_install_error ::
           file_exists_error
           | is_visible_error
-          | Henforcers.Server.belongs_to_entity_error()
-          | Henforcers.Server.server_exists_error()
-          | Henforcers.Entity.entity_exists_error()
 
   @doc """
   Aggregator that henforces that the given Entity can install the given File in the given Server.
@@ -61,26 +55,13 @@ defmodule Game.Henforcers.File do
 
   Used by the corresponding Endpoint and Process (FileInstallEndpoint and FileInstallProcess).
   """
-  @spec can_install?(Server.idt(), Entity.idt(), File.id()) ::
+  @spec can_install?(Server.t(), Entity.t(), File.id()) ::
           {true, can_install_relay}
           | can_install_error
   def can_install?(%Server{} = server, %Entity{} = entity, %File.ID{} = file_id) do
-    with {true, %{entity: entity}} <- Henforcers.Server.belongs_to_entity?(server, entity),
-         {true, %{file: file}} <- file_exists?(file_id, server),
+    with {true, %{file: file}} <- file_exists?(file_id, server),
          {true, %{visibility: visibility}} <- is_visible?(file, entity.id) do
-      Henforcer.success(%{file: file, visibility: visibility, server: server, entity: entity})
-    end
-  end
-
-  def can_install?(%Server.ID{} = server_id, entity, file_id) do
-    with {true, %{server: server}} <- Henforcers.Server.server_exists?(server_id) do
-      can_install?(server, entity, file_id)
-    end
-  end
-
-  def can_install?(server, %Entity.ID{} = entity_id, file_id) do
-    with {true, %{entity: entity}} <- Henforcers.Entity.entity_exists?(entity_id) do
-      can_install?(server, entity, file_id)
+      Henforcer.success(%{file: file, visibility: visibility})
     end
   end
 

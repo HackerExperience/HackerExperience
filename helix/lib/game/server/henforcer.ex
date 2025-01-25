@@ -3,7 +3,7 @@ defmodule Game.Henforcers.Server do
   alias Core.NIP
   alias Game.Services, as: Svc
   alias Game.Henforcers
-  alias Game.{Entity, Server, Tunnel}
+  alias Game.{Entity, Process, Server, Tunnel}
 
   @type server_exists_relay :: %{server: term()}
   @type server_exists_error :: {false, {:server, :not_found}, %{}}
@@ -66,6 +66,17 @@ defmodule Game.Henforcers.Server do
           | Henforcers.Network.nip_exists_error()
           | belongs_to_entity_error
           | server_exists_error
+
+  @doc """
+  "Alternative" entrypoint to the `has_access?/3` function, in which we extract the relevant
+  information. Useful to simplify the Henforcer pipeline at the corresponding processes.
+  """
+  @spec has_access?(Process.t()) ::
+          {true, has_access_relay}
+          | has_access_error
+  def has_access?(%Process{server_id: server_id, entity_id: entity_id, registry: registry}) do
+    has_access?(entity_id, server_id, registry[:src_tunnel_id])
+  end
 
   @doc """
   Henforces that the given Entity has access to the given Server (represented by its ID or NIP).
