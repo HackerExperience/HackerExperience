@@ -12,6 +12,11 @@ module API.Game.Types exposing
     , FileInstallOutput
     , FileInstallRequest
     , FileInstall_Error
+    , FileTransferInput
+    , FileTransferOkResponse
+    , FileTransferOutput
+    , FileTransferRequest
+    , FileTransfer_Error
     , GenericBadRequest
     , GenericBadRequestResponse
     , GenericError
@@ -45,8 +50,9 @@ import Game.Model.TunnelID as TunnelID exposing (TunnelID(..))
 ## Aliases
 
 @docs FileDeleteInput, FileDeleteOkResponse, FileDeleteOutput, FileDeleteRequest, FileInstallInput
-@docs FileInstallOkResponse, FileInstallOutput, FileInstallRequest, GenericBadRequest, GenericBadRequestResponse
-@docs GenericError, GenericErrorResponse, GenericUnauthorizedResponse, InstallationUninstallInput
+@docs FileInstallOkResponse, FileInstallOutput, FileInstallRequest, FileTransferInput, FileTransferOkResponse
+@docs FileTransferOutput, FileTransferRequest, GenericBadRequest, GenericBadRequestResponse, GenericError
+@docs GenericErrorResponse, GenericUnauthorizedResponse, InstallationUninstallInput
 @docs InstallationUninstallOkResponse, InstallationUninstallOutput, InstallationUninstallRequest
 @docs PlayerSyncInput, PlayerSyncOkResponse, PlayerSyncOutput, PlayerSyncRequest, ServerLoginInput
 @docs ServerLoginOkResponse, ServerLoginOutput, ServerLoginRequest
@@ -54,7 +60,8 @@ import Game.Model.TunnelID as TunnelID exposing (TunnelID(..))
 
 ## Errors
 
-@docs FileDelete_Error, FileInstall_Error, InstallationUninstall_Error, PlayerSync_Error, ServerLogin_Error
+@docs FileDelete_Error, FileInstall_Error, FileTransfer_Error, InstallationUninstall_Error, PlayerSync_Error
+@docs ServerLogin_Error
 
 -}
 type PlayerSync_Error
@@ -66,6 +73,10 @@ type alias FileDelete_Error =
 
 
 type alias FileInstall_Error =
+    Never
+
+
+type alias FileTransfer_Error =
     Never
 
 
@@ -109,6 +120,14 @@ type alias GenericBadRequest =
     { details : Maybe String, msg : String }
 
 
+type alias FileTransferOutput =
+    {}
+
+
+type alias FileTransferInput =
+    { transfer_type : String, tunnel_id : TunnelID }
+
+
 type alias FileInstallOutput =
     {}
 
@@ -149,6 +168,10 @@ type alias GenericBadRequestResponse =
     { error : GenericBadRequest }
 
 
+type alias FileTransferOkResponse =
+    { data : FileTransferOutput }
+
+
 type alias FileInstallOkResponse =
     { data : FileInstallOutput }
 
@@ -167,6 +190,10 @@ type alias PlayerSyncRequest =
 
 type alias InstallationUninstallRequest =
     InstallationUninstallInput
+
+
+type alias FileTransferRequest =
+    FileTransferInput
 
 
 type alias FileInstallRequest =

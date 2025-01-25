@@ -1,14 +1,18 @@
 -- This is an auto-generated file; manual changes will be overwritten!
 
 
-module API.Game.Api exposing (fileDeleteTask, fileInstallTask, installationUninstallTask, playerSyncTask, serverLoginTask)
+module API.Game.Api exposing
+    ( fileDeleteTask, fileInstallTask, fileTransferTask, installationUninstallTask, playerSyncTask
+    , serverLoginTask
+    )
 
 {-|
 
 
 ## Operations
 
-@docs fileDeleteTask, fileInstallTask, installationUninstallTask, playerSyncTask, serverLoginTask
+@docs fileDeleteTask, fileInstallTask, fileTransferTask, installationUninstallTask, playerSyncTask
+@docs serverLoginTask
 
 -}
 
@@ -114,6 +118,39 @@ fileInstallTask config =
                 API.Game.Json.decodeFileInstallOkResponse
         , body =
             Http.jsonBody (API.Game.Json.encodeFileInstallRequest config.body)
+        , timeout = Nothing
+        }
+
+
+fileTransferTask :
+    { server : String
+    , authorization : { authorization : String }
+    , body : API.Game.Types.FileTransferRequest
+    , params : { nip : NIP, file_id : String }
+    }
+    -> Task.Task (OpenApi.Common.Error API.Game.Types.FileTransfer_Error String) API.Game.Types.FileTransferOkResponse
+fileTransferTask config =
+    Http.task
+        { url =
+            Url.Builder.crossOrigin
+                config.server
+                [ "v1"
+                , "server"
+                , NIP.toString config.params.nip
+                , "file"
+                , config.params.file_id
+                , "transfer"
+                ]
+                []
+        , method = "POST"
+        , headers =
+            [ Http.header "Authorization" config.authorization.authorization ]
+        , resolver =
+            OpenApi.Common.jsonResolverCustom
+                (Dict.fromList [])
+                API.Game.Json.decodeFileTransferOkResponse
+        , body =
+            Http.jsonBody (API.Game.Json.encodeFileTransferRequest config.body)
         , timeout = Nothing
         }
 

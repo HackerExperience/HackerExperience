@@ -35,4 +35,12 @@ defmodule Core.Endpoint do
         {:error, {field, reason}}
     end
   end
+
+  def cast_enum(field, raw_value, allowed_values) do
+    if raw_value in allowed_values do
+      {:ok, raw_value}
+    else
+      {:error, {field, :inavlid}}
+    end
+  end
 end
