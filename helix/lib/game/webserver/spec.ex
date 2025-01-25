@@ -35,6 +35,10 @@ defmodule Game.Webserver.Spec do
       {Endpoint.File.Install, :post} => %{
         path: "/v1/server/{nip}/file/{file_id}/install",
         responses: [200]
+      },
+      {Endpoint.Installation.Uninstall, :post} => %{
+        path: "/v1/server/{nip}/installation/{installation_id}/uninstall",
+        responses: [200]
       }
     }
   end

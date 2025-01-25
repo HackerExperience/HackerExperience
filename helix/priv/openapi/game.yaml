@@ -51,6 +51,17 @@ components:
     GenericUnauthorizedResponse:
       description: TODO
       content: {}
+    InstallationUninstallOkResponse:
+      description: TODO description
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - data
+            properties:
+              data:
+                $ref: '#/components/schemas/InstallationUninstallOutput'
     PlayerSyncOkResponse:
       description: TODO description
       content:
@@ -88,6 +99,13 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/FileInstallInput'
+    InstallationUninstallRequest:
+      description: TODO description
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/InstallationUninstallInput'
     PlayerSyncRequest:
       description: TODO description
       required: true
@@ -139,6 +157,14 @@ components:
           type: string
         details:
           type: string
+    InstallationUninstallInput:
+      type: object
+      required: []
+      properties: {}
+    InstallationUninstallOutput:
+      type: object
+      required: []
+      properties: {}
     PlayerSyncInput:
       type: object
       required: []
@@ -223,6 +249,29 @@ paths:
       operationId: FileInstall
       requestBody:
         $ref: '#/components/requestBodies/FileInstallRequest'
+  /v1/server/{nip}/installation/{installation_id}/uninstall:
+    post:
+      parameters:
+        - in: path
+          name: nip
+          description: ''
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: installation_id
+          description: ''
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          $ref: '#/components/responses/InstallationUninstallOkResponse'
+      security:
+        - AuthorizationToken: []
+      operationId: InstallationUninstall
+      requestBody:
+        $ref: '#/components/requestBodies/InstallationUninstallRequest'
   /v1/server/{nip}/login/{target_nip}:
     post:
       parameters:

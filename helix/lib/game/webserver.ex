@@ -10,7 +10,9 @@ defmodule Game.Webserver do
       {"/v1/server/:nip/login/:target_nip", %{handler: Endpoint.Server.Login, method: :post}},
       {"/v1/server/:nip/log/:log_id/edit", %{handler: Endpoint.Log.Edit, method: :post}},
       {"/v1/server/:nip/file/:file_id/delete", %{handler: Endpoint.File.Delete, method: :post}},
-      {"/v1/server/:nip/file/:file_id/install", %{handler: Endpoint.File.Install, method: :post}}
+      {"/v1/server/:nip/file/:file_id/install", %{handler: Endpoint.File.Install, method: :post}},
+      {"/v1/server/:nip/installation/:installation_id/uninstall",
+       %{handler: Endpoint.Installation.Uninstall, method: :post}}
     ]
   end
 

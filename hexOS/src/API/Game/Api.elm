@@ -1,14 +1,14 @@
 -- This is an auto-generated file; manual changes will be overwritten!
 
 
-module API.Game.Api exposing (fileDeleteTask, fileInstallTask, playerSyncTask, serverLoginTask)
+module API.Game.Api exposing (fileDeleteTask, fileInstallTask, installationUninstallTask, playerSyncTask, serverLoginTask)
 
 {-|
 
 
 ## Operations
 
-@docs fileDeleteTask, fileInstallTask, playerSyncTask, serverLoginTask
+@docs fileDeleteTask, fileInstallTask, installationUninstallTask, playerSyncTask, serverLoginTask
 
 -}
 
@@ -114,6 +114,40 @@ fileInstallTask config =
                 API.Game.Json.decodeFileInstallOkResponse
         , body =
             Http.jsonBody (API.Game.Json.encodeFileInstallRequest config.body)
+        , timeout = Nothing
+        }
+
+
+installationUninstallTask :
+    { server : String
+    , authorization : { authorization : String }
+    , body : API.Game.Types.InstallationUninstallRequest
+    , params : { nip : NIP, installation_id : String }
+    }
+    -> Task.Task (OpenApi.Common.Error API.Game.Types.InstallationUninstall_Error String) API.Game.Types.InstallationUninstallOkResponse
+installationUninstallTask config =
+    Http.task
+        { url =
+            Url.Builder.crossOrigin
+                config.server
+                [ "v1"
+                , "server"
+                , NIP.toString config.params.nip
+                , "installation"
+                , config.params.installation_id
+                , "uninstall"
+                ]
+                []
+        , method = "POST"
+        , headers =
+            [ Http.header "Authorization" config.authorization.authorization ]
+        , resolver =
+            OpenApi.Common.jsonResolverCustom
+                (Dict.fromList [])
+                API.Game.Json.decodeInstallationUninstallOkResponse
+        , body =
+            Http.jsonBody
+                (API.Game.Json.encodeInstallationUninstallRequest config.body)
         , timeout = Nothing
         }
 

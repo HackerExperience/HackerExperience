@@ -17,6 +17,11 @@ module API.Game.Types exposing
     , GenericError
     , GenericErrorResponse
     , GenericUnauthorizedResponse
+    , InstallationUninstallInput
+    , InstallationUninstallOkResponse
+    , InstallationUninstallOutput
+    , InstallationUninstallRequest
+    , InstallationUninstall_Error
     , PlayerSyncInput
     , PlayerSyncOkResponse
     , PlayerSyncOutput
@@ -41,14 +46,15 @@ import Game.Model.TunnelID as TunnelID exposing (TunnelID(..))
 
 @docs FileDeleteInput, FileDeleteOkResponse, FileDeleteOutput, FileDeleteRequest, FileInstallInput
 @docs FileInstallOkResponse, FileInstallOutput, FileInstallRequest, GenericBadRequest, GenericBadRequestResponse
-@docs GenericError, GenericErrorResponse, GenericUnauthorizedResponse, PlayerSyncInput, PlayerSyncOkResponse
-@docs PlayerSyncOutput, PlayerSyncRequest, ServerLoginInput, ServerLoginOkResponse, ServerLoginOutput
-@docs ServerLoginRequest
+@docs GenericError, GenericErrorResponse, GenericUnauthorizedResponse, InstallationUninstallInput
+@docs InstallationUninstallOkResponse, InstallationUninstallOutput, InstallationUninstallRequest
+@docs PlayerSyncInput, PlayerSyncOkResponse, PlayerSyncOutput, PlayerSyncRequest, ServerLoginInput
+@docs ServerLoginOkResponse, ServerLoginOutput, ServerLoginRequest
 
 
 ## Errors
 
-@docs FileDelete_Error, FileInstall_Error, PlayerSync_Error, ServerLogin_Error
+@docs FileDelete_Error, FileInstall_Error, InstallationUninstall_Error, PlayerSync_Error, ServerLogin_Error
 
 -}
 type PlayerSync_Error
@@ -60,6 +66,10 @@ type alias FileDelete_Error =
 
 
 type alias FileInstall_Error =
+    Never
+
+
+type alias InstallationUninstall_Error =
     Never
 
 
@@ -81,6 +91,14 @@ type alias PlayerSyncOutput =
 
 type alias PlayerSyncInput =
     { token : Maybe String }
+
+
+type alias InstallationUninstallOutput =
+    {}
+
+
+type alias InstallationUninstallInput =
+    {}
 
 
 type alias GenericError =
@@ -115,6 +133,10 @@ type alias PlayerSyncOkResponse =
     { data : PlayerSyncOutput }
 
 
+type alias InstallationUninstallOkResponse =
+    { data : InstallationUninstallOutput }
+
+
 type alias GenericUnauthorizedResponse =
     ()
 
@@ -141,6 +163,10 @@ type alias ServerLoginRequest =
 
 type alias PlayerSyncRequest =
     PlayerSyncInput
+
+
+type alias InstallationUninstallRequest =
+    InstallationUninstallInput
 
 
 type alias FileInstallRequest =
