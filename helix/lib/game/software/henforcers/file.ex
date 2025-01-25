@@ -65,6 +65,17 @@ defmodule Game.Henforcers.File do
     end
   end
 
+  @type can_delete_relay :: %{file: File.t(), visibility: FileVisibility.t()}
+  @type can_delete_error ::
+          file_exists_error
+          | is_visible_error
+
+  @doc """
+  Aggregator henforcing that the given Entity can delete the given File in the given Server.
+  """
+  @spec can_delete?(Server.t(), Entity.t(), File.id()) ::
+          {true, can_delete_relay}
+          | can_delete_error
   def can_delete?(%Server{} = server, %Entity{} = entity, %File.ID{} = file_id) do
     with {true, %{file: file}} <- file_exists?(file_id, server),
          {true, %{visibility: visibility}} <- is_visible?(file, entity.id) do
