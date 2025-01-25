@@ -40,7 +40,9 @@ defmodule Core do
   If you don't want to commit, use `DB.with_context/1` directly (or add `with_context_no_commit/3`)
   """
   def with_context(:universe, access_type, callback) do
-    if can_reuse_current_context?([:singleplayer, :multiplayer], access_type) do
+    universe_shard_id = Process.get(:helix_universe_shard_id)
+
+    if can_reuse_current_context?([:singleplayer, :multiplayer], universe_shard_id, access_type) do
       # Already in the requested context, so do nothing special. Caller is responsible for COMMITing
       callback.()
     else
@@ -54,7 +56,7 @@ defmodule Core do
   end
 
   def with_context(:server, server_id, access_type, callback) do
-    if can_reuse_current_context?([:sp_server, :mp_server], access_type) do
+    if can_reuse_current_context?([:sp_server, :mp_server], server_id.id, access_type) do
       # Already in the requested context, so do nothing special. Caller is responsible for COMMITing
       callback.()
     else
@@ -68,7 +70,7 @@ defmodule Core do
   end
 
   def with_context(:player, player_id, access_type, callback) do
-    if can_reuse_current_context?([:sp_player, :mp_player], access_type) do
+    if can_reuse_current_context?([:sp_player, :mp_player], player_id.id, access_type) do
       # Already in the requested context, so do nothing special. Caller is responsible for COMMITing
       callback.()
     else
@@ -97,7 +99,8 @@ defmodule Core do
     - If we want :write and we are currently in :write, that's okay.
     - If we want :write and we are currently in :read, that's NOT okay and we can't re-use it.
   """
-  defp can_reuse_current_context?(expected_contexts, expected_access_type) do
+  defp can_reuse_current_context?(expected_contexts, expected_shard_id, expected_access_type)
+       when is_integer(expected_shard_id) do
     ctx = DB.LocalState.get_current_context()
 
     cond do
@@ -105,6 +108,10 @@ defmodule Core do
         false
 
       ctx.context not in expected_contexts ->
+        false
+
+      ctx.shard_id != expected_shard_id ->
+        # We can never re-use the context of a different shard
         false
 
       ctx.access_type == :read and expected_access_type == :write ->
