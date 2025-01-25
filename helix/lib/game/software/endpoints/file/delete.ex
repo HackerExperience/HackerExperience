@@ -68,7 +68,7 @@ defmodule Game.Endpoint.File.Delete do
         {:ok, %{request | result: %{process: process}}}
 
       {:error, reason} ->
-        raise "Error deleteing file: #{inspect(reason)}"
+        raise "Error deleting file: #{inspect(reason)}"
     end
   end
 

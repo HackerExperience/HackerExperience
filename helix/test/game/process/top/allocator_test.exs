@@ -164,7 +164,7 @@ defmodule Game.Process.TOP.AllocatorTest do
       entity_3 = Setup.entity!()
       entity_4 = Setup.entity!()
 
-      # Both entiteis will receive 500MHz each, with this total being shared evenly across the procs
+      # Both entities will receive 500MHz each, with this total being shared evenly across the procs
       proc_cpu_1 = Setup.process!(server.id, entity_id: entity_1.id)
       proc_cpu_2 = Setup.process!(server.id, entity_id: entity_2.id)
 
