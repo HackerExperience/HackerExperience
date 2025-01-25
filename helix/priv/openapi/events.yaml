@@ -134,6 +134,33 @@ components:
       properties:
         player:
           $ref: '#/components/schemas/IdxPlayer'
+    installation_uninstall_failed:
+      type: object
+      required:
+        - process_id
+        - reason
+      properties:
+        reason:
+          type: string
+        process_id:
+          type: integer
+    installation_uninstalled:
+      type: object
+      required:
+        - process_id
+        - installation_id
+      properties:
+        installation_id:
+          type: integer
+        process_id:
+          type: integer
+    process_completed:
+      type: object
+      required:
+        - process_id
+      properties:
+        process_id:
+          type: integer
     process_created:
       type: object
       required:
@@ -144,6 +171,16 @@ components:
           type: integer
         type:
           type: string
+    process_killed:
+      type: object
+      required:
+        - process_id
+        - reason
+      properties:
+        reason:
+          type: string
+        process_id:
+          type: integer
     tunnel_created:
       type: object
       required:

@@ -5,6 +5,7 @@ defmodule Test.Setup.Process.Spec do
 
   alias Game.Process.File.Delete, as: FileDeleteProcess
   alias Game.Process.File.Install, as: FileInstallProcess
+  alias Game.Process.Installation.Uninstall, as: InstallationUninstallProcess
   alias Game.Process.Log.Edit, as: LogEditProcess
   alias Test.Process.NoopCPU, as: NoopCPUProcess
   alias Test.Process.NoopDLK, as: NoopDLKProcess
@@ -54,6 +55,24 @@ defmodule Test.Setup.Process.Spec do
     relay = %{file: file}
 
     build_spec(FileInstallProcess, server_id, entity_id, params, meta, relay)
+  end
+
+  def spec(:installation_uninstall, server_id, entity_id, opts) do
+    default_installation = fn ->
+      %{installation: installation} = S.file(server_id, visible_by: entity_id, installed?: true)
+      installation
+    end
+
+    installation = opts[:installation] || default_installation.()
+
+    default_meta = %{installation: installation}
+    default_params = %{}
+
+    params = opts[:params] || default_params
+    meta = opts[:meta] || default_meta
+    relay = %{installation: installation}
+
+    build_spec(InstallationUninstallProcess, server_id, entity_id, params, meta, relay)
   end
 
   def spec(:log_edit, server_id, entity_id, opts) do

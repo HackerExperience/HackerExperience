@@ -3,6 +3,7 @@ defmodule Game.Installation do
 
   # TODO
   @type t :: term()
+  @type id :: __MODULE__.ID.t()
 
   @context :server
   @table :installations

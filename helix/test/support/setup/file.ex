@@ -20,7 +20,13 @@ defmodule Test.Setup.File do
           )
         end
 
-      %{file: file, file_visibility: file_visibility}
+      installation =
+        if opts[:installed] || opts[:installed?] do
+          {:ok, installation} = Svc.File.install_file(file)
+          installation
+        end
+
+      %{file: file, file_visibility: file_visibility, installation: installation}
     end)
   end
 

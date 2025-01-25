@@ -1,7 +1,7 @@
 defmodule Test.Event do
-  @table :processed_events
-
   alias Game.{Process, Server}
+
+  @table :processed_events
 
   def on_start do
     :ets.new(@table, [:set, :public, :named_table])
