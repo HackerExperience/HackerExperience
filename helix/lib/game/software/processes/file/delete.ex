@@ -25,6 +25,9 @@ defmodule Game.Process.File.Delete do
     def on_complete(%{registry: %{tgt_file_id: file_id}} = process) do
       source_tunnel_id = process.registry[:src_tunnel_id]
 
+      # TODO: This should be done at a higher level (automatically for all Processable)
+      Core.Event.Relay.set(process)
+
       Core.begin_context(:server, process.server_id, :write)
 
       with {true, %{entity: entity, target: server}} <-

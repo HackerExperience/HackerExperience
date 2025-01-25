@@ -177,6 +177,35 @@ defmodule Game.Events.File do
       def whom_to_publish(%{data: %{process: %{entity_id: entity_id}}}),
         do: %{player: entity_id}
     end
+
+    defmodule Loggable do
+      use Core.Event.Loggable.Definition
+      alias Game.{File, Tunnel}
+
+      def log_map(%{data: %{process: process, file: file}} = event) do
+        tunnel_id = process.registry[:src_tunnel_id]
+
+        # TODO: Loggable could accept a process instead, simplifying the API
+        %{
+          entity_id: process.entity_id,
+          target_id: process.server_id,
+          tunnel_id: tunnel_id,
+          type: :file_deleted,
+          data: %{
+            gateway: %{file: file},
+            endpoint: %{file: file}
+          }
+        }
+      end
+
+      defp get_data(%File{} = file) do
+        %{
+          name: "todo_file_name",
+          extension: "todo_file_ext",
+          version: file.version
+        }
+      end
+    end
   end
 
   defmodule DeleteFailed do

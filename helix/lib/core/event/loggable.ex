@@ -36,12 +36,12 @@ defmodule Core.Event.Loggable do
          target_id: server_id,
          entity_id: entity_id,
          type: log_type,
-         data: raw_data,
+         data: %{gateway: gtw_raw_data},
          tunnel_id: nil,
          opts: _opts
        }) do
     data_mod = Log.data_mod({log_type, :self})
-    [{server_id, entity_id, {log_type, :self, data_mod.new(raw_data)}}]
+    [{server_id, entity_id, {log_type, :self, data_mod.new(gtw_raw_data)}}]
   end
 
   # Remote log
@@ -53,6 +53,9 @@ defmodule Core.Event.Loggable do
          data: %{gateway: gtw_raw_data, endpoint: endp_raw_data},
          opts: _opts
        }) do
+    gtw_raw_data = Map.put(gtw_raw_data, :nip, "$access_point")
+    endp_raw_data = Map.put(endp_raw_data, :nip, "$exit_node")
+
     tunnel_links =
       Core.with_context(:universe, :read, fn ->
         Svc.Tunnel.list_links(on_tunnel: tunnel_id)

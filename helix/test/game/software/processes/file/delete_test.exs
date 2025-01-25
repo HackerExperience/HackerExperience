@@ -1,7 +1,7 @@
 defmodule Game.Process.File.DeleteTest do
   use Test.DBCase, async: true
 
-  alias Game.{File}
+  alias Game.{File, Log}
 
   alias Game.Process.File.Delete, as: FileDeleteProcess
 
@@ -103,6 +103,73 @@ defmodule Game.Process.File.DeleteTest do
 
       # Now we have no running processes! `proc_install` was killed due to the source file being deleted
       assert [] == U.get_all_process_registries()
+    end
+
+    test "upon completion, generates log entries accordingly" do
+      %{nip: gtw_nip, server: gateway, entity: entity} = Setup.server()
+      %{nip: endp_nip, server: endpoint} = Setup.server()
+      %{nip: ap_nip, server: ap} = Setup.server()
+      %{nip: en_nip, server: en} = Setup.server()
+
+      # Tunnel: Gateway -> AP -> EN -> Endpoint
+      tunnel =
+        Setup.tunnel!(source_nip: gtw_nip, target_nip: endp_nip, hops: [ap_nip, en_nip])
+
+      # Player is deleting `File` on the Endpoint. This process already reached its objective
+      %{process: proc_delete, spec: %{file: file}} =
+        Setup.process(endpoint.id,
+          type: :file_delete,
+          entity_id: entity.id,
+          completed?: true,
+          spec: [tunnel: tunnel]
+        )
+
+      DB.commit()
+
+      U.simulate_process_completion(proc_delete)
+
+      assert [file_deleted_event] = wait_events_on_server!(endpoint.id, :file_deleted, 1)
+      assert file_deleted_event.data.file.id == file.id
+
+      # Log on Gateway -> AP
+      Core.with_context(:server, gateway.id, :read, fn ->
+        assert [log] = DB.all(Log)
+        assert log.type == :file_deleted
+        assert log.direction == :to_ap
+        assert log.data.nip == ap_nip
+        assert log.data.file_name == "todo"
+        assert log.data.file_ext == "todo"
+        assert log.data.file_version == file.version
+      end)
+
+      # Log on AP -> EN
+      Core.with_context(:server, ap.id, :read, fn ->
+        assert [log] = DB.all(Log)
+        assert log.type == :connection_proxied
+        assert log.direction == :hop
+        assert log.data.from_nip == gtw_nip
+        assert log.data.to_nip == en_nip
+      end)
+
+      # Log on EN -> AP
+      Core.with_context(:server, en.id, :read, fn ->
+        assert [log] = DB.all(Log)
+        assert log.type == :connection_proxied
+        assert log.direction == :hop
+        assert log.data.from_nip == ap_nip
+        assert log.data.to_nip == endp_nip
+      end)
+
+      # Log on EN -> Endpoint
+      Core.with_context(:server, endpoint.id, :read, fn ->
+        assert [log] = DB.all(Log)
+        assert log.type == :file_deleted
+        assert log.direction == :from_en
+        assert log.data.nip == en_nip
+        assert log.data.file_name == "todo"
+        assert log.data.file_ext == "todo"
+        assert log.data.file_version == file.version
+      end)
     end
 
     @tag capture_log: true

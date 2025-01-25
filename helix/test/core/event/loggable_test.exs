@@ -15,7 +15,7 @@ defmodule Core.Event.LoggableTest do
           entity_id: entity.id,
           target_id: server.id,
           type: :server_login,
-          data: %{},
+          data: %{gateway: %{}},
           tunnel_id: nil
         }
 
@@ -96,9 +96,9 @@ defmodule Core.Event.LoggableTest do
     end
 
     test "works with remote log (with 1 intermediary hop)" do
-      %{nip: gtw_nip, server: gateway, entity: entity} = Setup.server_full()
-      %{nip: endp_nip, server: endpoint} = Setup.server_full()
-      %{nip: hop_nip, server: hop} = Setup.server_full()
+      %{nip: gtw_nip, server: gateway, entity: entity} = Setup.server()
+      %{nip: endp_nip, server: endpoint} = Setup.server()
+      %{nip: hop_nip, server: hop} = Setup.server()
 
       # Tunnel: Gateway -> Hop -> Endpoint. In this scenario, hop is both Access Point and Exit Node
       tunnel = Setup.tunnel!(source_nip: gtw_nip, target_nip: endp_nip, hops: [hop_nip])

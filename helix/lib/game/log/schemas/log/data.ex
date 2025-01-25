@@ -28,4 +28,39 @@ defmodule Game.Log.Data do
     def load!(%{from_nip: raw_from, to_nip: raw_to}),
       do: %__MODULE__{from_nip: NIP.from_internal(raw_from), to_nip: NIP.from_internal(raw_to)}
   end
+
+  defmodule LocalFile do
+    alias Game.File
+    defstruct [:file_name, :file_ext, :file_version]
+
+    def new(%{file: %File{} = file}),
+      do: %__MODULE__{file_name: "todo", file_ext: "todo", file_version: file.version}
+
+    def dump!(%__MODULE__{} = data),
+      do: Map.from_struct(data)
+
+    def load!(entry),
+      do: struct(__MODULE__, entry)
+  end
+
+  defmodule RemoteFile do
+    alias Core.NIP
+    alias Game.File
+    defstruct [:nip, :file_name, :file_ext, :file_version]
+
+    def new(%{nip: %NIP{} = nip, file: %File{} = file}),
+      do: %__MODULE__{nip: nip, file_name: "todo", file_ext: "todo", file_version: file.version}
+
+    def dump!(%__MODULE__{} = data) do
+      data
+      |> Map.from_struct()
+      |> Map.put(:nip, NIP.to_internal(data.nip))
+    end
+
+    def load!(entry) do
+      entry
+      |> Map.put(:nip, NIP.from_internal(entry.nip))
+      |> then(&struct(__MODULE__, &1))
+    end
+  end
 end

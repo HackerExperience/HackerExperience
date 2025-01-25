@@ -1,6 +1,7 @@
 defmodule Game.Log do
   use Core.Schema
   alias Game.Server
+  alias __MODULE__.Data, as: LogData
 
   # TODO
   @type t :: term
@@ -11,6 +12,7 @@ defmodule Game.Log do
 
   @log_types [
     :custom,
+    :file_deleted,
     :server_login,
     :connection_proxied
   ]
@@ -51,10 +53,12 @@ defmodule Game.Log do
   def hydrate_data(data, %{type: type, direction: direction}, _),
     do: data_mod({type, direction}).load!(data)
 
-  def data_mod({:custom, :self}), do: __MODULE__.Data.EmptyData
-  def data_mod({:server_login, :self}), do: __MODULE__.Data.EmptyData
-  def data_mod({:server_login, dir}) when dir in [:to_ap, :from_en], do: __MODULE__.Data.NIP
-  def data_mod({:connection_proxied, :hop}), do: __MODULE__.Data.NIPProxy
+  def data_mod({:custom, :self}), do: LogData.EmptyData
+  def data_mod({:file_deleted, :self}), do: LogData.LocalFile
+  def data_mod({:file_deleted, dir}) when dir in [:to_ap, :from_en], do: LogData.RemoteFile
+  def data_mod({:server_login, :self}), do: LogData.EmptyData
+  def data_mod({:server_login, dir}) when dir in [:to_ap, :from_en], do: LogData.NIP
+  def data_mod({:connection_proxied, :hop}), do: LogData.NIPProxy
 
   defp validate_data_struct!(params) do
     %struct{} = params.data

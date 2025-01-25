@@ -33,7 +33,7 @@ defmodule Test.Setup.Process.Spec do
   def spec(:file_delete, server_id, entity_id, opts) do
     file = opts[:file] || S.file!(server_id, visible_by: entity_id)
 
-    default_meta = %{file: file}
+    default_meta = %{file: file, tunnel: opts[:tunnel]}
     default_params = %{}
 
     params = opts[:params] || default_params
