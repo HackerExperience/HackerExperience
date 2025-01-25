@@ -22,12 +22,16 @@ defmodule Game.Process.File.Install do
     @spec on_complete(Process.t(:file_install)) ::
             {:ok, FileInstalledEvent.event()}
             | {:error, FileInstallFailedEvent.event()}
-    def on_complete(%{registry: %{src_file_id: %File.ID{} = file_id}} = process) do
+    def on_complete(
+          %{
+            server_id: server_id,
+            entity_id: entity_id,
+            registry: %{src_file_id: %File.ID{} = file_id}
+          } = process
+        ) do
       Core.begin_context(:server, process.server_id, :write)
 
-      with {true, %{server: server}} <- Henforcers.Server.server_exists?(process.server_id),
-           {true, %{entity: entity}} <- Henforcers.Entity.entity_exists?(process.entity_id),
-           {true, %{file: file}} <- Henforcers.File.can_install?(server, entity, file_id),
+      with {true, %{file: file}} <- Henforcers.File.can_install?(server_id, entity_id, file_id),
            {:ok, installation} <- Svc.File.install_file(file) do
         Core.commit()
         {:ok, FileInstalledEvent.new(installation, file, process)}
@@ -48,7 +52,6 @@ defmodule Game.Process.File.Install do
     defp format_henforcer_error({:file, :not_found}), do: "file_not_found"
     defp format_henforcer_error({:file_visibility, :not_found}), do: "file_not_found"
     defp format_henforcer_error({:server, :not_belongs}), do: "server_not_belongs"
-    defp format_henforcer_error(unhandled_error), do: "#{inspect(unhandled_error)}"
   end
 
   defmodule Signalable do
