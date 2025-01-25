@@ -54,6 +54,40 @@ defmodule Game.Process.File.DeleteTest do
       Setup.file_visibility!(server.entity_id, server_id: server.id, file_id: file.id)
       assert {:ok, _} = FileDeleteProcess.Processable.on_complete(process)
     end
+
+    test "fails if Player attempts to delete File in another Server without access" do
+      %{nip: gtw_nip, entity: entity} = Setup.server()
+      %{nip: endp_nip, server: endpoint} = Setup.server()
+
+      # Player is deleting `File` on the Endpoint. This process already reached its objective
+      process =
+        Setup.process!(endpoint.id, type: :file_delete, entity_id: entity.id, completed?: true)
+
+      # There is no Tunnel for this remote action
+      refute process.registry.src_tunnel_id
+
+      DB.commit()
+
+      assert {{:error, event}, log} =
+               with_log(fn -> FileDeleteProcess.Processable.on_complete(process) end)
+
+      assert event.name == :file_delete_failed
+      assert event.data.process == process
+      assert event.data.reason == "server_not_belongs"
+
+      assert log =~ "Unable to delete file: server_not_belongs"
+
+      # If we create a Tunnel between both servers, then we can complete the process
+      tunnel =
+        Core.with_context(:universe, :write, fn ->
+          Setup.tunnel!(source_nip: gtw_nip, target_nip: endp_nip)
+        end)
+
+      assert {:ok, _} =
+               process
+               |> U.Process.add_tunnel_to_process(tunnel.id)
+               |> FileDeleteProcess.Processable.on_complete()
+    end
   end
 
   describe "E2E" do

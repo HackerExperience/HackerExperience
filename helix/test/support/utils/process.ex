@@ -2,7 +2,7 @@ defmodule Test.Utils.Process do
   use Test.Setup.Definition
 
   alias Game.Process.TOP
-  alias Game.{Process, Server}
+  alias Game.{Process, Server, Tunnel}
 
   def get_all_process_registries do
     Core.with_context(:universe, :read, fn ->
@@ -40,5 +40,14 @@ defmodule Test.Utils.Process do
     # Just start the TOP. Since `process` has reached its objectives, on the initial scheduling the
     # TOP will complete the process accordingly.
     TOP.on_boot({universe, shard_id})
+  end
+
+  @doc """
+  Adds the given Tunnel to the Process as `src_tunnel_id`.
+
+  PS: If you need to persist the change in the database, then extend the function to do so.
+  """
+  def add_tunnel_to_process(%Process{registry: registry} = process, %Tunnel.ID{} = tunnel_id) do
+    %{process | registry: %{registry | src_tunnel_id: tunnel_id}}
   end
 end

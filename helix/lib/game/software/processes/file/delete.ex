@@ -50,6 +50,7 @@ defmodule Game.Process.File.Delete do
       end
     end
 
+    defp format_henforcer_error({:server, :not_belongs}), do: "server_not_belongs"
     defp format_henforcer_error({:tunnel, :not_found}), do: "tunnel_not_found"
     defp format_henforcer_error({:file, :not_found}), do: "file_not_found"
     defp format_henforcer_error({:file_visibility, :not_found}), do: "file_not_found"
