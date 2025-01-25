@@ -5,6 +5,7 @@ defmodule Test.Setup.Process.Spec do
 
   alias Game.Process.File.Delete, as: FileDeleteProcess
   alias Game.Process.File.Install, as: FileInstallProcess
+  alias Game.Process.File.Transfer, as: FileTransferProcess
   alias Game.Process.Installation.Uninstall, as: InstallationUninstallProcess
   alias Game.Process.Log.Edit, as: LogEditProcess
   alias Test.Process.NoopCPU, as: NoopCPUProcess
@@ -55,6 +56,42 @@ defmodule Test.Setup.Process.Spec do
     relay = %{file: file}
 
     build_spec(FileInstallProcess, server_id, entity_id, params, meta, relay)
+  end
+
+  def spec(:file_transfer, gateway_id, entity_id, opts) do
+    transfer_type = opts[:transfer_type] || Enum.random([:download, :upload])
+
+    endpoint = opts[:endpoint] || S.server!()
+
+    gtw_nip = Svc.NetworkConnection.fetch!(by_server_id: gateway_id).nip
+    endp_nip = Svc.NetworkConnection.fetch!(by_server_id: endpoint.id).nip
+
+    file_server_id =
+      case transfer_type do
+        :download -> endpoint.id
+        :upload -> gateway_id
+      end
+
+    file = opts[:file] || S.file!(file_server_id, visible_by: entity_id)
+
+    tunnel =
+      opts[:tunnel] || S.tunnel!(source_nip: gtw_nip, target_nip: endp_nip, hops: opts[:hops] || [])
+
+    params =
+      %{
+        transfer_type: transfer_type,
+        endpoint: endpoint
+      }
+
+    meta =
+      %{
+        file: file,
+        tunnel: tunnel
+      }
+
+    relay = %{file: file, tunnel: tunnel, endpoint: endpoint, transfer_type: transfer_type}
+
+    build_spec(FileTransferProcess, gateway_id, entity_id, params, meta, relay)
   end
 
   def spec(:installation_uninstall, server_id, entity_id, opts) do

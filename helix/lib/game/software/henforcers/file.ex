@@ -82,4 +82,33 @@ defmodule Game.Henforcers.File do
       Henforcer.success(%{file: file, visibility: visibility})
     end
   end
+
+  @type can_transfer_relay :: %{file: File.t(), visibility: FileVisibility.t()}
+  @type can_transfer_error ::
+          file_exists_error
+          | is_visible_error
+
+  @typep transfer_type :: :download | :upload
+
+  # TODO: Henforce space in disk
+  @spec can_transfer?(File.idt(), Entity.t(), {transfer_type, Server.t(), Server.t()}) ::
+          {true, can_transfer_relay}
+          | can_transfer_error
+  def can_transfer?(%File{} = file, %Entity{} = entity, _transfer_info) do
+    with {true, %{visibility: visibility}} <- is_visible?(file, entity.id) do
+      Henforcer.success(%{file: file, visibility: visibility})
+    end
+  end
+
+  def can_transfer?(%File.ID{} = file_id, entity, {:download, _, endpoint} = transfer_info) do
+    with {true, %{file: file}} <- file_exists?(file_id, endpoint) do
+      can_transfer?(file, entity, transfer_info)
+    end
+  end
+
+  def can_transfer?(%File.ID{} = file_id, entity, {:upload, gateway, _} = transfer_info) do
+    with {true, %{file: file}} <- file_exists?(file_id, gateway) do
+      can_transfer?(file, entity, transfer_info)
+    end
+  end
 end

@@ -28,7 +28,9 @@ defmodule Game.Services.Server do
     initial_resources =
       %{
         cpu: 1000,
-        ram: 128
+        ram: 128,
+        dlk: 100,
+        ulk: 10
       }
       |> Process.Resources.from_map()
 

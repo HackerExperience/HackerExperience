@@ -259,4 +259,115 @@ defmodule Game.Events.File do
         do: %{player: entity_id}
     end
   end
+
+  defmodule Transferred do
+    @moduledoc """
+    TODO
+    """
+
+    use Core.Event.Definition
+
+    alias Game.{File, Process, Server}
+
+    defstruct [:file, :transfer_info, :process]
+
+    @typep transfer_type :: :download | :upload
+
+    @type t :: %__MODULE__{
+            file: File.t(),
+            process: Process.t(),
+            transfer_info: {transfer_type, gateway :: Server.t(), endpoint :: Server.t()}
+          }
+
+    @name :file_transferred
+
+    def new(%File{} = file, transfer_info, %Process{} = process) do
+      %__MODULE__{file: file, transfer_info: transfer_info, process: process}
+      |> Event.new()
+    end
+
+    defmodule Publishable do
+      use Core.Event.Publishable.Definition
+
+      def spec do
+        selection(
+          schema(%{
+            file_id: integer(),
+            process_id: integer()
+          }),
+          [:file_id, :process_id]
+        )
+      end
+
+      def generate_payload(%{data: %{file: file, process: process}}) do
+        payload =
+          %{
+            file_id: file.id |> ID.to_external(),
+            process_id: process.id |> ID.to_external()
+          }
+
+        {:ok, payload}
+      end
+
+      @doc """
+      Only the Process owner receives this event.
+      """
+      def whom_to_publish(%{data: %{process: %{entity_id: entity_id}}}),
+        do: %{player: entity_id}
+    end
+  end
+
+  defmodule TransferFailed do
+    @moduledoc """
+    TODO
+    """
+
+    use Core.Event.Definition
+
+    alias Game.{Process}
+
+    defstruct [:reason, :process]
+
+    @type t :: %__MODULE__{
+            reason: term,
+            process: Process.t(:file_delete)
+          }
+
+    @name :file_transfer_failed
+
+    def new(reason, %Process{} = process) do
+      %__MODULE__{reason: reason, process: process}
+      |> Event.new()
+    end
+
+    defmodule Publishable do
+      use Core.Event.Publishable.Definition
+
+      def spec do
+        selection(
+          schema(%{
+            reason: binary(),
+            process_id: integer()
+          }),
+          [:reason, :process_id]
+        )
+      end
+
+      def generate_payload(%{data: %{reason: reason, process: process}}) do
+        payload =
+          %{
+            reason: reason,
+            process_id: process.id |> ID.to_external()
+          }
+
+        {:ok, payload}
+      end
+
+      @doc """
+      Only the Process owner receives this event.
+      """
+      def whom_to_publish(%{data: %{process: %{entity_id: entity_id}}}),
+        do: %{player: entity_id}
+    end
+  end
 end

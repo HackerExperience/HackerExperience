@@ -6,6 +6,8 @@ module API.Events.Types exposing
     , FileDeleted
     , FileInstallFailed
     , FileInstalled
+    , FileTransferFailed
+    , FileTransferred
     , IdxEndpoint
     , IdxGateway
     , IdxLog
@@ -30,9 +32,9 @@ import Game.Model.TunnelID as TunnelID exposing (TunnelID(..))
 
 ## Aliases
 
-@docs FileDeleteFailed, FileDeleted, FileInstallFailed, FileInstalled, IdxEndpoint, IdxGateway, IdxLog
-@docs IdxPlayer, IdxTunnel, IndexRequested, InstallationUninstallFailed, InstallationUninstalled
-@docs ProcessCompleted, ProcessCreated, ProcessKilled, TunnelCreated
+@docs FileDeleteFailed, FileDeleted, FileInstallFailed, FileInstalled, FileTransferFailed, FileTransferred
+@docs IdxEndpoint, IdxGateway, IdxLog, IdxPlayer, IdxTunnel, IndexRequested, InstallationUninstallFailed
+@docs InstallationUninstalled, ProcessCompleted, ProcessCreated, ProcessKilled, TunnelCreated
 
 -}
 type alias TunnelCreated =
@@ -66,6 +68,14 @@ type alias InstallationUninstallFailed =
 
 type alias IndexRequested =
     { player : IdxPlayer }
+
+
+type alias FileTransferred =
+    { file_id : Int, process_id : Int }
+
+
+type alias FileTransferFailed =
+    { process_id : Int, reason : String }
 
 
 type alias FileInstalled =

@@ -145,10 +145,24 @@ defmodule Core do
     state.shard_id
   end
 
+  def assert_context_server_id!(%Game.Server.ID{id: expected_server_id}) do
+    context_id = get_server_id_from_context!()
+
+    if expected_server_id != context_id,
+      do: raise("Bad context: expected server_id #{expected_server_id}, got: #{context_id}")
+  end
+
   def get_player_id_from_context! do
     state = DB.LocalState.get_current_context!()
     assert_player_context!(state.context)
     state.shard_id
+  end
+
+  def assert_context_player_id!(%Game.Entity.ID{id: expected_player_id}) do
+    context_id = get_player_id_from_context!()
+
+    if expected_player_id != context_id,
+      do: raise("Bad context: expected player_id #{expected_player_id}, got: #{context_id}")
   end
 
   defp player_ctx(:singleplayer), do: :sp_player

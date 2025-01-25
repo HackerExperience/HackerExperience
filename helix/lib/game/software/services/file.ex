@@ -39,6 +39,29 @@ defmodule Game.Services.File do
     |> DB.insert()
   end
 
+  def transfer(%File{} = file, {:download, gateway, endpoint}) do
+    true = file.server_id == endpoint.id
+    copy(file, gateway)
+  end
+
+  def transfer(%File{} = file, {:upload, gateway, endpoint}) do
+    true = file.server_id == gateway.id
+    copy(file, endpoint)
+  end
+
+  defp copy(%File{} = file, %Server{id: target_id}) do
+    Core.assert_context_server_id!(target_id)
+
+    %{
+      type: file.type,
+      version: file.version,
+      size: file.size,
+      path: "/"
+    }
+    |> File.new()
+    |> DB.insert()
+  end
+
   def delete(%File{} = file) do
     DB.delete(file)
   end

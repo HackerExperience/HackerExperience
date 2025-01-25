@@ -2,14 +2,16 @@
 
 
 module API.Events.Json exposing
-    ( encodeFileDeleteFailed, encodeFileDeleted, encodeFileInstallFailed, encodeFileInstalled, encodeIdxEndpoint
-    , encodeIdxGateway, encodeIdxLog, encodeIdxPlayer, encodeIdxTunnel, encodeIndexRequested
-    , encodeInstallationUninstallFailed, encodeInstallationUninstalled, encodeProcessCompleted
-    , encodeProcessCreated, encodeProcessKilled, encodeTunnelCreated
-    , decodeFileDeleteFailed, decodeFileDeleted, decodeFileInstallFailed, decodeFileInstalled, decodeIdxEndpoint
-    , decodeIdxGateway, decodeIdxLog, decodeIdxPlayer, decodeIdxTunnel, decodeIndexRequested
-    , decodeInstallationUninstallFailed, decodeInstallationUninstalled, decodeProcessCompleted
-    , decodeProcessCreated, decodeProcessKilled, decodeTunnelCreated
+    ( encodeFileDeleteFailed, encodeFileDeleted, encodeFileInstallFailed, encodeFileInstalled
+    , encodeFileTransferFailed, encodeFileTransferred, encodeIdxEndpoint, encodeIdxGateway, encodeIdxLog
+    , encodeIdxPlayer, encodeIdxTunnel, encodeIndexRequested, encodeInstallationUninstallFailed
+    , encodeInstallationUninstalled, encodeProcessCompleted, encodeProcessCreated, encodeProcessKilled
+    , encodeTunnelCreated
+    , decodeFileDeleteFailed, decodeFileDeleted, decodeFileInstallFailed, decodeFileInstalled
+    , decodeFileTransferFailed, decodeFileTransferred, decodeIdxEndpoint, decodeIdxGateway, decodeIdxLog
+    , decodeIdxPlayer, decodeIdxTunnel, decodeIndexRequested, decodeInstallationUninstallFailed
+    , decodeInstallationUninstalled, decodeProcessCompleted, decodeProcessCreated, decodeProcessKilled
+    , decodeTunnelCreated
     )
 
 {-|
@@ -17,18 +19,20 @@ module API.Events.Json exposing
 
 ## Encoders
 
-@docs encodeFileDeleteFailed, encodeFileDeleted, encodeFileInstallFailed, encodeFileInstalled, encodeIdxEndpoint
-@docs encodeIdxGateway, encodeIdxLog, encodeIdxPlayer, encodeIdxTunnel, encodeIndexRequested
-@docs encodeInstallationUninstallFailed, encodeInstallationUninstalled, encodeProcessCompleted
-@docs encodeProcessCreated, encodeProcessKilled, encodeTunnelCreated
+@docs encodeFileDeleteFailed, encodeFileDeleted, encodeFileInstallFailed, encodeFileInstalled
+@docs encodeFileTransferFailed, encodeFileTransferred, encodeIdxEndpoint, encodeIdxGateway, encodeIdxLog
+@docs encodeIdxPlayer, encodeIdxTunnel, encodeIndexRequested, encodeInstallationUninstallFailed
+@docs encodeInstallationUninstalled, encodeProcessCompleted, encodeProcessCreated, encodeProcessKilled
+@docs encodeTunnelCreated
 
 
 ## Decoders
 
-@docs decodeFileDeleteFailed, decodeFileDeleted, decodeFileInstallFailed, decodeFileInstalled, decodeIdxEndpoint
-@docs decodeIdxGateway, decodeIdxLog, decodeIdxPlayer, decodeIdxTunnel, decodeIndexRequested
-@docs decodeInstallationUninstallFailed, decodeInstallationUninstalled, decodeProcessCompleted
-@docs decodeProcessCreated, decodeProcessKilled, decodeTunnelCreated
+@docs decodeFileDeleteFailed, decodeFileDeleted, decodeFileInstallFailed, decodeFileInstalled
+@docs decodeFileTransferFailed, decodeFileTransferred, decodeIdxEndpoint, decodeIdxGateway, decodeIdxLog
+@docs decodeIdxPlayer, decodeIdxTunnel, decodeIndexRequested, decodeInstallationUninstallFailed
+@docs decodeInstallationUninstalled, decodeProcessCompleted, decodeProcessCreated, decodeProcessKilled
+@docs decodeTunnelCreated
 
 -}
 
@@ -188,6 +192,45 @@ decodeIndexRequested =
 encodeIndexRequested : API.Events.Types.IndexRequested -> Json.Encode.Value
 encodeIndexRequested rec =
     Json.Encode.object [ ( "player", encodeIdxPlayer rec.player ) ]
+
+
+decodeFileTransferred : Json.Decode.Decoder API.Events.Types.FileTransferred
+decodeFileTransferred =
+    Json.Decode.succeed
+        (\file_id process_id -> { file_id = file_id, process_id = process_id })
+        |> OpenApi.Common.jsonDecodeAndMap
+            (Json.Decode.field "file_id" Json.Decode.int)
+        |> OpenApi.Common.jsonDecodeAndMap
+            (Json.Decode.field
+                "process_id"
+                Json.Decode.int
+            )
+
+
+encodeFileTransferred : API.Events.Types.FileTransferred -> Json.Encode.Value
+encodeFileTransferred rec =
+    Json.Encode.object
+        [ ( "file_id", Json.Encode.int rec.file_id )
+        , ( "process_id", Json.Encode.int rec.process_id )
+        ]
+
+
+decodeFileTransferFailed : Json.Decode.Decoder API.Events.Types.FileTransferFailed
+decodeFileTransferFailed =
+    Json.Decode.succeed
+        (\process_id reason -> { process_id = process_id, reason = reason })
+        |> OpenApi.Common.jsonDecodeAndMap
+            (Json.Decode.field "process_id" Json.Decode.int)
+        |> OpenApi.Common.jsonDecodeAndMap
+            (Json.Decode.field "reason" Json.Decode.string)
+
+
+encodeFileTransferFailed : API.Events.Types.FileTransferFailed -> Json.Encode.Value
+encodeFileTransferFailed rec =
+    Json.Encode.object
+        [ ( "process_id", Json.Encode.int rec.process_id )
+        , ( "reason", Json.Encode.string rec.reason )
+        ]
 
 
 decodeFileInstalled : Json.Decode.Decoder API.Events.Types.FileInstalled

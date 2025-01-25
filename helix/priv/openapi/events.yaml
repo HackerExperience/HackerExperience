@@ -127,6 +127,26 @@ components:
           type: integer
         memory_usage:
           type: integer
+    file_transfer_failed:
+      type: object
+      required:
+        - process_id
+        - reason
+      properties:
+        reason:
+          type: string
+        process_id:
+          type: integer
+    file_transferred:
+      type: object
+      required:
+        - file_id
+        - process_id
+      properties:
+        process_id:
+          type: integer
+        file_id:
+          type: integer
     index_requested:
       type: object
       required:

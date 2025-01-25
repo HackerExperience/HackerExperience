@@ -5,6 +5,7 @@ defmodule Game.File do
   # TODO
   @type t :: term()
   @type id :: __MODULE__.ID.t()
+  @type idt :: t | id
 
   @context :server
   @table :files
