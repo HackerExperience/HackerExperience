@@ -29,7 +29,8 @@ defmodule Game.Henforcers.Installation do
           entity: Entity.t()
         }
   @type can_uninstall_error ::
-          Henforcers.Server.belongs_to_entity_error()
+          exists_error
+          | Henforcers.Server.belongs_to_entity_error()
           | Henforcers.Server.server_exists_error()
           | Henforcers.Entity.entity_exists_error()
 

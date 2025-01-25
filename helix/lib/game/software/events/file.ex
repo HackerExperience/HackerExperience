@@ -181,9 +181,9 @@ defmodule Game.Events.File do
 
     defmodule Loggable do
       use Core.Event.Loggable.Definition
-      alias Game.{File, Tunnel}
+      alias Game.{File}
 
-      def log_map(%{data: %{process: process, file: file}} = event) do
+      def log_map(%{data: %{process: process, file: file}}) do
         tunnel_id = process.registry[:src_tunnel_id]
 
         # TODO: Loggable could accept a process instead, simplifying the API
@@ -196,14 +196,6 @@ defmodule Game.Events.File do
             gateway: %{file: file},
             endpoint: %{file: file}
           }
-        }
-      end
-
-      defp get_data(%File{} = file) do
-        %{
-          name: "todo_file_name",
-          extension: "todo_file_ext",
-          version: file.version
         }
       end
     end
