@@ -4,7 +4,6 @@ defmodule Test.Utils.CI do
   this should be avoided, but some times it is necessary...
   """
   def sleep_on_ci(duration) when is_integer(duration) do
-    if is_ci?(), do: IO.puts("Sleeping on CI")
     if is_ci?(), do: :timer.sleep(duration)
   end
 
