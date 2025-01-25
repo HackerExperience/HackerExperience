@@ -55,8 +55,27 @@ defmodule Game.Process.Installation.UninstallTest do
       assert event.name == :installation_uninstall_failed
       assert event.data.process == process
       assert event.data.reason == "installation_not_found"
-
       assert log =~ "Unable to uninstall installation: installation_not_found"
+    end
+
+    @tag :capture_log
+    test "fails if trying to uninstall Installation from someone else" do
+      entity = Setup.entity_lite!()
+      other_server = Setup.server!()
+      process = Setup.process!(other_server.id, entity_id: entity.id, type: :installation_uninstall)
+      DB.commit()
+
+      # The Process is in the Other Server but it was started by Entity, who is not the owner
+      # Note this is impossible to happen for this particular process, since we validate at the
+      # moment the process is created. Still, it's harmless to have an additional layer of defense
+      assert process.entity_id == entity.id
+      assert process.server_id == other_server.id
+      refute other_server.entity_id == entity.id
+
+      assert {:error, event} = InstallationUninstallProcess.Processable.on_complete(process)
+
+      assert event.name == :installation_uninstall_failed
+      assert event.data.reason == "server_not_belongs"
     end
   end
 end

@@ -52,12 +52,31 @@ defmodule Game.Process.File.InstallTest do
       assert event.name == :file_install_failed
       assert event.data.process == process
       assert event.data.reason == "file_not_found"
-
       assert log =~ "Unable to install file: file_not_found"
 
       # If we suddenly start having Visibility into the File, then we can complete the process
       Setup.file_visibility!(server.entity_id, server_id: server.id, file_id: file.id)
       assert {:ok, _} = FileInstallProcess.Processable.on_complete(process)
+    end
+
+    @tag :capture_log
+    test "fails if trying to perform an installation on someone else's server" do
+      entity = Setup.entity_lite!()
+      other_server = Setup.server!()
+      process = Setup.process!(other_server.id, entity_id: entity.id, type: :file_install)
+      DB.commit()
+
+      # The Process is in the Other Server but it was started by Entity, who is not the owner
+      # Note this is impossible to happen for this particular process, since we validate at the
+      # moment the process is created. Still, it's harmless to have an additional layer of defense
+      assert process.entity_id == entity.id
+      assert process.server_id == other_server.id
+      refute other_server.entity_id == entity.id
+
+      assert {:error, event} = FileInstallProcess.Processable.on_complete(process)
+
+      assert event.name == :file_install_failed
+      assert event.data.reason == "server_not_belongs"
     end
   end
 end

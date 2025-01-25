@@ -51,6 +51,7 @@ defmodule Game.Process.Installation.Uninstall do
     end
 
     defp format_henforcer_error({:installation, :not_found}), do: "installation_not_found"
+    defp format_henforcer_error({:server, :not_belongs}), do: "server_not_belongs"
     defp format_henforcer_error(unhandled_error), do: "#{inspect(unhandled_error)}"
   end
 

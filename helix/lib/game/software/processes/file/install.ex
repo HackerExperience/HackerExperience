@@ -47,6 +47,7 @@ defmodule Game.Process.File.Install do
 
     defp format_henforcer_error({:file, :not_found}), do: "file_not_found"
     defp format_henforcer_error({:file_visibility, :not_found}), do: "file_not_found"
+    defp format_henforcer_error({:server, :not_belongs}), do: "server_not_belongs"
     defp format_henforcer_error(unhandled_error), do: "#{inspect(unhandled_error)}"
   end
 
