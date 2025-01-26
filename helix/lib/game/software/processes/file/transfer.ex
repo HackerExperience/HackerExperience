@@ -14,8 +14,6 @@ defmodule Game.Process.File.Transfer do
     %__MODULE__{transfer_type: type, endpoint_id: endpoint.id}
   end
 
-  # TODO: I could have a different proc type based on transfer type (file_download|upload)
-  # Not sure if that will be useful though. For now, assuming not...
   def get_process_type(_, _), do: :file_transfer
 
   def on_db_load(%__MODULE__{} = raw) do
@@ -72,6 +70,9 @@ defmodule Game.Process.File.Transfer do
       end
     end
 
+    defp format_henforcer_error({:tunnel, :not_found}), do: "tunnel_not_found"
+    defp format_henforcer_error({:file, :not_found}), do: "file_not_found"
+    defp format_henforcer_error({:file_visibility, :not_found}), do: "file_not_found"
     defp format_henforcer_error(unhandled_error), do: "#{inspect(unhandled_error)}"
   end
 
