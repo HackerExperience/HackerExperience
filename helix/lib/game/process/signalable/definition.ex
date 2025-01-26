@@ -12,6 +12,8 @@ defmodule Game.Process.Signalable.Definition do
         {:on_sigstop, quote(do: :pause)},
         {:on_sigcont, quote(do: :resume)},
         {:on_sig_renice, quote(do: :renice)},
+        # TODO: I think the default for many of these signals should be :delete. It's safer and more
+        # common, and the process that would like to change this behaviour can always customize it.
         {:on_sig_src_file_deleted, quote(do: :noop)},
         {:on_sig_tgt_file_deleted, quote(do: :noop)}
       ]

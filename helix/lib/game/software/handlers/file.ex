@@ -21,6 +21,8 @@ defmodule Game.Handlers.File do
       TOP.signal(process, :sig_tgt_file_deleted)
     end)
 
+    # TODO: Maybe improve the "kill msg"...
+
     :ok
   end
 end

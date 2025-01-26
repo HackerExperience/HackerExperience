@@ -50,6 +50,7 @@ defmodule Game.Process do
     # `data` is the actual process data (e.g. log edit I need the contents of the new log)
     {:data, {:map, load_structs: true, after_read: :hydrate_data}},
     # `registry` includes tgt_log_id, src_file_id etc (same data in ProcessRegistry)
+    # TODO: I should reject `nil` values so they don't waste unnecessary space
     {:registry, {:map, load_structs: true}},
     {:status, {:enum, values: @statuses}},
     {:resources, {:map, load_structs: true, after_read: :format_resources}},

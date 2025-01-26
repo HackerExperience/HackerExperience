@@ -106,6 +106,7 @@ defmodule Game.Events.Process do
     defmodule Publishable do
       use Core.Event.Publishable.Definition
 
+      # TODO: server NIP should be included here
       def spec do
         selection(
           schema(%{process_id: integer()}),
