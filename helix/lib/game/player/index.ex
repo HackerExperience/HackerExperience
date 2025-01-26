@@ -4,10 +4,11 @@ defmodule Game.Index.Player do
   alias Core.ID
   alias Game.Services, as: Svc
   alias Game.Index
+  alias Game.{Player, Server}
 
   @type index ::
           %{
-            mainframe_id: server_id :: integer(),
+            mainframe_id: Server.id(),
             gateways: [Index.Server.gateway_index()],
             endpoints: [Index.Server.endpoint_index()]
           }
@@ -31,26 +32,28 @@ defmodule Game.Index.Player do
     )
   end
 
-  @spec index(player :: map()) ::
+  @spec index(player :: Player.t()) ::
           index
   def index(player) do
-    gateways = Svc.Server.list(by_entity_id: player.id)
+    entity = Svc.Entity.fetch!(by_id: player.id)
+
+    gateways = Svc.Server.list(by_entity_id: entity.id)
     mainframe = List.first(gateways)
 
     %{
       mainframe_id: mainframe.id,
-      gateways: Enum.map(gateways, fn server -> Index.Server.gateway_index(player, server) end)
+      gateways: Enum.map(gateways, fn server -> Index.Server.gateway_index(entity, server) end)
     }
-    |> index_add_endpoints(player)
+    |> index_add_endpoints(entity)
   end
 
-  defp index_add_endpoints(partial_index, player) do
+  defp index_add_endpoints(partial_index, entity) do
     endpoints =
       partial_index.gateways
       |> Enum.flat_map(& &1.tunnels)
       |> Enum.map(fn %{target_nip: endpoint_nip} ->
         endpoint_id = Svc.NetworkConnection.fetch!(by_nip: endpoint_nip).server_id
-        Index.Server.endpoint_index(player.id, endpoint_id, endpoint_nip)
+        Index.Server.endpoint_index(entity.id, endpoint_id, endpoint_nip)
       end)
 
     Map.put(partial_index, :endpoints, endpoints)

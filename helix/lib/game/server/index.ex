@@ -4,6 +4,7 @@ defmodule Game.Index.Server do
   alias Core.{ID, NIP}
   alias Game.Index
   alias Game.Services, as: Svc
+  alias Game.{Entity, Server}
 
   @type gateway_index ::
           %{
@@ -57,25 +58,25 @@ defmodule Game.Index.Server do
     )
   end
 
-  @spec gateway_index(term(), term()) ::
+  @spec gateway_index(Entity.t(), Server.t()) ::
           gateway_index
-  def gateway_index(player, server) do
+  def gateway_index(entity, server) do
     %{nip: nip} = Svc.NetworkConnection.fetch!(by_server_id: server.id)
 
     %{
       id: server.id,
       nip: nip,
-      logs: Index.Log.index(player.id, server.id),
+      logs: Index.Log.index(entity.id, server.id),
       tunnels: Index.Tunnel.index(nip)
     }
   end
 
-  @spec endpoint_index(term(), term(), term()) ::
+  @spec endpoint_index(Entity.id(), Server.id(), NIP.t()) ::
           endpoint_index
-  def endpoint_index(player_id, server_id, nip) do
+  def endpoint_index(%Entity.ID{} = entity_id, server_id, nip) do
     %{
       nip: nip,
-      logs: Index.Log.index(player_id, server_id)
+      logs: Index.Log.index(entity_id, server_id)
     }
   end
 

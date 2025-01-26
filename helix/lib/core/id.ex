@@ -60,6 +60,8 @@ defmodule Core.ID do
   def ref(:connection_id), do: :"Elixir.Game.Connection.ID"
   def ref(:connection_group_id), do: :"Elixir.Game.ConnectionGroup.ID"
   def ref(:entity_id), do: :"Elixir.Game.Entity.ID"
+  def ref(:file_id), do: :"Elixir.Game.File.ID"
+  def ref(:installation_id), do: :"Elixir.Game.Installation.ID"
   def ref(:log_id), do: :"Elixir.Game.Log.ID"
   def ref(:player_id), do: :"Elixir.Game.Player.ID"
   def ref(:process_id), do: :"Elixir.Game.Process.ID"

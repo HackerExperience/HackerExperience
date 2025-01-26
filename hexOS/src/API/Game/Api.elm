@@ -1,14 +1,18 @@
 -- This is an auto-generated file; manual changes will be overwritten!
 
 
-module API.Game.Api exposing (playerSyncTask, serverLoginTask)
+module API.Game.Api exposing
+    ( fileDeleteTask, fileInstallTask, fileTransferTask, installationUninstallTask, playerSyncTask
+    , serverLoginTask
+    )
 
 {-|
 
 
 ## Operations
 
-@docs playerSyncTask, serverLoginTask
+@docs fileDeleteTask, fileInstallTask, fileTransferTask, installationUninstallTask, playerSyncTask
+@docs serverLoginTask
 
 -}
 
@@ -48,6 +52,139 @@ playerSyncTask config =
                 API.Game.Json.decodePlayerSyncOkResponse
         , body =
             Http.jsonBody (API.Game.Json.encodePlayerSyncRequest config.body)
+        , timeout = Nothing
+        }
+
+
+fileDeleteTask :
+    { server : String
+    , authorization : { authorization : String }
+    , body : API.Game.Types.FileDeleteRequest
+    , params : { nip : NIP, file_id : String }
+    }
+    -> Task.Task (OpenApi.Common.Error API.Game.Types.FileDelete_Error String) API.Game.Types.FileDeleteOkResponse
+fileDeleteTask config =
+    Http.task
+        { url =
+            Url.Builder.crossOrigin
+                config.server
+                [ "v1"
+                , "server"
+                , NIP.toString config.params.nip
+                , "file"
+                , config.params.file_id
+                , "delete"
+                ]
+                []
+        , method = "POST"
+        , headers =
+            [ Http.header "Authorization" config.authorization.authorization ]
+        , resolver =
+            OpenApi.Common.jsonResolverCustom
+                (Dict.fromList [])
+                API.Game.Json.decodeFileDeleteOkResponse
+        , body =
+            Http.jsonBody (API.Game.Json.encodeFileDeleteRequest config.body)
+        , timeout = Nothing
+        }
+
+
+fileInstallTask :
+    { server : String
+    , authorization : { authorization : String }
+    , body : API.Game.Types.FileInstallRequest
+    , params : { nip : NIP, file_id : String }
+    }
+    -> Task.Task (OpenApi.Common.Error API.Game.Types.FileInstall_Error String) API.Game.Types.FileInstallOkResponse
+fileInstallTask config =
+    Http.task
+        { url =
+            Url.Builder.crossOrigin
+                config.server
+                [ "v1"
+                , "server"
+                , NIP.toString config.params.nip
+                , "file"
+                , config.params.file_id
+                , "install"
+                ]
+                []
+        , method = "POST"
+        , headers =
+            [ Http.header "Authorization" config.authorization.authorization ]
+        , resolver =
+            OpenApi.Common.jsonResolverCustom
+                (Dict.fromList [])
+                API.Game.Json.decodeFileInstallOkResponse
+        , body =
+            Http.jsonBody (API.Game.Json.encodeFileInstallRequest config.body)
+        , timeout = Nothing
+        }
+
+
+fileTransferTask :
+    { server : String
+    , authorization : { authorization : String }
+    , body : API.Game.Types.FileTransferRequest
+    , params : { nip : NIP, file_id : String }
+    }
+    -> Task.Task (OpenApi.Common.Error API.Game.Types.FileTransfer_Error String) API.Game.Types.FileTransferOkResponse
+fileTransferTask config =
+    Http.task
+        { url =
+            Url.Builder.crossOrigin
+                config.server
+                [ "v1"
+                , "server"
+                , NIP.toString config.params.nip
+                , "file"
+                , config.params.file_id
+                , "transfer"
+                ]
+                []
+        , method = "POST"
+        , headers =
+            [ Http.header "Authorization" config.authorization.authorization ]
+        , resolver =
+            OpenApi.Common.jsonResolverCustom
+                (Dict.fromList [])
+                API.Game.Json.decodeFileTransferOkResponse
+        , body =
+            Http.jsonBody (API.Game.Json.encodeFileTransferRequest config.body)
+        , timeout = Nothing
+        }
+
+
+installationUninstallTask :
+    { server : String
+    , authorization : { authorization : String }
+    , body : API.Game.Types.InstallationUninstallRequest
+    , params : { nip : NIP, installation_id : String }
+    }
+    -> Task.Task (OpenApi.Common.Error API.Game.Types.InstallationUninstall_Error String) API.Game.Types.InstallationUninstallOkResponse
+installationUninstallTask config =
+    Http.task
+        { url =
+            Url.Builder.crossOrigin
+                config.server
+                [ "v1"
+                , "server"
+                , NIP.toString config.params.nip
+                , "installation"
+                , config.params.installation_id
+                , "uninstall"
+                ]
+                []
+        , method = "POST"
+        , headers =
+            [ Http.header "Authorization" config.authorization.authorization ]
+        , resolver =
+            OpenApi.Common.jsonResolverCustom
+                (Dict.fromList [])
+                API.Game.Json.decodeInstallationUninstallOkResponse
+        , body =
+            Http.jsonBody
+                (API.Game.Json.encodeInstallationUninstallRequest config.body)
         , timeout = Nothing
         }
 

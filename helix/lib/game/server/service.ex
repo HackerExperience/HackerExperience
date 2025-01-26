@@ -28,7 +28,9 @@ defmodule Game.Services.Server do
     initial_resources =
       %{
         cpu: 1000,
-        ram: 128
+        ram: 128,
+        dlk: 100,
+        ulk: 10
       }
       |> Process.Resources.from_map()
 
@@ -53,7 +55,9 @@ defmodule Game.Services.Server do
       by_id: {:one, {:servers, :fetch}}
     ]
 
-    Core.Fetch.query(filter_params, opts, filters)
+    Core.with_context(:universe, :read, fn ->
+      Core.Fetch.query(filter_params, opts, filters)
+    end)
   end
 
   def fetch!(filter_params, opts \\ []) do

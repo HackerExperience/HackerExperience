@@ -2,6 +2,8 @@ defmodule Game.Tunnel do
   use Core.Schema
 
   @type t :: term
+  @type id :: __MODULE__.ID.t()
+  @type idt :: t | id
 
   @context :game
   @table :tunnels
@@ -29,5 +31,10 @@ defmodule Game.Tunnel do
     # |> validate_fields([:access, :status])
     # |> validate_context([&no_cyclic_tunnel/1])
     |> Schema.create()
+  end
+
+  def update(%_{} = tunnel, changes) do
+    tunnel
+    |> Schema.update(changes)
   end
 end

@@ -1,4 +1,5 @@
 defmodule Core do
+  use Docp
   alias Feeb.DB
 
   # TODO: Consider a more specific API, like `begin_universe/1` and `begin_player/2`
@@ -39,9 +40,9 @@ defmodule Core do
   If you don't want to commit, use `DB.with_context/1` directly (or add `with_context_no_commit/3`)
   """
   def with_context(:universe, access_type, callback) do
-    ctx = DB.LocalState.get_current_context()
+    universe_shard_id = Process.get(:helix_universe_shard_id)
 
-    if ctx && ctx.context in [:singleplayer, :multiplayer] && ctx.access_type == access_type do
+    if can_reuse_current_context?([:singleplayer, :multiplayer], universe_shard_id, access_type) do
       # Already in the requested context, so do nothing special. Caller is responsible for COMMITing
       callback.()
     else
@@ -55,10 +56,7 @@ defmodule Core do
   end
 
   def with_context(:server, server_id, access_type, callback) do
-    ctx = DB.LocalState.get_current_context()
-
-    if ctx && ctx.context in [:sp_server, :mp_server] && ctx.shard_id == server_id.id &&
-         ctx.access_type == access_type do
+    if can_reuse_current_context?([:sp_server, :mp_server], server_id.id, access_type) do
       # Already in the requested context, so do nothing special. Caller is responsible for COMMITing
       callback.()
     else
@@ -72,10 +70,7 @@ defmodule Core do
   end
 
   def with_context(:player, player_id, access_type, callback) do
-    ctx = DB.LocalState.get_current_context()
-
-    if ctx && ctx.context in [:sp_player, :mp_player] && ctx.shard_id == player_id.id &&
-         ctx.access_type == access_type do
+    if can_reuse_current_context?([:sp_player, :mp_player], player_id.id, access_type) do
       # Already in the requested context, so do nothing special. Caller is responsible for COMMITing
       callback.()
     else
@@ -85,6 +80,46 @@ defmodule Core do
         DB.commit()
         result
       end)
+    end
+  end
+
+  def commit, do: DB.commit()
+
+  def rollback, do: DB.rollback()
+
+  @docp """
+  It is possible than the context we need is already the context we are currently in. That's what
+  this function does: it returns `true` if we can reuse the current context, `false` otherwise.
+
+  We can reuse the current context if:
+  - It is the same context we want (`expected_contexts`).
+  - Its access type is a "superset" of the `expected_access_type`:
+    - If we want :read and we are currently in :write, that's okay.
+    - If we want :read and we are currently in :read, that's okay.
+    - If we want :write and we are currently in :write, that's okay.
+    - If we want :write and we are currently in :read, that's NOT okay and we can't re-use it.
+  """
+  defp can_reuse_current_context?(expected_contexts, expected_shard_id, expected_access_type)
+       when is_integer(expected_shard_id) do
+    ctx = DB.LocalState.get_current_context()
+
+    cond do
+      is_nil(ctx) ->
+        false
+
+      ctx.context not in expected_contexts ->
+        false
+
+      ctx.shard_id != expected_shard_id ->
+        # We can never re-use the context of a different shard
+        false
+
+      ctx.access_type == :read and expected_access_type == :write ->
+        # Despite being in the same context, we need to upgrade the access type from read to write
+        false
+
+      :else ->
+        true
     end
   end
 
@@ -110,10 +145,24 @@ defmodule Core do
     state.shard_id
   end
 
+  def assert_context_server_id!(%Game.Server.ID{id: expected_server_id}) do
+    context_id = get_server_id_from_context!()
+
+    if expected_server_id != context_id,
+      do: raise("Bad context: expected server_id #{expected_server_id}, got: #{context_id}")
+  end
+
   def get_player_id_from_context! do
     state = DB.LocalState.get_current_context!()
     assert_player_context!(state.context)
     state.shard_id
+  end
+
+  def assert_context_player_id!(%Game.Entity.ID{id: expected_player_id}) do
+    context_id = get_player_id_from_context!()
+
+    if expected_player_id != context_id,
+      do: raise("Bad context: expected player_id #{expected_player_id}, got: #{context_id}")
   end
 
   defp player_ctx(:singleplayer), do: :sp_player

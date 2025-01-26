@@ -1,28 +1,36 @@
 defmodule Game.Services.Log do
   require Logger
   alias Feeb.DB
-  alias Game.{Log, LogVisibility}
+  alias Game.{Entity, Log, LogVisibility, Server}
 
-  def fetch(filter_params, opts \\ []) do
+  @doc """
+  """
+  @spec fetch(Server.id(), list, list) ::
+          Log.t() | nil
+  def fetch(%Server.ID{} = server_id, filter_params, opts \\ []) do
     filters = [
       by_id_and_revision_id: &query_by_id_and_revision_id/1,
       by_id: {:one, {:logs, :fetch_latest_by_id}}
     ]
 
-    Core.Fetch.query(filter_params, opts, filters)
+    Core.with_context(:server, server_id, :read, fn ->
+      Core.Fetch.query(filter_params, opts, filters)
+    end)
   end
 
-  # TODO: Rethink how (and if) I need to switch context when calling read queries
-  # Why not follow the same pattern as inserts?
-  # Outside == universe, inside == custom
-  def list(filter_params, opts \\ []) do
-    # TODO: How can I add LIMIT to "static" queries?
+  @doc """
+  Returns a list of LogVisibility matching the given filters.
+  """
+  @spec list_visibility(Entity.id(), list, list) ::
+          [LogVisibility.t()]
+  def list_visibility(%Entity.ID{} = entity_id, filter_params, opts \\ []) do
     filters = [
       visible_on_server: {:all, {:log_visibilities, :by_server_ordered}, format: :raw}
-      # visible_on_server: &query_by_log_visibility/1
     ]
 
-    Core.Fetch.query(filter_params, opts, filters)
+    Core.with_context(:player, entity_id, :read, fn ->
+      Core.Fetch.query(filter_params, opts, filters)
+    end)
   end
 
   def create_new(entity_id, server_id, log_params) do

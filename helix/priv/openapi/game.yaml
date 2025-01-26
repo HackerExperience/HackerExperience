@@ -4,6 +4,39 @@ info:
   title: Game API
 components:
   responses:
+    FileDeleteOkResponse:
+      description: TODO description
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - data
+            properties:
+              data:
+                $ref: '#/components/schemas/FileDeleteOutput'
+    FileInstallOkResponse:
+      description: TODO description
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - data
+            properties:
+              data:
+                $ref: '#/components/schemas/FileInstallOutput'
+    FileTransferOkResponse:
+      description: TODO description
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - data
+            properties:
+              data:
+                $ref: '#/components/schemas/FileTransferOutput'
     GenericBadRequestResponse:
       description: TODO
       content:
@@ -29,6 +62,17 @@ components:
     GenericUnauthorizedResponse:
       description: TODO
       content: {}
+    InstallationUninstallOkResponse:
+      description: TODO description
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - data
+            properties:
+              data:
+                $ref: '#/components/schemas/InstallationUninstallOutput'
     PlayerSyncOkResponse:
       description: TODO description
       content:
@@ -51,7 +95,82 @@ components:
             properties:
               data:
                 $ref: '#/components/schemas/ServerLoginOutput'
+  requestBodies:
+    FileDeleteRequest:
+      description: TODO description
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/FileDeleteInput'
+    FileInstallRequest:
+      description: TODO description
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/FileInstallInput'
+    FileTransferRequest:
+      description: TODO description
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/FileTransferInput'
+    InstallationUninstallRequest:
+      description: TODO description
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/InstallationUninstallInput'
+    PlayerSyncRequest:
+      description: TODO description
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/PlayerSyncInput'
+    ServerLoginRequest:
+      description: TODO description
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ServerLoginInput'
   schemas:
+    FileDeleteInput:
+      type: object
+      required: []
+      properties:
+        tunnel_id:
+          type: integer
+    FileDeleteOutput:
+      type: object
+      required: []
+      properties: {}
+    FileInstallInput:
+      type: object
+      required: []
+      properties: {}
+    FileInstallOutput:
+      type: object
+      required: []
+      properties: {}
+    FileTransferInput:
+      type: object
+      required:
+        - tunnel_id
+        - transfer_type
+      properties:
+        transfer_type:
+          type: string
+        tunnel_id:
+          type: integer
+    FileTransferOutput:
+      type: object
+      required: []
+      properties: {}
     GenericBadRequest:
       type: object
       required:
@@ -70,6 +189,14 @@ components:
           type: string
         details:
           type: string
+    InstallationUninstallInput:
+      type: object
+      required: []
+      properties: {}
+    InstallationUninstallOutput:
+      type: object
+      required: []
+      properties: {}
     PlayerSyncInput:
       type: object
       required: []
@@ -90,21 +217,6 @@ components:
       type: object
       required: []
       properties: {}
-  requestBodies:
-    PlayerSyncRequest:
-      description: TODO description
-      required: true
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/PlayerSyncInput'
-    ServerLoginRequest:
-      description: TODO description
-      required: true
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/ServerLoginInput'
   securitySchemes:
     AuthorizationToken:
       in: header
@@ -123,6 +235,98 @@ paths:
       operationId: PlayerSync
       requestBody:
         $ref: '#/components/requestBodies/PlayerSyncRequest'
+  /v1/server/{nip}/file/{file_id}/delete:
+    post:
+      parameters:
+        - in: path
+          name: nip
+          description: ''
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: file_id
+          description: ''
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          $ref: '#/components/responses/FileDeleteOkResponse'
+      security:
+        - AuthorizationToken: []
+      operationId: FileDelete
+      requestBody:
+        $ref: '#/components/requestBodies/FileDeleteRequest'
+  /v1/server/{nip}/file/{file_id}/install:
+    post:
+      parameters:
+        - in: path
+          name: nip
+          description: ''
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: file_id
+          description: ''
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          $ref: '#/components/responses/FileInstallOkResponse'
+      security:
+        - AuthorizationToken: []
+      operationId: FileInstall
+      requestBody:
+        $ref: '#/components/requestBodies/FileInstallRequest'
+  /v1/server/{nip}/file/{file_id}/transfer:
+    post:
+      parameters:
+        - in: path
+          name: nip
+          description: ''
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: file_id
+          description: ''
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          $ref: '#/components/responses/FileTransferOkResponse'
+      security:
+        - AuthorizationToken: []
+      operationId: FileTransfer
+      requestBody:
+        $ref: '#/components/requestBodies/FileTransferRequest'
+  /v1/server/{nip}/installation/{installation_id}/uninstall:
+    post:
+      parameters:
+        - in: path
+          name: nip
+          description: ''
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: installation_id
+          description: ''
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          $ref: '#/components/responses/InstallationUninstallOkResponse'
+      security:
+        - AuthorizationToken: []
+      operationId: InstallationUninstall
+      requestBody:
+        $ref: '#/components/requestBodies/InstallationUninstallRequest'
   /v1/server/{nip}/login/{target_nip}:
     post:
       parameters:
@@ -141,8 +345,8 @@ paths:
       responses:
         '200':
           $ref: '#/components/responses/ServerLoginOkResponse'
+      security:
+        - AuthorizationToken: []
       operationId: ServerLogin
       requestBody:
         $ref: '#/components/requestBodies/ServerLoginRequest'
-      security:
-        - AuthorizationToken: []

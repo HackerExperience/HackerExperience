@@ -2,6 +2,8 @@ defmodule Game.LogVisibility do
   use Core.Schema
   alias Game.Entity
 
+  @type t :: term
+
   @context :player
   @table :log_visibilities
 

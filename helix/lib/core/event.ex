@@ -206,6 +206,7 @@ defmodule Core.Event do
     end
   end
 
+  # TODO: Only commit/rollback if there is an active context?
   defp teardown_db(:ok, handler_mod, event) do
     case teardown_db_on_success_behaviour(handler_mod, event) do
       :commit -> DB.commit()

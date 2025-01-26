@@ -1,7 +1,7 @@
 defmodule Test.Event do
-  @table :processed_events
-
   alias Game.{Process, Server}
+
+  @table :processed_events
 
   def on_start do
     :ets.new(@table, [:set, :public, :named_table])
@@ -72,7 +72,8 @@ defmodule Test.Event do
     end
   end
 
-  def wait_events_on_server!(%Server.ID{} = server_id, event_name, count \\ 1) do
+  def wait_events_on_server!(%Server.ID{} = server_id, event_name, count \\ 1)
+      when is_atom(event_name) do
     wait_events!(
       filter: fn
         {_, s_id, _, _}, %{event: %{name: e_name}} ->

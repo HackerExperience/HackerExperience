@@ -107,7 +107,7 @@ defmodule Game.Endpoint.Server.Login do
       event =
         TunnelCreatedEvent.new(
           tunnel,
-          session.data.player_id,
+          session.data.entity_id,
           context.gateway.id,
           context.endpoint.id
         )

@@ -127,6 +127,13 @@ defmodule Game.Process.TOP.Allocator do
           {:ok, [Process.t()]}
           | {:error, {:overflow, [Resources.name()]}}
   def allocate(%Resources{} = total_resources, [_ | _] = processes) do
+    # TODO: Cover the following scenario:
+    # Process requests dynamic allocation but receives zero.
+    # Allocator thinks it should complete immediately (due to safe_div) when in reality it should
+    # complete in :infinity. Possible things to consider:
+    # - Static (minimum) allocation for dynamic resource -> Can't ever go down to zero in the
+    # dynamic step...
+
     # Static allocation
     {static_resources_usage, statically_allocated_processes} = static_allocation(processes)
 

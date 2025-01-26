@@ -1,7 +1,10 @@
 defmodule Game.Server do
   use Core.Schema
 
+  # TODO
+  @type t :: term
   @type id :: __MODULE__.ID.t()
+  @type idt :: t | id
 
   @context :game
   @table :servers

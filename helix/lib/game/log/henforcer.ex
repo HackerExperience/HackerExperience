@@ -5,15 +5,12 @@ defmodule Game.Henforcers.Log do
 
   def log_exists?(%Log.ID{} = log_id, nil, %Server{} = server) do
     # If `revision_id` is nil, just make sure the log itself exists and return the latest rev
+    case Svc.Log.fetch(server.id, by_id: log_id) do
+      %Log{} = log ->
+        Henforcer.success(%{log: log})
 
-    Core.with_context(:server, server.id, :read, fn ->
-      case Svc.Log.fetch(by_id: log_id) do
-        %Log{} = log ->
-          Henforcer.success(%{log: log})
-
-        nil ->
-          Henforcer.fail({:log, :not_found})
-      end
-    end)
+      nil ->
+        Henforcer.fail({:log, :not_found})
+    end
   end
 end

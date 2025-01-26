@@ -12,11 +12,11 @@ defmodule CoreTest do
         assert true
       end)
 
-      Core.with_context(:server, Random.int(), :read, fn ->
+      Core.with_context(:server, %{id: Random.int()}, :read, fn ->
         assert true
       end)
 
-      Core.with_context(:player, Random.int(), :read, fn ->
+      Core.with_context(:player, %{id: Random.int()}, :read, fn ->
         assert true
       end)
     end

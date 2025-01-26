@@ -8,6 +8,7 @@ jobs:
     env:
       MIX_ENV: test
       HELIX_TEST_DATA_DIR: tmp/helix_test
+      IS_CI: true
 
     defaults:
       run:
@@ -113,6 +114,7 @@ jobs:
 
     env:
       MIX_ENV: dev
+      IS_CI: true
 
     defaults:
       run:

@@ -3,8 +3,26 @@ defmodule Game.Process do
   alias Game.Server
   alias __MODULE__
 
-  # TODO
-  @type t :: term
+  @type t :: t(atom())
+  @type t(process_type) ::
+          %__MODULE__{
+            id: id,
+            entity_id: term,
+            type: process_type,
+            data: struct,
+            registry: map,
+            status: term,
+            resources: map,
+            priority: integer,
+            inserted_at: DateTime.t(),
+            last_checkpoint_ts: integer | nil,
+            estimated_completion_ts: integer | nil,
+            server_id: Server.ID.t(),
+            next_allocation: map | :unchanged | :updated | nil,
+            __meta__: term,
+            __private__: term
+          }
+
   @type id :: __MODULE__.ID.t()
 
   @type priority :: integer
@@ -13,6 +31,10 @@ defmodule Game.Process do
   @table :processes
 
   @process_types [
+    :file_delete,
+    :file_install,
+    :file_transfer,
+    :installation_uninstall,
     :log_edit,
     # Below are test processes; they do not exist in production
     :noop_cpu,
@@ -28,6 +50,7 @@ defmodule Game.Process do
     # `data` is the actual process data (e.g. log edit I need the contents of the new log)
     {:data, {:map, load_structs: true, after_read: :hydrate_data}},
     # `registry` includes tgt_log_id, src_file_id etc (same data in ProcessRegistry)
+    # TODO: I should reject `nil` values so they don't waste unnecessary space
     {:registry, {:map, load_structs: true}},
     {:status, {:enum, values: @statuses}},
     {:resources, {:map, load_structs: true, after_read: :format_resources}},
@@ -73,6 +96,10 @@ defmodule Game.Process do
 
   #
 
+  def process_mod(:file_delete), do: Process.File.Delete
+  def process_mod(:file_install), do: Process.File.Install
+  def process_mod(:file_transfer), do: Process.File.Transfer
+  def process_mod(:installation_uninstall), do: Process.Installation.Uninstall
   def process_mod(:log_edit), do: Process.Log.Edit
   def process_mod(:noop_cpu), do: Test.Process.NoopCPU
   def process_mod(:noop_dlk), do: Test.Process.NoopDLK

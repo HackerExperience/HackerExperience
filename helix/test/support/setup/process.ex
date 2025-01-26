@@ -122,7 +122,7 @@ defmodule Test.Setup.Process do
     end
   end
 
-  defp maybe_mark_as_complete(process, opts) do
+  def maybe_mark_as_complete(process, opts) do
     if opts[:completed?] || opts[:completed] do
       now = DateTime.utc_now() |> DateTime.to_unix(:millisecond)
 
@@ -152,7 +152,7 @@ defmodule Test.Setup.Process do
       |> Process.update(changes)
       |> DB.update!()
 
-      Svc.Process.fetch!(by_id: process.id)
+      Svc.Process.fetch!(process.server_id, by_id: process.id)
     end)
   end
 end

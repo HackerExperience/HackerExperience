@@ -11,7 +11,9 @@ defmodule Game.Services.NetworkConnection do
       by_server_id: {:one, {:network_connections, :by_server_id}}
     ]
 
-    Core.Fetch.query(filter_params, opts, filters)
+    Core.with_context(:universe, :read, fn ->
+      Core.Fetch.query(filter_params, opts, filters)
+    end)
   end
 
   def fetch!(filter_params, opts \\ []) do

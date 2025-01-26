@@ -27,7 +27,9 @@ defmodule Game.Services.Entity do
         by_id: {:one, {:entities, :fetch}}
       ]
 
-    Core.Fetch.query(filter_params, opts, filters)
+    Core.with_context(:universe, :read, fn ->
+      Core.Fetch.query(filter_params, opts, filters)
+    end)
   end
 
   def fetch!(filter_params, opts \\ []) do

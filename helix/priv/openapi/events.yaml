@@ -21,8 +21,8 @@ components:
     IdxGateway:
       type: object
       required:
-        - tunnels
         - logs
+        - tunnels
         - nip
         - id
       properties:
@@ -30,14 +30,14 @@ components:
           type: integer
         nip:
           type: string
-        logs:
-          type: array
-          items:
-            $ref: '#/components/schemas/IdxLog'
         tunnels:
           type: array
           items:
             $ref: '#/components/schemas/IdxTunnel'
+        logs:
+          type: array
+          items:
+            $ref: '#/components/schemas/IdxLog'
     IdxLog:
       type: object
       required:
@@ -54,20 +54,20 @@ components:
     IdxPlayer:
       type: object
       required:
-        - endpoints
-        - gateways
         - mainframe_id
+        - gateways
+        - endpoints
       properties:
-        mainframe_id:
-          type: integer
-        gateways:
-          type: array
-          items:
-            $ref: '#/components/schemas/IdxGateway'
         endpoints:
           type: array
           items:
             $ref: '#/components/schemas/IdxEndpoint'
+        gateways:
+          type: array
+          items:
+            $ref: '#/components/schemas/IdxGateway'
+        mainframe_id:
+          type: integer
     IdxTunnel:
       type: object
       required:
@@ -81,6 +81,72 @@ components:
           type: string
         source_nip:
           type: string
+    file_delete_failed:
+      type: object
+      required:
+        - process_id
+        - reason
+      properties:
+        reason:
+          type: string
+        process_id:
+          type: integer
+    file_deleted:
+      type: object
+      required:
+        - process_id
+        - file_id
+      properties:
+        file_id:
+          type: integer
+        process_id:
+          type: integer
+    file_install_failed:
+      type: object
+      required:
+        - process_id
+        - reason
+      properties:
+        reason:
+          type: string
+        process_id:
+          type: integer
+    file_installed:
+      type: object
+      required:
+        - memory_usage
+        - process_id
+        - installation_id
+        - file_name
+      properties:
+        file_name:
+          type: string
+        installation_id:
+          type: integer
+        process_id:
+          type: integer
+        memory_usage:
+          type: integer
+    file_transfer_failed:
+      type: object
+      required:
+        - process_id
+        - reason
+      properties:
+        reason:
+          type: string
+        process_id:
+          type: integer
+    file_transferred:
+      type: object
+      required:
+        - file_id
+        - process_id
+      properties:
+        process_id:
+          type: integer
+        file_id:
+          type: integer
     index_requested:
       type: object
       required:
@@ -88,6 +154,33 @@ components:
       properties:
         player:
           $ref: '#/components/schemas/IdxPlayer'
+    installation_uninstall_failed:
+      type: object
+      required:
+        - process_id
+        - reason
+      properties:
+        reason:
+          type: string
+        process_id:
+          type: integer
+    installation_uninstalled:
+      type: object
+      required:
+        - process_id
+        - installation_id
+      properties:
+        installation_id:
+          type: integer
+        process_id:
+          type: integer
+    process_completed:
+      type: object
+      required:
+        - process_id
+      properties:
+        process_id:
+          type: integer
     process_created:
       type: object
       required:
@@ -98,6 +191,16 @@ components:
           type: integer
         type:
           type: string
+    process_killed:
+      type: object
+      required:
+        - process_id
+        - reason
+      properties:
+        reason:
+          type: string
+        process_id:
+          type: integer
     tunnel_created:
       type: object
       required:

@@ -17,6 +17,8 @@ defmodule Test.SetupTest do
 
   describe "Setup.player_lite/1" do
     test "creates lite version (no shards)" do
+      with_random_autoincrement()
+
       %{player: player, entity: entity} = Setup.player_lite()
       assert player.id.id == entity.id.id
 

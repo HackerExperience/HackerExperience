@@ -1,14 +1,14 @@
 defmodule Game.Events.Network.TunnelCreated do
   use Core.Event.Definition
   alias Core.{ID, NIP}
-  alias Game.{Index, Player, Server, Tunnel}
+  alias Game.{Index, Entity, Server, Tunnel}
   alias Game.Services, as: Svc
 
-  defstruct [:tunnel, :player_id, :gateway_id, :endpoint_id]
+  defstruct [:tunnel, :entity_id, :gateway_id, :endpoint_id]
 
   @type t :: %__MODULE__{
           tunnel: Tunnel.t(),
-          player_id: Player.id(),
+          entity_id: Entity.id(),
           gateway_id: Server.id(),
           endpoint_id: Server.id()
         }
@@ -17,13 +17,13 @@ defmodule Game.Events.Network.TunnelCreated do
 
   def new(
         %Tunnel{} = tunnel,
-        %Player.ID{} = player_id,
+        %Entity.ID{} = entity_id,
         %Server.ID{} = gateway_id,
         %Server.ID{} = endpoint_id
       ) do
     %__MODULE__{
       tunnel: tunnel,
-      player_id: player_id,
+      entity_id: entity_id,
       gateway_id: gateway_id,
       endpoint_id: endpoint_id
     }
@@ -47,11 +47,11 @@ defmodule Game.Events.Network.TunnelCreated do
       )
     end
 
-    def generate_payload(%{data: %{tunnel: tunnel, player_id: player_id}}) do
+    def generate_payload(%{data: %{tunnel: tunnel, entity_id: entity_id}}) do
       endpoint_id = Svc.NetworkConnection.fetch!(by_nip: tunnel.target_nip).server_id
 
       index =
-        player_id
+        entity_id
         |> Index.Server.endpoint_index(endpoint_id, tunnel.target_nip)
         |> Index.Server.render_endpoint_index()
 
@@ -67,8 +67,8 @@ defmodule Game.Events.Network.TunnelCreated do
       {:ok, payload}
     end
 
-    def whom_to_publish(%{data: %{player_id: player_id}}),
-      do: %{player: player_id}
+    def whom_to_publish(%{data: %{entity_id: entity_id}}),
+      do: %{player: entity_id}
   end
 
   defmodule Loggable do
@@ -76,14 +76,14 @@ defmodule Game.Events.Network.TunnelCreated do
 
     def log_map(event) do
       %{
-        entity_id: event.data.player_id,
-        gateway_id: event.data.gateway_id,
-        endpoint_id: event.data.endpoint_id,
+        entity_id: event.data.entity_id,
+        target_id: event.data.endpoint_id,
         tunnel_id: event.data.tunnel.id,
-        type_gateway: :remote_login_gateway,
-        data_gateway: %{nip: "$access_point"},
-        type_endpoint: :remote_login_endpoint,
-        data_endpoint: %{nip: "$exit_node"}
+        type: :server_login,
+        data: %{
+          gateway: %{nip: "$access_point"},
+          endpoint: %{nip: "$exit_node"}
+        }
       }
     end
   end

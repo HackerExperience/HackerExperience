@@ -2,14 +2,22 @@
 
 
 module API.Game.Json exposing
-    ( encodeGenericBadRequest, encodeGenericBadRequestResponse, encodeGenericError, encodeGenericErrorResponse
-    , encodeGenericUnauthorizedResponse, encodePlayerSyncInput, encodePlayerSyncOkResponse
-    , encodePlayerSyncOutput, encodePlayerSyncRequest, encodeServerLoginInput, encodeServerLoginOkResponse
-    , encodeServerLoginOutput, encodeServerLoginRequest
+    ( encodeFileDeleteInput, encodeFileDeleteOkResponse, encodeFileDeleteOutput, encodeFileDeleteRequest
+    , encodeFileInstallInput, encodeFileInstallOkResponse, encodeFileInstallOutput, encodeFileInstallRequest
+    , encodeFileTransferInput, encodeFileTransferOkResponse, encodeFileTransferOutput, encodeFileTransferRequest
+    , encodeGenericBadRequest, encodeGenericBadRequestResponse, encodeGenericError, encodeGenericErrorResponse
+    , encodeGenericUnauthorizedResponse, encodeInstallationUninstallInput, encodeInstallationUninstallOkResponse
+    , encodeInstallationUninstallOutput, encodeInstallationUninstallRequest, encodePlayerSyncInput
+    , encodePlayerSyncOkResponse, encodePlayerSyncOutput, encodePlayerSyncRequest, encodeServerLoginInput
+    , encodeServerLoginOkResponse, encodeServerLoginOutput, encodeServerLoginRequest
+    , decodeFileDeleteInput, decodeFileDeleteOkResponse, decodeFileDeleteOutput, decodeFileDeleteRequest
+    , decodeFileInstallInput, decodeFileInstallOkResponse, decodeFileInstallOutput, decodeFileInstallRequest
+    , decodeFileTransferInput, decodeFileTransferOkResponse, decodeFileTransferOutput, decodeFileTransferRequest
     , decodeGenericBadRequest, decodeGenericBadRequestResponse, decodeGenericError, decodeGenericErrorResponse
-    , decodeGenericUnauthorizedResponse, decodePlayerSyncInput, decodePlayerSyncOkResponse
-    , decodePlayerSyncOutput, decodePlayerSyncRequest, decodeServerLoginInput, decodeServerLoginOkResponse
-    , decodeServerLoginOutput, decodeServerLoginRequest
+    , decodeGenericUnauthorizedResponse, decodeInstallationUninstallInput, decodeInstallationUninstallOkResponse
+    , decodeInstallationUninstallOutput, decodeInstallationUninstallRequest, decodePlayerSyncInput
+    , decodePlayerSyncOkResponse, decodePlayerSyncOutput, decodePlayerSyncRequest, decodeServerLoginInput
+    , decodeServerLoginOkResponse, decodeServerLoginOutput, decodeServerLoginRequest
     )
 
 {-|
@@ -17,18 +25,26 @@ module API.Game.Json exposing
 
 ## Encoders
 
+@docs encodeFileDeleteInput, encodeFileDeleteOkResponse, encodeFileDeleteOutput, encodeFileDeleteRequest
+@docs encodeFileInstallInput, encodeFileInstallOkResponse, encodeFileInstallOutput, encodeFileInstallRequest
+@docs encodeFileTransferInput, encodeFileTransferOkResponse, encodeFileTransferOutput, encodeFileTransferRequest
 @docs encodeGenericBadRequest, encodeGenericBadRequestResponse, encodeGenericError, encodeGenericErrorResponse
-@docs encodeGenericUnauthorizedResponse, encodePlayerSyncInput, encodePlayerSyncOkResponse
-@docs encodePlayerSyncOutput, encodePlayerSyncRequest, encodeServerLoginInput, encodeServerLoginOkResponse
-@docs encodeServerLoginOutput, encodeServerLoginRequest
+@docs encodeGenericUnauthorizedResponse, encodeInstallationUninstallInput, encodeInstallationUninstallOkResponse
+@docs encodeInstallationUninstallOutput, encodeInstallationUninstallRequest, encodePlayerSyncInput
+@docs encodePlayerSyncOkResponse, encodePlayerSyncOutput, encodePlayerSyncRequest, encodeServerLoginInput
+@docs encodeServerLoginOkResponse, encodeServerLoginOutput, encodeServerLoginRequest
 
 
 ## Decoders
 
+@docs decodeFileDeleteInput, decodeFileDeleteOkResponse, decodeFileDeleteOutput, decodeFileDeleteRequest
+@docs decodeFileInstallInput, decodeFileInstallOkResponse, decodeFileInstallOutput, decodeFileInstallRequest
+@docs decodeFileTransferInput, decodeFileTransferOkResponse, decodeFileTransferOutput, decodeFileTransferRequest
 @docs decodeGenericBadRequest, decodeGenericBadRequestResponse, decodeGenericError, decodeGenericErrorResponse
-@docs decodeGenericUnauthorizedResponse, decodePlayerSyncInput, decodePlayerSyncOkResponse
-@docs decodePlayerSyncOutput, decodePlayerSyncRequest, decodeServerLoginInput, decodeServerLoginOkResponse
-@docs decodeServerLoginOutput, decodeServerLoginRequest
+@docs decodeGenericUnauthorizedResponse, decodeInstallationUninstallInput, decodeInstallationUninstallOkResponse
+@docs decodeInstallationUninstallOutput, decodeInstallationUninstallRequest, decodePlayerSyncInput
+@docs decodePlayerSyncOkResponse, decodePlayerSyncOutput, decodePlayerSyncRequest, decodeServerLoginInput
+@docs decodeServerLoginOkResponse, decodeServerLoginOutput, decodeServerLoginRequest
 
 -}
 
@@ -107,6 +123,26 @@ encodePlayerSyncInput rec =
         )
 
 
+decodeInstallationUninstallOutput : Json.Decode.Decoder API.Game.Types.InstallationUninstallOutput
+decodeInstallationUninstallOutput =
+    Json.Decode.succeed {}
+
+
+encodeInstallationUninstallOutput : API.Game.Types.InstallationUninstallOutput -> Json.Encode.Value
+encodeInstallationUninstallOutput rec =
+    Json.Encode.object []
+
+
+decodeInstallationUninstallInput : Json.Decode.Decoder API.Game.Types.InstallationUninstallInput
+decodeInstallationUninstallInput =
+    Json.Decode.succeed {}
+
+
+encodeInstallationUninstallInput : API.Game.Types.InstallationUninstallInput -> Json.Encode.Value
+encodeInstallationUninstallInput rec =
+    Json.Encode.object []
+
+
 decodeGenericError : Json.Decode.Decoder API.Game.Types.GenericError
 decodeGenericError =
     Json.Decode.succeed
@@ -159,6 +195,89 @@ encodeGenericBadRequest rec =
         )
 
 
+decodeFileTransferOutput : Json.Decode.Decoder API.Game.Types.FileTransferOutput
+decodeFileTransferOutput =
+    Json.Decode.succeed {}
+
+
+encodeFileTransferOutput : API.Game.Types.FileTransferOutput -> Json.Encode.Value
+encodeFileTransferOutput rec =
+    Json.Encode.object []
+
+
+decodeFileTransferInput : Json.Decode.Decoder API.Game.Types.FileTransferInput
+decodeFileTransferInput =
+    Json.Decode.succeed
+        (\transfer_type tunnel_id ->
+            { transfer_type = transfer_type, tunnel_id = tunnel_id }
+        )
+        |> OpenApi.Common.jsonDecodeAndMap
+            (Json.Decode.field "transfer_type" Json.Decode.string)
+        |> OpenApi.Common.jsonDecodeAndMap
+            (Json.Decode.field "tunnel_id" (Json.Decode.map TunnelID Json.Decode.int))
+
+
+encodeFileTransferInput : API.Game.Types.FileTransferInput -> Json.Encode.Value
+encodeFileTransferInput rec =
+    Json.Encode.object
+        [ ( "transfer_type", Json.Encode.string rec.transfer_type )
+        , ( "tunnel_id", Json.Encode.int (TunnelID.toValue rec.tunnel_id) )
+        ]
+
+
+decodeFileInstallOutput : Json.Decode.Decoder API.Game.Types.FileInstallOutput
+decodeFileInstallOutput =
+    Json.Decode.succeed {}
+
+
+encodeFileInstallOutput : API.Game.Types.FileInstallOutput -> Json.Encode.Value
+encodeFileInstallOutput rec =
+    Json.Encode.object []
+
+
+decodeFileInstallInput : Json.Decode.Decoder API.Game.Types.FileInstallInput
+decodeFileInstallInput =
+    Json.Decode.succeed {}
+
+
+encodeFileInstallInput : API.Game.Types.FileInstallInput -> Json.Encode.Value
+encodeFileInstallInput rec =
+    Json.Encode.object []
+
+
+decodeFileDeleteOutput : Json.Decode.Decoder API.Game.Types.FileDeleteOutput
+decodeFileDeleteOutput =
+    Json.Decode.succeed {}
+
+
+encodeFileDeleteOutput : API.Game.Types.FileDeleteOutput -> Json.Encode.Value
+encodeFileDeleteOutput rec =
+    Json.Encode.object []
+
+
+decodeFileDeleteInput : Json.Decode.Decoder API.Game.Types.FileDeleteInput
+decodeFileDeleteInput =
+    Json.Decode.succeed
+        (\tunnel_id -> { tunnel_id = tunnel_id })
+        |> OpenApi.Common.jsonDecodeAndMap
+            (OpenApi.Common.decodeOptionalField
+                "tunnel_id"
+                (Json.Decode.map TunnelID Json.Decode.int)
+            )
+
+
+encodeFileDeleteInput : API.Game.Types.FileDeleteInput -> Json.Encode.Value
+encodeFileDeleteInput rec =
+    Json.Encode.object
+        (List.filterMap
+            Basics.identity
+            [ Maybe.map
+                (\mapUnpack -> ( "tunnel_id", Json.Encode.int (TunnelID.toValue mapUnpack) ))
+                rec.tunnel_id
+            ]
+        )
+
+
 decodeServerLoginOkResponse : Json.Decode.Decoder API.Game.Types.ServerLoginOkResponse
 decodeServerLoginOkResponse =
     Json.Decode.succeed
@@ -189,6 +308,23 @@ decodePlayerSyncOkResponse =
 encodePlayerSyncOkResponse : API.Game.Types.PlayerSyncOkResponse -> Json.Encode.Value
 encodePlayerSyncOkResponse rec =
     Json.Encode.object [ ( "data", encodePlayerSyncOutput rec.data ) ]
+
+
+decodeInstallationUninstallOkResponse : Json.Decode.Decoder API.Game.Types.InstallationUninstallOkResponse
+decodeInstallationUninstallOkResponse =
+    Json.Decode.succeed
+        (\data -> { data = data })
+        |> OpenApi.Common.jsonDecodeAndMap
+            (Json.Decode.field
+                "data"
+                decodeInstallationUninstallOutput
+            )
+
+
+encodeInstallationUninstallOkResponse : API.Game.Types.InstallationUninstallOkResponse -> Json.Encode.Value
+encodeInstallationUninstallOkResponse rec =
+    Json.Encode.object
+        [ ( "data", encodeInstallationUninstallOutput rec.data ) ]
 
 
 decodeGenericUnauthorizedResponse : Json.Decode.Decoder API.Game.Types.GenericUnauthorizedResponse
@@ -233,6 +369,54 @@ encodeGenericBadRequestResponse rec =
     Json.Encode.object [ ( "error", encodeGenericBadRequest rec.error ) ]
 
 
+decodeFileTransferOkResponse : Json.Decode.Decoder API.Game.Types.FileTransferOkResponse
+decodeFileTransferOkResponse =
+    Json.Decode.succeed
+        (\data -> { data = data })
+        |> OpenApi.Common.jsonDecodeAndMap
+            (Json.Decode.field
+                "data"
+                decodeFileTransferOutput
+            )
+
+
+encodeFileTransferOkResponse : API.Game.Types.FileTransferOkResponse -> Json.Encode.Value
+encodeFileTransferOkResponse rec =
+    Json.Encode.object [ ( "data", encodeFileTransferOutput rec.data ) ]
+
+
+decodeFileInstallOkResponse : Json.Decode.Decoder API.Game.Types.FileInstallOkResponse
+decodeFileInstallOkResponse =
+    Json.Decode.succeed
+        (\data -> { data = data })
+        |> OpenApi.Common.jsonDecodeAndMap
+            (Json.Decode.field
+                "data"
+                decodeFileInstallOutput
+            )
+
+
+encodeFileInstallOkResponse : API.Game.Types.FileInstallOkResponse -> Json.Encode.Value
+encodeFileInstallOkResponse rec =
+    Json.Encode.object [ ( "data", encodeFileInstallOutput rec.data ) ]
+
+
+decodeFileDeleteOkResponse : Json.Decode.Decoder API.Game.Types.FileDeleteOkResponse
+decodeFileDeleteOkResponse =
+    Json.Decode.succeed
+        (\data -> { data = data })
+        |> OpenApi.Common.jsonDecodeAndMap
+            (Json.Decode.field
+                "data"
+                decodeFileDeleteOutput
+            )
+
+
+encodeFileDeleteOkResponse : API.Game.Types.FileDeleteOkResponse -> Json.Encode.Value
+encodeFileDeleteOkResponse rec =
+    Json.Encode.object [ ( "data", encodeFileDeleteOutput rec.data ) ]
+
+
 decodeServerLoginRequest : Json.Decode.Decoder API.Game.Types.ServerLoginRequest
 decodeServerLoginRequest =
     decodeServerLoginInput
@@ -251,3 +435,43 @@ decodePlayerSyncRequest =
 encodePlayerSyncRequest : API.Game.Types.PlayerSyncRequest -> Json.Encode.Value
 encodePlayerSyncRequest =
     encodePlayerSyncInput
+
+
+decodeInstallationUninstallRequest : Json.Decode.Decoder API.Game.Types.InstallationUninstallRequest
+decodeInstallationUninstallRequest =
+    decodeInstallationUninstallInput
+
+
+encodeInstallationUninstallRequest : API.Game.Types.InstallationUninstallRequest -> Json.Encode.Value
+encodeInstallationUninstallRequest =
+    encodeInstallationUninstallInput
+
+
+decodeFileTransferRequest : Json.Decode.Decoder API.Game.Types.FileTransferRequest
+decodeFileTransferRequest =
+    decodeFileTransferInput
+
+
+encodeFileTransferRequest : API.Game.Types.FileTransferRequest -> Json.Encode.Value
+encodeFileTransferRequest =
+    encodeFileTransferInput
+
+
+decodeFileInstallRequest : Json.Decode.Decoder API.Game.Types.FileInstallRequest
+decodeFileInstallRequest =
+    decodeFileInstallInput
+
+
+encodeFileInstallRequest : API.Game.Types.FileInstallRequest -> Json.Encode.Value
+encodeFileInstallRequest =
+    encodeFileInstallInput
+
+
+decodeFileDeleteRequest : Json.Decode.Decoder API.Game.Types.FileDeleteRequest
+decodeFileDeleteRequest =
+    decodeFileDeleteInput
+
+
+encodeFileDeleteRequest : API.Game.Types.FileDeleteRequest -> Json.Encode.Value
+encodeFileDeleteRequest =
+    encodeFileDeleteInput

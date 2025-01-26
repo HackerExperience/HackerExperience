@@ -4,6 +4,7 @@ CREATE TABLE logs (
   id INTEGER,
   revision_id INTEGER NOT NULL,
   type TEXT NOT NULL,
+  direction TEXT NOT NULL,
   data TEXT NOT NULL,
   inserted_at TEXT NOT NULL,
   UNIQUE (id, revision_id)

@@ -41,7 +41,8 @@ defmodule Game.Endpoint.Log.EditTest do
         assert process.type == :log_edit
         assert process.server_id == gateway.id
         assert process.entity_id.id == player.id.id
-        assert process.data.log_type == :local_login
+        assert process.data.log_type == :server_login
+        assert process.data.log_direction == :self
         assert process.data.log_data == %{}
         assert process.registry.tgt_log_id == log.id
       end)

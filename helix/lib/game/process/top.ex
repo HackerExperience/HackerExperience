@@ -12,7 +12,6 @@ defmodule Game.Process.TOP do
 
   require Logger
 
-  alias Feeb.DB
   alias Core.Event
   alias Game.Services, as: Svc
   alias Game.Process.{Executable, Resources, Signalable}
@@ -27,7 +26,7 @@ defmodule Game.Process.TOP do
              server_id: Server.id(),
              entity_id: Entity.id(),
              server_resources: Resources.t(),
-             next: Process.t() | nil
+             next: {Process.t(), time_left_ms :: integer, reference} | nil
            }
 
   @typedocp "GenServer state before the bootstrap phase"
@@ -58,6 +57,7 @@ defmodule Game.Process.TOP do
            | {:resume, Process.id()}
            | {:pause, Process.id()}
            | {:renice, Process.id()}
+           | {:killed, Process.id()}
 
   # Public
 
@@ -70,7 +70,7 @@ defmodule Game.Process.TOP do
 
     :universe
     |> Core.with_context(:read, fn ->
-      DB.all({:processes_registry, :servers_with_processes}, [], format: :type)
+      Svc.Process.list_registry(query: :servers_with_processes)
     end)
     |> Enum.each(fn %{server_id: server_id} ->
       {:ok, _} = TOP.Registry.fetch_or_create({server_id, universe, shard_id})
@@ -129,6 +129,18 @@ defmodule Game.Process.TOP do
     |> GenServer.call({:renice, process, priority})
   end
 
+  @doc """
+  Delivers the given Signal to the given Process, performing whatever action was returned by the
+  process' Signalable.
+  """
+  @spec signal(Process.t(), Signalable.signal(), term) ::
+          {:ok, Signalable.action()}
+  def signal(%Process{server_id: server_id} = process, signal, xargs \\ []) do
+    server_id
+    |> TOP.Registry.fetch!()
+    |> GenServer.call({:signal, process, signal, xargs})
+  end
+
   @spec on_server_resources_changed(Server.id()) ::
           :ok
   def on_server_resources_changed(server_id) do
@@ -144,8 +156,7 @@ defmodule Game.Process.TOP do
     Elixir.Process.put(:helix_universe, universe)
     Elixir.Process.put(:helix_universe_shard_id, universe_shard_id)
 
-    relay = Event.Relay.new(:top, %{server_id: server_id})
-    Elixir.Process.put(:helix_event_relay, relay)
+    Event.Relay.set(:top, %{server_id: server_id})
 
     data = %{
       server_id: server_id,
@@ -167,9 +178,7 @@ defmodule Game.Process.TOP do
           {state, [Process.t()]}
   defp fetch_initial_data(state) do
     {processes, meta} =
-      Core.with_context(:server, state.server_id, :read, fn ->
-        {DB.all(Process), Svc.Server.get_meta(state.server_id)}
-      end)
+      {Svc.Process.list(state.server_id, query: :all), Svc.Server.get_meta(state.server_id)}
 
     state =
       state
@@ -184,12 +193,7 @@ defmodule Game.Process.TOP do
            Executable.execute(process_mod, state.server_id, entity_id, params, meta),
          %{dropped: [], state: new_state} <-
            run_schedule(state, state.server_id, :insert, creation_events) do
-      new_process =
-        Core.with_context(:server, state.server_id, :read, fn ->
-          # TODO: Process Service should be responsible for handling context
-          Svc.Process.fetch!(by_id: new_process.id)
-        end)
-
+      new_process = Svc.Process.fetch!(state.server_id, by_id: new_process.id)
       {:reply, {:ok, new_process}, new_state}
     else
       %{dropped: [_ | _], state: new_state} ->
@@ -205,14 +209,7 @@ defmodule Game.Process.TOP do
     with {:signal_action, :pause} <- {:signal_action, Signalable.sigstop(process)},
          {:ok, _, [process_paused_event]} <- Svc.Process.pause(process) do
       result = run_schedule(state, state.server_id, {:pause, process.id}, [process_paused_event])
-
-      # Fetch from disk the process we just paused because its allocation has changed
-      paused_process =
-        Core.with_context(:server, state.server_id, :read, fn ->
-          Svc.Process.fetch!(by_id: process.id)
-        end)
-
-      {:reply, {:ok, paused_process}, result.state}
+      {:reply, {:ok, refetch_process!(process)}, result.state}
     else
       {:signal_action, :noop} ->
         {:reply, {:error, :rejected}, state}
@@ -228,12 +225,7 @@ defmodule Game.Process.TOP do
          {:ok, _, [process_resumed_event]} <- Svc.Process.resume(process),
          %{dropped: [], paused: [], state: new_state} <-
            run_schedule(state, state.server_id, {:resume, process.id}, [process_resumed_event]) do
-      resumed_process =
-        Core.with_context(:server, state.server_id, :read, fn ->
-          Svc.Process.fetch!(by_id: process.id)
-        end)
-
-      {:reply, {:ok, resumed_process}, new_state}
+      {:reply, {:ok, refetch_process!(process)}, new_state}
     else
       {:signal_action, :noop} ->
         {:reply, {:error, :rejected}, state}
@@ -263,6 +255,27 @@ defmodule Game.Process.TOP do
     end
   end
 
+  def handle_call({:signal, process, signal, xargs}, _from, state) do
+    action = apply(Signalable, signal, [process, xargs])
+
+    {should_reschedule?, reschedule_reason, signal_events} =
+      case action do
+        :delete ->
+          {:ok, process_killed_event} = Svc.Process.delete(process, :killed)
+          {true, {:killed, process.id}, [process_killed_event]}
+
+        :noop ->
+          {false, nil, []}
+      end
+
+    if should_reschedule? do
+      result = run_schedule(state, state.server_id, reschedule_reason, signal_events)
+      {:reply, {:ok, action}, result.state}
+    else
+      {:reply, {:ok, action}, state}
+    end
+  end
+
   def handle_call({:on_server_resources_changed}, _from, state) do
     {state, processes} = fetch_initial_data(state)
     schedule = run_schedule(state, processes, :resources_changed)
@@ -276,12 +289,7 @@ defmodule Game.Process.TOP do
       # Process completed and we are supposed to delete it
       {true, :delete} ->
         {:ok, process_completed_event} = Svc.Process.delete(process, :completed)
-
-        remaining_processes =
-          Core.with_context(:server, state.server_id, :read, fn ->
-            # TODO: Move to Svc layer
-            DB.all(Process)
-          end)
+        remaining_processes = Svc.Process.list(state.server_id, query: :all)
 
         schedule =
           run_schedule(state, remaining_processes, :completion, [process_completed_event])
@@ -300,6 +308,14 @@ defmodule Game.Process.TOP do
     end
   end
 
+  def handle_info(:next_process_completed, %{next: nil} = state) do
+    # Under normal circumstances this won't happen, but it's theoretically possible there is a race
+    # condition where the timer finished before we could cancel it, and multiple processes were
+    # completed (or finished) at the same time, for instance due to a signal returning `:delete`.
+    # When that happens, just do nothing. We should be good.
+    {:noreply, state}
+  end
+
   # Reference from `Event.emit_async/1`; it's safe to ignore it
   def handle_info({_ref, {:event_result, _}}, state),
     do: {:noreply, state}
@@ -316,11 +332,7 @@ defmodule Game.Process.TOP do
   defp run_schedule(state, processes_or_server_id, reason, events \\ [])
 
   defp run_schedule(state, %Server.ID{} = server_id, reason, events) do
-    processes =
-      Core.with_context(:server, server_id, :read, fn ->
-        DB.all(Process)
-      end)
-
+    processes = Svc.Process.list(server_id, query: :all)
     run_schedule(state, processes, reason, events)
   end
 
@@ -369,7 +381,7 @@ defmodule Game.Process.TOP do
          process_killed_events = TOP.Scheduler.drop_processes(dropped_processes) do
       top_recalcado_event =
         if reason != :boot or modified_procs > 0 do
-          TOPRecalcadoEvent.new(server_id, processes)
+          TOPRecalcadoEvent.new(server_id, processes, reason)
         else
           # We don't need to emit the TOPRecalcadoEvent if this TOP just booted and nothing changed
           nil
@@ -498,9 +510,7 @@ defmodule Game.Process.TOP do
   end
 
   defp refetch_process!(%Process{id: process_id, server_id: server_id}) do
-    Core.with_context(:server, server_id, :read, fn ->
-      Svc.Process.fetch!(by_id: process_id)
-    end)
+    Svc.Process.fetch!(server_id, by_id: process_id)
   end
 
   defp with_registry(key) do

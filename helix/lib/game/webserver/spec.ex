@@ -27,6 +27,22 @@ defmodule Game.Webserver.Spec do
       {Endpoint.Server.Login, :post} => %{
         path: "/v1/server/{nip}/login/{target_nip}",
         responses: [200]
+      },
+      {Endpoint.File.Delete, :post} => %{
+        path: "/v1/server/{nip}/file/{file_id}/delete",
+        responses: [200]
+      },
+      {Endpoint.File.Install, :post} => %{
+        path: "/v1/server/{nip}/file/{file_id}/install",
+        responses: [200]
+      },
+      {Endpoint.File.Transfer, :post} => %{
+        path: "/v1/server/{nip}/file/{file_id}/transfer",
+        responses: [200]
+      },
+      {Endpoint.Installation.Uninstall, :post} => %{
+        path: "/v1/server/{nip}/installation/{installation_id}/uninstall",
+        responses: [200]
       }
     }
   end

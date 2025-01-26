@@ -40,7 +40,9 @@ defmodule Test.HTTPClient do
     header_name =
       if is_lobby_request(partial_url), do: "test-lobby-shard-id", else: "test-game-shard-id"
 
-    put_header(req, header_name, "#{Keyword.fetch!(opts, :shard_id)}")
+    shard_id = opts[:shard_id] || Process.get(:helix_universe_shard_id) || raise "Missing shard_id"
+
+    put_header(req, header_name, "#{shard_id}")
   end
 
   defp add_authorization_header(req, opts) do
@@ -71,6 +73,17 @@ defmodule Test.HTTPClient do
 
   # defp parse_response({_, %Req.Response{status: status, body: ""}}),
   #   do: %{status: status, raw_body: "", body: nil, data: nil, error: nil} |> wrap_response(status)
+
+  defp parse_response({_, %Req.Response{status: 404, body: ""}}) do
+    %{
+      status: 404,
+      raw_body: "",
+      body: nil,
+      data: nil,
+      error: nil
+    }
+    |> wrap_response(404)
+  end
 
   defp parse_response({_, %Req.Response{status: status, body: raw_body}}) when is_map(raw_body) do
     body = Renatils.Map.atomify_keys(raw_body)
