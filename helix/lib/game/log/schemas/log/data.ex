@@ -34,7 +34,7 @@ defmodule Game.Log.Data do
     defstruct [:file_name, :file_ext, :file_version]
 
     def new(%{file: %File{} = file}),
-      do: %__MODULE__{file_name: "todo", file_ext: "todo", file_version: file.version}
+      do: %__MODULE__{file_name: file.name, file_ext: "todo", file_version: file.version}
 
     def dump!(%__MODULE__{} = data),
       do: Map.from_struct(data)
@@ -49,7 +49,7 @@ defmodule Game.Log.Data do
     defstruct [:nip, :file_name, :file_ext, :file_version]
 
     def new(%{nip: %NIP{} = nip, file: %File{} = file}),
-      do: %__MODULE__{nip: nip, file_name: "todo", file_ext: "todo", file_version: file.version}
+      do: %__MODULE__{nip: nip, file_name: file.name, file_ext: "todo", file_version: file.version}
 
     def dump!(%__MODULE__{} = data) do
       data

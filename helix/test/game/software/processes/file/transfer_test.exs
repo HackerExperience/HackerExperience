@@ -250,7 +250,7 @@ defmodule Game.Process.File.TransferTest do
       assert log.type == expected_log_type
       assert log.direction == :to_ap
       assert log.data.nip == endp_nip
-      assert log.data.file_name == "todo"
+      assert log.data.file_name == file.name
       assert log.data.file_ext == "todo"
       assert log.data.file_version == file.version
 
@@ -259,7 +259,7 @@ defmodule Game.Process.File.TransferTest do
       assert log.type == expected_log_type
       assert log.direction == :from_en
       assert log.data.nip == gtw_nip
-      assert log.data.file_name == "todo"
+      assert log.data.file_name == file.name
       assert log.data.file_ext == "todo"
       assert log.data.file_version == file.version
     end
@@ -314,7 +314,7 @@ defmodule Game.Process.File.TransferTest do
   end
 
   defp assert_transferred_files_equal(previous_file, new_file) do
-    copied_attributes = [:type, :version, :size]
+    copied_attributes = [:type, :name, :version, :size]
     assert Map.take(previous_file, copied_attributes) == Map.take(new_file, copied_attributes)
   end
 end

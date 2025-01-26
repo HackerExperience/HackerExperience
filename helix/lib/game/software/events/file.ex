@@ -41,12 +41,11 @@ defmodule Game.Events.File do
         )
       end
 
-      def generate_payload(%{data: %{process: process, file: _file, installation: installation}}) do
+      def generate_payload(%{data: %{process: process, file: file, installation: installation}}) do
         payload =
           %{
             installation_id: installation.id,
-            # file_name: file.name,
-            file_name: "todo",
+            file_name: file.name,
             memory_usage: installation.memory_usage,
             process_id: process.id
           }

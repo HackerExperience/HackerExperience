@@ -17,6 +17,7 @@ defmodule Game.File do
   @schema [
     {:id, ID.ref(:file_id)},
     {:type, {:enum, values: @file_types}},
+    {:name, :string},
     {:version, :integer},
     {:size, :integer},
     {:path, :string},

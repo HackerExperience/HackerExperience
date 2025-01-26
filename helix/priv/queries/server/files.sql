@@ -4,8 +4,8 @@
 
 -- :__insert
 INSERT INTO files (
-  type, version, size, path, inserted_at, updated_at
+  type, name, version, size, path, inserted_at, updated_at
   )
 VALUES
-  (?, ?, ?, ?, ?, ?)
+  (?, ?, ?, ?, ?, ?, ?)
 RETURNING *;

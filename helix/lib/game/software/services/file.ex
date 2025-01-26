@@ -54,6 +54,7 @@ defmodule Game.Services.File do
 
     %{
       type: file.type,
+      name: file.name,
       version: file.version,
       size: file.size,
       path: "/"

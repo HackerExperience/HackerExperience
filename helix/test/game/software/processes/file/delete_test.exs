@@ -162,7 +162,7 @@ defmodule Game.Process.File.DeleteTest do
       assert log.type == :file_deleted
       assert log.direction == :to_ap
       assert log.data.nip == ap_nip
-      assert log.data.file_name == "todo"
+      assert log.data.file_name == file.name
       assert log.data.file_ext == "todo"
       assert log.data.file_version == file.version
 
@@ -185,7 +185,7 @@ defmodule Game.Process.File.DeleteTest do
       assert log.type == :file_deleted
       assert log.direction == :from_en
       assert log.data.nip == en_nip
-      assert log.data.file_name == "todo"
+      assert log.data.file_name == file.name
       assert log.data.file_ext == "todo"
       assert log.data.file_version == file.version
     end
