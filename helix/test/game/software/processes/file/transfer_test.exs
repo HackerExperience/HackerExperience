@@ -145,6 +145,54 @@ defmodule Game.Process.File.TransferTest do
     end
   end
 
+  describe "Resourceable" do
+    test "download uses DLK resource dynamically" do
+      %{server: gateway, meta: %{resources: server_resources}} = Setup.server()
+
+      %{process: process, spec: %{file: file}} =
+        Setup.process(gateway.id, type: :file_transfer, spec: [transfer_type: :download])
+
+      DB.commit()
+
+      # Run the TOP and wait for an initial allocation on `process`
+      U.start_top(gateway.id, wait_for_recalcado: true)
+
+      # Fetch the process again so we can see what its allocated resources look like
+      process = Svc.Process.fetch!(gateway.id, by_id: process.id)
+
+      # Process is using 100% of the available DLK in the Server while not using any ULK
+      assert_decimal_eq(process.resources.allocated.dlk, server_resources.dlk)
+      assert_decimal_eq(process.resources.allocated.ulk, 0)
+
+      # Objective is the file.size (DLK)
+      assert_decimal_eq(process.resources.objective.dlk, file.size)
+      assert_decimal_eq(process.resources.objective.ulk, 0)
+    end
+
+    test "upload uses ULK resource dynamically" do
+      %{server: gateway, meta: %{resources: server_resources}} = Setup.server()
+
+      %{process: process, spec: %{file: file}} =
+        Setup.process(gateway.id, type: :file_transfer, spec: [transfer_type: :upload])
+
+      DB.commit()
+
+      # Run the TOP and wait for an initial allocation on `process`
+      U.start_top(gateway.id, wait_for_recalcado: true)
+
+      # Fetch the process again so we can see what its allocated resources look like
+      process = Svc.Process.fetch!(gateway.id, by_id: process.id)
+
+      # Process is using 100% of the available DLK in the Server while not using any ULK
+      assert_decimal_eq(process.resources.allocated.ulk, server_resources.ulk)
+      assert_decimal_eq(process.resources.allocated.dlk, 0)
+
+      # Objective is the file.size (ULK)
+      assert_decimal_eq(process.resources.objective.ulk, file.size)
+      assert_decimal_eq(process.resources.objective.dlk, 0)
+    end
+  end
+
   describe "E2E - Processable" do
     test "upon completion, transfers the file to the target server (download)", ctx do
       %{player: player, server: gateway} = Setup.player()

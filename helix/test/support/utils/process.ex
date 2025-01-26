@@ -42,6 +42,16 @@ defmodule Test.Utils.Process do
     TOP.on_boot({universe, shard_id})
   end
 
+  def start_top(%Server.ID{} = server_id, opts \\ []) do
+    {:ok, pid} = TOP.Registry.fetch_or_create(server_id)
+
+    if opts[:wait_for_recalcado] do
+      Test.Event.wait_events_on_server!(server_id, :top_recalcado)
+    end
+
+    pid
+  end
+
   @doc """
   Adds the given Tunnel to the Process as `src_tunnel_id`.
 

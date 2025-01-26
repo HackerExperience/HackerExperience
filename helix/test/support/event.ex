@@ -72,7 +72,8 @@ defmodule Test.Event do
     end
   end
 
-  def wait_events_on_server!(%Server.ID{} = server_id, event_name, count \\ 1) do
+  def wait_events_on_server!(%Server.ID{} = server_id, event_name, count \\ 1)
+      when is_atom(event_name) do
     wait_events!(
       filter: fn
         {_, s_id, _, _}, %{event: %{name: e_name}} ->

@@ -17,6 +17,7 @@ defmodule Test.Utils do
   defdelegate get_all_process_registries, to: U.Process
   defdelegate get_all_processes(server_id), to: U.Process
   defdelegate simulate_process_completion(process), to: U.Process
+  defdelegate start_top(server_id, opts \\ []), to: U.Process
 
   # Misc
   defdelegate sleep_on_ci(duration), to: U.CI

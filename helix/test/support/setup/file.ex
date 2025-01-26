@@ -53,7 +53,7 @@ defmodule Test.Setup.File do
       type: Kw.get(opts, :type, :log_editor),
       name: Kw.get(opts, :name, Random.uuid()),
       version: Kw.get(opts, :version, 10),
-      size: Kw.get(opts, :size, 1),
+      size: Kw.get(opts, :size, 100),
       path: Kw.get(opts, :path, "/")
     }
   end

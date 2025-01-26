@@ -91,20 +91,19 @@ defmodule Game.Process.File.Transfer do
   defmodule Resourceable do
     use Game.Process.Resourceable.Definition
 
-    # TODO: dlk/ulk
-    def dlk(_factors, _param, _meta) do
-      # TODO
-      5000
-    end
+    def dlk(_factors, %{transfer_type: :download}, %{file: file}), do: file.size
+    def dlk(_, %{transfer_type: :upload}, _), do: 0
+
+    def ulk(_factors, %{transfer_type: :upload}, %{file: file}), do: file.size
+    def ulk(_, %{transfer_type: :download}, _), do: 0
 
     def limit(_factors, _params, _meta) do
       # TODO: Query endpoint to figure out proper limits
       %{}
     end
 
-    # TODO dlk/ulk based on direction
     def dynamic(_, %{transfer_type: :download}, _), do: [:dlk]
-    def dynamic(_, %{transfer_type: :upload}, _), do: [:dlk]
+    def dynamic(_, %{transfer_type: :upload}, _), do: [:ulk]
 
     def static(_, _, _) do
       %{
