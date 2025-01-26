@@ -308,6 +308,14 @@ defmodule Game.Process.TOP do
     end
   end
 
+  def handle_info(:next_process_completed, %{next: nil} = state) do
+    # Under normal circumstances this won't happen, but it's theoretically possible there is a race
+    # condition where the timer finished before we could cancel it, and multiple processes were
+    # completed (or finished) at the same time, for instance due to a signal returning `:delete`.
+    # When that happens, just do nothing. We should be good.
+    {:noreply, state}
+  end
+
   # Reference from `Event.emit_async/1`; it's safe to ignore it
   def handle_info({_ref, {:event_result, _}}, state),
     do: {:noreply, state}
