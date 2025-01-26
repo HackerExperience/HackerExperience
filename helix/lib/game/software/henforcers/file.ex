@@ -91,6 +91,10 @@ defmodule Game.Henforcers.File do
   @typep transfer_type :: :download | :upload
 
   # TODO: Henforce space in disk
+  @doc """
+  Aggregator henforcing that the given Entity can transfer the given File within the context of the
+  given "transfer info".
+  """
   @spec can_transfer?(File.idt(), Entity.t(), {transfer_type, Server.t(), Server.t()}) ::
           {true, can_transfer_relay}
           | can_transfer_error

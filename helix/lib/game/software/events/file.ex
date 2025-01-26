@@ -260,7 +260,8 @@ defmodule Game.Events.File do
 
   defmodule Transferred do
     @moduledoc """
-    TODO
+    The FileTransferredEvent is emitted after a File has been transferred from one Server to
+    another. It is a direct result of the FileTransferProcess reaching completion.
     """
 
     use Core.Event.Definition
@@ -343,7 +344,9 @@ defmodule Game.Events.File do
 
   defmodule TransferFailed do
     @moduledoc """
-    TODO
+    The FileTransferFailed event is emitted when the attempt to transfer a File has failed. This may
+    happen during the execution of a FileTransferProcess or at its completion if the prerequisites
+    are not met.
     """
 
     use Core.Event.Definition
