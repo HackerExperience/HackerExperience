@@ -21,9 +21,17 @@ defmodule Game.Process.File.Transfer do
     |> Map.put(:transfer_type, String.to_existing_atom(raw.transfer_type))
   end
 
+  @doc """
+  Based on the `transfer_type`, identify what is the "target" Server, that is, the Server that will
+  receive the File being transferred.
+  """
+  def get_target_id(:download, gateway_id, _), do: gateway_id
+  def get_target_id(:upload, _, endpoint_id), do: endpoint_id
+
   defmodule Processable do
     use Game.Process.Processable.Definition
 
+    alias Game.Process.File.Transfer, as: FileTransferProcess
     alias Game.Events.File.Transferred, as: FileTransferredEvent
     alias Game.Events.File.TransferFailed, as: FileTransferFailedEvent
 
@@ -41,12 +49,7 @@ defmodule Game.Process.File.Transfer do
       # TODO: This should be done at a higher level (automatically for all Processable)
       Core.Event.Relay.set(process)
 
-      target_server_id =
-        case transfer_type do
-          :download -> gateway_id
-          :upload -> endpoint_id
-        end
-
+      target_server_id = FileTransferProcess.get_target_id(transfer_type, gateway_id, endpoint_id)
       Core.begin_context(:server, target_server_id, :write)
 
       with {true, %{entity: entity, gateway: gateway, endpoint: endpoint}} <-
@@ -78,6 +81,11 @@ defmodule Game.Process.File.Transfer do
 
   defmodule Signalable do
     use Game.Process.Signalable.Definition
+
+    @doc """
+    The File we are transferring was deleted; kill this process.
+    """
+    def on_sig_src_file_deleted(_, _), do: :delete
   end
 
   defmodule Resourceable do

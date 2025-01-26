@@ -145,7 +145,7 @@ defmodule Game.Process.File.TransferTest do
     end
   end
 
-  describe "E2E" do
+  describe "E2E - Processable" do
     test "upon completion, transfers the file to the target server (download)", ctx do
       %{player: player, server: gateway} = Setup.player()
 
@@ -218,6 +218,54 @@ defmodule Game.Process.File.TransferTest do
 
       # The files are essentially the same, minus the things expected to change after a transfer
       assert_transferred_files_equal(file, new_file)
+    end
+  end
+
+  describe "E2E - Signalable" do
+    test "process is killed if file being transferred gets deleted", ctx do
+      %{player: player, server: gateway} = Setup.player()
+
+      %{process: transfer_process, spec: %{file: file}} =
+        Setup.process(gateway.id, type: :file_transfer)
+
+      DB.commit()
+
+      target_nip = Svc.NetworkConnection.fetch!(by_server_id: file.server_id).nip
+
+      U.start_sse_listener(ctx, player, total_expected_events: 1)
+
+      # FileTransferProcess is running nicely
+      assert [_] = U.get_all_processes(gateway.id)
+
+      Core.begin_context(:universe, :write)
+
+      # Now we'll simulate a third party "other" deleting this File
+      %{entity: other_entity, nip: other_nip} = Setup.server()
+
+      # `other_server` has access to the Server where the File is and has visibility over the File
+      other_tunnel = Setup.tunnel!(source_nip: other_nip, target_nip: target_nip)
+      Setup.file_visibility!(other_entity.id, server_id: file.server_id, file_id: file.id)
+
+      # And now "other" can start a FileDeleteProcess
+      file_delete_process =
+        Setup.process!(file.server_id,
+          entity_id: other_entity.id,
+          type: :file_delete,
+          completed?: true,
+          spec: [file: file, tunnel: other_tunnel]
+        )
+
+      DB.commit()
+
+      U.simulate_process_completion(file_delete_process)
+
+      # Player eventually received a ProcessKilledEvent
+      process_killed_event = U.wait_sse_event!("process_killed")
+      assert process_killed_event.data.process_id == transfer_process.id.id
+      assert process_killed_event.data.reason == "killed"
+
+      # No more processes are running in the Gateway server
+      assert [] = U.get_all_processes(gateway.id)
     end
   end
 
