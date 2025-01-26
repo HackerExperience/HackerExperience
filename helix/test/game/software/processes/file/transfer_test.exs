@@ -219,6 +219,50 @@ defmodule Game.Process.File.TransferTest do
       # The files are essentially the same, minus the things expected to change after a transfer
       assert_transferred_files_equal(file, new_file)
     end
+
+    test "upon completion, generates the log entries accordingly" do
+      %{nip: gtw_nip, server: gateway, entity: entity} = Setup.server()
+      %{nip: endp_nip, server: endpoint} = Setup.server()
+      tunnel = Setup.tunnel!(source_nip: gtw_nip, target_nip: endp_nip)
+
+      %{process: process, spec: %{file: file}} =
+        Setup.process(gateway.id,
+          entity_id: entity.id,
+          type: :file_transfer,
+          completed?: true,
+          spec: [tunnel: tunnel, endpoint: endpoint]
+        )
+
+      DB.commit()
+
+      # Complete the process and wait for the FileTransferredEvent to be processed
+      U.simulate_process_completion(process)
+      assert [_] = wait_events_on_server!(gateway.id, :file_transferred, 1)
+
+      expected_log_type =
+        case process.data.transfer_type do
+          :download -> :file_downloaded
+          :upload -> :file_uploaded
+        end
+
+      # Log on Gateway -> AP (Endpoint)
+      assert [log] = U.get_all_logs(gateway.id)
+      assert log.type == expected_log_type
+      assert log.direction == :to_ap
+      assert log.data.nip == endp_nip
+      assert log.data.file_name == "todo"
+      assert log.data.file_ext == "todo"
+      assert log.data.file_version == file.version
+
+      # Log on EN (Gateway) -> Endpoint
+      assert [log] = U.get_all_logs(endpoint.id)
+      assert log.type == expected_log_type
+      assert log.direction == :from_en
+      assert log.data.nip == gtw_nip
+      assert log.data.file_name == "todo"
+      assert log.data.file_ext == "todo"
+      assert log.data.file_version == file.version
+    end
   end
 
   describe "E2E - Signalable" do

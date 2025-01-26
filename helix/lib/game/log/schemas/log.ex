@@ -13,6 +13,8 @@ defmodule Game.Log do
   @log_types [
     :custom,
     :file_deleted,
+    :file_downloaded,
+    :file_uploaded,
     :server_login,
     :connection_proxied
   ]
@@ -56,6 +58,8 @@ defmodule Game.Log do
   def data_mod({:custom, :self}), do: LogData.EmptyData
   def data_mod({:file_deleted, :self}), do: LogData.LocalFile
   def data_mod({:file_deleted, dir}) when dir in [:to_ap, :from_en], do: LogData.RemoteFile
+  def data_mod({:file_downloaded, dir}) when dir in [:to_ap, :from_en], do: LogData.RemoteFile
+  def data_mod({:file_uploaded, dir}) when dir in [:to_ap, :from_en], do: LogData.RemoteFile
   def data_mod({:server_login, :self}), do: LogData.EmptyData
   def data_mod({:server_login, dir}) when dir in [:to_ap, :from_en], do: LogData.NIP
   def data_mod({:connection_proxied, :hop}), do: LogData.NIPProxy
