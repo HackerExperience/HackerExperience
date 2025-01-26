@@ -2,7 +2,7 @@ defmodule Game.Services.LogTest do
   use Test.DBCase, async: true
   alias Core.ID
   alias Game.Services, as: Svc
-  alias Game.{Log, LogVisibility}
+  alias Game.{Log}
 
   setup [:with_game_db]
 
@@ -33,34 +33,31 @@ defmodule Game.Services.LogTest do
       assert {:ok, log_1} = Svc.Log.create_new(entity.id, server.id, log_params)
       assert {:ok, log_2} = Svc.Log.create_new(entity.id, server.id, log_params)
 
-      Core.with_context(:server, server.id, :read, fn ->
-        logs = DB.all(Log)
-        assert log_1 == Enum.find(logs, &(&1.id == log_1.id))
-        assert log_2 == Enum.find(logs, &(&1.id == log_2.id))
+      logs = U.get_all_logs(server.id)
+      assert log_1 == Enum.find(logs, &(&1.id == log_1.id))
+      assert log_2 == Enum.find(logs, &(&1.id == log_2.id))
 
-        # Has the correct data
-        assert log_1.server_id == server.id
-        assert log_1.type == :server_login
-        assert log_1.direction == :self
-        assert log_1.data == %Log.Data.EmptyData{}
+      # Has the correct data
+      assert log_1.server_id == server.id
+      assert log_1.type == :server_login
+      assert log_1.direction == :self
+      assert log_1.data == %Log.Data.EmptyData{}
 
-        # It's a brand new log, so revision is always 1
-        assert log_1.revision_id == 1
+      # It's a brand new log, so revision is always 1
+      assert log_1.revision_id == 1
 
-        # Log IDs are sequential
-        assert ID.to_external(log_2.id) == ID.to_external(log_1.id) + 1
-      end)
+      # Log IDs are sequential
+      assert ID.to_external(log_2.id) == ID.to_external(log_1.id) + 1
 
-      Core.with_context(:player, entity.id, :read, fn ->
-        log_visibilities = DB.all(LogVisibility)
+      # Visibilities were inserted correctly
+      log_visibilities = U.get_all_log_visibilities(entity.id)
 
-        assert visibility_1 = Enum.find(log_visibilities, &(&1.log_id == log_1.id))
-        assert _visibility_2 = Enum.find(log_visibilities, &(&1.log_id == log_2.id))
+      assert visibility_1 = Enum.find(log_visibilities, &(&1.log_id == log_1.id))
+      assert _visibility_2 = Enum.find(log_visibilities, &(&1.log_id == log_2.id))
 
-        assert visibility_1.entity_id == entity.id
-        assert visibility_1.server_id == server.id
-        assert visibility_1.revision_id == 1
-      end)
+      assert visibility_1.entity_id == entity.id
+      assert visibility_1.server_id == server.id
+      assert visibility_1.revision_id == 1
     end
   end
 end

@@ -8,6 +8,11 @@ defmodule Test.Utils do
   # File
   defdelegate get_all_files(server_id), to: U.File
 
+  # Log
+  defdelegate get_all_logs(server_id), to: U.Log
+  defdelegate get_all_log_visibilities(player_id), to: U.Log
+  defdelegate get_all_log_visibilities_on_server(player_id, server_id), to: U.Log
+
   # Process
   defdelegate get_all_process_registries, to: U.Process
   defdelegate get_all_processes(server_id), to: U.Process

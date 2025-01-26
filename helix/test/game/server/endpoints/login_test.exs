@@ -1,7 +1,7 @@
 defmodule Game.Endpoint.Server.LoginTest do
   use Test.WebCase, async: true
   alias Core.{ID, NIP}
-  alias Game.{Log, LogVisibility, Tunnel, TunnelLink}
+  alias Game.{Tunnel, TunnelLink}
 
   setup [:with_game_db, :with_game_webserver]
 
@@ -228,55 +228,39 @@ defmodule Game.Endpoint.Server.LoginTest do
       wait_events!(x_request_id: x_request_id)
 
       # Gateway -> OtherHop
-      Core.with_context(:server, gateway.id, :read, fn ->
-        assert [log] = DB.all(Log)
-        assert log.type == :server_login
-        assert log.direction == :to_ap
-        assert log.data.nip == other_hop_nip
-      end)
+      assert [log] = U.get_all_logs(gateway.id)
+      assert log.type == :server_login
+      assert log.direction == :to_ap
+      assert log.data.nip == other_hop_nip
 
       # OtherHop (AP): Gateway -> OtherEndpoint
-      Core.with_context(:server, other_hop.id, :read, fn ->
-        assert [log] = DB.all(Log)
-        assert log.type == :connection_proxied
-        assert log.direction == :hop
-        assert log.data.from_nip == gtw_nip
-        assert log.data.to_nip == other_endp_nip
-      end)
+      assert [log] = U.get_all_logs(other_hop.id)
+      assert log.type == :connection_proxied
+      assert log.direction == :hop
+      assert log.data.from_nip == gtw_nip
+      assert log.data.to_nip == other_endp_nip
 
       # OtherEndpoint (EN): OtherHop -> Endpoint
-      Core.with_context(:server, other_endpoint.id, :read, fn ->
-        assert [log] = DB.all(Log)
-        assert log.type == :connection_proxied
-        assert log.direction == :hop
-        assert log.data.from_nip == other_hop_nip
-        assert log.data.to_nip == endp_nip
-      end)
+      assert [log] = U.get_all_logs(other_endpoint.id)
+      assert log.type == :connection_proxied
+      assert log.direction == :hop
+      assert log.data.from_nip == other_hop_nip
+      assert log.data.to_nip == endp_nip
 
       # OtherHop -> Endpoint
-      Core.with_context(:server, endpoint.id, :read, fn ->
-        assert [log] = DB.all(Log)
-        assert log.type == :server_login
-        assert log.direction == :from_en
-        assert log.data.nip == other_endp_nip
-      end)
+      assert [log] = U.get_all_logs(endpoint.id)
+      assert log.type == :server_login
+      assert log.direction == :from_en
+      assert log.data.nip == other_endp_nip
 
       # `player` has visibility on all four logs
-      Core.with_context(:player, player.id, :read, fn ->
-        visibilities =
-          DB.all(LogVisibility)
-          |> Enum.map(& &1.server_id)
-
-        assert gateway.id in visibilities
-        assert other_hop.id in visibilities
-        assert other_endpoint.id in visibilities
-        assert endpoint.id in visibilities
-      end)
+      assert [_] = U.get_all_log_visibilities_on_server(player.id, gateway.id)
+      assert [_] = U.get_all_log_visibilities_on_server(player.id, other_hop.id)
+      assert [_] = U.get_all_log_visibilities_on_server(player.id, other_endpoint.id)
+      assert [_] = U.get_all_log_visibilities_on_server(player.id, endpoint.id)
 
       # `endpoint_entity` does not have visibility on any logs
-      Core.with_context(:player, endpoint_entity.id, :read, fn ->
-        assert [] == DB.all(LogVisibility)
-      end)
+      assert [] == U.get_all_log_visibilities(endpoint_entity.id)
     end
 
     test "can't connect if the endpoint NIP does not exist", %{shard_id: shard_id} do
