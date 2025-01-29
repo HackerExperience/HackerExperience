@@ -3,7 +3,7 @@ defmodule Game.Index.Tunnel do
   import Core.Spec
   alias Core.{ID, NIP}
   alias Game.Services, as: Svc
-  alias Game.Tunnel
+  alias Game.{Entity, Server, Tunnel}
 
   @type index ::
           [map]
@@ -12,18 +12,18 @@ defmodule Game.Index.Tunnel do
           [rendered_tunnel]
 
   @typep rendered_tunnel :: %{
-           tunnel_id: integer(),
-           source_nip: binary(),
-           target_nip: binary()
+           tunnel_id: ID.external(),
+           source_nip: NIP.external(),
+           target_nip: NIP.external()
          }
 
   def spec do
     selection(
       schema(%{
         __openapi_name: "IdxTunnel",
-        tunnel_id: integer(),
-        source_nip: binary(),
-        target_nip: binary()
+        tunnel_id: external_id(),
+        source_nip: nip(),
+        target_nip: nip()
       }),
       [:tunnel_id, :source_nip, :target_nip]
     )
@@ -38,15 +38,15 @@ defmodule Game.Index.Tunnel do
     Svc.Tunnel.list(by_source_nip: nip)
   end
 
-  @spec render_index(index()) ::
+  @spec render_index(index, Server.id(), Entity.id()) ::
           rendered_index
-  def render_index(index) do
-    Enum.map(index, &render_tunnel/1)
+  def render_index(index, server_id, entity_id) do
+    Enum.map(index, &render_tunnel(&1, server_id, entity_id))
   end
 
-  defp render_tunnel(%Tunnel{} = tunnel) do
+  defp render_tunnel(%Tunnel{} = tunnel, %Server.ID{} = server_id, entity_id) do
     %{
-      tunnel_id: tunnel.id |> ID.to_external(),
+      tunnel_id: tunnel.id |> ID.to_external(entity_id, server_id),
       source_nip: tunnel.source_nip |> NIP.to_external(),
       target_nip: tunnel.target_nip |> NIP.to_external()
     }

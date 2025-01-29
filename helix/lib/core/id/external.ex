@@ -36,17 +36,34 @@ defmodule Core.ID.External do
   end
 
   defp generate_external_id(player_id, {object_id, type, domain_id, subdomain_id}) do
-    Core.with_context(:player, player_id, :write, fn ->
-      %{
-        external_id: Renatils.Random.uuid(),
-        object_id: object_id,
-        object_type: type,
-        domain_id: domain_id,
-        subdomain_id: subdomain_id
-      }
-      |> ExternalID.new()
-      |> DB.insert()
-    end)
+    result =
+      Core.with_context(:player, player_id, :write, fn ->
+        %{
+          external_id: Renatils.Random.uuid(),
+          object_id: object_id,
+          object_type: type,
+          domain_id: domain_id,
+          subdomain_id: subdomain_id
+        }
+        |> ExternalID.new()
+        |> DB.insert()
+      end)
+
+    # If the outter context is a :read connection on Player, restart it so the new connection
+    # can "see" this newly generated entry. This should not happen often; usually Player is the
+    # outter context only when Index is being rendered, and even then for most cases the Player
+    # should already have an entry matching the internal ID (meaning an external one doesn't have to
+    # be generated). Somewhat of a dirty hack, but since it happens infrequently I'm okay with it.
+    case Core.get_current_context() do
+      {ctx, _, :read} when ctx in [:sp_player, :mp_player] ->
+        Core.commit()
+        Core.begin_context(:player, player_id, :read)
+
+      _ ->
+        :noop
+    end
+
+    result
   end
 
   defp query_by_internal_id(player_id, {object_id, type, nil, nil}),

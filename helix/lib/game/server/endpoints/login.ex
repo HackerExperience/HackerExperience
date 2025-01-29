@@ -16,7 +16,7 @@ defmodule Game.Endpoint.Server.Login do
         :__openapi_path_parameters => ["nip", "target_nip"],
         "nip" => binary(),
         "target_nip" => binary(),
-        "tunnel_id" => integer()
+        "tunnel_id" => external_id()
       }),
       ["nip", "target_nip"]
     )
@@ -41,8 +41,8 @@ defmodule Game.Endpoint.Server.Login do
 
       {:ok, %{request | params: params}}
     else
-      {:error, {field, _reason}} ->
-        {:error, %{request | response: {400, "invalid_input:#{field}"}}}
+      {:error, {_, _} = error} ->
+        {:error, %{request | response: {400, format_cast_error(error)}}}
     end
   end
 

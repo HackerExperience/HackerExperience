@@ -35,35 +35,6 @@ defmodule Game.Events.Process do
       }
       |> Event.new()
     end
-
-    defmodule Publishable do
-      use Core.Event.Publishable.Definition
-
-      def spec do
-        selection(
-          schema(%{
-            id: integer(),
-            type: binary()
-          }),
-          [:id, :type]
-        )
-      end
-
-      def generate_payload(%{data: %{process: process}}) do
-        # TODO: It doesn't make any sense to publish this process, at least while it hasn't been
-        # confirmed yet. The request that created the process already has access to this information
-        payload =
-          %{
-            id: process.id |> ID.to_external(),
-            type: "#{process.type}"
-          }
-
-        {:ok, payload}
-      end
-
-      def whom_to_publish(%{data: %{process: %{entity_id: entity_id}}}),
-        do: %{player: entity_id}
-    end
   end
 
   defmodule Completed do
@@ -109,13 +80,13 @@ defmodule Game.Events.Process do
       # TODO: server NIP should be included here
       def spec do
         selection(
-          schema(%{process_id: integer()}),
+          schema(%{process_id: external_id()}),
           [:process_id]
         )
       end
 
       def generate_payload(%{data: %{process: process}}),
-        do: {:ok, %{process_id: process.id |> ID.to_external()}}
+        do: {:ok, %{process_id: process.id |> ID.to_external(process.entity_id, process.server_id)}}
 
       @doc """
       Only the Process owner receives this event.
@@ -150,15 +121,21 @@ defmodule Game.Events.Process do
       def spec do
         selection(
           schema(%{
-            process_id: integer(),
+            process_id: external_id(),
             reason: binary()
           }),
           [:process_id, :reason]
         )
       end
 
-      def generate_payload(%{data: %{process: process, reason: reason}}),
-        do: {:ok, %{process_id: process.id |> ID.to_external(), reason: "#{reason}"}}
+      def generate_payload(%{data: %{process: process, reason: reason}}) do
+        payload = %{
+          process_id: process.id |> ID.to_external(process.entity_id, process.server_id),
+          reason: "#{reason}"
+        }
+
+        {:ok, payload}
+      end
 
       @doc """
       Only the Process owner receives this event.

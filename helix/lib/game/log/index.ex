@@ -12,7 +12,8 @@ defmodule Game.Index.Log do
           [rendered_log]
 
   @typep rendered_log :: %{
-           id: integer(),
+           id: ID.external(),
+           # TODO: `revision_id` should be converted to external ID too
            revision_id: integer(),
            type: String.t()
          }
@@ -21,7 +22,7 @@ defmodule Game.Index.Log do
     selection(
       schema(%{
         __openapi_name: "IdxLog",
-        id: integer(),
+        id: external_id(),
         revision_id: integer(),
         type: binary()
       }),
@@ -48,15 +49,16 @@ defmodule Game.Index.Log do
     end)
   end
 
-  @spec render_index(index) ::
+  @spec render_index(index, Entity.id()) ::
           rendered_index
-  def render_index(index) do
-    Enum.map(index, &render_log/1)
+  def render_index(index, entity_id) do
+    Enum.map(index, &render_log(&1, entity_id))
   end
 
-  defp render_log(%Log{} = log) do
+  defp render_log(%Log{} = log, entity_id) do
     %{
-      id: ID.to_external(log.id),
+      id: ID.to_external(log.id, entity_id, log.server_id),
+      # TODO: `log.revision_id` should be an external ID too
       revision_id: log.revision_id,
       type: "#{log.type}"
     }

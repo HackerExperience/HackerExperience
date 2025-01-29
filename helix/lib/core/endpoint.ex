@@ -1,5 +1,5 @@
 defmodule Core.Endpoint do
-  alias Core.NIP
+  alias Core.{ID, NIP}
 
   @doc """
   Casts an external input into a Core.ID format. Note it does NOT check whether the ID exists or
@@ -12,13 +12,27 @@ defmodule Core.Endpoint do
   """
   def cast_id(field, raw_value, mod, opts \\ []) do
     id_mod = Module.concat(mod, ID)
+    entity_id = Process.get(:helix_session_entity_id)
 
-    case id_mod.from_endpoint(raw_value, opts) do
-      {:ok, id} ->
-        {:ok, id}
+    cond do
+      is_binary(raw_value) ->
+        case ID.from_external(raw_value, entity_id) do
+          %struct{id: _} = internal_id ->
+            # TODO: Validate struct with mod
+            {:ok, internal_id}
 
-      {:error, reason} ->
-        {:error, {field, reason}}
+          nil ->
+            {:error, {field, :id_not_found}}
+        end
+
+      is_nil(raw_value) and opts[:optional] ->
+        {:ok, nil}
+
+      is_nil(raw_value) ->
+        {:error, {field, :empty}}
+
+      true ->
+        {:error, {field, :invalid}}
     end
   end
 
@@ -40,7 +54,14 @@ defmodule Core.Endpoint do
     if raw_value in allowed_values do
       {:ok, raw_value}
     else
-      {:error, {field, :inavlid}}
+      {:error, {field, :invalid}}
     end
   end
+
+  def format_cast_error({field, :invalid_nip}), do: "#{field}:invalid_nip"
+  def format_cast_error({field, {:invalid_ip, _}}), do: "#{field}:invalid_nip"
+  def format_cast_error({field, {:invalid_network_id, _}}), do: "#{field}:invalid_nip"
+  def format_cast_error({field, :id_not_found}), do: "#{field}:id_not_found"
+  def format_cast_error({field, :invalid}), do: "#{field}:invalid_input"
+  def format_cast_error({field, :empty}), do: "#{field}:missing"
 end

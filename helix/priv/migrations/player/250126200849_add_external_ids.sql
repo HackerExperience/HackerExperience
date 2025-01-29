@@ -7,5 +7,5 @@ CREATE TABLE external_ids (
   inserted_at TEXT NOT NULL
 ) STRICT, WITHOUT ROWID;
 
--- TODO: Indices
--- I'm thinking: UNIQUE (object_id, object_type, domain_id, subdomain_id)
+CREATE UNIQUE INDEX external_ids_unique_object_identifier_idx
+ON external_ids(object_id, object_type, domain_id, subdomain_id);

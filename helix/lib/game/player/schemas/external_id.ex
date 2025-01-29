@@ -9,7 +9,11 @@ defmodule Game.ExternalID do
 
   @object_types [
     :file_id,
-    :server_id
+    :installation_id,
+    :log_id,
+    :process_id,
+    :server_id,
+    :tunnel_id
   ]
 
   @schema [

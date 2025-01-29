@@ -33,6 +33,9 @@ defmodule Game.Endpoint.Installation.Uninstall do
          {:ok, inst_id} <- cast_id(:installation_id, parsed[:installation_id], Installation) do
       params = %{nip: nip, installation_id: inst_id}
       {:ok, %{request | params: params}}
+    else
+      {:error, {_, _} = error} ->
+        {:error, %{request | response: {400, format_cast_error(error)}}}
     end
   end
 
@@ -70,8 +73,9 @@ defmodule Game.Endpoint.Installation.Uninstall do
     end
   end
 
-  def render_response(request, %{process: process}, _) do
-    {:ok, %{request | response: {200, %{process_id: process.id |> ID.to_external()}}}}
+  def render_response(request, %{process: process}, session) do
+    process_eid = ID.to_external(process.id, session.data.entity_id, process.server_id)
+    {:ok, %{request | response: {200, %{process_id: process_eid}}}}
   end
 
   defp format_henforcer_error({:server, :not_belongs}), do: "server_not_belongs"

@@ -1,5 +1,6 @@
 defmodule Game.Installation do
   use Core.Schema
+  alias Game.Server
 
   # TODO
   @type t :: term()
@@ -18,7 +19,8 @@ defmodule Game.Installation do
     {:file_version, :integer},
     {:file_id, {ID.ref(:file_id), nullable: true}},
     {:memory_usage, :integer},
-    {:inserted_at, {:datetime_utc, [precision: :millisecond], mod: :inserted_at}}
+    {:inserted_at, {:datetime_utc, [precision: :millisecond], mod: :inserted_at}},
+    {:server_id, {ID.ref(:server_id), virtual: true, after_read: :get_server_id}}
   ]
 
   @derived_fields [:id]
@@ -28,4 +30,6 @@ defmodule Game.Installation do
     |> Schema.cast()
     |> Schema.create()
   end
+
+  def get_server_id(_, _row, %{shard_id: raw_server_id}), do: Server.ID.new(raw_server_id)
 end

@@ -32,22 +32,25 @@ defmodule Game.Events.File do
       def spec do
         selection(
           schema(%{
-            installation_id: integer(),
+            installation_id: external_id(),
             file_name: binary(),
             memory_usage: integer(),
-            process_id: integer()
+            process_id: external_id()
           }),
           [:installation_id, :file_name, :memory_usage, :process_id]
         )
       end
 
       def generate_payload(%{data: %{process: process, file: file, installation: installation}}) do
+        entity_id = process.entity_id
+        server_id = process.server_id
+
         payload =
           %{
-            installation_id: installation.id,
+            installation_id: installation.id |> ID.to_external(entity_id, server_id),
             file_name: file.name,
             memory_usage: installation.memory_usage,
-            process_id: process.id
+            process_id: process.id |> ID.to_external(entity_id, server_id)
           }
 
         {:ok, payload}
@@ -96,17 +99,20 @@ defmodule Game.Events.File do
         selection(
           schema(%{
             reason: binary(),
-            process_id: integer()
+            process_id: external_id()
           }),
           [:reason, :process_id]
         )
       end
 
       def generate_payload(%{data: %{reason: reason, process: process}}) do
+        entity_id = process.entity_id
+        server_id = process.server_id
+
         payload =
           %{
             reason: reason,
-            process_id: process.id
+            process_id: process.id |> ID.to_external(entity_id, server_id)
           }
 
         {:ok, payload}
@@ -154,18 +160,21 @@ defmodule Game.Events.File do
       def spec do
         selection(
           schema(%{
-            file_id: integer(),
-            process_id: integer()
+            file_id: external_id(),
+            process_id: external_id()
           }),
           [:file_id, :process_id]
         )
       end
 
       def generate_payload(%{data: %{process: process, file: file}}) do
+        entity_id = process.entity_id
+        server_id = process.server_id
+
         payload =
           %{
-            file_id: file.id |> ID.to_external(),
-            process_id: process.id |> ID.to_external()
+            file_id: file.id |> ID.to_external(entity_id, server_id),
+            process_id: process.id |> ID.to_external(entity_id, server_id)
           }
 
         {:ok, payload}
@@ -234,17 +243,20 @@ defmodule Game.Events.File do
         selection(
           schema(%{
             reason: binary(),
-            process_id: integer()
+            process_id: external_id()
           }),
           [:reason, :process_id]
         )
       end
 
       def generate_payload(%{data: %{reason: reason, process: process}}) do
+        entity_id = process.entity_id
+        server_id = process.server_id
+
         payload =
           %{
             reason: reason,
-            process_id: process.id |> ID.to_external()
+            process_id: process.id |> ID.to_external(entity_id, server_id)
           }
 
         {:ok, payload}
@@ -291,18 +303,21 @@ defmodule Game.Events.File do
       def spec do
         selection(
           schema(%{
-            file_id: integer(),
-            process_id: integer()
+            file_id: external_id(),
+            process_id: external_id()
           }),
           [:file_id, :process_id]
         )
       end
 
       def generate_payload(%{data: %{file: file, process: process}}) do
+        entity_id = process.entity_id
+        server_id = process.server_id
+
         payload =
           %{
-            file_id: file.id |> ID.to_external(),
-            process_id: process.id |> ID.to_external()
+            file_id: file.id |> ID.to_external(entity_id, server_id),
+            process_id: process.id |> ID.to_external(entity_id, server_id)
           }
 
         {:ok, payload}
@@ -374,17 +389,20 @@ defmodule Game.Events.File do
         selection(
           schema(%{
             reason: binary(),
-            process_id: integer()
+            process_id: external_id()
           }),
           [:reason, :process_id]
         )
       end
 
       def generate_payload(%{data: %{reason: reason, process: process}}) do
+        entity_id = process.entity_id
+        server_id = process.server_id
+
         payload =
           %{
             reason: reason,
-            process_id: process.id |> ID.to_external()
+            process_id: process.id |> ID.to_external(entity_id, server_id)
           }
 
         {:ok, payload}

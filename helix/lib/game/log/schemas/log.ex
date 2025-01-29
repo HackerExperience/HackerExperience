@@ -50,7 +50,7 @@ defmodule Game.Log do
     |> Schema.create()
   end
 
-  def get_server_id(_, _row, %{shard_id: raw_server_id}), do: Server.ID.from_external(raw_server_id)
+  def get_server_id(_, _row, %{shard_id: raw_server_id}), do: Server.ID.new(raw_server_id)
 
   def hydrate_data(data, %{type: type, direction: direction}, _),
     do: data_mod({type, direction}).load!(data)

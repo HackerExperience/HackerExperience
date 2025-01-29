@@ -1,4 +1,7 @@
 defmodule Core.ID do
+  @type external :: binary()
+  @type internal :: integer()
+
   defmacro __using__(_) do
     quote do
       @behaviour Feeb.DB.Type.Behaviour
@@ -28,29 +31,31 @@ defmodule Core.ID do
         def to_string(%{id: id}), do: "#{id}"
       end
 
-      def from_endpoint(nil, opts),
-        do: if(opts[:optional], do: {:ok, nil}, else: {:error, :empty})
+      # def from_endpoint(nil, opts),
+      #   do: if(opts[:optional], do: {:ok, nil}, else: {:error, :empty})
 
-      def from_endpoint(raw_id, _opts) when is_integer(raw_id),
-        do: {:ok, from_external(raw_id)}
+      # def from_endpoint(raw_id, _opts) when is_integer(raw_id),
+      #   do: {:ok, from_external(raw_id)}
 
-      def from_endpoint(raw_id, opts) when is_binary(raw_id) do
-        case Integer.parse(raw_id) do
-          {raw_numeric_id, ""} ->
-            from_endpoint(raw_numeric_id, opts)
+      # def from_endpoint(raw_id, opts) when is_binary(raw_id) do
+      #   case Integer.parse(raw_id) do
+      #     {raw_numeric_id, ""} ->
+      #       from_endpoint(raw_numeric_id, opts)
 
-          :error ->
-            {:error, :invalid}
-        end
-      end
+      #     :error ->
+      #       {:error, :invalid}
+      #   end
+      # end
 
-      def from_endpoint(_, _),
-        do: {:error, :invalid}
+      # def from_endpoint(_, _),
+      #   do: {:error, :invalid}
 
-      def from_external(id) when is_integer(id),
+      def new(id) when is_integer(id),
         do: %__MODULE__{id: id}
     end
   end
+
+  # def to_external(%_{id: id}), do: id
 
   def to_external(%struct{id: id}, %_{} = player_id, domain_id \\ nil, subdomain_id \\ nil) do
     object_type =

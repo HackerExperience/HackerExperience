@@ -21,5 +21,5 @@ defmodule Game.LogVisibility do
     |> Schema.create()
   end
 
-  def get_entity_id(_, _, %{shard_id: raw_entity_id}), do: Entity.ID.from_external(raw_entity_id)
+  def get_entity_id(_, _, %{shard_id: raw_entity_id}), do: Entity.ID.new(raw_entity_id)
 end

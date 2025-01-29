@@ -216,12 +216,12 @@ defmodule Game.Process.File.TransferTest do
 
       # First the Client is notified about the process being complete
       proc_completed_sse = U.wait_sse_event!("process_completed")
-      assert proc_completed_sse.data.process_id == process.id.id
+      assert proc_completed_sse.data.process_id |> U.from_eid(player.id) == process.id
 
       # Then he is notified about the file transfer event
       file_transferred_sse = U.wait_sse_event!("file_transferred")
-      assert file_transferred_sse.data.process_id == process.id.id
-      new_file_id = file_transferred_sse.data.file_id
+      assert file_transferred_sse.data.process_id |> U.from_eid(player.id) == process.id
+      new_file_id = file_transferred_sse.data.file_id |> U.from_eid(player.id)
 
       # Now the player has two files in the Gateway!
       assert gateway_files = [_, _] = U.get_all_files(gateway.id)
@@ -230,7 +230,7 @@ defmodule Game.Process.File.TransferTest do
       assert other_file == Enum.find(gateway_files, &(&1.id == other_file.id))
 
       # And we can find the new file based on the `new_file_id` from the event
-      assert new_file = Enum.find(gateway_files, &(&1.id.id == new_file_id))
+      assert new_file = Enum.find(gateway_files, &(&1.id == new_file_id))
 
       # The files are essentially the same, minus the things expected to change after a transfer
       assert_transferred_files_equal(file, new_file)
@@ -255,11 +255,11 @@ defmodule Game.Process.File.TransferTest do
 
       # First the Client is notified about the process being complete
       proc_completed_sse = U.wait_sse_event!("process_completed")
-      assert proc_completed_sse.data.process_id == process.id.id
+      assert proc_completed_sse.data.process_id |> U.from_eid(player.id) == process.id
 
       # Then he is notified about the file transfer event
       file_transferred_sse = U.wait_sse_event!("file_transferred")
-      assert file_transferred_sse.data.process_id == process.id.id
+      assert file_transferred_sse.data.process_id |> U.from_eid(player.id) == process.id
 
       # Now the endpoint has a new file!
       assert [new_file] = U.get_all_files(endpoint.id)
@@ -353,7 +353,7 @@ defmodule Game.Process.File.TransferTest do
 
       # Player eventually received a ProcessKilledEvent
       process_killed_event = U.wait_sse_event!("process_killed")
-      assert process_killed_event.data.process_id == transfer_process.id.id
+      assert process_killed_event.data.process_id |> U.from_eid(player.id) == transfer_process.id
       assert process_killed_event.data.reason == "killed"
 
       # No more processes are running in the Gateway server

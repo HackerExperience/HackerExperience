@@ -34,5 +34,5 @@ defmodule Game.File do
     |> Schema.create()
   end
 
-  def get_server_id(_, _, %{shard_id: raw_server_id}), do: Server.ID.from_external(raw_server_id)
+  def get_server_id(_, _, %{shard_id: raw_server_id}), do: Server.ID.new(raw_server_id)
 end

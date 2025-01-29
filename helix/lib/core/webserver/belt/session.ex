@@ -53,10 +53,13 @@ defmodule Core.Webserver.Belt.Session do
             %{} = player ->
               DB.commit()
 
+              entity_id = Entity.ID.new(player.id)
+              Process.put(:helix_session_entity_id, entity_id)
+
               %{
                 type: :authenticated,
                 player_id: player.id,
-                entity_id: Entity.ID.new(player.id),
+                entity_id: entity_id,
                 external_id: player.external_id
               }
 
@@ -87,10 +90,13 @@ defmodule Core.Webserver.Belt.Session do
          %{} = player <- Svc.Player.fetch(by_external_id: claims.external_id) || :user_not_found do
       DB.commit()
 
+      entity_id = Entity.ID.new(player.id)
+      Process.put(:helix_session_entity_id, entity_id)
+
       session_data = %{
         type: :authenticated,
         player_id: player.id,
-        entity_id: Entity.ID.new(player.id),
+        entity_id: entity_id,
         external_id: player.external_id
       }
 

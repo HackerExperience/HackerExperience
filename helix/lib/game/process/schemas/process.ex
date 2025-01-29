@@ -84,7 +84,7 @@ defmodule Game.Process do
     |> Map.put(:dynamic, Enum.map(resources.dynamic, &String.to_existing_atom/1))
   end
 
-  def get_server_id(_, _, %{shard_id: raw_server_id}), do: Server.ID.from_external(raw_server_id)
+  def get_server_id(_, _, %{shard_id: raw_server_id}), do: Server.ID.new(raw_server_id)
 
   #
 
