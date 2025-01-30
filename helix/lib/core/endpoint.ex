@@ -11,15 +11,20 @@ defmodule Core.Endpoint do
   - `raw_value` is of a type different than the one expected by `id_mod`.
   """
   def cast_id(field, raw_value, mod, opts \\ []) do
-    id_mod = Module.concat(mod, ID)
-    entity_id = Process.get(:helix_session_entity_id)
+    id_mod = Module.concat(mod, Elixir.ID)
+    entity_id = Process.get(:helix_session_entity_id) || raise "Missing entity_id in process"
 
     cond do
       is_binary(raw_value) ->
         case ID.from_external(raw_value, entity_id) do
-          %struct{id: _} = internal_id ->
-            # TODO: Validate struct with mod
-            {:ok, internal_id}
+          %id_struct{id: _} = internal_id ->
+            # Make sure the external ID passed as input belongs to an object of the same type that
+            # we are expecting. The type we are expecting is defined by `mod`.
+            if id_struct == id_mod do
+              {:ok, internal_id}
+            else
+              {:error, {field, :id_not_found}}
+            end
 
           nil ->
             {:error, {field, :id_not_found}}
