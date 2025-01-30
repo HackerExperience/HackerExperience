@@ -144,7 +144,7 @@ components:
       required: []
       properties:
         tunnel_id:
-          type: integer
+          type: string
     FileDeleteOutput:
       type: object
       required: []
@@ -166,7 +166,7 @@ components:
         transfer_type:
           type: string
         tunnel_id:
-          type: integer
+          type: string
     FileTransferOutput:
       type: object
       required: []
@@ -212,7 +212,7 @@ components:
       required: []
       properties:
         tunnel_id:
-          type: integer
+          type: string
     ServerLoginOutput:
       type: object
       required: []

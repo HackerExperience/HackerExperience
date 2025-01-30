@@ -35,7 +35,7 @@ defmodule Game.Index.ServerTest do
       rendered_index =
         entity.id
         |> Index.Server.endpoint_index(endpoint.id, endp_nip)
-        |> Index.Server.render_endpoint_index()
+        |> Index.Server.render_endpoint_index(entity.id)
 
       # Rendered index has a client-friendly format
       assert rendered_index.nip == NIP.to_external(endp_nip)

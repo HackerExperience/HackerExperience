@@ -15,10 +15,10 @@ defmodule Game.Endpoint.File.InstallTest do
       DB.commit()
 
       assert {:ok, %{status: 200, data: data}} =
-               post(build_path(nip, file.id), %{}, shard_id: shard_id, token: jwt)
+               post(build_path(nip, file, player.id), %{}, shard_id: shard_id, token: jwt)
 
       assert [registry] = U.get_all_process_registries()
-      assert registry.process_id.id == data.process_id
+      assert registry.process_id == data.process_id |> U.from_eid(player.id)
       assert registry.entity_id.id == player.id.id
       assert registry.server_id == gateway.id
       assert registry.src_file_id == file.id
@@ -39,7 +39,7 @@ defmodule Game.Endpoint.File.InstallTest do
       DB.commit()
 
       assert {:error, %{status: 400, error: %{msg: reason}}} =
-               post(build_path(nip, file.id), %{}, token: jwt)
+               post(build_path(nip, file, player.id), %{}, token: jwt)
 
       assert reason == "file_not_found"
     end
@@ -54,7 +54,7 @@ defmodule Game.Endpoint.File.InstallTest do
       DB.commit()
 
       assert {:error, %{status: 400, error: %{msg: reason}}} =
-               post(build_path(nip, file.id), %{}, token: jwt)
+               post(build_path(nip, file, player.id), %{}, token: jwt)
 
       assert reason == "file_not_found"
 
@@ -62,13 +62,15 @@ defmodule Game.Endpoint.File.InstallTest do
       # ensure this test is *actually* testing visibility issues and not an unrelated error).
       Setup.file_visibility!(player.id, server_id: gateway.id, file_id: file.id)
 
-      assert {:ok, %{status: 200}} = post(build_path(nip, file.id), %{}, token: jwt)
+      assert {:ok, %{status: 200}} = post(build_path(nip, file, player.id), %{}, token: jwt)
     end
 
     @tag :skip
     test "returns an error if there already is an equivalent installation"
   end
 
-  defp build_path(%NIP{} = nip, %File.ID{} = file_id),
-    do: "/server/#{NIP.to_external(nip)}/file/#{ID.to_external(file_id)}/install"
+  defp build_path(%NIP{} = nip, %File{} = file, player_id) do
+    file_eid = ID.to_external(file.id, player_id, file.server_id)
+    "/server/#{NIP.to_external(nip)}/file/#{file_eid}/install"
+  end
 end

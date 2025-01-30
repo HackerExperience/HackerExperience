@@ -73,9 +73,8 @@ defmodule Game.Endpoint.Server.LoginTest do
           # The client received a `tunnel_created` event
           assert event.name == "tunnel_created"
 
-          # TODO: Maybe I could have an `assert_id`?
           # Which has the expected data
-          assert event.data.tunnel_id == tunnel.id.id
+          assert event.data.tunnel_id |> U.from_eid(player.id) == tunnel.id
           assert event.data.source_nip == gtw_nip |> NIP.to_external()
           assert event.data.target_nip == endp_nip |> NIP.to_external()
           assert event.data.access == "ssh"
@@ -103,10 +102,7 @@ defmodule Game.Endpoint.Server.LoginTest do
 
       DB.commit()
 
-      params =
-        %{
-          tunnel_id: other_tunnel.id |> ID.to_external()
-        }
+      params = %{tunnel_id: other_tunnel.id |> U.to_eid(player.id)}
 
       U.start_sse_listener(ctx, player)
 
@@ -114,11 +110,11 @@ defmodule Game.Endpoint.Server.LoginTest do
                post(build_path(gtw_nip, endp_nip), params, shard_id: shard_id, token: jwt)
 
       receive do
-        {:event, %{name: "tunnel_created", data: %{tunnel_id: raw_tunnel_id}}} ->
+        {:event, %{name: "tunnel_created", data: %{tunnel_id: tunnel_eid}}} ->
           begin_game_db(:read)
 
           # The tunnel was created as expected
-          tunnel_id = Tunnel.ID.from_external(raw_tunnel_id)
+          tunnel_id = U.from_eid(tunnel_eid, player.id)
           tunnel = Svc.Tunnel.fetch(by_id: tunnel_id)
           assert tunnel.source_nip == gtw_nip
           assert tunnel.target_nip == endp_nip
@@ -213,10 +209,7 @@ defmodule Game.Endpoint.Server.LoginTest do
       DB.commit()
 
       # Gateway -> OtherHop -> OtherEndpoint -> Endpoint (because we are using an implicit bounce)
-      params =
-        %{
-          tunnel_id: other_tunnel.id |> ID.to_external()
-        }
+      params = %{tunnel_id: other_tunnel.id |> U.to_eid(player.id)}
 
       assert {:ok, %{status: 200, data: %{}}} =
                post(build_path(gtw_nip, endp_nip), params,
@@ -341,10 +334,11 @@ defmodule Game.Endpoint.Server.LoginTest do
       %{nip: nip} = Setup.server_full(entity_id: player.id)
       DB.commit()
 
-      params = %{tunnel_id: Random.int()}
+      params = %{tunnel_id: Random.uuid()}
 
+      # TODO: Also test directly at `get_context/3`
       # We can't create an SSH connection using a Tunnel that does not exist
-      assert {:error, %{status: 400, error: %{msg: "tunnel_not_found"}}} =
+      assert {:error, %{status: 400, error: %{msg: "tunnel_id:id_not_found"}}} =
                post(build_path(nip, nip), params, shard_id: shard_id, token: jwt)
     end
 
@@ -354,17 +348,18 @@ defmodule Game.Endpoint.Server.LoginTest do
       jwt = U.jwt_token(uid: player.external_id)
 
       %{nip: gtw_nip} = Setup.server_full(entity_id: player.id)
-      %{nip: endp_nip} = Setup.server_full(entity_id: other_player.id)
+      %{nip: endp_nip, server: endpoint} = Setup.server_full(entity_id: other_player.id)
       %{nip: other_nip} = Setup.server_full()
 
       # There is a tunnel from Endpoint -> Other that belongs to OtherPlayer
       other_tunnel = Setup.tunnel!(source_nip: endp_nip, target_nip: other_nip)
       DB.commit()
 
-      params = %{tunnel_id: other_tunnel.id |> ID.to_external()}
+      params = %{tunnel_id: other_tunnel.id |> ID.to_external(other_player.id, endpoint.id)}
 
+      # TODO: Also test directly at `get_context/3`
       # We can't create an SSH connection using a Tunnel that is not ours
-      assert {:error, %{status: 400, error: %{msg: "tunnel_not_authorized"}}} =
+      assert {:error, %{status: 400, error: %{msg: "tunnel_id:id_not_found"}}} =
                post(build_path(gtw_nip, endp_nip), params, shard_id: shard_id, token: jwt)
     end
 
@@ -379,7 +374,7 @@ defmodule Game.Endpoint.Server.LoginTest do
 
       # Player has 2 gateways
       %{nip: gtw_1_nip} = Setup.server_full(entity_id: player.id)
-      %{nip: gtw_2_nip} = Setup.server_full(entity_id: player.id)
+      %{nip: gtw_2_nip, server: gateway_2} = Setup.server_full(entity_id: player.id)
       %{nip: endp_nip} = Setup.server_full()
       %{nip: other_nip} = Setup.server_full()
 
@@ -387,7 +382,7 @@ defmodule Game.Endpoint.Server.LoginTest do
       tunnel = Setup.tunnel!(source_nip: gtw_2_nip, target_nip: other_nip)
       DB.commit()
 
-      params = %{tunnel_id: tunnel.id |> ID.to_external()}
+      params = %{tunnel_id: tunnel.id |> ID.to_external(player.id, gateway_2.id)}
 
       assert {:error, %{status: 400, error: %{msg: "tunnel_not_authorized"}}} =
                post(build_path(gtw_1_nip, endp_nip), params, shard_id: shard_id, token: jwt)
@@ -415,7 +410,7 @@ defmodule Game.Endpoint.Server.LoginTest do
 
       # First round, testing the gateway NIP
       Enum.each(invalid_nips, fn src_nip ->
-        assert {:error, %{status: 400, error: %{msg: "invalid_input:nip"}}} =
+        assert {:error, %{status: 400, error: %{msg: "nip:invalid_nip"}}} =
                  post("/server/#{src_nip}/login/0@2.2.2.2", params, shard_id: shard_id, token: jwt)
       end)
 
@@ -425,7 +420,7 @@ defmodule Game.Endpoint.Server.LoginTest do
           :this_will_cause_a_404_out_of_scope
 
         tgt ->
-          assert {:error, %{status: 400, error: %{msg: "invalid_input:target_nip"}}} =
+          assert {:error, %{status: 400, error: %{msg: "target_nip:invalid_nip"}}} =
                    post("/server/0@3.3.3.3/login/#{tgt}", params, shard_id: shard_id, token: jwt)
       end)
     end
@@ -441,12 +436,13 @@ defmodule Game.Endpoint.Server.LoginTest do
         "91mid",
         "10%20",
         "1+1",
-        "not_an_id"
+        "not_an_id",
+        "; DROP TABLE users; --"
       ]
       |> Enum.each(fn invalid_tunnel_id ->
         params = %{tunnel_id: invalid_tunnel_id}
 
-        assert {:error, %{status: 400, error: %{msg: "invalid_input"}}} =
+        assert {:error, %{status: 400, error: %{msg: "tunnel_id:id_not_found"}}} =
                  post("/server/0@1.1.1.1/login/0@2.2.2.2", params, shard_id: shard_id, token: jwt)
       end)
     end

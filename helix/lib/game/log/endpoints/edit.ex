@@ -42,8 +42,8 @@ defmodule Game.Endpoint.Log.Edit do
 
       {:ok, %{request | params: params}}
     else
-      {:error, {field, _reason}} ->
-        {:error, %{request | response: {400, "invalid_input:#{field}"}}}
+      {:error, {_, _} = error} ->
+        {:error, %{request | response: {400, format_cast_error(error)}}}
     end
   end
 
@@ -85,7 +85,8 @@ defmodule Game.Endpoint.Log.Edit do
     end
   end
 
-  def render_response(request, %{process: process}, _) do
-    {:ok, %{request | response: {200, %{process_id: process.id |> ID.to_external()}}}}
+  def render_response(request, %{process: process}, session) do
+    process_eid = ID.to_external(process.id, session.data.entity_id, process.server_id)
+    {:ok, %{request | response: {200, %{process_id: process_eid}}}}
   end
 end

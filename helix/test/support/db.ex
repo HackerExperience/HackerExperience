@@ -19,6 +19,10 @@ defmodule Test.DB do
   end
 
   def on_finish do
+    # To avoid Processes created during the tests to reach completion after the suite has finished
+    # and we are in the process of cleaning up the shards, make sure to sTOP all the TOPs.
+    DynamicSupervisor.stop(Game.Process.TOP.Supervisor)
+
     delete_all_dbs()
   end
 

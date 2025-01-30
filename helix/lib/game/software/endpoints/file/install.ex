@@ -17,7 +17,7 @@ defmodule Game.Endpoint.File.Install do
       schema(%{
         :__openapi_path_parameters => ["nip", "file_id"],
         "nip" => binary(),
-        "file_id" => binary()
+        "file_id" => external_id()
       }),
       ["nip", "file_id"]
     )
@@ -33,6 +33,9 @@ defmodule Game.Endpoint.File.Install do
          {:ok, file_id} <- cast_id(:file_id, parsed[:file_id], File) do
       params = %{nip: nip, file_id: file_id}
       {:ok, %{request | params: params}}
+    else
+      {:error, {_, _} = error} ->
+        {:error, %{request | response: {400, format_cast_error(error)}}}
     end
   end
 
@@ -69,8 +72,9 @@ defmodule Game.Endpoint.File.Install do
     end
   end
 
-  def render_response(request, %{process: process}, _) do
-    {:ok, %{request | response: {200, %{process_id: process.id |> ID.to_external()}}}}
+  def render_response(request, %{process: process}, session) do
+    process_eid = ID.to_external(process.id, session.data.entity_id, process.server_id)
+    {:ok, %{request | response: {200, %{process_id: process_eid}}}}
   end
 
   defp format_henforcer_error({:nip, :not_found}), do: "nip_not_found"

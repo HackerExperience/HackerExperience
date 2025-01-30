@@ -55,7 +55,7 @@ defmodule Game.Henforcers.NetworkTest do
     end
 
     test "fails when Tunnel does not exist" do
-      fake_tunnel_id = Random.int() |> Game.Tunnel.ID.from_external()
+      fake_tunnel_id = Random.int() |> Game.Tunnel.ID.new()
 
       assert {false, {:tunnel, :not_found}, %{}} ==
                Henforcers.Network.tunnel_exists?(fake_tunnel_id)

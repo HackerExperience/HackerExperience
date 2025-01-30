@@ -20,9 +20,9 @@ defmodule Game.Endpoint.File.Transfer do
       schema(%{
         :__openapi_path_parameters => ["nip", "file_id"],
         "nip" => binary(),
-        "file_id" => binary(),
+        "file_id" => external_id(),
         "transfer_type" => binary(),
-        "tunnel_id" => integer()
+        "tunnel_id" => external_id()
       }),
       ["nip", "file_id", "transfer_type", "tunnel_id"]
     )
@@ -41,6 +41,9 @@ defmodule Game.Endpoint.File.Transfer do
          {:ok, tunnel_id} <- cast_id(:tunnel_id, parsed[:tunnel_id], Tunnel) do
       params = %{nip: nip, file_id: file_id, tunnel_id: tunnel_id, transfer_type: transfer_type}
       {:ok, %{request | params: params}}
+    else
+      {:error, {_, _} = error} ->
+        {:error, %{request | response: {400, format_cast_error(error)}}}
     end
   end
 
@@ -82,8 +85,9 @@ defmodule Game.Endpoint.File.Transfer do
     end
   end
 
-  def render_response(request, %{process: process}, _) do
-    {:ok, %{request | response: {200, %{process_id: process.id |> ID.to_external()}}}}
+  def render_response(request, %{process: process}, session) do
+    process_eid = ID.to_external(process.id, session.data.entity_id, process.server_id)
+    {:ok, %{request | response: {200, %{process_id: process_eid}}}}
   end
 
   defp format_henforcer_error({:tunnel, :not_found}), do: "tunnel_not_found"

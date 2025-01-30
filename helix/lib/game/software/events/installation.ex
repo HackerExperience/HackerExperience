@@ -31,18 +31,21 @@ defmodule Game.Events.Installation do
       def spec do
         selection(
           schema(%{
-            installation_id: integer(),
-            process_id: integer()
+            installation_id: external_id(),
+            process_id: external_id()
           }),
           [:installation_id, :process_id]
         )
       end
 
       def generate_payload(%{data: %{process: process, installation: installation}}) do
+        entity_id = process.entity_id
+        server_id = process.server_id
+
         payload =
           %{
-            installation_id: installation.id |> ID.to_external(),
-            process_id: process.id |> ID.to_external()
+            installation_id: installation.id |> ID.to_external(entity_id, server_id),
+            process_id: process.id |> ID.to_external(entity_id, server_id)
           }
 
         {:ok, payload}
@@ -90,7 +93,7 @@ defmodule Game.Events.Installation do
       def spec do
         selection(
           schema(%{
-            process_id: integer(),
+            process_id: external_id(),
             reason: binary()
           }),
           [:process_id, :reason]
@@ -98,9 +101,12 @@ defmodule Game.Events.Installation do
       end
 
       def generate_payload(%{data: %{process: process, reason: reason}}) do
+        entity_id = process.entity_id
+        server_id = process.server_id
+
         payload =
           %{
-            process_id: process.id |> ID.to_external(),
+            process_id: process.id |> ID.to_external(entity_id, server_id),
             reason: reason
           }
 

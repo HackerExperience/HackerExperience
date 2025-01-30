@@ -7,8 +7,8 @@ defmodule Game.ConnectionGroup do
   @group_types [:ftp, :ssh]
 
   @schema [
-    {:id, ID.ref(:connection_group_id)},
-    {:tunnel_id, ID.ref(:tunnel_id)},
+    {:id, ID.Definition.ref(:connection_group_id)},
+    {:tunnel_id, ID.Definition.ref(:tunnel_id)},
     {:type, {:enum, values: @group_types}},
     {:inserted_at, {:datetime_utc, [precision: :millisecond], mod: :inserted_at}}
   ]

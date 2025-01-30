@@ -5,8 +5,8 @@ defmodule Game.ServerMeta do
   @table :meta
 
   @schema [
-    {:id, ID.ref(:server_id)},
-    {:entity_id, ID.ref(:entity_id)},
+    {:id, ID.Definition.ref(:server_id)},
+    {:entity_id, ID.Definition.ref(:entity_id)},
     {:resources, {:map, load_structs: true}}
   ]
 

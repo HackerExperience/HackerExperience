@@ -10,6 +10,8 @@ defmodule Core.NIP do
           ip: String.t()
         }
 
+  @type external :: binary()
+
   def new(network_id, ip),
     do: %__MODULE__{network_id: network_id, ip: ip}
 

@@ -11,15 +11,15 @@ defmodule Game.ProcessRegistry do
   @table :processes_registry
 
   @schema [
-    {:server_id, ID.ref(:server_id)},
-    {:process_id, ID.ref(:process_id)},
-    {:entity_id, ID.ref(:entity_id)},
-    {:src_file_id, {ID.ref(:file_id), nullable: true}},
-    {:tgt_file_id, {ID.ref(:file_id), nullable: true}},
-    {:src_installation_id, {ID.ref(:installation_id), nullable: true}},
-    {:tgt_installation_id, {ID.ref(:installation_id), nullable: true}},
-    {:tgt_log_id, {ID.ref(:log_id), nullable: true}},
-    {:src_tunnel_id, {ID.ref(:tunnel_id), nullable: true}},
+    {:server_id, ID.Definition.ref(:server_id)},
+    {:process_id, ID.Definition.ref(:process_id)},
+    {:entity_id, ID.Definition.ref(:entity_id)},
+    {:src_file_id, {ID.Definition.ref(:file_id), nullable: true}},
+    {:tgt_file_id, {ID.Definition.ref(:file_id), nullable: true}},
+    {:src_installation_id, {ID.Definition.ref(:installation_id), nullable: true}},
+    {:tgt_installation_id, {ID.Definition.ref(:installation_id), nullable: true}},
+    {:tgt_log_id, {ID.Definition.ref(:log_id), nullable: true}},
+    {:src_tunnel_id, {ID.Definition.ref(:tunnel_id), nullable: true}},
     {:inserted_at, {:datetime_utc, [precision: :millisecond], mod: :inserted_at}}
   ]
 

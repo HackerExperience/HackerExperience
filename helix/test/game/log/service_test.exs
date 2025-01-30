@@ -1,6 +1,5 @@
 defmodule Game.Services.LogTest do
   use Test.DBCase, async: true
-  alias Core.ID
   alias Game.Services, as: Svc
   alias Game.{Log}
 
@@ -46,8 +45,8 @@ defmodule Game.Services.LogTest do
       # It's a brand new log, so revision is always 1
       assert log_1.revision_id == 1
 
-      # Log IDs are sequential
-      assert ID.to_external(log_2.id) == ID.to_external(log_1.id) + 1
+      # (Internal) Log IDs are sequential
+      assert log_2.id.id == log_1.id.id + 1
 
       # Visibilities were inserted correctly
       log_visibilities = U.get_all_log_visibilities(entity.id)

@@ -10,8 +10,8 @@ defmodule Game.Server do
   @table :servers
 
   @schema [
-    {:id, ID.ref(:server_id)},
-    {:entity_id, ID.ref(:entity_id)},
+    {:id, ID.Definition.ref(:server_id)},
+    {:entity_id, ID.Definition.ref(:entity_id)},
     {:inserted_at, {:datetime_utc, [precision: :millisecond], mod: :inserted_at}}
   ]
 

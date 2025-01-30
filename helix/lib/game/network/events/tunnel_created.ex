@@ -36,7 +36,7 @@ defmodule Game.Events.Network.TunnelCreated do
     def spec do
       selection(
         schema(%{
-          tunnel_id: integer(),
+          tunnel_id: external_id(),
           source_nip: binary(),
           target_nip: binary(),
           # TODO: Is Enum supported? oneOf?
@@ -47,17 +47,17 @@ defmodule Game.Events.Network.TunnelCreated do
       )
     end
 
-    def generate_payload(%{data: %{tunnel: tunnel, entity_id: entity_id}}) do
+    def generate_payload(%{data: %{gateway_id: gateway_id, tunnel: tunnel, entity_id: entity_id}}) do
       endpoint_id = Svc.NetworkConnection.fetch!(by_nip: tunnel.target_nip).server_id
 
       index =
         entity_id
         |> Index.Server.endpoint_index(endpoint_id, tunnel.target_nip)
-        |> Index.Server.render_endpoint_index()
+        |> Index.Server.render_endpoint_index(entity_id)
 
       payload =
         %{
-          tunnel_id: tunnel.id |> ID.to_external(),
+          tunnel_id: tunnel.id |> ID.to_external(entity_id, gateway_id),
           source_nip: NIP.to_external(tunnel.source_nip),
           target_nip: NIP.to_external(tunnel.target_nip),
           access: "#{tunnel.access}",

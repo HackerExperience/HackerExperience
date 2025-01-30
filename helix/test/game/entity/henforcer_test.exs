@@ -1,6 +1,7 @@
 defmodule Game.Henforcers.EntityTest do
   use Test.DBCase, async: true
   alias Game.Henforcers
+  alias Game.Entity
 
   setup [:with_game_db]
 
@@ -11,7 +12,7 @@ defmodule Game.Henforcers.EntityTest do
     end
 
     test "fails when Entity is not found" do
-      fake_entity_id = Random.int() |> Game.Entity.ID.from_external()
+      fake_entity_id = Random.int() |> Entity.ID.new()
       assert {false, {:entity, :not_found}, %{}} == Henforcers.Entity.entity_exists?(fake_entity_id)
     end
   end
@@ -23,7 +24,7 @@ defmodule Game.Henforcers.EntityTest do
     end
 
     test "fails when Entity does not exist" do
-      fake_entity_id = Random.int() |> Game.Entity.ID.from_external()
+      fake_entity_id = Random.int() |> Entity.ID.new()
       assert {false, {:entity, :not_found}, %{}} == Henforcers.Entity.is_player?(fake_entity_id)
     end
 

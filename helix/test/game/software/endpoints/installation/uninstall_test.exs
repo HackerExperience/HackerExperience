@@ -15,10 +15,10 @@ defmodule Game.Endpoint.Installation.UninstallTest do
       DB.commit()
 
       assert {:ok, %{status: 200, data: data}} =
-               post(build_path(nip, installation.id), %{}, shard_id: shard_id, token: jwt)
+               post(build_path(nip, installation, player.id), %{}, shard_id: shard_id, token: jwt)
 
       assert [registry] = U.get_all_process_registries()
-      assert registry.process_id.id == data.process_id
+      assert registry.process_id == data.process_id |> U.from_eid(player.id)
       assert registry.entity_id.id == player.id.id
       assert registry.server_id == server.id
       assert registry.tgt_installation_id == installation.id
@@ -46,7 +46,7 @@ defmodule Game.Endpoint.Installation.UninstallTest do
       DB.commit()
 
       assert {:error, %{status: 400, error: %{msg: reason}}} =
-               post(build_path(endp_nip, installation.id), %{}, token: jwt)
+               post(build_path(endp_nip, installation, player.id), %{}, token: jwt)
 
       assert reason == "server_not_belongs"
     end
@@ -67,12 +67,14 @@ defmodule Game.Endpoint.Installation.UninstallTest do
       end)
 
       assert {:error, %{status: 400, error: %{msg: reason}}} =
-               post(build_path(nip, installation.id), %{}, token: jwt)
+               post(build_path(nip, installation, player.id), %{}, token: jwt)
 
       assert reason == "installation_not_found"
     end
   end
 
-  defp build_path(%NIP{} = nip, %Installation.ID{} = installation_id),
-    do: "/server/#{NIP.to_external(nip)}/installation/#{ID.to_external(installation_id)}/uninstall"
+  defp build_path(%NIP{} = nip, %Installation{id: id, server_id: server_id}, player_id) do
+    installation_eid = U.to_eid(id, player_id, server_id)
+    "/server/#{NIP.to_external(nip)}/installation/#{installation_eid}/uninstall"
+  end
 end

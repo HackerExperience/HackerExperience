@@ -5,10 +5,10 @@ defmodule Game.TunnelLink do
   @table :tunnel_links
 
   @schema [
-    {:tunnel_id, ID.ref(:tunnel_id)},
+    {:tunnel_id, ID.Definition.ref(:tunnel_id)},
     {:idx, :integer},
     {:nip, NIP},
-    {:server_id, ID.ref(:server_id)},
+    {:server_id, ID.Definition.ref(:server_id)},
     {:inserted_at, {:datetime_utc, [precision: :millisecond], mod: :inserted_at}}
   ]
 
