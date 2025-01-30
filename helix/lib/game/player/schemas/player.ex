@@ -10,7 +10,7 @@ defmodule Game.Player do
 
   @schema [
     # `players.id` is not auto-incrementing. It is defined by `entities.id`.
-    {:id, ID.ref(:player_id)},
+    {:id, ID.Definition.ref(:player_id)},
     {:external_id, :uuid},
     {:inserted_at, {:datetime_utc, [precision: :millisecond], mod: :inserted_at}}
   ]

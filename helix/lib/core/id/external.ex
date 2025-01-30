@@ -18,7 +18,7 @@ defmodule Core.ID.External do
     Core.with_context(:player, player_id, :read, fn ->
       case DB.one({:external_ids, :fetch}, [external_id]) do
         %ExternalID{object_id: id, object_type: id_ref} ->
-          struct(Core.ID.ref(id_ref), %{id: id})
+          struct(Core.ID.Definition.ref(id_ref), %{id: id})
 
         nil ->
           nil

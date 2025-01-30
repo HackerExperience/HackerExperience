@@ -11,13 +11,13 @@ defmodule Game.Connection do
   ]
 
   @schema [
-    {:id, ID.ref(:connection_id)},
+    {:id, ID.Definition.ref(:connection_id)},
     {:nip, NIP},
     {:from_nip, {NIP, nullable: true}},
     {:to_nip, {NIP, nullable: true}},
     {:type, {:enum, values: @connection_types}},
-    {:group_id, ID.ref(:connection_group_id)},
-    {:tunnel_id, ID.ref(:tunnel_id)},
+    {:group_id, ID.Definition.ref(:connection_group_id)},
+    {:tunnel_id, ID.Definition.ref(:tunnel_id)},
     {:inserted_at, {:datetime_utc, [precision: :millisecond], mod: :inserted_at}}
   ]
 

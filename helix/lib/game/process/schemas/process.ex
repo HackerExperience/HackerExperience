@@ -44,8 +44,8 @@ defmodule Game.Process do
   @statuses [:awaiting_allocation, :running, :paused]
 
   @schema [
-    {:id, ID.ref(:process_id)},
-    {:entity_id, ID.ref(:entity_id)},
+    {:id, ID.Definition.ref(:process_id)},
+    {:entity_id, ID.Definition.ref(:entity_id)},
     {:type, {:enum, values: @process_types}},
     # `data` is the actual process data (e.g. log edit I need the contents of the new log)
     {:data, {:map, load_structs: true, after_read: :hydrate_data}},
@@ -58,7 +58,7 @@ defmodule Game.Process do
     {:inserted_at, {:datetime_utc, [precision: :millisecond], mod: :inserted_at}},
     {:last_checkpoint_ts, {:integer, nullable: true}},
     {:estimated_completion_ts, {:integer, nullable: true}},
-    {:server_id, {ID.ref(:server_id), virtual: true, after_read: :get_server_id}},
+    {:server_id, {ID.Definition.ref(:server_id), virtual: true, after_read: :get_server_id}},
     {:next_allocation, {:map, virtual: true}}
   ]
 

@@ -8,10 +8,10 @@ defmodule Game.FileVisibility do
   @table :file_visibilities
 
   @schema [
-    {:server_id, ID.ref(:server_id)},
-    {:file_id, ID.ref(:file_id)},
+    {:server_id, ID.Definition.ref(:server_id)},
+    {:file_id, ID.Definition.ref(:file_id)},
     {:inserted_at, {:datetime_utc, [precision: :millisecond], mod: :inserted_at}},
-    {:entity_id, {ID.ref(:entity_id), virtual: true, after_read: :get_entity_id}}
+    {:entity_id, {ID.Definition.ref(:entity_id), virtual: true, after_read: :get_entity_id}}
   ]
 
   def new(params) do

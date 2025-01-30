@@ -11,7 +11,7 @@ defmodule Game.Entity do
   @entity_types [:player, :npc, :clan]
 
   @schema [
-    {:id, {ID.ref(:entity_id), :autoincrement}},
+    {:id, {ID.Definition.ref(:entity_id), :autoincrement}},
     {:type, {:enum, values: @entity_types}},
     {:inserted_at, {:datetime_utc, [precision: :millisecond], mod: :inserted_at}}
   ]

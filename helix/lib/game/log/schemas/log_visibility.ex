@@ -8,11 +8,11 @@ defmodule Game.LogVisibility do
   @table :log_visibilities
 
   @schema [
-    {:server_id, ID.ref(:server_id)},
-    {:log_id, ID.ref(:log_id)},
+    {:server_id, ID.Definition.ref(:server_id)},
+    {:log_id, ID.Definition.ref(:log_id)},
     {:revision_id, :integer},
     {:inserted_at, {:datetime_utc, [precision: :millisecond], mod: :inserted_at}},
-    {:entity_id, {ID.ref(:entity_id), virtual: true, after_read: :get_entity_id}}
+    {:entity_id, {ID.Definition.ref(:entity_id), virtual: true, after_read: :get_entity_id}}
   ]
 
   def new(params) do

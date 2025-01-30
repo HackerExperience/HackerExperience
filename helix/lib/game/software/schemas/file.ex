@@ -15,7 +15,7 @@ defmodule Game.File do
   ]
 
   @schema [
-    {:id, ID.ref(:file_id)},
+    {:id, ID.Definition.ref(:file_id)},
     {:type, {:enum, values: @file_types}},
     {:name, :string},
     {:version, :integer},
@@ -23,7 +23,7 @@ defmodule Game.File do
     {:path, :string},
     {:inserted_at, {:datetime_utc, [precision: :millisecond], mod: :inserted_at}},
     {:updated_at, {:datetime_utc, [precision: :millisecond], mod: :updated_at}},
-    {:server_id, {ID.ref(:server_id), virtual: true, after_read: :get_server_id}}
+    {:server_id, {ID.Definition.ref(:server_id), virtual: true, after_read: :get_server_id}}
   ]
 
   @derived_fields [:id]
