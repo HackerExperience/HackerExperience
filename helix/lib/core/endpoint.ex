@@ -2,13 +2,18 @@ defmodule Core.Endpoint do
   alias Core.{ID, NIP}
 
   @doc """
-  Casts an external input into a Core.ID format. Note it does NOT check whether the ID exists or
-  if the player has authorization to access it.
+  Casts an external ID (string) into the internal Core.ID format (integer). It relies on the
+  ID.External implementation and ensures that the given ID:
+  1. Exists in the database at one point (it might have been deleted in the corresponding source of
+     truth -- remember that the external ID is more like a cache of IDs the entity has access to).
+  2. Belongs to the same type expected by the caller, as defined by the schema `mod`.
 
   Returns an error if:
 
+  - `raw_value` does not exist and therefore cannot map to an internal ID.
   - `raw_value` is `nil` when it is not nullable.
   - `raw_value` is of a type different than the one expected by `id_mod`.
+  - `raw_value` is not a string.
   """
   def cast_id(field, raw_value, mod, opts \\ []) do
     id_mod = Module.concat(mod, Elixir.ID)
