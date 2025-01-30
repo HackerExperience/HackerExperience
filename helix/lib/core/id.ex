@@ -10,6 +10,9 @@ defmodule Core.ID do
 
       defstruct [:id]
 
+      def new(id) when is_integer(id),
+        do: %__MODULE__{id: id}
+
       @impl true
       def sqlite_type, do: :integer
 
@@ -30,32 +33,8 @@ defmodule Core.ID do
       defimpl String.Chars do
         def to_string(%{id: id}), do: "#{id}"
       end
-
-      # def from_endpoint(nil, opts),
-      #   do: if(opts[:optional], do: {:ok, nil}, else: {:error, :empty})
-
-      # def from_endpoint(raw_id, _opts) when is_integer(raw_id),
-      #   do: {:ok, from_external(raw_id)}
-
-      # def from_endpoint(raw_id, opts) when is_binary(raw_id) do
-      #   case Integer.parse(raw_id) do
-      #     {raw_numeric_id, ""} ->
-      #       from_endpoint(raw_numeric_id, opts)
-
-      #     :error ->
-      #       {:error, :invalid}
-      #   end
-      # end
-
-      # def from_endpoint(_, _),
-      #   do: {:error, :invalid}
-
-      def new(id) when is_integer(id),
-        do: %__MODULE__{id: id}
     end
   end
-
-  # def to_external(%_{id: id}), do: id
 
   def to_external(%struct{id: id}, %_{} = player_id, domain_id \\ nil, subdomain_id \\ nil) do
     object_type =
