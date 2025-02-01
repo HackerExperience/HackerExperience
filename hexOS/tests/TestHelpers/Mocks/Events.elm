@@ -6,4 +6,9 @@ import Game.Model.ServerID as ServerID
 
 indexRequested : Events.IndexRequested
 indexRequested =
-    { player = { mainframe_id = ServerID.fromValue 1, gateways = [], endpoints = [] } }
+    { player =
+        { mainframe_id = ServerID.fromValue "gateway_id"
+        , gateways = []
+        , endpoints = []
+        }
+    }

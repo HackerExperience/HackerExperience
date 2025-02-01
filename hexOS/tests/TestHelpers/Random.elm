@@ -6,10 +6,11 @@ import Game
 import Game.Model.ServerID as ServerID exposing (ServerID)
 import Game.Universe as Universe exposing (Universe(..))
 import HUD.ConnectionInfo as CI
-import Random as R exposing (Generator, int, map, map4, maxInt)
+import Random as R exposing (Generator, map, map4)
 import Random.Extra as R
 import Random.List as R
 import State exposing (State)
+import TestHelpers.Random.Utils exposing (randomId)
 import TestHelpers.Support.RandomUtils as R
 import WM
 
@@ -20,7 +21,7 @@ import WM
 
 serverId : Generator ServerID
 serverId =
-    int 1 maxInt
+    randomId
         |> map (\rawId -> ServerID.fromValue rawId)
 
 

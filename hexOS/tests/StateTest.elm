@@ -38,7 +38,7 @@ msgPerformActionTests =
                                 |> TM.stateWithUniverse Singleplayer
 
                         serverId =
-                            ServerID.fromValue 999
+                            ServerID.fromValue "other"
 
                         -- We'll go to MP
                         msg =

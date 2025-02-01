@@ -25,7 +25,7 @@ state =
             Mocks.indexRequested
 
         gatewayId =
-            ServerID.fromValue 1
+            index.player.mainframe_id
 
         spModel =
             Game.init (API.Types.InputToken "t0k3n") Singleplayer index

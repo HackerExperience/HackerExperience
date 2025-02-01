@@ -9,22 +9,22 @@ module Game.Model.LogID exposing
 
 
 type LogID
-    = LogID Int
+    = LogID String
 
 
 type alias RawLogID =
-    Int
+    String
 
 
 
 -- Functions
 
 
-toValue : LogID -> Int
+toValue : LogID -> String
 toValue (LogID id) =
     id
 
 
-fromValue : Int -> LogID
+fromValue : String -> LogID
 fromValue id =
     LogID id
