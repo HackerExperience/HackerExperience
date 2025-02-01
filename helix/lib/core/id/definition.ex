@@ -42,6 +42,7 @@ defmodule Core.ID.Definition do
   def ref(:file_id), do: :"Elixir.Game.File.ID"
   def ref(:installation_id), do: :"Elixir.Game.Installation.ID"
   def ref(:log_id), do: :"Elixir.Game.Log.ID"
+  def ref(:log_revision_id), do: :"Elixir.Game.LogRevision.ID"
   def ref(:player_id), do: :"Elixir.Game.Player.ID"
   def ref(:process_id), do: :"Elixir.Game.Process.ID"
   def ref(:server_id), do: :"Elixir.Game.Server.ID"

@@ -10,7 +10,7 @@ defmodule Game.LogVisibility do
   @schema [
     {:server_id, ID.Definition.ref(:server_id)},
     {:log_id, ID.Definition.ref(:log_id)},
-    {:revision_id, :integer},
+    {:revision_id, ID.Definition.ref(:log_revision_id)},
     {:inserted_at, {:datetime_utc, [precision: :millisecond], mod: :inserted_at}},
     {:entity_id, {ID.Definition.ref(:entity_id), virtual: true, after_read: :get_entity_id}}
   ]

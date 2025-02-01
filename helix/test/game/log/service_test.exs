@@ -16,10 +16,10 @@ defmodule Game.Services.LogTest do
       rows = Svc.Log.list_visibility(entity.id, visible_on_server: server.id)
 
       # Only the two visibilities in `server.id` were found
-      assert [visibility_1.log_id.id, visibility_1.revision_id] ==
+      assert [visibility_1.log_id.id, visibility_1.revision_id.id] ==
                Enum.find(rows, &(Enum.at(&1, 0) == visibility_1.log_id.id))
 
-      assert [visibility_2.log_id.id, visibility_2.revision_id] ==
+      assert [visibility_2.log_id.id, visibility_2.revision_id.id] ==
                Enum.find(rows, &(Enum.at(&1, 0) == visibility_2.log_id.id))
     end
   end
@@ -43,7 +43,7 @@ defmodule Game.Services.LogTest do
       assert log_1.data == %Log.Data.EmptyData{}
 
       # It's a brand new log, so revision is always 1
-      assert log_1.revision_id == 1
+      assert log_1.revision_id.id == 1
 
       # (Internal) Log IDs are sequential
       assert log_2.id.id == log_1.id.id + 1
@@ -56,7 +56,7 @@ defmodule Game.Services.LogTest do
 
       assert visibility_1.entity_id == entity.id
       assert visibility_1.server_id == server.id
-      assert visibility_1.revision_id == 1
+      assert visibility_1.revision_id == %LogRevision.ID{id: 1}
     end
   end
 end

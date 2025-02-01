@@ -31,7 +31,7 @@ defmodule Core.Event.LoggableTest do
       assert log.direction == :self
       assert log.data == %Log.Data.EmptyData{}
       assert log.server_id == server.id
-      assert log.revision_id == 1
+      assert log.revision_id.id == 1
 
       # It has the correct visibility too
       assert [log_visibility] = U.get_all_log_visibilities(entity.id)

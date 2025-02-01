@@ -59,7 +59,7 @@ defmodule Game.Index.Log do
     %{
       id: ID.to_external(log.id, entity_id, log.server_id),
       # TODO: `log.revision_id` should be an external ID too
-      revision_id: log.revision_id,
+      revision_id: log.revision_id.id,
       type: "#{log.type}"
     }
   end

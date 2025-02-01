@@ -35,7 +35,7 @@ defmodule Game.Log do
 
   @schema [
     {:id, ID.Definition.ref(:log_id)},
-    {:revision_id, :integer},
+    {:revision_id, ID.Definition.ref(:log_revision_id)},
     {:type, {:enum, values: @log_types}},
     {:direction, {:enum, values: @log_directions}},
     {:data, {:map, load_structs: true, after_read: :hydrate_data}},
