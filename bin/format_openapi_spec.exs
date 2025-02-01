@@ -39,11 +39,11 @@ defmodule OpenAPI.Elm.Formatter do
   end
 
   defp handle(:server_id, file) do
-    replace("mainframe_id", "Int", "ServerID", file)
+    replace("mainframe_id", "String", "ServerID", file)
   end
 
   defp handle(:tunnel_id, file) do
-    replace("tunnel_id", "Int", "TunnelID", file)
+    replace("tunnel_id", "String", "TunnelID", file)
   end
 
   ##################################################################################################

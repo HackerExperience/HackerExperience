@@ -87,6 +87,16 @@ defmodule Core do
 
   def rollback, do: DB.rollback()
 
+  def get_current_context do
+    case DB.LocalState.get_current_context() do
+      %{context: ctx, access_type: access, shard_id: shard_id} ->
+        {ctx, shard_id, access}
+
+      nil ->
+        nil
+    end
+  end
+
   @docp """
   It is possible than the context we need is already the context we are currently in. That's what
   this function does: it returns `true` if we can reuse the current context, `false` otherwise.

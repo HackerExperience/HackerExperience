@@ -18,7 +18,8 @@ defmodule Game.Events.Player.IndexRequestedTest do
       assert Map.has_key?(payload, :player)
 
       # The Player Index has the expected data
-      assert payload.player == player |> Index.Player.index() |> Index.Player.render_index()
+      assert payload.player ==
+               player |> Index.Player.index() |> Index.Player.render_index(player.id)
     end
   end
 end

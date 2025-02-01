@@ -40,8 +40,8 @@ defmodule Game.Index.LogTest do
 
       # These are two revisions of the same log
       assert rev_1.id == rev_2.id
-      assert rev_1.revision_id == 1
-      assert rev_2.revision_id == 2
+      assert rev_1.revision_id.id == 1
+      assert rev_2.revision_id.id == 2
 
       # The index only returned `rev_2`
       assert [rev_2] == Index.Log.index(entity.id, gateway.id)
@@ -63,14 +63,14 @@ defmodule Game.Index.LogTest do
       rendered_index =
         entity.id
         |> Index.Log.index(gateway.id)
-        |> Index.Log.render_index()
+        |> Index.Log.render_index(entity.id)
 
       # Rendered index contains log information we need
       assert [log_2, log_1] = rendered_index
-      assert log_1.id == gtw_log_1.id.id
-      assert log_2.id == gtw_log_2.id.id
-      assert log_1.revision_id == gtw_log_1.revision_id
-      assert log_2.revision_id == gtw_log_2.revision_id
+      assert log_1.id |> U.from_eid(entity.id) == gtw_log_1.id
+      assert log_2.id |> U.from_eid(entity.id) == gtw_log_2.id
+      assert log_1.revision_id |> U.from_eid(entity.id) == gtw_log_1.revision_id
+      assert log_2.revision_id |> U.from_eid(entity.id) == gtw_log_2.revision_id
       assert log_1.type == "#{gtw_log_1.type}"
       assert log_2.type == "#{gtw_log_1.type}"
 

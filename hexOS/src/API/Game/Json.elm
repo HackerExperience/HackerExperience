@@ -74,7 +74,7 @@ decodeServerLoginInput =
         |> OpenApi.Common.jsonDecodeAndMap
             (OpenApi.Common.decodeOptionalField
                 "tunnel_id"
-                (Json.Decode.map TunnelID Json.Decode.int)
+                (Json.Decode.map TunnelID Json.Decode.string)
             )
 
 
@@ -84,7 +84,7 @@ encodeServerLoginInput rec =
         (List.filterMap
             Basics.identity
             [ Maybe.map
-                (\mapUnpack -> ( "tunnel_id", Json.Encode.int (TunnelID.toValue mapUnpack) ))
+                (\mapUnpack -> ( "tunnel_id", Json.Encode.string (TunnelID.toValue mapUnpack) ))
                 rec.tunnel_id
             ]
         )
@@ -214,14 +214,17 @@ decodeFileTransferInput =
         |> OpenApi.Common.jsonDecodeAndMap
             (Json.Decode.field "transfer_type" Json.Decode.string)
         |> OpenApi.Common.jsonDecodeAndMap
-            (Json.Decode.field "tunnel_id" (Json.Decode.map TunnelID Json.Decode.int))
+            (Json.Decode.field
+                "tunnel_id"
+                (Json.Decode.map TunnelID Json.Decode.string)
+            )
 
 
 encodeFileTransferInput : API.Game.Types.FileTransferInput -> Json.Encode.Value
 encodeFileTransferInput rec =
     Json.Encode.object
         [ ( "transfer_type", Json.Encode.string rec.transfer_type )
-        , ( "tunnel_id", Json.Encode.int (TunnelID.toValue rec.tunnel_id) )
+        , ( "tunnel_id", Json.Encode.string (TunnelID.toValue rec.tunnel_id) )
         ]
 
 
@@ -262,7 +265,7 @@ decodeFileDeleteInput =
         |> OpenApi.Common.jsonDecodeAndMap
             (OpenApi.Common.decodeOptionalField
                 "tunnel_id"
-                (Json.Decode.map TunnelID Json.Decode.int)
+                (Json.Decode.map TunnelID Json.Decode.string)
             )
 
 
@@ -272,7 +275,7 @@ encodeFileDeleteInput rec =
         (List.filterMap
             Basics.identity
             [ Maybe.map
-                (\mapUnpack -> ( "tunnel_id", Json.Encode.int (TunnelID.toValue mapUnpack) ))
+                (\mapUnpack -> ( "tunnel_id", Json.Encode.string (TunnelID.toValue mapUnpack) ))
                 rec.tunnel_id
             ]
         )

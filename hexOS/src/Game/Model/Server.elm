@@ -67,7 +67,7 @@ parseGateway gateway =
 
 invalidGateway : Gateway
 invalidGateway =
-    { id = ServerID.fromValue 0
+    { id = ServerID.fromValue "invalid_server"
     , nip = NIP.invalidNip
     , logs = OrderedDict.empty
     , tunnels = []

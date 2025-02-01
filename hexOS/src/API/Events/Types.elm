@@ -17,7 +17,6 @@ module API.Events.Types exposing
     , InstallationUninstallFailed
     , InstallationUninstalled
     , ProcessCompleted
-    , ProcessCreated
     , ProcessKilled
     , TunnelCreated
     )
@@ -34,7 +33,7 @@ import Game.Model.TunnelID as TunnelID exposing (TunnelID(..))
 
 @docs FileDeleteFailed, FileDeleted, FileInstallFailed, FileInstalled, FileTransferFailed, FileTransferred
 @docs IdxEndpoint, IdxGateway, IdxLog, IdxPlayer, IdxTunnel, IndexRequested, InstallationUninstallFailed
-@docs InstallationUninstalled, ProcessCompleted, ProcessCreated, ProcessKilled, TunnelCreated
+@docs InstallationUninstalled, ProcessCompleted, ProcessKilled, TunnelCreated
 
 -}
 type alias TunnelCreated =
@@ -47,23 +46,19 @@ type alias TunnelCreated =
 
 
 type alias ProcessKilled =
-    { process_id : Int, reason : String }
-
-
-type alias ProcessCreated =
-    { id : Int, type_ : String }
+    { process_id : String, reason : String }
 
 
 type alias ProcessCompleted =
-    { process_id : Int }
+    { process_id : String }
 
 
 type alias InstallationUninstalled =
-    { installation_id : Int, process_id : Int }
+    { installation_id : String, process_id : String }
 
 
 type alias InstallationUninstallFailed =
-    { process_id : Int, reason : String }
+    { process_id : String, reason : String }
 
 
 type alias IndexRequested =
@@ -71,31 +66,31 @@ type alias IndexRequested =
 
 
 type alias FileTransferred =
-    { file_id : Int, process_id : Int }
+    { file_id : String, process_id : String }
 
 
 type alias FileTransferFailed =
-    { process_id : Int, reason : String }
+    { process_id : String, reason : String }
 
 
 type alias FileInstalled =
     { file_name : String
-    , installation_id : Int
+    , installation_id : String
     , memory_usage : Int
-    , process_id : Int
+    , process_id : String
     }
 
 
 type alias FileInstallFailed =
-    { process_id : Int, reason : String }
+    { process_id : String, reason : String }
 
 
 type alias FileDeleted =
-    { file_id : Int, process_id : Int }
+    { file_id : String, process_id : String }
 
 
 type alias FileDeleteFailed =
-    { process_id : Int, reason : String }
+    { process_id : String, reason : String }
 
 
 type alias IdxTunnel =
@@ -110,11 +105,11 @@ type alias IdxPlayer =
 
 
 type alias IdxLog =
-    { id : Int, revision_id : Int, type_ : String }
+    { id : String, revision_id : String, type_ : String }
 
 
 type alias IdxGateway =
-    { id : Int, logs : List IdxLog, nip : NIP, tunnels : List IdxTunnel }
+    { id : String, logs : List IdxLog, nip : NIP, tunnels : List IdxTunnel }
 
 
 type alias IdxEndpoint =

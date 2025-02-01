@@ -3,20 +3,17 @@ module Game.Model.TunnelID exposing
     , toValue
     )
 
-{-| TODO: Actual tunnel ID isn't `int`. Yet TBD.
--}
-
 -- Types
 
 
 type TunnelID
-    = TunnelID Int
+    = TunnelID String
 
 
 
 -- Functions
 
 
-toValue : TunnelID -> Int
+toValue : TunnelID -> String
 toValue (TunnelID id) =
     id

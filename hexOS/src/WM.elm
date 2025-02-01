@@ -724,7 +724,7 @@ dummyWindow =
     , blockedByApp = Nothing
     , childBehavior = Nothing
     , universe = Universe.Singleplayer
-    , sessionID = LocalSessionID (ServerID.fromValue 0)
+    , sessionID = LocalSessionID (ServerID.fromValue "invalid_wm_server")
     }
 
 

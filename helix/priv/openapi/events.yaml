@@ -27,7 +27,7 @@ components:
         - id
       properties:
         id:
-          type: integer
+          type: string
         nip:
           type: string
         tunnels:
@@ -46,11 +46,11 @@ components:
         - id
       properties:
         id:
-          type: integer
+          type: string
         type:
           type: string
         revision_id:
-          type: integer
+          type: string
     IdxPlayer:
       type: object
       required:
@@ -67,7 +67,7 @@ components:
           items:
             $ref: '#/components/schemas/IdxGateway'
         mainframe_id:
-          type: integer
+          type: string
     IdxTunnel:
       type: object
       required:
@@ -76,7 +76,7 @@ components:
         - tunnel_id
       properties:
         tunnel_id:
-          type: integer
+          type: string
         target_nip:
           type: string
         source_nip:
@@ -90,17 +90,17 @@ components:
         reason:
           type: string
         process_id:
-          type: integer
+          type: string
     file_deleted:
       type: object
       required:
-        - process_id
         - file_id
+        - process_id
       properties:
-        file_id:
-          type: integer
         process_id:
-          type: integer
+          type: string
+        file_id:
+          type: string
     file_install_failed:
       type: object
       required:
@@ -110,21 +110,21 @@ components:
         reason:
           type: string
         process_id:
-          type: integer
+          type: string
     file_installed:
       type: object
       required:
         - memory_usage
-        - process_id
         - installation_id
+        - process_id
         - file_name
       properties:
         file_name:
           type: string
-        installation_id:
-          type: integer
         process_id:
-          type: integer
+          type: string
+        installation_id:
+          type: string
         memory_usage:
           type: integer
     file_transfer_failed:
@@ -136,7 +136,7 @@ components:
         reason:
           type: string
         process_id:
-          type: integer
+          type: string
     file_transferred:
       type: object
       required:
@@ -144,9 +144,9 @@ components:
         - process_id
       properties:
         process_id:
-          type: integer
+          type: string
         file_id:
-          type: integer
+          type: string
     index_requested:
       type: object
       required:
@@ -163,33 +163,23 @@ components:
         reason:
           type: string
         process_id:
-          type: integer
+          type: string
     installation_uninstalled:
       type: object
       required:
-        - process_id
         - installation_id
+        - process_id
       properties:
-        installation_id:
-          type: integer
         process_id:
-          type: integer
+          type: string
+        installation_id:
+          type: string
     process_completed:
       type: object
       required:
         - process_id
       properties:
         process_id:
-          type: integer
-    process_created:
-      type: object
-      required:
-        - type
-        - id
-      properties:
-        id:
-          type: integer
-        type:
           type: string
     process_killed:
       type: object
@@ -200,7 +190,7 @@ components:
         reason:
           type: string
         process_id:
-          type: integer
+          type: string
     tunnel_created:
       type: object
       required:
@@ -215,7 +205,7 @@ components:
         index:
           $ref: '#/components/schemas/IdxEndpoint'
         tunnel_id:
-          type: integer
+          type: string
         target_nip:
           type: string
         source_nip:

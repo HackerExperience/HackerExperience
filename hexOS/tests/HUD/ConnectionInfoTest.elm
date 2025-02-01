@@ -68,7 +68,7 @@ suite =
                             ( TM.state, TM.hudCiWithSelector SelectorGateway )
 
                         serverId =
-                            ServerID.fromValue 999
+                            ServerID.fromValue "other"
 
                         msg =
                             CI.SwitchGateway state.currentUniverse serverId

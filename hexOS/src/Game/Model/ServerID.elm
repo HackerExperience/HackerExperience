@@ -5,29 +5,26 @@ module Game.Model.ServerID exposing
     , toValue
     )
 
-{-| TODO: Actual server ID isn't `int`. Yet TBD.
--}
-
 -- Types
 
 
 type ServerID
-    = ServerID Int
+    = ServerID String
 
 
 type alias RawServerID =
-    Int
+    String
 
 
 
 -- Functions
 
 
-toValue : ServerID -> Int
+toValue : ServerID -> String
 toValue (ServerID id) =
     id
 
 
-fromValue : Int -> ServerID
+fromValue : String -> ServerID
 fromValue id =
     ServerID id

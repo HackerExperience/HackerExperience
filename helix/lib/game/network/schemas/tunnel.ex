@@ -12,7 +12,7 @@ defmodule Game.Tunnel do
   @status_types [:open, :closed]
 
   @schema [
-    {:id, ID.ref(:tunnel_id)},
+    {:id, ID.Definition.ref(:tunnel_id)},
     {:source_nip, NIP},
     {:target_nip, NIP},
     {:access, {:enum, values: @access_types}},
