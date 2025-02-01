@@ -38,6 +38,9 @@ defmodule Core.ID.External do
     result =
       Core.with_context(:player, player_id, :write, fn ->
         %{
+          # TODO: For now the external ID is just a random UUID, but I think it makes sense to make
+          # it smaller and perhaps with some embedded metadata. Also, if @env == :dev, embed the
+          # actual internal ID in it -- vastly easier debugging with zero downsides.
           external_id: Renatils.Random.uuid(),
           object_id: object_id,
           object_type: type,
