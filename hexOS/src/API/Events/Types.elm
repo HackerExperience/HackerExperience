@@ -41,7 +41,7 @@ type alias TunnelCreated =
     , index : IdxEndpoint
     , source_nip : NIP
     , target_nip : NIP
-    , tunnel_id : String
+    , tunnel_id : TunnelID
     }
 
 
@@ -94,13 +94,13 @@ type alias FileDeleteFailed =
 
 
 type alias IdxTunnel =
-    { source_nip : NIP, target_nip : NIP, tunnel_id : String }
+    { source_nip : NIP, target_nip : NIP, tunnel_id : TunnelID }
 
 
 type alias IdxPlayer =
     { endpoints : List IdxEndpoint
     , gateways : List IdxGateway
-    , mainframe_id : String
+    , mainframe_id : ServerID
     }
 
 

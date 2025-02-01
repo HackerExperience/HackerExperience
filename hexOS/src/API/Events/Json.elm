@@ -69,7 +69,7 @@ decodeTunnelCreated =
         |> OpenApi.Common.jsonDecodeAndMap
             (Json.Decode.field
                 "tunnel_id"
-                Json.Decode.string
+                (Json.Decode.map TunnelID Json.Decode.string)
             )
 
 
@@ -80,7 +80,7 @@ encodeTunnelCreated rec =
         , ( "index", encodeIdxEndpoint rec.index )
         , ( "source_nip", Json.Encode.string (NIP.toString rec.source_nip) )
         , ( "target_nip", Json.Encode.string (NIP.toString rec.target_nip) )
-        , ( "tunnel_id", Json.Encode.string rec.tunnel_id )
+        , ( "tunnel_id", Json.Encode.string (TunnelID.toValue rec.tunnel_id) )
         ]
 
 
@@ -326,7 +326,7 @@ decodeIdxTunnel =
         |> OpenApi.Common.jsonDecodeAndMap
             (Json.Decode.field
                 "tunnel_id"
-                Json.Decode.string
+                (Json.Decode.map TunnelID Json.Decode.string)
             )
 
 
@@ -335,7 +335,7 @@ encodeIdxTunnel rec =
     Json.Encode.object
         [ ( "source_nip", Json.Encode.string (NIP.toString rec.source_nip) )
         , ( "target_nip", Json.Encode.string (NIP.toString rec.target_nip) )
-        , ( "tunnel_id", Json.Encode.string rec.tunnel_id )
+        , ( "tunnel_id", Json.Encode.string (TunnelID.toValue rec.tunnel_id) )
         ]
 
 
@@ -361,7 +361,7 @@ decodeIdxPlayer =
         |> OpenApi.Common.jsonDecodeAndMap
             (Json.Decode.field
                 "mainframe_id"
-                Json.Decode.string
+                (Json.Decode.map ServerID Json.Decode.string)
             )
 
 
@@ -370,7 +370,7 @@ encodeIdxPlayer rec =
     Json.Encode.object
         [ ( "endpoints", Json.Encode.list encodeIdxEndpoint rec.endpoints )
         , ( "gateways", Json.Encode.list encodeIdxGateway rec.gateways )
-        , ( "mainframe_id", Json.Encode.string rec.mainframe_id )
+        , ( "mainframe_id", Json.Encode.string (ServerID.toValue rec.mainframe_id) )
         ]
 
 

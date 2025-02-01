@@ -93,7 +93,7 @@ type alias ServerLoginOutput =
 
 
 type alias ServerLoginInput =
-    { tunnel_id : Maybe String }
+    { tunnel_id : Maybe TunnelID }
 
 
 type alias PlayerSyncOutput =
@@ -125,7 +125,7 @@ type alias FileTransferOutput =
 
 
 type alias FileTransferInput =
-    { transfer_type : String, tunnel_id : String }
+    { transfer_type : String, tunnel_id : TunnelID }
 
 
 type alias FileInstallOutput =
@@ -141,7 +141,7 @@ type alias FileDeleteOutput =
 
 
 type alias FileDeleteInput =
-    { tunnel_id : Maybe String }
+    { tunnel_id : Maybe TunnelID }
 
 
 type alias ServerLoginOkResponse =
