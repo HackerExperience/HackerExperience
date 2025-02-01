@@ -184,7 +184,6 @@ defmodule Game.Endpoint.File.TransferTest do
       params_download_no_tunnel = %{transfer_type: :download}
       params_upload_no_tunnel = %{transfer_type: :upload}
 
-      # TODO: Also test directly at `get_context/3`
       # Can't download file using unrelated tunnel
       assert {:error, %{status: 400, error: %{msg: "tunnel_id:id_not_found"}}} =
                post(build_path(endp_nip, file_endp, player.id), params_download, token: jwt)

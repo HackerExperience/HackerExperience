@@ -336,7 +336,6 @@ defmodule Game.Endpoint.Server.LoginTest do
 
       params = %{tunnel_id: Random.uuid()}
 
-      # TODO: Also test directly at `get_context/3`
       # We can't create an SSH connection using a Tunnel that does not exist
       assert {:error, %{status: 400, error: %{msg: "tunnel_id:id_not_found"}}} =
                post(build_path(nip, nip), params, shard_id: shard_id, token: jwt)
@@ -357,7 +356,6 @@ defmodule Game.Endpoint.Server.LoginTest do
 
       params = %{tunnel_id: other_tunnel.id |> ID.to_external(other_player.id, endpoint.id)}
 
-      # TODO: Also test directly at `get_context/3`
       # We can't create an SSH connection using a Tunnel that is not ours
       assert {:error, %{status: 400, error: %{msg: "tunnel_id:id_not_found"}}} =
                post(build_path(gtw_nip, endp_nip), params, shard_id: shard_id, token: jwt)
