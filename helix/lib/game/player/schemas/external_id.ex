@@ -11,6 +11,7 @@ defmodule Game.ExternalID do
     :file_id,
     :installation_id,
     :log_id,
+    :log_revision_id,
     :process_id,
     :server_id,
     :tunnel_id

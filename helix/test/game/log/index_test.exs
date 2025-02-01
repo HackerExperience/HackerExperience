@@ -69,8 +69,8 @@ defmodule Game.Index.LogTest do
       assert [log_2, log_1] = rendered_index
       assert log_1.id |> U.from_eid(entity.id) == gtw_log_1.id
       assert log_2.id |> U.from_eid(entity.id) == gtw_log_2.id
-      assert log_1.revision_id == gtw_log_1.revision_id.id
-      assert log_2.revision_id == gtw_log_2.revision_id.id
+      assert log_1.revision_id |> U.from_eid(entity.id) == gtw_log_1.revision_id
+      assert log_2.revision_id |> U.from_eid(entity.id) == gtw_log_2.revision_id
       assert log_1.type == "#{gtw_log_1.type}"
       assert log_2.type == "#{gtw_log_1.type}"
 

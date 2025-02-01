@@ -26,10 +26,9 @@ defmodule Core.ID.External do
     end)
   end
 
-  def get_object_type("X"), do: :x
-
   def get_object_type(schema_name) do
     schema_name
+    |> Macro.underscore()
     |> String.downcase()
     |> Kernel.<>("_id")
     |> String.to_existing_atom()

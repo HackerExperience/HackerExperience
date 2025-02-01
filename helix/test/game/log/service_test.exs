@@ -56,7 +56,7 @@ defmodule Game.Services.LogTest do
 
       assert visibility_1.entity_id == entity.id
       assert visibility_1.server_id == server.id
-      assert visibility_1.revision_id == %LogRevision.ID{id: 1}
+      assert visibility_1.revision_id.id == 1
     end
   end
 end

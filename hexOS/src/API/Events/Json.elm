@@ -385,7 +385,7 @@ decodeIdxLog =
         |> OpenApi.Common.jsonDecodeAndMap
             (Json.Decode.field
                 "revision_id"
-                Json.Decode.int
+                Json.Decode.string
             )
         |> OpenApi.Common.jsonDecodeAndMap
             (Json.Decode.field
@@ -398,7 +398,7 @@ encodeIdxLog : API.Events.Types.IdxLog -> Json.Encode.Value
 encodeIdxLog rec =
     Json.Encode.object
         [ ( "id", Json.Encode.string rec.id )
-        , ( "revision_id", Json.Encode.int rec.revision_id )
+        , ( "revision_id", Json.Encode.string rec.revision_id )
         , ( "type", Json.Encode.string rec.type_ )
         ]
 

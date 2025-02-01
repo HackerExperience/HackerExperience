@@ -20,7 +20,7 @@ type alias Logs =
 
 type alias Log =
     { id : LogID
-    , revisionId : Int
+    , revisionId : String
     , type_ : LogType
     , rawText : String
     }

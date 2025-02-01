@@ -13,8 +13,7 @@ defmodule Game.Index.Log do
 
   @typep rendered_log :: %{
            id: ID.external(),
-           # TODO: `revision_id` should be converted to external ID too
-           revision_id: integer(),
+           revision_id: ID.external(),
            type: String.t()
          }
 
@@ -23,7 +22,7 @@ defmodule Game.Index.Log do
       schema(%{
         __openapi_name: "IdxLog",
         id: external_id(),
-        revision_id: integer(),
+        revision_id: external_id(),
         type: binary()
       }),
       [:id, :revision_id, :type]
@@ -58,8 +57,7 @@ defmodule Game.Index.Log do
   defp render_log(%Log{} = log, entity_id) do
     %{
       id: ID.to_external(log.id, entity_id, log.server_id),
-      # TODO: `log.revision_id` should be an external ID too
-      revision_id: log.revision_id.id,
+      revision_id: ID.to_external(log.revision_id, entity_id, log.server_id, log.id),
       type: "#{log.type}"
     }
   end

@@ -50,7 +50,7 @@ components:
         type:
           type: string
         revision_id:
-          type: integer
+          type: string
     IdxPlayer:
       type: object
       required:
