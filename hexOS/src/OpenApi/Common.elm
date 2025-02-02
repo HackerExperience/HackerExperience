@@ -1,7 +1,10 @@
+-- This is an auto-generated file; manual changes will be overwritten!
+
+
 module OpenApi.Common exposing
     ( Nullable(..)
     , decodeOptionalField, jsonDecodeAndMap
-    , Error(..), bytesResolverCustom, expectBytesCustom, expectJsonCustom, expectStringCustom, jsonResolverCustom
+    , Error(..), expectJsonCustom, expectStringCustom, jsonResolverCustom
     , stringResolverCustom
     )
 
@@ -20,13 +23,11 @@ module OpenApi.Common exposing
 
 ## Http
 
-@docs Error, bytesResolverCustom, expectBytesCustom, expectJsonCustom, expectStringCustom, jsonResolverCustom
+@docs Error, expectJsonCustom, expectStringCustom, jsonResolverCustom
 @docs stringResolverCustom
 
 -}
 
-import Bytes
-import Bytes.Decode
 import Dict
 import Http
 import Json.Decode
@@ -216,128 +217,6 @@ stringResolverCustom errorDecoders =
         )
 
 
-expectBytesCustom :
-    (Result (Error err Bytes.Bytes) Bytes.Bytes -> msg)
-    -> Dict.Dict String (Json.Decode.Decoder err)
-    -> Http.Expect msg
-expectBytesCustom toMsg errorDecoders =
-    Http.expectBytesResponse
-        toMsg
-        (\expectBytesResponseUnpack ->
-            case expectBytesResponseUnpack of
-                Http.BadUrl_ stringString ->
-                    Result.Err (BadUrl stringString)
-
-                Http.Timeout_ ->
-                    Result.Err Timeout
-
-                Http.NetworkError_ ->
-                    Result.Err NetworkError
-
-                Http.BadStatus_ httpMetadata body ->
-                    case
-                        Dict.get
-                            (String.fromInt httpMetadata.statusCode)
-                            errorDecoders
-                    of
-                        Maybe.Just a ->
-                            case
-                                Json.Decode.decodeString
-                                    a
-                                    (Maybe.withDefault
-                                        ""
-                                        (Bytes.Decode.decode
-                                            (Bytes.Decode.string
-                                                (Bytes.width body)
-                                            )
-                                            body
-                                        )
-                                    )
-                            of
-                                Result.Ok value ->
-                                    Result.Err
-                                        (KnownBadStatus
-                                            httpMetadata.statusCode
-                                            value
-                                        )
-
-                                Result.Err error ->
-                                    Result.Err (BadErrorBody httpMetadata body)
-
-                        Maybe.Nothing ->
-                            Result.Err (UnknownBadStatus httpMetadata body)
-
-                Http.GoodStatus_ httpMetadata body ->
-                    Result.Ok body
-        )
-
-
-bytesResolverCustom :
-    Dict.Dict String (Json.Decode.Decoder err)
-    -> Http.Resolver (Error err Bytes.Bytes) Bytes.Bytes
-bytesResolverCustom errorDecoders =
-    Http.bytesResolver
-        (\bytesResolverUnpack ->
-            case bytesResolverUnpack of
-                Http.BadUrl_ stringString ->
-                    Result.Err (BadUrl stringString)
-
-                Http.Timeout_ ->
-                    Result.Err Timeout
-
-                Http.NetworkError_ ->
-                    Result.Err NetworkError
-
-                Http.BadStatus_ httpMetadata body ->
-                    case
-                        Dict.get
-                            (String.fromInt httpMetadata.statusCode)
-                            errorDecoders
-                    of
-                        Maybe.Just a ->
-                            case
-                                Json.Decode.decodeString
-                                    a
-                                    (Maybe.withDefault
-                                        ""
-                                        (Bytes.Decode.decode
-                                            (Bytes.Decode.string
-                                                (Bytes.width body)
-                                            )
-                                            body
-                                        )
-                                    )
-                            of
-                                Result.Ok value ->
-                                    Result.Err
-                                        (KnownBadStatus
-                                            httpMetadata.statusCode
-                                            value
-                                        )
-
-                                Result.Err error ->
-                                    Result.Err (BadErrorBody httpMetadata body)
-
-                        Maybe.Nothing ->
-                            Result.Err (UnknownBadStatus httpMetadata body)
-
-                Http.GoodStatus_ httpMetadata body ->
-                    Result.Ok body
-        )
-
-
-{-| Decode an optional field
-
-    decodeString (decodeOptionalField "x" int) "{ "x": 3 }"
-    --> Ok (Just 3)
-
-    decodeString (decodeOptionalField "x" int) "{ "x": true }"
-    --> Err ...
-
-    decodeString (decodeOptionalField "x" int) "{ "y": 4 }"
-    --> Ok Nothing
-
--}
 decodeOptionalField : String -> Json.Decode.Decoder t -> Json.Decode.Decoder (Maybe t)
 decodeOptionalField key fieldDecoder =
     Json.Decode.andThen
