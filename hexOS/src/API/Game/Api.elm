@@ -32,7 +32,7 @@ import Url.Builder
 
 playerSyncTask :
     { server : String, body : API.Game.Types.PlayerSyncRequest }
-    -> Task.Task (OpenApi.Common.Error API.Game.Types.PlayerSync_Error String) API.Game.Types.PlayerSyncOkResponse
+    -> Task.Task (OpenApi.Common.Error API.Game.Types.GenericBadRequestResponse String) API.Game.Types.PlayerSyncOkResponse
 playerSyncTask config =
     Http.task
         { url =
@@ -42,11 +42,7 @@ playerSyncTask config =
         , resolver =
             OpenApi.Common.jsonResolverCustom
                 (Dict.fromList
-                    [ ( "400"
-                      , Json.Decode.map
-                            API.Game.Types.PlayerSync_400
-                            API.Game.Json.decodeGenericBadRequestResponse
-                      )
+                    [ ( "400", API.Game.Json.decodeGenericBadRequestResponse )
                     ]
                 )
                 API.Game.Json.decodePlayerSyncOkResponse
@@ -62,7 +58,7 @@ fileDeleteTask :
     , body : API.Game.Types.FileDeleteRequest
     , params : { nip : NIP, file_id : String }
     }
-    -> Task.Task (OpenApi.Common.Error API.Game.Types.FileDelete_Error String) API.Game.Types.FileDeleteOkResponse
+    -> Task.Task (OpenApi.Common.Error e String) API.Game.Types.FileDeleteOkResponse
 fileDeleteTask config =
     Http.task
         { url =
@@ -95,7 +91,7 @@ fileInstallTask :
     , body : API.Game.Types.FileInstallRequest
     , params : { nip : NIP, file_id : String }
     }
-    -> Task.Task (OpenApi.Common.Error API.Game.Types.FileInstall_Error String) API.Game.Types.FileInstallOkResponse
+    -> Task.Task (OpenApi.Common.Error e String) API.Game.Types.FileInstallOkResponse
 fileInstallTask config =
     Http.task
         { url =
@@ -128,7 +124,7 @@ fileTransferTask :
     , body : API.Game.Types.FileTransferRequest
     , params : { nip : NIP, file_id : String }
     }
-    -> Task.Task (OpenApi.Common.Error API.Game.Types.FileTransfer_Error String) API.Game.Types.FileTransferOkResponse
+    -> Task.Task (OpenApi.Common.Error e String) API.Game.Types.FileTransferOkResponse
 fileTransferTask config =
     Http.task
         { url =
@@ -161,7 +157,7 @@ installationUninstallTask :
     , body : API.Game.Types.InstallationUninstallRequest
     , params : { nip : NIP, installation_id : String }
     }
-    -> Task.Task (OpenApi.Common.Error API.Game.Types.InstallationUninstall_Error String) API.Game.Types.InstallationUninstallOkResponse
+    -> Task.Task (OpenApi.Common.Error e String) API.Game.Types.InstallationUninstallOkResponse
 installationUninstallTask config =
     Http.task
         { url =
@@ -195,7 +191,7 @@ serverLoginTask :
     , body : API.Game.Types.ServerLoginRequest
     , params : { nip : NIP, target_nip : NIP }
     }
-    -> Task.Task (OpenApi.Common.Error API.Game.Types.ServerLogin_Error String) API.Game.Types.ServerLoginOkResponse
+    -> Task.Task (OpenApi.Common.Error e String) API.Game.Types.ServerLoginOkResponse
 serverLoginTask config =
     Http.task
         { url =
