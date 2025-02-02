@@ -3,6 +3,8 @@
 defmodule OpenAPI.Elm.Formatter do
   require Logger
 
+  @common_file "src/OpenApi/Common.elm"
+
   # TODO: Add comment stating these files are generated and should not be hand-edited
   @files [
     "src/API/Events/Types.elm",
@@ -19,13 +21,15 @@ defmodule OpenAPI.Elm.Formatter do
   ]
 
   def format do
+    handle_common_file()
+
     Enum.each(@custom_types, fn type ->
       Logger.debug("Formatting custom type: #{type}")
       Enum.each(@files, &handle(type, &1))
     end)
 
-    Enum.each(@files, &add_warning_comment/1)
-    Enum.each(@files, &elm_format/1)
+    Enum.each(@files ++ [@common_file], &add_warning_comment/1)
+    Enum.each(@files ++ [@common_file], &elm_format/1)
   end
 
   ##################################################################################################
@@ -44,6 +48,15 @@ defmodule OpenAPI.Elm.Formatter do
 
   defp handle(:tunnel_id, file) do
     replace("tunnel_id", "String", "TunnelID", file)
+  end
+
+  defp handle_common_file do
+    # Remove Bytes resolver: we have no plans on using it and it's not supported by elm-program-test
+    sed("/expectBytesCustom \:/,/decodeOptionalField \:/{/decodeOptionalField \:/!d}", @common_file)
+    sed("s/expectBytesCustom, //", @common_file)
+    sed("s/bytesResolverCustom, //", @common_file)
+    sed("/import Bytes$/d", @common_file)
+    sed("/import Bytes\.Decode$/d", @common_file)
   end
 
   ##################################################################################################

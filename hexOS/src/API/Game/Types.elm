@@ -6,17 +6,14 @@ module API.Game.Types exposing
     , FileDeleteOkResponse
     , FileDeleteOutput
     , FileDeleteRequest
-    , FileDelete_Error
     , FileInstallInput
     , FileInstallOkResponse
     , FileInstallOutput
     , FileInstallRequest
-    , FileInstall_Error
     , FileTransferInput
     , FileTransferOkResponse
     , FileTransferOutput
     , FileTransferRequest
-    , FileTransfer_Error
     , GenericBadRequest
     , GenericBadRequestResponse
     , GenericError
@@ -26,17 +23,14 @@ module API.Game.Types exposing
     , InstallationUninstallOkResponse
     , InstallationUninstallOutput
     , InstallationUninstallRequest
-    , InstallationUninstall_Error
     , PlayerSyncInput
     , PlayerSyncOkResponse
     , PlayerSyncOutput
     , PlayerSyncRequest
-    , PlayerSync_Error(..)
     , ServerLoginInput
     , ServerLoginOkResponse
     , ServerLoginOutput
     , ServerLoginRequest
-    , ServerLogin_Error
     )
 
 import Game.Model.NIP as NIP exposing (NIP(..))
@@ -57,37 +51,7 @@ import Game.Model.TunnelID as TunnelID exposing (TunnelID(..))
 @docs PlayerSyncInput, PlayerSyncOkResponse, PlayerSyncOutput, PlayerSyncRequest, ServerLoginInput
 @docs ServerLoginOkResponse, ServerLoginOutput, ServerLoginRequest
 
-
-## Errors
-
-@docs FileDelete_Error, FileInstall_Error, FileTransfer_Error, InstallationUninstall_Error, PlayerSync_Error
-@docs ServerLogin_Error
-
 -}
-type PlayerSync_Error
-    = PlayerSync_400 GenericBadRequestResponse
-
-
-type alias FileDelete_Error =
-    Never
-
-
-type alias FileInstall_Error =
-    Never
-
-
-type alias FileTransfer_Error =
-    Never
-
-
-type alias InstallationUninstall_Error =
-    Never
-
-
-type alias ServerLogin_Error =
-    Never
-
-
 type alias ServerLoginOutput =
     {}
 

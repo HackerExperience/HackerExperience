@@ -89,7 +89,7 @@ setup_simulated_openapi_common() {
     cp $SPEC_FILE $TARGET_FILE
 
     # Replace module name
-    sed -i '1 s/\.Common/\.SimulatedCommon/' $TARGET_FILE
+    sed -i 's/\.Common/\.SimulatedCommon/g' $TARGET_FILE
 
     # Handle imports
     add_SimulatedEffectHttpAsHttpSim $TARGET_FILE
