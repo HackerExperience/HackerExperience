@@ -22,8 +22,8 @@
     "elm-open-api": "^0.6.1",
     "elm-review": "^2.12.0",
     "elm-test-rs": "^3.0.0-5",
-    "vite": "^5.0.11",
-    "vite-plugin-elm": "^3.0.0"
+    "vite": "^6.0.11",
+    "vite-plugin-elm": "^3.0.1"
   },
   "dependencies": {
     "elm": "^0.19.1-6",
