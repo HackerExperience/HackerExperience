@@ -21,12 +21,10 @@ export default defineConfig(({ command, mode }) => {
       outDir: path.join(__dirname, "dist"),
       emptyOutDir: true,
       rollupOptions: {
-        output: {
-          manualChunks: {
-            core: ["src/styles/core.scss"],
-            midnight: ["src/styles/themes/midnight/_index.scss"],
-            terminal: ["src/styles/themes/terminal/_index.scss"],
-          }
+        input: {
+          index: 'src/index.html',
+          midnight: 'src/styles/themes/midnight/_index.scss',
+          terminal: 'src/styles/themes/terminal/_index.scss'
         }
       }
     },
