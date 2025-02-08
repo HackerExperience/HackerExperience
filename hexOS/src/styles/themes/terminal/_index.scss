@@ -1,9 +1,7 @@
-@use "variables" as v;
+@use "../../utils/vars" as v;
 
-@mixin theme {
-    :root {
-        --primary: #{v.$primary};
-    }
-}
-
-@include theme;
+@include v.define(
+    (
+        "primary": green
+    )
+);

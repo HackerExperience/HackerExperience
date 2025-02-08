@@ -1,0 +1,7 @@
+// This is mostly to make sure that if a theme "forgets" to define a particular value, we just
+// specify a properly defined default, instead of having a potentially missing variable.
+
+$default-theme-vars: (
+    "primary": black,
+    "secondary": black
+)
