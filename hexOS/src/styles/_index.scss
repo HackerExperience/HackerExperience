@@ -1,0 +1,30 @@
+@use "utils/colors" as *;
+
+@use "preflight";
+@use "ui";
+@use "old_index";
+
+html {
+    /* This is a hack so that, from now on, 1px = 0.1rem.
+     * We will, then, set `font-size: 1.6rem` in `body` as to restore the
+     * default font-size for the user.
+     */
+    font-size: 62.5%;
+    font-family: 'Lato';
+}
+
+body {
+    /* See `font-size` comment on `html` */
+    font-size: 1.6rem;
+}
+
+html, body {
+    height: 100%;
+    width: 100%;
+    min-width: 100%;
+    max-width: 100%;
+}
+
+body {
+    background-color: base()
+}

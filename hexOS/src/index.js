@@ -1,5 +1,5 @@
 import "./styles/themes/midnight/_index.scss";
-import "./styles/core.scss";
+import "./styles/_index.scss";
 import { Elm } from "./Main.elm";
 
 document.addEventListener("DOMContentLoaded", () => {
