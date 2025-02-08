@@ -1,7 +1,8 @@
 @use "../../utils/vars" as v;
 
-@include v.define(
-    (
-        "primary": green
-    )
+$theme-vars: (
+    "primary": purple,
+    "secondary": green
 );
+
+@include v.define($theme-vars);
