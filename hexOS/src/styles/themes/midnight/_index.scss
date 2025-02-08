@@ -1,0 +1,9 @@
+@use "variables" as v;
+
+@mixin theme {
+    :root {
+        --primary: #{v.$primary};
+    }
+}
+
+@include theme;

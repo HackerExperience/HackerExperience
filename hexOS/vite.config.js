@@ -24,7 +24,8 @@ export default defineConfig(({ command, mode }) => {
         output: {
           manualChunks: {
             core: ["src/styles/core.scss"],
-            theme: ["src/styles/themes/_index.scss"]
+            midnight: ["src/styles/themes/midnight/_index.scss"],
+            terminal: ["src/styles/themes/terminal/_index.scss"],
           }
         }
       }
