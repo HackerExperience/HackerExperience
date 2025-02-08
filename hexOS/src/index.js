@@ -6,14 +6,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const app = Elm.Main.init({
     node: document.getElementById('app'),
     flags: {
-      "theme": {
-        "c": {
-          "primary": "#2ba964",
-          "background": "#ffffff",
-        },
-        "logo": "foo_logo.png",
-        "default": true
-      },
       "creds": "42",
       "viewportX": window.innerWidth,
       "viewportY": window.innerHeight,
