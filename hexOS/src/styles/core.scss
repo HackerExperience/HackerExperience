@@ -1,3 +1,5 @@
+@use "utils/colors" as *;
+
 body {
-    background-color: var(--primary);
+    background-color: base()
 }
