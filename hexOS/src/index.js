@@ -1,4 +1,5 @@
-// import "./style.css";
+import "./styles/themes/_index.scss";
+import "./styles/core.scss";
 import { Elm } from "./Main.elm";
 
 document.addEventListener("DOMContentLoaded", () => {

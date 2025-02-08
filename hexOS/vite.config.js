@@ -19,7 +19,15 @@ export default defineConfig(({ command, mode }) => {
     root: "src",
     build: {
       outDir: path.join(__dirname, "dist"),
-      emptyOutDir: true
+      emptyOutDir: true,
+      rollupOptions: {
+        output: {
+          manualChunks: {
+            core: ["src/styles/core.scss"],
+            theme: ["src/styles/themes/_index.scss"]
+          }
+        }
+      }
     },
     resolve: {
       alias: {
@@ -27,6 +35,14 @@ export default defineConfig(({ command, mode }) => {
         $images: path.resolve('./assets/images')
       }
     },
-    publicDir: 'assets'
+    publicDir: 'assets',
+    css: {
+      preprocessorOptions: {
+        scss: {
+          api: 'modern-compiler',
+          devSourcemap: true
+        }
+      }
+    }
   }
 });
