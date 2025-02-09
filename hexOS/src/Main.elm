@@ -81,10 +81,10 @@ main : Program Flags Model Msg
 
 -}
 main =
-    -- Browser.application
-    TimeTravel.application Debug.toString
-        Debug.toString
-        defaultConfig
+    Browser.application
+        -- TimeTravel.application Debug.toString
+        --     Debug.toString
+        -- defaultConfig
         { init = wrapInit
         , view = view
         , update = wrapUpdate

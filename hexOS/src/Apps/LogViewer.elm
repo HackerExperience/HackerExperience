@@ -72,6 +72,18 @@ view model game =
         ]
 
 
+{-| Things we may want in a header
+
+Quick filters:
+
+  - Filters log in which my (gateway, exit node) IP addresses show up
+
+Highlights (PS: not in header but rather as part of each log entry):
+
+  - Red if my IP is present (either gateway or exit node)
+  - Gray if low important noisy one (e.g. bounces without relevant IP addresses)
+
+-}
 vHeader : UI Msg
 vHeader =
     row [ cl "a-log-header", UI.centerItems ] [ text "Header" ]
@@ -79,6 +91,10 @@ vHeader =
 
 vBody : Model -> Game.Model -> UI Msg
 vBody model game =
+    let
+        _ =
+            Debug.log "Game" game
+    in
     col [ cl "a-log-body", UI.flexGrow, UI.flexFill ]
         (vLogList model game)
 

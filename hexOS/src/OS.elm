@@ -709,8 +709,9 @@ view gameState model =
     [ col
         (id "hexOS" :: addGlobalEvents model)
         [ wmView gameState model
-        , viewDock model
-        , Html.map HudMsg <| HUD.view gameState model.hud
+
+        -- , viewDock model
+        , Html.map HudMsg <| HUD.view gameState model.hud model.wm
         ]
     ]
 
