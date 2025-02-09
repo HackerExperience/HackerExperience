@@ -1,0 +1,25 @@
+@use "vars" as v;
+
+@function spacing-0() { @return v.get(spacing-0); }
+@function spacing-1() { @return v.get(spacing-1); }
+@function spacing-2() { @return v.get(spacing-2); }
+@function spacing-3() { @return v.get(spacing-3); }
+@function spacing-4() { @return v.get(spacing-4); }
+@function spacing-5() { @return v.get(spacing-5); }
+@function spacing-6() { @return v.get(spacing-6); }
+@function spacing-7() { @return v.get(spacing-7); }
+@function spacing-8() { @return v.get(spacing-8); }
+@function spacing-9() { @return v.get(spacing-9); }
+@function spacing-10() { @return v.get(spacing-10); }
+
+@function s-0() { @return spacing-0(); }
+@function s-1() { @return spacing-1(); }
+@function s-2() { @return spacing-2(); }
+@function s-3() { @return spacing-3(); }
+@function s-4() { @return spacing-4(); }
+@function s-5() { @return spacing-5(); }
+@function s-6() { @return spacing-6(); }
+@function s-7() { @return spacing-7(); }
+@function s-8() { @return spacing-8(); }
+@function s-9() { @return spacing-9(); }
+@function s-10() { @return spacing-10(); }
