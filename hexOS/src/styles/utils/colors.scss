@@ -1,0 +1,90 @@
+@use "vars" as v;
+
+@function primary() { @return prim-500(); }
+@function prim() { @return prim-500(); }
+@function secondary() { @return sec-500(); }
+@function sec() { @return sec-500(); }
+@function tertiary() { @return ter-500(); }
+@function ter() { @return ter-500(); }
+@function accent() { @return accent-500(); }
+@function base() { @return base-500(); }
+
+@function primary-100() { @return v.get(primary-100); }
+@function primary-200() { @return v.get(primary-200); }
+@function primary-300() { @return v.get(primary-300); }
+@function primary-400() { @return v.get(primary-400); }
+@function primary-500() { @return v.get(primary-500); }
+@function primary-600() { @return v.get(primary-600); }
+@function primary-700() { @return v.get(primary-700); }
+@function primary-800() { @return v.get(primary-800); }
+@function primary-900() { @return v.get(primary-900); }
+
+@function prim-100() { @return primary-100(); }
+@function prim-200() { @return primary-200(); }
+@function prim-300() { @return primary-300(); }
+@function prim-400() { @return primary-400(); }
+@function prim-500() { @return primary-500(); }
+@function prim-600() { @return primary-600(); }
+@function prim-700() { @return primary-700(); }
+@function prim-800() { @return primary-800(); }
+@function prim-900() { @return primary-900(); }
+
+@function secondary-100() { @return v.get(secondary-100); }
+@function secondary-200() { @return v.get(secondary-200); }
+@function secondary-300() { @return v.get(secondary-300); }
+@function secondary-400() { @return v.get(secondary-400); }
+@function secondary-500() { @return v.get(secondary-500); }
+@function secondary-600() { @return v.get(secondary-600); }
+@function secondary-700() { @return v.get(secondary-700); }
+@function secondary-800() { @return v.get(secondary-800); }
+@function secondary-900() { @return v.get(secondary-900); }
+
+@function sec-100() { @return secondary-100(); }
+@function sec-200() { @return secondary-200(); }
+@function sec-300() { @return secondary-300(); }
+@function sec-400() { @return secondary-400(); }
+@function sec-500() { @return secondary-500(); }
+@function sec-600() { @return secondary-600(); }
+@function sec-700() { @return secondary-700(); }
+@function sec-800() { @return secondary-800(); }
+@function sec-900() { @return secondary-900(); }
+
+@function tertiary-100() { @return v.get(tertiary-100); }
+@function tertiary-200() { @return v.get(tertiary-200); }
+@function tertiary-300() { @return v.get(tertiary-300); }
+@function tertiary-400() { @return v.get(tertiary-400); }
+@function tertiary-500() { @return v.get(tertiary-500); }
+@function tertiary-600() { @return v.get(tertiary-600); }
+@function tertiary-700() { @return v.get(tertiary-700); }
+@function tertiary-800() { @return v.get(tertiary-800); }
+@function tertiary-900() { @return v.get(tertiary-900); }
+
+@function ter-100() { @return tertiary-100(); }
+@function ter-200() { @return tertiary-200(); }
+@function ter-300() { @return tertiary-300(); }
+@function ter-400() { @return tertiary-400(); }
+@function ter-500() { @return tertiary-500(); }
+@function ter-600() { @return tertiary-600(); }
+@function ter-700() { @return tertiary-700(); }
+@function ter-800() { @return tertiary-800(); }
+@function ter-900() { @return tertiary-900(); }
+
+@function accent-100() { @return v.get(accent-100); }
+@function accent-200() { @return v.get(accent-200); }
+@function accent-300() { @return v.get(accent-300); }
+@function accent-400() { @return v.get(accent-400); }
+@function accent-500() { @return v.get(accent-500); }
+@function accent-600() { @return v.get(accent-600); }
+@function accent-700() { @return v.get(accent-700); }
+@function accent-800() { @return v.get(accent-800); }
+@function accent-900() { @return v.get(accent-900); }
+
+@function base-100() { @return v.get(base-100); }
+@function base-200() { @return v.get(base-200); }
+@function base-300() { @return v.get(base-300); }
+@function base-400() { @return v.get(base-400); }
+@function base-500() { @return v.get(base-500); }
+@function base-600() { @return v.get(base-600); }
+@function base-700() { @return v.get(base-700); }
+@function base-800() { @return v.get(base-800); }
+@function base-900() { @return v.get(base-900); }

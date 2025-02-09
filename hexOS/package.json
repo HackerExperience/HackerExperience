@@ -22,6 +22,7 @@
     "elm-open-api": "^0.7.0",
     "elm-review": "^2.12.0",
     "elm-test-rs": "^3.0.0-5",
+    "sass-embedded": "^1.83.4",
     "vite": "^6.0.11",
     "vite-plugin-elm": "^3.0.1"
   },

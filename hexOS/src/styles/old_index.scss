@@ -1,5 +1,4 @@
-@import './preflight.css';
-@import './ui.css';
+@use "utils/colors" as *;
 
 :root {
     --c-1: #008f11;
@@ -20,16 +19,6 @@
 
     --c-background: #0d0208;
 
-    --c-1-a50: rgb(from var(--c-1) r g b / 0.5);
-    --c-1-a25: rgb(from var(--c-1) r g b / 0.25);
-    --c-1-darkest-a30: rgb(from var(--c-1-darkest) r g b / 0.3);
-    --c-1-darkest-a40: rgb(from var(--c-1-darkest) r g b / 0.4);
-    --c-1-darkest-a50: rgb(from var(--c-1-darkest) r g b / 0.5);
-    --c-1-darkest-a60: rgb(from var(--c-1-darkest) r g b / 0.6);
-    --c-1-darkest-a75: rgb(from var(--c-1-darkest) r g b / 0.75);
-    --c-1-darkest-a85: rgb(from var(--c-1-darkest) r g b / 0.85);
-
-
     --c-window-bg: #384245;
 
     /* HUD/Layout elements size */
@@ -38,27 +27,6 @@
 
     --hud-nav-width: 260px;
     --hud-footer-height: 50px;
-}
-
-html {
-    /* This is a hack so that, from now on, 1px = 0.1rem.
-     * We will, then, set `font-size: 1.6rem` in `body` as to restore the
-     * default font-size for the user.
-     */
-    font-size: 62.5%;
-    font-family: 'Lato';
-}
-
-body {
-    /* See `font-size` comment on `html` */
-    font-size: 1.6rem;
-}
-
-html, body {
-    height: 100%;
-    width: 100%;
-    min-width: 100%;
-    max-width: 100%;
 }
 
 /* @media (1240px <= width) { */
@@ -73,7 +41,7 @@ html, body {
 }
 
 #os-wm {
-    background-color: #333;
+    background-color: base();
     flex-grow: 1;
     width: 100%;
 }
