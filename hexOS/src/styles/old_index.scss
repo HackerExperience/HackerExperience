@@ -1,3 +1,5 @@
+@use "utils/colors" as *;
+
 :root {
     --c-1: #008f11;
     --c-1-darkest: #002200;
@@ -16,16 +18,6 @@
     --c-2-lightest: #ffff73;
 
     --c-background: #0d0208;
-
-    --c-1-a50: rgb(from var(--c-1) r g b / 0.5);
-    --c-1-a25: rgb(from var(--c-1) r g b / 0.25);
-    --c-1-darkest-a30: rgb(from var(--c-1-darkest) r g b / 0.3);
-    --c-1-darkest-a40: rgb(from var(--c-1-darkest) r g b / 0.4);
-    --c-1-darkest-a50: rgb(from var(--c-1-darkest) r g b / 0.5);
-    --c-1-darkest-a60: rgb(from var(--c-1-darkest) r g b / 0.6);
-    --c-1-darkest-a75: rgb(from var(--c-1-darkest) r g b / 0.75);
-    --c-1-darkest-a85: rgb(from var(--c-1-darkest) r g b / 0.85);
-
 
     --c-window-bg: #384245;
 
@@ -49,7 +41,7 @@
 }
 
 #os-wm {
-    background-color: #333;
+    background-color: base();
     flex-grow: 1;
     width: 100%;
 }

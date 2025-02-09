@@ -2,6 +2,23 @@
 // specify a properly defined default, instead of having a potentially missing variable.
 
 $default-theme-vars: (
-    "primary": black,
-    "secondary": black
+    // Colors
+    base: purple,
+    primary: purple,
+    secondary: purple,
+    tertiary: purple,
+    accent: purple,
+
+    // Spacing
+    spacing-0: 2px,
+    spacing-1: 4px,
+    spacing-2: 8px,
+    spacing-3: 12px,
+    spacing-4: 16px,
+    spacing-5: 20px,
+    spacing-6: 24px,
+    spacing-7: 32px,
+    spacing-8: 40px,
+    spacing-9: 48px,
+    spacing-10: 64px
 )

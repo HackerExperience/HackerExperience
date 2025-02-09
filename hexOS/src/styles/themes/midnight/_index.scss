@@ -61,8 +61,3 @@ $theme-vars: (
 );
 
 @include v.define($theme-vars);
-
-.somethingElse {
-    background-color: v.get("primary-500");
-    display: none;
-}
