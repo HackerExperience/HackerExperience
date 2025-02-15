@@ -105,6 +105,11 @@ iCloudflare hint =
 -- MSOutline:
 
 
+msOutline : String -> Maybe String -> Icon msg
+msOutline name hint =
+    Icon (Props hint name MSOutline) defaultOpts
+
+
 iAdd : Maybe String -> Icon msg
 iAdd hint =
     Icon (Props hint "add" MSOutline) defaultOpts

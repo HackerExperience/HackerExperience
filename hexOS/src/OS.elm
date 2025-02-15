@@ -21,6 +21,7 @@ import Effect exposing (Effect)
 import Game
 import HUD
 import HUD.ConnectionInfo
+import HUD.Launcher
 import Html
 import Html.Attributes as HA
 import Html.Events as HE
@@ -687,6 +688,9 @@ updateHud state model hudMsg =
         HUD.CIMsg (HUD.ConnectionInfo.ToOS action) ->
             ( model, Effect.msgToCmd (PerformAction action) )
 
+        HUD.LauncherMsg (HUD.Launcher.ToOS action) ->
+            ( model, Effect.msgToCmd (PerformAction action) )
+
         _ ->
             let
                 ( newHud, hudEffect ) =
@@ -709,8 +713,9 @@ view gameState model =
     [ col
         (id "hexOS" :: addGlobalEvents model)
         [ wmView gameState model
-        , viewDock model
-        , Html.map HudMsg <| HUD.view gameState model.hud
+
+        -- , viewDock model
+        , Html.map HudMsg <| HUD.view gameState model.hud model.wm
         ]
     ]
 

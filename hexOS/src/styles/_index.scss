@@ -3,6 +3,7 @@
 @use "preflight";
 @use "ui";
 @use "old_index";
+@use "hud";
 
 html {
     /* This is a hack so that, from now on, 1px = 0.1rem.
@@ -23,8 +24,10 @@ html, body {
     width: 100%;
     min-width: 100%;
     max-width: 100%;
+    color: #ddd;
 }
 
 body {
-    background-color: base()
+    background-color: base();
+    cursor: default;
 }
