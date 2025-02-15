@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "build:dev": "vite build --mode development",
     "preview": "vite preview",
     "format": "elm-format src tests --validate",
     "test": "./tests/setup.sh && elm-test-rs --watch",
