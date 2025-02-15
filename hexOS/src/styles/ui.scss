@@ -13,10 +13,6 @@ UI
     flex-direction: column;
 }
 
-.ui-something {
-    font-size: 40px;
-}
-
 /* UI > Class helpers */
 
 .ui-align-items {
@@ -49,21 +45,6 @@ UI
 
 .ui-cursor-pointer {
     cursor: pointer
-}
-
-/*------------------------------------------------------------------------------
--- UI.Badge
-------------------------------------------------------------------------------*/
-
-.ui-badge {
-}
-
-.ui-badge .ui-span {
-    background-color: #3b82f644;
-    color: #000000ee;
-    padding: 2px 4px;
-    display: flex;
-    justify-content: center;
 }
 
 /*------------------------------------------------------------------------------
@@ -105,103 +86,6 @@ UI
 
 .ui-button-landi .ui-icon {
     padding-right: 7px;
-}
-
-/*------------------------------------------------------------------------------
--- UI.Form
-------------------------------------------------------------------------------*/
-
-.ui-form-steps {
-    /* background-color: pink */
-}
-
-.ui-form-step {
-    /* background-color: gray; */
-    height: 50px;
-    border: 1px solid #00000011;
-    border-radius: 1rem;
-    padding: 10px;
-    align-items: center;
-    margin-bottom: 16px;
-    cursor: pointer;
-}
-
-.ui-form-step:hover {
-    background-color: #00000011;
-}
-
-.ui-form-step-doing {
-    border-color: #cadefd;
-}
-
-.ui-form-step-done {
-    border-color: #cadefd;
-}
-
-.ui-form-step-doing:hover {
-    background-color: #fff;
-}
-
-.ui-form-step-number {
-    height: 24px;
-    width: 24px;
-    border-radius: 5rem;
-    align-items: center;
-    justify-content: center;
-
-    font-weight: bold;
-}
-
-.ui-form-step-number-doing {
-    color: #00000088;
-    background-color: #cadefd;
-}
-
-.ui-form-step-number-todo {
-    color: #00000088;
-    background-color: #00000011;
-}
-
-.ui-form-step-number-done {
-    color: #00000088;
-    background-color: #cadefd;
-    /* border: 1px solid #00000033; */
-}
-
-.ui-form-step-label {
-    padding: 0 6px;
-    align-self: center;
-}
-
-.ui-form-step-label {
-    padding: 0 6px;
-    align-self: center;
-}
-
-/* Questions */
-
-.ui-form-questions-block > .ui-span {
-    font-size: 2.4rem;
-    font-weight: bold;
-    padding-bottom: 20px;
-}
-
-.ui-form-question-block {
-    background-color: #fff;
-    border: 1px solid #00000033;
-    border-radius: .5rem;
-    padding: 20px 16px;
-    margin-bottom: 12px;
-}
-
-.ui-form-question + .ui-form-question {
-    margin-top: 16px;
-}
-
-.ui-form-questions-submit {
-    width: 200px;
-    height: 36px;
-    align-self: flex-end;
 }
 
 /*------------------------------------------------------------------------------
@@ -256,112 +140,3 @@ UI
     color: #00000099;
 }
 
-
-/*------------------------------------------------------------------------------
--- UI.Layout
-------------------------------------------------------------------------------*/
-
-.ui-layout-twopane-left {
-    max-width: 300px;
-}
-
-.ui-layout-twopane-right {
-    margin-left: 20px;
-    background-color: gray;
-}
-
-/*------------------------------------------------------------------------------
--- UI.Table
-------------------------------------------------------------------------------*/
-
-
-.ui-tbl-wrapper {
-    overflow-x: auto;
-    overflow-y: auto;
-    white-spacing: nowrap;
-}
-
-.ui-tbl {
-    width: 100%;
-    table-layout: fixed;
-}
-
-.entry-ms {
-    /* background-color: pink; */
-}
-
-/* Header */
-
-.ui-tbl-hdr {
-    background-color: #f6f8fa;
-    height: 40px;
-}
-
-.ui-tbl-hdr-col {
-    padding: 0 10px;
-    position: relative;
-}
-
-.ui-tbl-hdr-col:after {
-    content: '';
-    height: 20px;
-    width: 1px;
-    position: absolute;
-    right: 0;
-    top: 10px;
-    background-color: #00000066;
-}
-
-.ui-tbl-hdr-col:first-child:after {
-    background-color: #00000022;
-}
-
-/* Hide bar for width fill column */
-.ui-tbl-hdr-col:last-child:after {
-    display: none;
-}
-
-.ui-tbl-hdr-col .ui-span {
-    display: flex;
-}
-
-
-/* Body */
-
-.ui-tbl-cell {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    padding: 0 10px;
-    height: 40px;
-
-    border-bottom: 1px solid #e0e6ed66;
-}
-
-.ui-tbl-row:nth-child(2n) {
-    background-color: #f6f8faaa;
-}
-
-.ui-tbl-cell-ms {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-}
-
-.ui-tbl-cell-ms input {
-    /* background-color: pink; */
-    height: 1.50rem;
-    width: 1.50rem;
-
-    cursor: pointer;
-    border: 2px solid #ddd;
-    border-radius: .25rem;
-
-    appearance: none;
-}
-
-.ui-tbl-cell-ms input:checked {
-    background-color: #999;
-    border: 2px solid #ddd;
-    appearance: none;
-}
