@@ -30,4 +30,8 @@ html, body {
 body {
     background-color: base();
     cursor: default;
+
+    // Nothing is selectable by default; override it as needed
+    user-select: none;
+    -webkit-user-select: none;
 }

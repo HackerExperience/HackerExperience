@@ -184,11 +184,6 @@ heightFill =
     cl "ui-height-fill"
 
 
-noSelect : Attribute msg
-noSelect =
-    cl "ui-noselect"
-
-
 pointer : Attribute msg
 pointer =
     cl "ui-cursor-pointer"

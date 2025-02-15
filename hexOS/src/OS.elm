@@ -848,7 +848,6 @@ renderWindowTitle appId window isDragging =
     in
     row
         [ cl "os-w-header"
-        , UI.noSelect
         , if isDragging then
             -- TODO: Consider data attribute instead
             cl "os-w-title-dragging"
