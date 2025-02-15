@@ -3,7 +3,7 @@
 @use "preflight";
 @use "ui";
 @use "old_index";
-@use "hud";
+@use "hud/index";
 
 html {
     /* This is a hack so that, from now on, 1px = 0.1rem.

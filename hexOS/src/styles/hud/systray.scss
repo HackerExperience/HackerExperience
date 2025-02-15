@@ -1,0 +1,71 @@
+@use "../utils/colors" as *;
+@use "../utils/spacing" as *;
+
+
+#hud-systray {
+    position: absolute;
+    bottom: s-4();
+    right: s-4();
+    width: 300px;
+    height: 80px;
+    // background-color: base-600();
+    // border: 1px solid sec-600();
+    padding: s-2();
+}
+
+
+.hud-st-left-area {
+    flex: 1;
+    margin-right: 10px;
+    border: 1px solid #fff;
+}
+
+.hud-st-bottom-area {
+    flex: 1;
+    align-items: center;
+}
+
+.hud-st-apps-area {
+    border: 1px solid orange;
+    flex: 1;
+    align-content: center;
+    align-items: center;
+    justify-content: flex-end;
+}
+
+.hud-st-apps-entry-area {
+    .ui-icon {
+        // font-size: 20px;
+    }
+
+    &:hover {
+        color: prim();
+    }
+}
+
+.hud-st-apps-entry-area + .hud-st-apps-entry-area{
+    margin-left: s-1();
+}
+
+.hud-st-clock-area {
+    border: 1px solid sec();
+    font-size: 20px;
+    justify-content: center;
+    align-items: center;
+    padding: 4px;
+    font-family: "Orbitron", serif;
+}
+
+.hud-st-heat-area {
+    flex: 1;
+    justify-content: flex-end;
+    margin-right: s-1();
+}
+
+.hud-st-trace-area {
+    justify-content: flex-end;
+    border: 1px solid red;
+}
+
+.hud-st-trace-notrace {
+}
