@@ -713,8 +713,6 @@ view gameState model =
     [ col
         (id "hexOS" :: addGlobalEvents model)
         [ wmView gameState model
-
-        -- , viewDock model
         , Html.map HudMsg <| HUD.view gameState model.hud model.wm
         ]
     ]
@@ -934,23 +932,3 @@ addFocusEvent isFocused isBlocked appId =
 
     else
         UI.emptyAttr
-
-
-viewDock : Model -> UI Msg
-viewDock _ =
-    row [ id "os-dock" ]
-        [ row [ cl "os-dock-launch-tmp" ]
-            [ UI.Icon.iAdd (Just "Launch Demo")
-                |> UI.Button.fromIcon
-                |> UI.Button.withOnClick (PerformAction (OS.Bus.RequestOpenApp App.DemoApp Nothing))
-                |> UI.Button.toUI
-            , UI.Icon.iAdd (Just "Log Viewer")
-                |> UI.Button.fromIcon
-                |> UI.Button.withOnClick (PerformAction (OS.Bus.RequestOpenApp App.LogViewerApp Nothing))
-                |> UI.Button.toUI
-            , UI.Icon.iAdd (Just "Remote Access")
-                |> UI.Button.fromIcon
-                |> UI.Button.withOnClick (PerformAction (OS.Bus.RequestOpenApp App.RemoteAccessApp Nothing))
-                |> UI.Button.toUI
-            ]
-        ]
