@@ -29,8 +29,8 @@ type alias Model =
 
 type Msg
     = ToOS OS.Bus.Action
-    | ToggleLauncherOverlay
     | OpenLauncherOverlay
+    | CloseLauncherOverlay
     | LaunchApp App.Manifest
     | NoOp
 
@@ -52,13 +52,15 @@ update : Msg -> Model -> ( Model, Effect Msg )
 update msg model =
     case msg of
         OpenLauncherOverlay ->
-            ( { model | isOpen = True }, Effect.none )
+            ( { model | isOpen = True }, Effect.domFocus "hud-lo-search-input" NoOp )
 
-        ToggleLauncherOverlay ->
-            ( { model | isOpen = not model.isOpen }, Effect.none )
+        CloseLauncherOverlay ->
+            ( { model | isOpen = False }, Effect.none )
 
         LaunchApp app ->
-            ( { model | isOpen = False }, Effect.msgToCmd <| ToOS <| OS.Bus.RequestOpenApp app Nothing )
+            ( { model | isOpen = False }
+            , Effect.msgToCmd <| ToOS <| OS.Bus.RequestOpenApp app Nothing
+            )
 
         NoOp ->
             ( model, Effect.none )
@@ -196,4 +198,4 @@ addGlobalEvents model =
             []
 
         True ->
-            [ HE.on "click" <| JD.succeed ToggleLauncherOverlay ]
+            [ HE.on "click" <| JD.succeed CloseLauncherOverlay ]
