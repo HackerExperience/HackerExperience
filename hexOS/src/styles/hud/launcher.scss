@@ -1,13 +1,13 @@
 @use "../utils/colors" as *;
 @use "../utils/spacing" as *;
+@use "../utils/dimensions" as *;
 
 #hud-launcher {
-    // background-color: base-300();
     position: absolute;
-    width: 100px;
-    height: 80px;
-    bottom: s-4();
-    left: s-2();
+    width: d-hud-launcher-width();
+    height: d-hud-launcher-height();
+    bottom: d-hud-launcher-s-bottom();
+    left: d-hud-launcher-s-left();
 
 }
 
@@ -36,12 +36,11 @@
     }
 }
 
-// TODO: Move sizes to variables
 #hud-launcher-overlay {
     position: fixed;
     width: 100vw;
-    height: calc(100vh - 88px - 90px);
-    top: 90px;
+    height: calc(100vh - d-bottom-clearance() - d-top-clearance());
+    top: d-top-clearance();
     bottom: 0;
     left: 0;
     z-index: 999;

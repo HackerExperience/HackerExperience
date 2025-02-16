@@ -1,16 +1,13 @@
 @use "../utils/colors" as *;
 @use "../utils/spacing" as *;
+@use "../utils/dimensions" as *;
 
 #hud-dock {
     position: absolute;
-
-    // TODO: Move to variables
-    // 100px + 8px -> Launcher size + border
-    // 300px + 16px -> SysTray size + border
-    width: calc(100% - 108px - 316px);
-    height: 80px;
-    left: 108px;
-    bottom: s-4();
+    width: calc(100% - d-hud-launcher-w-clearance() - d-hud-systray-w-clearance());
+    height: d-hud-dock-height();
+    left: d-hud-launcher-w-clearance();
+    bottom: d-hud-dock-s-bottom();
 }
 
 
@@ -44,7 +41,6 @@
 }
 
 .hud-d-entry-name-area {
-    // background-color: orange;
     flex: 1;
     align-items: center;
     padding-left: s-2();

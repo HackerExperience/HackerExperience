@@ -1,0 +1,32 @@
+@use "vars" as v;
+
+// Layout
+@function d-top-clearance() { @return v.get(d-top-clearance); }
+@function d-bottom-clearance() { @return v.get(d-bottom-clearance); }
+
+// HUD > ConnectionInfo
+@function d-hud-ci-height() { @return v.get(d-hud-ci-height); }
+@function d-hud-ci-width() { @return v.get(d-hud-ci-width); }
+@function d-hud-ci-s-left() { @return v.get(d-hud-ci-s-left); }
+@function d-hud-ci-s-top() { @return v.get(d-hud-ci-s-top); }
+@function d-hud-ci-h-clearance() { @return v.get(d-hud-ci-h-clearance); }
+
+// HUD > Dock
+@function d-hud-dock-height() { @return v.get(d-hud-dock-height); }
+@function d-hud-dock-s-bottom() { @return v.get(d-hud-dock-s-bottom); }
+
+// HUD > Launcher
+@function d-hud-launcher-width() { @return v.get(d-hud-launcher-width); }
+@function d-hud-launcher-height() { @return v.get(d-hud-launcher-height); }
+@function d-hud-launcher-s-bottom() { @return v.get(d-hud-launcher-s-bottom); }
+@function d-hud-launcher-s-left() { @return v.get(d-hud-launcher-s-left); }
+@function d-hud-launcher-w-clearance() { @return v.get(d-hud-launcher-w-clearance); }
+@function d-hud-launcher-h-clearance() { @return v.get(d-hud-launcher-h-clearance); }
+
+// HUD > SysTray
+@function d-hud-systray-height() { @return v.get(d-hud-systray-height); }
+@function d-hud-systray-width() { @return v.get(d-hud-systray-width); }
+@function d-hud-systray-s-bottom() { @return v.get(d-hud-systray-s-bottom); }
+@function d-hud-systray-s-right() { @return v.get(d-hud-systray-s-right); }
+@function d-hud-systray-w-clearance() { @return v.get(d-hud-systray-w-clearance); }
+

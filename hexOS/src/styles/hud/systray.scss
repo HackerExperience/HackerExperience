@@ -1,15 +1,14 @@
 @use "../utils/colors" as *;
 @use "../utils/spacing" as *;
+@use "../utils/dimensions" as *;
 
 
 #hud-systray {
     position: absolute;
-    bottom: s-4();
-    right: s-4();
-    width: 300px;
-    height: 80px;
-    // background-color: base-600();
-    // border: 1px solid sec-600();
+    bottom: d-hud-systray-s-bottom();
+    right: d-hud-systray-s-right();
+    width: d-hud-systray-width();
+    height: d-hud-systray-height();
     padding: s-2();
 }
 

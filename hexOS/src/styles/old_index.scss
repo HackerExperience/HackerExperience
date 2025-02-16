@@ -20,13 +20,6 @@
     --c-background: #0d0208;
 
     --c-window-bg: #384245;
-
-    /* HUD/Layout elements size */
-    --hud-header-height: 80px;
-    --hud-header-width: 500px;
-
-    --hud-nav-width: 260px;
-    --hud-footer-height: 50px;
 }
 
 /* @media (1240px <= width) { */
@@ -125,69 +118,6 @@
     transform: translate3d(4px, 0, 0);
   }
 }
-
-/*------------------------------------------------------------------------------
--- HUD
-------------------------------------------------------------------------------*/
-
-/*------------------------------------------------------------------------------
--- HUD > ConnectionInfo
-------------------------------------------------------------------------------*/
-
-#hud-connection-info {
-    position: absolute;
-    left: calc(50% - var(--hud-header-width) / 2);
-    display: flex;
-    /* justify-content: center; */
-    align-items: center;
-    height: var(--hud-header-height);
-    top: 10px;
-    width: var(--hud-header-width);
-    border: 1px solid red;
-    user-select: none;
-}
-
-.hud-ci-gateway-area {
-    width: 200px;
-    justify-content: center;
-}
-
-.hud-ci-vpn-area {
-    width: 100px;
-    justify-content: center;
-}
-
-.hud-ci-endpoint-area {
-    width: 200px;
-}
-
-.hud-ci-side-area {
-    width: 35px;
-}
-
-.hud-ci-server-gateway {
-}
-
-.hud-ci-server-endpoint {
-    /* align-items: center; */
-}
-
-.hud-ci-server-selector {
-    background-color: yellow;
-    width: 50px;
-}
-
-.hud-connection-info-selector {
-    position: absolute;
-    left: calc(50% - var(--hud-header-width) / 2);
-    width: var(--hud-header-width);
-    height: 200px;
-    top: calc(20px + var(--hud-header-height));
-    border: 1px solid red;
-    z-index: 999;
-    background-color: #ccc;
-}
-
 
 /*------------------------------------------------------------------------------
 -- Apps > Demo
