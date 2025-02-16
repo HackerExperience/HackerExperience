@@ -89,22 +89,23 @@ view model =
 viewLauncher : Model -> UI Msg
 viewLauncher { isOpen } =
     let
-        icon =
-            UI.Icon.msOutline "apps" Nothing
-                |> UI.Icon.toUI
-
-        iconArea =
-            row [ cl "hud-l-launcher-icon-area" ]
-                [ icon ]
-
         onClickMsg =
             if isOpen then
                 NoOp
 
             else
                 OpenLauncherOverlay
+
+        icon =
+            UI.Icon.msOutline "apps" Nothing
+                |> UI.Icon.withOnClick onClickMsg
+                |> UI.Icon.toUI
+
+        iconArea =
+            row [ cl "hud-l-launcher-icon-area" ]
+                [ icon ]
     in
-    row [ cl "hud-l-launcher-area", stopPropagation "click", UI.onClick onClickMsg ]
+    row [ cl "hud-l-launcher-area" ]
         [ iconArea ]
 
 
