@@ -122,14 +122,11 @@ viewOverlaySearch =
         formValue =
             FormFields.textWithValue ""
 
-        -- |> FormFields.setValue ""
         textInput =
             UI.Icon.msOutline "search" Nothing
                 |> UI.TextInput.fromIcon formValue
+                |> UI.TextInput.withID "hud-lo-search-input"
                 |> UI.TextInput.toUI
-
-        -- UI.TextInput.new "Search" formValue
-        --     |> UI.TextInput.toUI
     in
     row [ cl "hud-lo-search-area" ]
         [ textInput ]
