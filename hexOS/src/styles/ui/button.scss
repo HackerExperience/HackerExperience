@@ -1,0 +1,39 @@
+@use "../utils/colors" as *;
+@use "../utils/spacing" as *;
+
+.ui-button {
+    flex: 1;
+    border-radius: .375em;
+    /* border: 1px solid #000; */
+    cursor: pointer;
+}
+
+.ui-button:hover {
+    box-shadow: none;
+}
+
+.ui-button-primary {
+    background-color: #4361ee;
+    color: #fff;
+    box-shadow: 0 0 #000, 0 0 #000, 0 0 #000, 0 10px 20px -10px #4361ee99;
+}
+
+.ui-button-primary-outline {
+    color: #4361eedd;
+    border: 1px solid #4361eeaa;
+    box-shadow: 0 0 #000, 0 0 #000, 0 0 #000, 0 10px 20px -10px #4361ee99;
+}
+
+.ui-button-primary-outline:hover {
+    background-color: #4361ee;
+    color: #fff;
+}
+
+.ui-button-landi, .ui-button-ionly
+{
+    justify-content: center;
+}
+
+.ui-button-landi .ui-icon {
+    padding-right: 7px;
+}

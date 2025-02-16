@@ -1,0 +1,61 @@
+@use "../utils/colors" as *;
+@use "../utils/spacing" as *;
+
+.ui-input-text-row {
+    border: 1px solid prim-500();
+    border-radius: .375em;
+    flex: 1;
+
+    .ui-icon {
+        font-size: 24px;
+        align-self: center;
+        color: prim-500();
+        padding: 0 5px;
+    }
+
+    &:hover {
+        border: 1px solid prim-400();
+
+        .ui-icon {
+            color: prim-400();
+        }
+    }
+
+    &:focus-within {
+        border: 1px solid prim-300();
+
+        .ui-icon {
+            color: prim-300();
+        }
+    }
+}
+
+.ui-input-text {
+    width: 100%;
+    border-radius: .375em;
+    padding: 5px;
+    color: white;
+}
+
+.ui-input-text:focus {
+    /* border: 1px solid #0000005a; */
+    outline: none;
+}
+
+.ui-input-text-problem {
+    border: 1px solid red;
+}
+
+.ui-input-text-desc {
+    font-size: 12px;
+}
+
+.ui-input-text-desc-problem {
+    color: red;
+}
+
+.ui-input-text-desc-info {
+    color: base-500();
+}
+
+
