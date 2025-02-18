@@ -21,6 +21,7 @@ import Json.Decode as JD
 import OS.Bus
 import State exposing (State)
 import UI exposing (UI, cl, col, div, id, row, text)
+import UI.Icon
 import WM
 
 
@@ -129,6 +130,7 @@ view state model =
     -- TODO: Figure out a better way to identify the top-level and each child (all 3 are important to identify)
     col [ addEvents model ]
         [ viewConnectionInfo state model
+        , viewConnectionInfo2 state model
         , viewSelector state model
         ]
 
@@ -146,7 +148,143 @@ addEvents model =
 
 viewConnectionInfo : State -> Model -> UI Msg
 viewConnectionInfo state model =
+    let
+        isLocalSession =
+            WM.isSessionLocal state.currentSession
+
+        side =
+            if isLocalSession then
+                CIGateway
+
+            else
+                CIEndpoint
+    in
     row [ id "hud-connection-info" ]
+        [ viewActiveServerIndicator side
+        , viewSelectorDropdown CIGateway model
+        , viewSelectorDropdown CIEndpoint model
+        , viewGatewayServerNew state model
+        , viewVPNAreaNew state model
+        , viewEndpointServerNew state model
+        ]
+
+
+viewGatewayServerNew : State -> Model -> UI Msg
+viewGatewayServerNew state model =
+    let
+        game =
+            State.getActiveUniverse state
+
+        gateway =
+            Game.getActiveGateway game
+    in
+    row [ cl "hud-ci-server-area hud-ci-server-gateway" ]
+        [ text (NIP.getIPString gateway.nip) ]
+
+
+viewEndpointServerNew : State -> Model -> UI Msg
+viewEndpointServerNew state model =
+    row [ cl "hud-ci-server-area hud-ci-server-endpoint" ]
+        [ text "93.84.190.205" ]
+
+
+viewVPNAreaNew : State -> Model -> UI Msg
+viewVPNAreaNew state model =
+    let
+        vpnIcon =
+            UI.Icon.msOutline "public" Nothing
+                |> UI.Icon.toUI
+    in
+    row [ cl "hud-ci-vpn-area" ]
+        [ vpnIcon ]
+
+
+viewActiveServerIndicator : CISide -> UI Msg
+viewActiveServerIndicator side =
+    let
+        activeServerIcon =
+            UI.Icon.msOutline "radio_button_checked" Nothing
+                |> UI.Icon.toUI
+
+        activeServerClass =
+            case side of
+                CIGateway ->
+                    "hud-ci-active-server-gateway"
+
+                CIEndpoint ->
+                    "hud-ci-active-server-endpoint"
+    in
+    div [ cl "hud-ci-active-server-indicator", cl activeServerClass ]
+        [ activeServerIcon ]
+
+
+viewSelectorDropdown : CISide -> Model -> UI Msg
+viewSelectorDropdown side { selector } =
+    let
+        dropdownIconName =
+            case ( side, selector ) of
+                ( CIGateway, SelectorGateway ) ->
+                    -- "arrow_drop_up"
+                    "keyboard_arrow_up"
+
+                ( CIGateway, _ ) ->
+                    -- "arrow_drop_down"
+                    "keyboard_arrow_down"
+
+                ( CIEndpoint, SelectorEndpoint ) ->
+                    -- "arrow_drop_up"
+                    "keyboard_arrow_up"
+
+                ( CIEndpoint, _ ) ->
+                    -- "arrow_drop_down"
+                    "keyboard_arrow_down"
+
+        dropdownIcon =
+            UI.Icon.msOutline dropdownIconName Nothing
+                |> UI.Icon.toUI
+
+        selectorDropdownSide =
+            case side of
+                CIGateway ->
+                    "hud-ci-selector-dropdown-gateway"
+
+                CIEndpoint ->
+                    "hud-ci-selector-dropdown-endpoint"
+
+        hasNotification =
+            case side of
+                CIGateway ->
+                    True
+
+                CIEndpoint ->
+                    False
+
+        notificationClass =
+            if hasNotification then
+                "hud-ci-selector-dropdown-with-notification"
+
+            else
+                ""
+
+        notificationIcon =
+            if hasNotification then
+                row [ cl "hud-ci-selector-dropdown-notification" ]
+                    [ UI.Icon.msOutline "radio_button_checked" Nothing
+                        |> UI.Icon.toUI
+                    ]
+
+            else
+                UI.emptyEl
+    in
+    row [ cl "hud-ci-selector-dropdown", cl notificationClass, cl selectorDropdownSide ]
+        [ dropdownIcon
+        , notificationIcon
+        ]
+
+
+viewConnectionInfo2 : State -> Model -> UI Msg
+viewConnectionInfo2 state model =
+    row [ id "hud-connection-info2" ]
         [ viewGatewayArea state model
         , viewVpnArea
         , viewEndpointArea state model
@@ -155,7 +293,7 @@ viewConnectionInfo state model =
 
 viewGatewayArea : State -> Model -> UI Msg
 viewGatewayArea state model =
-    row [ cl "hud-ci-gateway-area" ]
+    row [ cl "hud-ci-gateway-area2" ]
         [ viewSideIcons state CIGateway
         , viewGatewayServer state model
         ]
@@ -163,13 +301,13 @@ viewGatewayArea state model =
 
 viewVpnArea : UI Msg
 viewVpnArea =
-    row [ cl "hud-ci-vpn-area" ]
+    row [ cl "hud-ci-vpn-area2" ]
         [ text "vpn" ]
 
 
 viewEndpointArea : State -> Model -> UI Msg
 viewEndpointArea state model =
-    row [ cl "hud-ci-endpoint-area" ]
+    row [ cl "hud-ci-endpoint-area2" ]
         [ viewEndpointServer state model
         , viewSideIcons state CIEndpoint
         ]
@@ -196,7 +334,7 @@ viewSideIcons { currentSession } side =
             else
                 " "
     in
-    col [ cl "hud-ci-side-area" ]
+    col [ cl "hud-ci-side-area2" ]
         [ text ("[" ++ wmIndicator ++ "]")
         , text "b"
         ]
@@ -241,10 +379,10 @@ viewGatewayServer state model =
                 , text (NIP.getIPString gateway.nip)
                 ]
     in
-    col [ cl "hud-ci-server-gateway", UI.flexFill ]
+    col [ cl "hud-ci-server-gateway2", UI.flexFill ]
         [ serverCol
         , div
-            [ cl "hud-ci-server-selector"
+            [ cl "hud-ci-server-selector2"
             , UI.pointer
             , UI.onClick onClickMsg
 
@@ -299,10 +437,10 @@ viewEndpointServer state model =
                 , text label
                 ]
     in
-    col [ cl "hud-ci-server-endpoint", UI.flexFill ]
+    col [ cl "hud-ci-server-endpoint2", UI.flexFill ]
         [ serverCol
         , div
-            [ cl "hud-ci-server-selector"
+            [ cl "hud-ci-server-selector2"
             , UI.pointer
             , UI.onClick onClickMsg
 
@@ -333,7 +471,7 @@ viewSelector state model =
 renderSelector : UI Msg -> UI Msg
 renderSelector renderedSelector =
     row
-        [ cl "hud-connection-info-selector"
+        [ cl "hud-connection-info-selector2"
         , stopPropagation "mousedown"
         ]
         [ renderedSelector ]

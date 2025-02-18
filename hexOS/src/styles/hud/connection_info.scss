@@ -10,40 +10,134 @@
     height: d-hud-ci-height();
     top: d-hud-ci-s-top();
     width: d-hud-ci-width();
-    border: 1px solid red;
+    border: 1px solid sec-500();
+    background-color: sec-700();
+    // TODO: Box shadow
 }
 
-.hud-ci-gateway-area {
-    width: 200px;
+.hud-ci-active-server-indicator {
+    position: absolute;
+    top: s-1();
+
+    .ui-icon {
+        font-size: 14px;
+        color: #00FF41;
+    }
+}
+
+.hud-ci-active-server-gateway {
+    left: s-2();
+}
+
+.hud-ci-active-server-endpoint {
+    right: s-2();
+}
+
+.hud-ci-selector-dropdown {
+    position: absolute;
+    bottom: -16px;
+    border: 1px solid sec-500();
+    width: 20px;
+    height: 16px;
+
+    .ui-icon {
+        font-size: 16px;
+        background-color: sec-700();
+    }
+}
+
+.hud-ci-selector-dropdown-with-notification {
+    width: 34px;
+}
+
+.hud-ci-selector-dropdown-notification {
+    align-items: center;
     justify-content: center;
+    align-self: center;
+    margin: 0 auto;
+
+    .ui-icon {
+        color: red;
+        font-size: 10px;
+        text-shadow: 0 0 4px red, 0 0 0px red, 0 0 0px red;
+    }
 }
 
-.hud-ci-vpn-area {
-    width: 100px;
+.hud-ci-selector-dropdown-gateway {
+    left: -1px;
+}
+
+.hud-ci-selector-dropdown-endpoint {
+    right: -1px;
+    flex-direction: row-reverse;
+}
+
+.hud-ci-server-area {
+    font-family: "Roboto", serif;
+    flex: 1;
     justify-content: center;
-}
 
-.hud-ci-endpoint-area {
-    width: 200px;
-}
-
-.hud-ci-side-area {
-    width: 35px;
+    color: prim-400();
+    text-shadow: 0 0 2px prim-400(), 0 0 0px prim-400(), 0 0 0px prim-400();
 }
 
 .hud-ci-server-gateway {
 }
 
-.hud-ci-server-endpoint {
+.hud-ci-vpn-area {
+    flex: 1;
+    justify-content: center;
+
+    .ui-icon {
+        color: prim-400();
+        font-size: 32px;
+    }
+}
+
+// Old version \/
+
+#hud-connection-info2 {
+    position: absolute;
+    left: d-hud-ci-s-left();
+    display: flex;
+    align-items: center;
+    height: d-hud-ci-height();
+    top: calc(d-hud-ci-s-top() + 190px);
+    width: d-hud-ci-width();
+    border: 1px solid red;
+}
+
+.hud-ci-gateway-area2 {
+    width: 200px;
+    justify-content: center;
+}
+
+.hud-ci-vpn-area2 {
+    width: 100px;
+    justify-content: center;
+}
+
+.hud-ci-endpoint-area2 {
+    width: 200px;
+}
+
+.hud-ci-side-area2 {
+    width: 35px;
+}
+
+.hud-ci-server-gateway2 {
+}
+
+.hud-ci-server-endpoint2 {
     /* align-items: center; */
 }
 
-.hud-ci-server-selector {
+.hud-ci-server-selector2 {
     background-color: yellow;
     width: 50px;
 }
 
-.hud-connection-info-selector {
+.hud-connection-info-selector2 {
     position: absolute;
     left: calc(50% - var(--hud-header-width) / 2);
     width: var(--hud-header-width);
