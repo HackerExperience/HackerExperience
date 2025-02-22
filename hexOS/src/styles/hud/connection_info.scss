@@ -7,9 +7,11 @@
     left: d-hud-ci-s-left();
     display: flex;
     align-items: center;
-    height: d-hud-ci-height();
+    // height: d-hud-ci-height();
+    height: 65px;
     top: d-hud-ci-s-top();
     width: d-hud-ci-width();
+    // width: 500px;
     border: 1px solid sec-500();
     background-color: sec-700();
     // TODO: Box shadow
@@ -39,6 +41,7 @@
     border: 1px solid sec-500();
     width: 20px;
     height: 16px;
+    cursor: pointer;
 
     .ui-icon {
         font-size: 16px;
@@ -82,6 +85,11 @@
 }
 
 .hud-ci-server-gateway {
+    justify-content: flex-end;
+}
+
+.hud-ci-server-endpoint {
+    justify-content: flex-start;
 }
 
 .hud-ci-vpn-area {
@@ -94,56 +102,18 @@
     }
 }
 
-// Old version \/
-
-#hud-connection-info2 {
+.hud-connection-info-selector {
     position: absolute;
-    left: d-hud-ci-s-left();
-    display: flex;
-    align-items: center;
-    height: d-hud-ci-height();
-    top: calc(d-hud-ci-s-top() + 190px);
-    width: d-hud-ci-width();
-    border: 1px solid red;
-}
-
-.hud-ci-gateway-area2 {
-    width: 200px;
-    justify-content: center;
-}
-
-.hud-ci-vpn-area2 {
-    width: 100px;
-    justify-content: center;
-}
-
-.hud-ci-endpoint-area2 {
-    width: 200px;
-}
-
-.hud-ci-side-area2 {
-    width: 35px;
-}
-
-.hud-ci-server-gateway2 {
-}
-
-.hud-ci-server-endpoint2 {
-    /* align-items: center; */
-}
-
-.hud-ci-server-selector2 {
-    background-color: yellow;
-    width: 50px;
-}
-
-.hud-connection-info-selector2 {
-    position: absolute;
-    left: calc(50% - var(--hud-header-width) / 2);
-    width: var(--hud-header-width);
+    // left: calc(50% - var(--hud-header-width) / 2);
+    left: calc(50% - 500px / 2);
+    // width: var(--hud-header-width);
+    width: 250px;
     height: 200px;
-    top: calc(20px + var(--hud-header-height));
-    border: 1px solid red;
+    // top: calc(20px + var(--hud-header-height));
+    top: calc(20px + 56px);
     z-index: 999;
-    background-color: #ccc;
+
+    // border: 1px solid red;
+    background-color: sec-700();
+    border: 1px solid sec-500();
 }
