@@ -21,6 +21,7 @@ import Json.Decode as JD
 import OS.Bus
 import State exposing (State)
 import UI exposing (UI, cl, col, div, id, row, text)
+import UI.Icon
 import WM
 
 
@@ -146,67 +147,29 @@ addEvents model =
 
 viewConnectionInfo : State -> Model -> UI Msg
 viewConnectionInfo state model =
-    row [ id "hud-connection-info" ]
-        [ viewGatewayArea state model
-        , viewVpnArea
-        , viewEndpointArea state model
-        ]
-
-
-viewGatewayArea : State -> Model -> UI Msg
-viewGatewayArea state model =
-    row [ cl "hud-ci-gateway-area" ]
-        [ viewSideIcons state CIGateway
-        , viewGatewayServer state model
-        ]
-
-
-viewVpnArea : UI Msg
-viewVpnArea =
-    row [ cl "hud-ci-vpn-area" ]
-        [ text "vpn" ]
-
-
-viewEndpointArea : State -> Model -> UI Msg
-viewEndpointArea state model =
-    row [ cl "hud-ci-endpoint-area" ]
-        [ viewEndpointServer state model
-        , viewSideIcons state CIEndpoint
-        ]
-
-
-viewSideIcons : State -> CISide -> UI Msg
-viewSideIcons { currentSession } side =
     let
         isLocalSession =
-            WM.isSessionLocal currentSession
+            WM.isSessionLocal state.currentSession
 
-        isWMActive =
-            case side of
-                CIGateway ->
-                    isLocalSession
-
-                CIEndpoint ->
-                    not isLocalSession
-
-        wmIndicator =
-            if isWMActive then
-                "X"
+        side =
+            if isLocalSession then
+                CIGateway
 
             else
-                " "
+                CIEndpoint
     in
-    col [ cl "hud-ci-side-area" ]
-        [ text ("[" ++ wmIndicator ++ "]")
-        , text "b"
+    row [ id "hud-connection-info" ]
+        [ viewActiveServerIndicator side
+        , viewServerSelectorDropdown CIGateway model
+        , viewServerSelectorDropdown CIEndpoint model
+        , viewGatewayServer state model
+        , viewVPNArea state model
+        , viewEndpointServer state model
         ]
 
 
-{-| TODO: Once this module matures, try to merge the "mirrored" functions into a single one with
-shared logic. An example can be found at `viewSideIcons`.
--}
 viewGatewayServer : State -> Model -> UI Msg
-viewGatewayServer state model =
+viewGatewayServer state _ =
     let
         game =
             State.getActiveUniverse state
@@ -214,49 +177,22 @@ viewGatewayServer state model =
         gateway =
             Game.getActiveGateway game
 
-        ( arrowText, onClickMsg ) =
-            case model.selector of
-                NoSelector ->
-                    ( text "\\/", OpenSelector SelectorGateway )
-
-                SelectorEndpoint ->
-                    ( text "\\/", OpenSelector SelectorGateway )
-
-                _ ->
-                    ( text "/\\", CloseSelector )
-
         canSwitchSession =
             not (WM.isSessionLocal state.currentSession)
 
-        serverClasses =
+        extraAttrs =
             if canSwitchSession then
                 [ UI.pointer, UI.onClick ToggleWMSession ]
 
             else
-                []
-
-        serverCol =
-            col serverClasses
-                [ text "Gatewayy"
-                , text (NIP.getIPString gateway.nip)
-                ]
+                [ cl "hud-ci-server-active" ]
     in
-    col [ cl "hud-ci-server-gateway", UI.flexFill ]
-        [ serverCol
-        , div
-            [ cl "hud-ci-server-selector"
-            , UI.pointer
-            , UI.onClick onClickMsg
-
-            -- Don't close the selector on "mousedown". We'll handle that ourselves.
-            , stopPropagation "mousedown"
-            ]
-            [ arrowText ]
-        ]
+    row (cl "hud-ci-server-area hud-ci-server-gateway" :: extraAttrs)
+        [ text (NIP.getIPString gateway.nip) ]
 
 
 viewEndpointServer : State -> Model -> UI Msg
-viewEndpointServer state model =
+viewEndpointServer state _ =
     let
         endpoint =
             state
@@ -271,46 +207,93 @@ viewEndpointServer state model =
                 Nothing ->
                     ( "Not Connected", False )
 
-        -- TODO: Hide selector switch if there are no tunnels
-        ( arrowText, onClickMsg ) =
-            case model.selector of
-                NoSelector ->
-                    ( text "\\/", OpenSelector SelectorEndpoint )
-
-                SelectorGateway ->
-                    ( text "\\/", OpenSelector SelectorEndpoint )
-
-                _ ->
-                    ( text "/\\", CloseSelector )
-
         canSwitchSession =
             isConnected && WM.isSessionLocal state.currentSession
 
-        serverClasses =
+        extraAttrs =
             if canSwitchSession then
-                [ UI.pointer, UI.onClick ToggleWMSession ]
+                [ UI.onClick ToggleWMSession, cl "hud-ci-server-selectable" ]
 
             else
-                []
-
-        serverCol =
-            col serverClasses
-                [ text "Endpoint"
-                , text label
-                ]
+                [ cl "hud-ci-server-active" ]
     in
-    col [ cl "hud-ci-server-endpoint", UI.flexFill ]
-        [ serverCol
-        , div
-            [ cl "hud-ci-server-selector"
-            , UI.pointer
-            , UI.onClick onClickMsg
+    row
+        (cl "hud-ci-server-area hud-ci-server-endpoint" :: extraAttrs)
+        [ text label ]
 
-            -- Don't close the selector on "mousedown". We'll handle that ourselves.
-            , stopPropagation "mousedown"
-            ]
-            [ arrowText ]
+
+viewVPNArea : State -> Model -> UI Msg
+viewVPNArea _ _ =
+    let
+        vpnIcon =
+            UI.Icon.msOutline "public" Nothing
+                |> UI.Icon.toUI
+    in
+    row [ cl "hud-ci-vpn-area" ]
+        [ vpnIcon ]
+
+
+viewActiveServerIndicator : CISide -> UI Msg
+viewActiveServerIndicator side =
+    let
+        activeServerClass =
+            case side of
+                CIGateway ->
+                    "hud-ci-active-server-gateway"
+
+                CIEndpoint ->
+                    "hud-ci-active-server-endpoint"
+    in
+    div
+        [ cl "hud-ci-active-server-indicator"
+        , cl activeServerClass
+        , cl "hud-ci-active-server-indicator-circle"
         ]
+        []
+
+
+viewServerSelectorDropdown : CISide -> Model -> UI Msg
+viewServerSelectorDropdown side { selector } =
+    let
+        ( dropdownIconName, onClickMsg ) =
+            case ( side, selector ) of
+                ( CIGateway, SelectorGateway ) ->
+                    -- "arrow_drop_up"
+                    ( "keyboard_arrow_up", CloseSelector )
+
+                ( CIGateway, _ ) ->
+                    -- "arrow_drop_down"
+                    ( "keyboard_arrow_down", OpenSelector SelectorGateway )
+
+                ( CIEndpoint, SelectorEndpoint ) ->
+                    -- "arrow_drop_up"
+                    ( "keyboard_arrow_up", CloseSelector )
+
+                ( CIEndpoint, _ ) ->
+                    -- "arrow_drop_down"
+                    ( "keyboard_arrow_down", OpenSelector SelectorEndpoint )
+
+        dropdownIcon =
+            UI.Icon.msOutline dropdownIconName Nothing
+                |> UI.Icon.toUI
+
+        selectorDropdownSide =
+            case side of
+                CIGateway ->
+                    "hud-ci-srvselector-dropdown-gateway"
+
+                CIEndpoint ->
+                    "hud-ci-srvselector-dropdown-endpoint"
+    in
+    row
+        [ cl "hud-ci-srvselector-dropdown"
+        , cl selectorDropdownSide
+        , UI.onClick onClickMsg
+
+        -- Don't close the selector on "mousedown". We'll handle that ourselves.
+        , stopPropagation "mousedown"
+        ]
+        [ dropdownIcon ]
 
 
 
@@ -324,16 +307,26 @@ viewSelector state model =
             UI.emptyEl
 
         SelectorGateway ->
-            renderSelector <| viewGatewaySelector state model
+            renderServerSelector CIGateway (viewGatewaySelector state model)
 
         SelectorEndpoint ->
-            renderSelector <| viewEndpointSelector state model
+            renderServerSelector CIEndpoint (viewEndpointSelector state model)
 
 
-renderSelector : UI Msg -> UI Msg
-renderSelector renderedSelector =
+renderServerSelector : CISide -> UI Msg -> UI Msg
+renderServerSelector side renderedSelector =
+    let
+        sideClass =
+            case side of
+                CIGateway ->
+                    "hud-ci-srvselector-gateway"
+
+                CIEndpoint ->
+                    "hud-ci-srvselector-endpoint"
+    in
     row
-        [ cl "hud-connection-info-selector"
+        [ id "hud-connection-info-srvselector"
+        , cl sideClass
         , stopPropagation "mousedown"
         ]
         [ renderedSelector ]
@@ -350,7 +343,7 @@ stopPropagation event =
 
 
 viewGatewaySelector : State -> Model -> UI Msg
-viewGatewaySelector state model__ =
+viewGatewaySelector state _ =
     let
         spGateways =
             List.foldl (gatewaySelectorEntries Singleplayer) [] (Game.getGateways state.sp)
@@ -358,7 +351,7 @@ viewGatewaySelector state model__ =
         mpGateways =
             List.foldl (gatewaySelectorEntries Multiplayer) [] (Game.getGateways state.mp)
     in
-    col [] <|
+    col [ cl "hud-ci-selector-gateway-area" ] <|
         spGateways
             ++ mpGateways
 

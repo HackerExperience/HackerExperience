@@ -1,0 +1,127 @@
+@use "../utils/colors" as *;
+@use "../utils/spacing" as *;
+@use "../utils/dimensions" as *;
+
+#hud-connection-info {
+    position: absolute;
+    left: d-hud-ci-s-left();
+    display: flex;
+    align-items: center;
+    // height: d-hud-ci-height();
+    height: 65px;
+    top: d-hud-ci-s-top();
+    width: d-hud-ci-width();
+    // width: 500px;
+    border: 1px solid sec-500();
+    background-color: sec-700();
+    // TODO: Box shadow
+}
+
+.hud-ci-active-server-indicator {
+    position: absolute;
+    top: s-1();
+
+    height: 6px;
+    width: 6px;
+    background-color: #00ff41;
+    border-radius: 50%;
+}
+
+.hud-ci-active-server-gateway {
+    left: s-1();
+}
+
+.hud-ci-active-server-endpoint {
+    right: s-1();
+}
+
+.hud-ci-srvselector-dropdown {
+    position: absolute;
+    bottom: -1px;
+    border: 1px solid sec-500();
+    width: 18px;
+    height: 16px;
+    cursor: pointer;
+
+    background-color: sec-500();
+
+    .ui-icon {
+        font-size: 16px;
+        background-color: sec-500();
+    }
+}
+
+.hud-ci-srvselector-dropdown-gateway {
+    left: -1px;
+}
+
+.hud-ci-srvselector-dropdown-endpoint {
+    right: -1px;
+    flex-direction: row-reverse;
+}
+
+.hud-ci-server-area {
+    font-family: "Roboto", serif;
+    flex: 1;
+    height: 100%;
+    align-items: center;
+    justify-content: center;
+
+    color: prim-400();
+    text-shadow: 0 0 2px prim-400(), 0 0 0px prim-400(), 0 0 0px prim-400();
+
+    &:hover {
+    }
+}
+
+.hud-ci-server-gateway {
+    padding-right: 8px;
+    justify-content: flex-end;
+}
+
+.hud-ci-server-endpoint {
+    padding-left: 8px;
+    justify-content: flex-start;
+}
+
+.hud-ci-server-selectable {
+    &:hover {
+        color: prim-300();
+        cursor: pointer;
+    }
+}
+
+.hud-ci-server-active {
+    text-shadow: 0 0 2px prim-300(), 0 0 0px prim-300(), 0 0 0px prim-300();
+}
+
+.hud-ci-vpn-area {
+    flex: 1;
+    justify-content: center;
+
+    .ui-icon {
+        color: prim-400();
+        font-size: 32px;
+    }
+}
+
+// Selector
+
+#hud-connection-info-srvselector {
+    position: absolute;
+    width: d-hud-ci-srvselector-width();
+    height: d-hud-ci-srvselector-height();
+    top: d-hud-ci-srvselector-s-top();
+    z-index: 999;
+
+    background-color: sec-700();
+    border: 1px solid sec-500();
+}
+
+.hud-ci-srvselector-gateway {
+    left: calc(50% - (d-hud-ci-width() / 2));
+}
+
+.hud-ci-srvselector-endpoint {
+    left: 50%;
+}

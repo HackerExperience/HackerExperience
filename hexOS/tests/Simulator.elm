@@ -29,6 +29,10 @@ simulateEffect effect =
             -- TODO
             SimulatedEffect.Cmd.none
 
+        Effect.DomFocus domId msg ->
+            -- TODO
+            SimulatedEffect.Cmd.none
+
         Effect.APIRequest apiRequest ->
             case apiRequest of
                 LobbyLogin result config ->

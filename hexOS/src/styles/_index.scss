@@ -1,8 +1,10 @@
 @use "utils/colors" as *;
 
 @use "preflight";
-@use "ui";
-@use "old_index";
+@use "ui/index" as ui;
+@use "hud/index" as hud;
+@use "apps/index" as apps;
+@use "os";
 
 html {
     /* This is a hack so that, from now on, 1px = 0.1rem.
@@ -23,8 +25,14 @@ html, body {
     width: 100%;
     min-width: 100%;
     max-width: 100%;
+    color: #ddd;
 }
 
 body {
-    background-color: base()
+    background-color: base();
+    cursor: default;
+
+    // Nothing is selectable by default; override it as needed
+    user-select: none;
+    -webkit-user-select: none;
 }

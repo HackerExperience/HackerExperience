@@ -1,0 +1,86 @@
+@use "../utils/colors" as *;
+@use "../utils/spacing" as *;
+@use "../utils/dimensions" as *;
+
+.app-log-viewer {
+    /* background-color: var(--c-1-a10); */
+}
+
+.a-log-header {
+    height: 60px;
+    border-bottom: 1px solid prim-500();
+}
+
+.a-log-body {
+    /* background-color: #e2e2ee; */
+}
+
+.a-log-row {
+    min-height: 50px;
+    padding: 5px 15px;
+    border-bottom: 1px solid prim-500();
+}
+
+.a-log-row:nth-child(odd) {
+    background: rgba(13, 2, 8, 0.225);
+}
+
+.a-log-row:nth-child(even) {
+    background: rgba(0, 0, 0, 0.325);
+}
+
+.a-log-row:hover {
+    background-color: sec-700();
+    cursor: pointer;
+}
+
+.a-log-row-date {
+    min-width: 80px;
+    color: white;
+    font-size: 12px;
+}
+
+.a-log-row-date-microseconds {
+    color: white;
+}
+
+.a-log-row-text {
+    /* Overflow is tricky. Always test any changes here */
+    display: inline-block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    margin: auto 0 auto 7px;
+}
+
+.a-log-row-internal-separator {
+    margin-left: 7px;
+    border-left: 1px solid var(--c-1-darker);
+}
+
+.a-log-row-vertical-separator {
+    width: 90%;
+    margin: 10px auto 10px auto;
+    border-top: 1px solid var(--c-1-darker);
+}
+
+.a-log-srow {
+    padding: 5px 15px;
+    border-bottom: 1px solid var(--c-1);
+    background: var(--c-1-darkest-a75);
+}
+
+.a-log-srow:hover {
+    background: var(--c-1-darkest-a85);
+    cursor: pointer;
+}
+
+.a-log-srow-body {
+    min-height: 50px;
+    padding: 5px 0;
+}
+
+.a-log-srow-actions {
+    color: var(--c-1-dark);
+    min-height: 50px;
+}

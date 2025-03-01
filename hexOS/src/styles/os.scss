@@ -1,0 +1,92 @@
+@use "utils/colors" as *;
+@use "utils/spacing" as *;
+@use "utils/dimensions" as *;
+
+// Unused?
+#hexOS {
+    height: 100%;
+}
+
+// Unused?
+#os-wm {
+    background-color: base();
+    flex-grow: 1;
+    width: 100%;
+}
+
+.os-w {
+    position: absolute;
+    border: 1px solid prim-500();
+    border-radius: 0px;
+    color: white;
+
+    /* `transform` is in HEView, figure out why */
+    transform: "translateZ(0)";
+}
+
+.os-w-header {
+    min-height: 40px;
+    border-bottom: 1px solid prim-500();
+    background-color: sec-600();
+    padding: 5px;
+    align-items: center;
+}
+
+.os-w-content {
+    height: 100%;
+    // background-color: rgba(0, 16, 20, 0.8);
+    background-color: sec-700();
+    /* Note: careful with Moire pattern. If modifying the background, make sure it looks good when
+     * the window is moving */
+    background-image: radial-gradient(black 1px, transparent 0);
+    background-size: 5px 5px;
+}
+
+.os-w-title {
+    flex-grow: 1;
+}
+
+.os-w-title-dragging {
+    cursor: grab;
+}
+
+.os-w-title-actions {
+    justify-content: flex-end;
+}
+
+.os-w-title-actions .ui-icon {
+    cursor: pointer
+}
+
+.os-w-app-overlay {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+}
+
+.os-w-focused {
+    background-color: rgba(10, 26, 30, 0.825);
+    box-shadow: 0 0 2px 2px sec-500(),
+                0 0 4px 4px sec-700();
+}
+
+.os-w-vibrating {
+    /* animation: window-vibrating 0.1s 0.1s linear alternate; */
+    animation: window-vibrating 0.82s;
+}
+
+
+@keyframes window-vibrating {
+  10%, 90% {
+    transform: translate3d(-1px, 0, 0);
+  }
+  20%, 80% {
+    transform: translate3d(2px, 0, 0);
+  }
+  30%, 50%, 70% {
+    transform: translate3d(-4px, 0, 0);
+  }
+  40%, 60% {
+    transform: translate3d(4px, 0, 0);
+  }
+}

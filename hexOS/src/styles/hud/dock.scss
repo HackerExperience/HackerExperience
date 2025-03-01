@@ -1,0 +1,47 @@
+@use "../utils/colors" as *;
+@use "../utils/spacing" as *;
+@use "../utils/dimensions" as *;
+
+#hud-dock {
+    position: absolute;
+    width: calc(100% - d-hud-launcher-w-clearance() - d-hud-systray-w-clearance());
+    height: d-hud-dock-height();
+    left: d-hud-launcher-w-clearance();
+    bottom: d-hud-dock-s-bottom();
+}
+
+
+.hud-d-entry-area {
+    width: 220px;
+    height: 80%;
+    margin: auto 8px;
+    background-color: sec-700();
+    border: 1px solid sec-500();
+
+    &:hover {
+        cursor: pointer;
+        border: 1px solid sec-400();
+    }
+}
+
+.hud-d-entry-icon-area {
+    width: 50px;
+    align-items: center;
+    justify-content: center;
+
+    .ui-icon {
+        font-size: 36px;
+    }
+}
+
+.hud-d-entry-icon-separator {
+    height: 65%;
+    border-right: 1px solid sec();
+    margin: auto 0;
+}
+
+.hud-d-entry-name-area {
+    flex: 1;
+    align-items: center;
+    padding-left: s-2();
+}

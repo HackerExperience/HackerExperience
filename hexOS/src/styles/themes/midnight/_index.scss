@@ -1,4 +1,4 @@
-@use "../../utils/vars" as v;
+@use "../../utils/theme" as theme;
 
 $theme-vars: (
     // Base colors
@@ -51,13 +51,6 @@ $theme-vars: (
     base-700: hsl(226, 35%, 07%),
     base-800: hsl(226, 35%, 03%),
     base-900: hsl(226, 35%, 01%),
-
-    // Simplified color names
-    base: v.get(base-500),
-    primary: v.get(primary-500),
-    secondary: v.get(secondary-500),
-    tertiary: v.get(tertiary-500),
-    accent: v.get(accent-500)
 );
 
-@include v.define($theme-vars);
+@include theme.define($theme-vars);

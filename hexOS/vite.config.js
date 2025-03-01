@@ -20,6 +20,7 @@ export default defineConfig(({ command, mode }) => {
     build: {
       outDir: path.join(__dirname, "dist"),
       emptyOutDir: true,
+      minify: mode === 'production',
       rollupOptions: {
         input: {
           index: 'src/index.html',

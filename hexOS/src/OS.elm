@@ -21,6 +21,7 @@ import Effect exposing (Effect)
 import Game
 import HUD
 import HUD.ConnectionInfo
+import HUD.Launcher
 import Html
 import Html.Attributes as HA
 import Html.Events as HE
@@ -31,7 +32,6 @@ import OS.AppID exposing (AppID)
 import OS.Bus
 import State exposing (State)
 import UI exposing (UI, cl, col, div, id, row, style, text)
-import UI.Button
 import UI.Icon
 import WM
 import WM.Windowable
@@ -687,6 +687,9 @@ updateHud state model hudMsg =
         HUD.CIMsg (HUD.ConnectionInfo.ToOS action) ->
             ( model, Effect.msgToCmd (PerformAction action) )
 
+        HUD.LauncherMsg (HUD.Launcher.ToOS action) ->
+            ( model, Effect.msgToCmd (PerformAction action) )
+
         _ ->
             let
                 ( newHud, hudEffect ) =
@@ -709,8 +712,7 @@ view gameState model =
     [ col
         (id "hexOS" :: addGlobalEvents model)
         [ wmView gameState model
-        , viewDock model
-        , Html.map HudMsg <| HUD.view gameState model.hud
+        , Html.map HudMsg <| HUD.view gameState model.hud model.wm
         ]
     ]
 
@@ -845,7 +847,6 @@ renderWindowTitle appId window isDragging =
     in
     row
         [ cl "os-w-header"
-        , UI.noSelect
         , if isDragging then
             -- TODO: Consider data attribute instead
             cl "os-w-title-dragging"
@@ -929,23 +930,3 @@ addFocusEvent isFocused isBlocked appId =
 
     else
         UI.emptyAttr
-
-
-viewDock : Model -> UI Msg
-viewDock _ =
-    row [ id "os-dock" ]
-        [ row [ cl "os-dock-launch-tmp" ]
-            [ UI.Icon.iAdd (Just "Launch Demo")
-                |> UI.Button.fromIcon
-                |> UI.Button.withOnClick (PerformAction (OS.Bus.RequestOpenApp App.DemoApp Nothing))
-                |> UI.Button.toUI
-            , UI.Icon.iAdd (Just "Log Viewer")
-                |> UI.Button.fromIcon
-                |> UI.Button.withOnClick (PerformAction (OS.Bus.RequestOpenApp App.LogViewerApp Nothing))
-                |> UI.Button.toUI
-            , UI.Icon.iAdd (Just "Remote Access")
-                |> UI.Button.fromIcon
-                |> UI.Button.withOnClick (PerformAction (OS.Bus.RequestOpenApp App.RemoteAccessApp Nothing))
-                |> UI.Button.toUI
-            ]
-        ]

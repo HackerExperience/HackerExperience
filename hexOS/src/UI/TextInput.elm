@@ -25,6 +25,7 @@ type alias Opts msg =
     , placeholder : Maybe String
     , icon : Maybe (Icon msg)
     , problem : Maybe String
+    , id : Maybe String
     }
 
 
@@ -79,6 +80,11 @@ withPlaceholder maybePlaceholder (Input props opts) =
     Input props { opts | placeholder = maybePlaceholder }
 
 
+withID : String -> Input msg -> Input msg
+withID id (Input props opts) =
+    Input props { opts | id = Just id }
+
+
 defaultOpts : Opts msg
 defaultOpts =
     { onChange = Nothing
@@ -86,6 +92,7 @@ defaultOpts =
     , placeholder = Nothing
     , icon = Nothing
     , problem = Nothing
+    , id = Nothing
     }
 
 
@@ -114,9 +121,15 @@ toUI ((Input _ { icon }) as input) =
 
 
 inputUI : Input msg -> UI msg
-inputUI (Input { label, field, kind } { onChange, onBlur, placeholder, problem }) =
+inputUI (Input { label, field, kind } { onChange, onBlur, placeholder, problem, id }) =
     H.input
         [ cl "ui-input-text"
+        , case id of
+            Just id_ ->
+                UI.id id_
+
+            Nothing ->
+                UI.emptyAttr
         , HA.type_ kind
         , HA.value field.value
         , HA.title label

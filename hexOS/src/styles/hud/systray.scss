@@ -1,0 +1,80 @@
+@use "../utils/colors" as *;
+@use "../utils/spacing" as *;
+@use "../utils/dimensions" as *;
+
+
+#hud-systray {
+    position: absolute;
+    bottom: d-hud-systray-s-bottom();
+    right: d-hud-systray-s-right();
+    width: d-hud-systray-width();
+    height: d-hud-systray-height();
+    padding: s-2();
+    // This z-index is needed for dev-only, so it shows above the time-travel debugger
+    // I'll remove it once I figure out a better way to handle the debugger
+    z-index: 9999999999;
+}
+
+
+.hud-st-left-area {
+    flex: 1;
+    margin-right: 10px;
+}
+
+.hud-st-apps-area {
+    flex: 1;
+    align-content: center;
+    align-items: center;
+    justify-content: flex-end;
+}
+
+.hud-st-apps-entry-area {
+    justify-content: center;
+
+    &:hover {
+        color: prim();
+        cursor: pointer;
+    }
+}
+
+.hud-st-apps-entry-area + .hud-st-apps-entry-area{
+    margin-left: s-1();
+}
+
+.hud-st-tray-area {
+    flex: 1;
+    justify-content: flex-end;
+    align-items: center;
+}
+
+.hud-st-tray-entry-area {
+    justify-content: center;
+
+    &:hover {
+        color: prim();
+        cursor: pointer;
+    }
+}
+
+.hud-st-tray-entry-area + .hud-st-tray-entry-area {
+    margin-left: s-1();
+}
+
+.hud-st-clock-area {
+    border: 1px solid sec();
+    font-size: 20px;
+    justify-content: center;
+    align-items: center;
+    padding: 4px;
+    font-family: "Orbitron", serif;
+}
+
+#hud-build-version-area {
+    position: absolute;
+    bottom: -12px;
+    right: -13px;
+    font-size: 10px;
+    padding: 0;
+    margin: 0;
+    color: prim-500();
+}

@@ -1,0 +1,12 @@
+@use "sass:map";
+@use "../themes/defaults";
+
+@mixin define($custom-theme-vars) {
+    $merged-vars: map.merge(defaults.$default-theme-vars, $custom-theme-vars);
+
+    :root {
+        @each $name, $value in $merged-vars {
+            --#{$name}: #{$value};
+        }
+    }
+}

@@ -1,14 +1,9 @@
 // This is mostly to make sure that if a theme "forgets" to define a particular value, we just
 // specify a properly defined default, instead of having a potentially missing variable.
+@use "../utils/spacing" as *;
+@use "../utils/dimensions" as *;
 
 $default-theme-vars: (
-    // Colors
-    base: purple,
-    primary: purple,
-    secondary: purple,
-    tertiary: purple,
-    accent: purple,
-
     // Spacing
     spacing-0: 2px,
     spacing-1: 4px,
@@ -20,5 +15,38 @@ $default-theme-vars: (
     spacing-7: 32px,
     spacing-8: 40px,
     spacing-9: 48px,
-    spacing-10: 64px
+    spacing-10: 64px,
+
+    // Dimensions > Layout
+    d-top-clearance: d-hud-ci-h-clearance(),
+    d-bottom-clearance: d-hud-launcher-h-clearance(),
+
+    // Dimensions > HUD > ConnectionInfo
+    d-hud-ci-height: 80px,
+    d-hud-ci-width: 500px,
+    d-hud-ci-s-left: calc(50% - d-hud-ci-width() / 2),
+    d-hud-ci-s-top: s-3(),
+    d-hud-ci-h-clearance: calc(d-hud-ci-height() + d-hud-ci-s-top()),
+    d-hud-ci-srvselector-width: 250px,
+    d-hud-ci-srvselector-height: 200px,
+    d-hud-ci-srvselector-s-top: 86px,
+
+    // Dimensions > HUD > Dock
+    d-hud-dock-height: d-hud-launcher-height(),
+    d-hud-dock-s-bottom: d-hud-launcher-s-bottom(),
+
+    // Dimensions > HUD > Launcher
+    d-hud-launcher-height: 80px,
+    d-hud-launcher-width: 100px,
+    d-hud-launcher-s-bottom: s-3(),
+    d-hud-launcher-s-left: s-2(),
+    d-hud-launcher-h-clearance: calc(d-hud-launcher-height() + d-hud-launcher-s-bottom()),
+    d-hud-launcher-w-clearance: calc(d-hud-launcher-width() + d-hud-launcher-s-left()),
+
+    // Dimensions > Hud > SysTray
+    d-hud-systray-height: d-hud-launcher-height(),
+    d-hud-systray-width: 300px,
+    d-hud-systray-s-bottom: d-hud-launcher-s-bottom(),
+    d-hud-systray-s-right: s-4(),
+    d-hud-systray-w-clearance: calc(d-hud-systray-width() + d-hud-systray-s-right()),
 )

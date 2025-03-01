@@ -6,6 +6,7 @@ import API.Game as GameAPI
 import API.Lobby as LobbyAPI
 import API.Types exposing (InputConfig, InputToken)
 import API.Utils
+import Browser.Dom
 import Json.Encode as JE
 import Ports
 import Task
@@ -20,6 +21,7 @@ type Effect msg
     | MsgToCmd Float msg
     | StartSSESubscription InputToken String
     | DebouncedCmd (Cmd msg)
+    | DomFocus String msg
 
 
 type APIRequestEnum msg
@@ -61,6 +63,9 @@ apply ( seeds, effect ) =
                         ]
             in
             ( seeds, Ports.eventStart encodedValue )
+
+        DomFocus domId msg ->
+            ( seeds, Task.attempt (\_ -> msg) (Browser.Dom.focus domId) )
 
         -- The `elm-debounce` library always returns a Cmd. We are merely wrapping it into an Effect
         DebouncedCmd cmd ->
@@ -119,6 +124,11 @@ debouncedCmd cmd =
     DebouncedCmd cmd
 
 
+domFocus : String -> msg -> Effect msg
+domFocus domId msg =
+    DomFocus domId msg
+
+
 
 -- Effects > API Requests
 
@@ -164,3 +174,6 @@ map toMsg effect =
 
         DebouncedCmd cmd ->
             DebouncedCmd (Cmd.map toMsg cmd)
+
+        DomFocus domId msg ->
+            DomFocus domId (toMsg msg)

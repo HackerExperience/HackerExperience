@@ -9,7 +9,7 @@ import Game.Model.NIP as NIP
 import OS.AppID exposing (AppID)
 import OS.Bus
 import Regex
-import UI exposing (UI, col)
+import UI exposing (UI, cl, col)
 import UI.Button
 import UI.Model.FormFields as FormFields exposing (TextField)
 import UI.TextInput
@@ -120,7 +120,7 @@ update game msg model =
 
 view : Model -> Game.Model -> UI Msg
 view model _ =
-    col []
+    col [ cl "app-remote-access" ]
         [ UI.TextInput.new "IP" model.ip
             |> UI.TextInput.withOnChange SetIPAddress
             |> UI.TextInput.withOnBlur ValidateIPAddress
