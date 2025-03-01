@@ -24,10 +24,11 @@ view : State -> UI Msg
 view state =
     row [ id "hud-systray" ]
         [ col [ cl "hud-st-left-area" ]
-            [ viewTraceBar
+            [ viewTrayIcons
             , viewInstalledApps
             ]
         , viewClock
+        , viewBuildVersion
         ]
 
 
@@ -53,42 +54,36 @@ viewClock : UI Msg
 viewClock =
     col [ cl "hud-st-clock-area orbitron-400" ]
         [ row [] [ text "10:15 AM " ]
-
-        -- , row [] [ text "Jan 24th" ]
         ]
 
 
-viewClock2 : UI Msg
-viewClock2 =
-    row [ cl "hud-st-clock-area orbitron-400" ]
-        [ text "10:15 AM" ]
-
-
-viewHeatBar : UI Msg
-viewHeatBar =
+viewTrayIcons : UI Msg
+viewTrayIcons =
     let
-        noHeatIcon =
-            UI.Icon.msOutline "ac_unit" Nothing
+        notificationIcon =
+            UI.Icon.msOutline "notifications" Nothing
                 |> UI.Icon.toUI
 
-        noHeatView =
-            row [ cl "hud-st-heat-noheat" ]
-                [ noHeatIcon ]
-    in
-    row [ cl "hud-st-heat-area" ]
-        [ noHeatView ]
-
-
-viewTraceBar : UI Msg
-viewTraceBar =
-    let
-        noTraceIcon =
-            UI.Icon.msOutline "block" Nothing
+        settingsIcon =
+            UI.Icon.msOutline "settings" Nothing
                 |> UI.Icon.toUI
 
-        noTraceView =
-            row [ cl "hud-st-trace-notrace" ]
-                [ noTraceIcon ]
+        trayEntry =
+            \icon ->
+                row [ cl "hud-st-tray-entry-area" ]
+                    [ icon ]
     in
-    row [ cl "hud-st-trace-area" ]
-        [ noTraceView ]
+    row [ cl "hud-st-tray-area" ]
+        [ trayEntry settingsIcon
+        , trayEntry notificationIcon
+        ]
+
+
+viewBuildVersion : UI Msg
+viewBuildVersion =
+    row
+        [ id "hud-build-version-area"
+        , HA.alt "Foo"
+        ]
+        -- Currently just a placeholder
+        [ text "v04.293.33" ]
