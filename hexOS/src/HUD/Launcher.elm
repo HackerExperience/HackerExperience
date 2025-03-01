@@ -12,11 +12,10 @@ import Effect exposing (Effect)
 import Html.Events as HE
 import Json.Decode as JD
 import OS.Bus
-import UI exposing (UI, cl, col, div, id, row, text)
+import UI exposing (UI, cl, col, id, row, text)
 import UI.Icon
-import UI.Model.FormFields as FormFields exposing (TextField)
+import UI.Model.FormFields as FormFields
 import UI.TextInput
-import WM
 
 
 
@@ -194,9 +193,8 @@ stopPropagation event =
 
 addGlobalEvents : Model -> List (UI.Attribute Msg)
 addGlobalEvents model =
-    case model.isOpen of
-        False ->
-            []
+    if model.isOpen then
+        [ HE.on "click" <| JD.succeed CloseLauncherOverlay ]
 
-        True ->
-            [ HE.on "click" <| JD.succeed CloseLauncherOverlay ]
+    else
+        []

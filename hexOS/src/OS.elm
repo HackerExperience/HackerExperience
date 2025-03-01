@@ -32,7 +32,6 @@ import OS.AppID exposing (AppID)
 import OS.Bus
 import State exposing (State)
 import UI exposing (UI, cl, col, div, id, row, style, text)
-import UI.Button
 import UI.Icon
 import WM
 import WM.Windowable

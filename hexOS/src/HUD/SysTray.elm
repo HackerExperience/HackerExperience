@@ -3,7 +3,6 @@ module HUD.SysTray exposing
     , view
     )
 
-import Html as H exposing (Html)
 import Html.Attributes as HA
 import OS.Bus
 import State exposing (State)
@@ -21,7 +20,7 @@ type Msg
 
 
 view : State -> UI Msg
-view state =
+view _ =
     row [ id "hud-systray" ]
         [ col [ cl "hud-st-left-area" ]
             [ viewTrayIcons

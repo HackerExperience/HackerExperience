@@ -67,12 +67,12 @@ update state msg model =
             in
             ( { model | ci = newCiModel }, Effect.map CIMsg effect )
 
-        DockMsg dockMsg ->
+        DockMsg _ ->
             -- let
             --     ( newCiModel, effect ) =
             --         CI.update state ciMsg model.ci
             -- in
-            ( { model | dock = model.dock }, Effect.none )
+            ( model, Effect.none )
 
         LauncherMsg launcherMsg ->
             let
@@ -81,12 +81,12 @@ update state msg model =
             in
             ( { model | launcher = newLauncherModel }, Effect.map LauncherMsg effect )
 
-        SysTrayMsg sysTrayMsg ->
+        SysTrayMsg _ ->
             -- let
             --     ( newCiModel, effect ) =
             --         CI.update state ciMsg model.ci
             -- in
-            ( { model | sysTray = model.sysTray }, Effect.none )
+            ( model, Effect.none )
 
         ToOS _ ->
             -- Handled by parent

@@ -4,7 +4,7 @@ module HUD.Dock exposing
     )
 
 import OS.Bus
-import UI exposing (UI, cl, col, div, id, row, text)
+import UI exposing (UI, cl, div, id, row, text)
 import UI.Icon
 import WM
 
@@ -19,7 +19,7 @@ type Msg
 
 
 view : WM.Model -> UI Msg
-view wm =
+view _ =
     row [ id "hud-dock" ]
         [ viewAppEntry "Log Viewer" "list_alt"
         , viewAppEntry "File Explorer" "folder"

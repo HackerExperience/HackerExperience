@@ -182,13 +182,13 @@ viewGatewayServerNew state model =
 
 
 viewEndpointServerNew : State -> Model -> UI Msg
-viewEndpointServerNew state model =
+viewEndpointServerNew _ _ =
     row [ cl "hud-ci-server-area hud-ci-server-endpoint" ]
         [ text "93.84.190.205" ]
 
 
 viewVPNAreaNew : State -> Model -> UI Msg
-viewVPNAreaNew state model =
+viewVPNAreaNew _ _ =
     let
         vpnIcon =
             UI.Icon.msOutline "public" Nothing
@@ -201,10 +201,6 @@ viewVPNAreaNew state model =
 viewActiveServerIndicator : CISide -> UI Msg
 viewActiveServerIndicator side =
     let
-        activeServerIcon =
-            UI.Icon.msOutline "radio_button_checked" Nothing
-                |> UI.Icon.toUI
-
         activeServerClass =
             case side of
                 CIGateway ->
@@ -312,7 +308,7 @@ stopPropagation event =
 
 
 viewGatewaySelector : State -> Model -> UI Msg
-viewGatewaySelector state model__ =
+viewGatewaySelector state _ =
     let
         spGateways =
             List.foldl (gatewaySelectorEntries Singleplayer) [] (Game.getGateways state.sp)
