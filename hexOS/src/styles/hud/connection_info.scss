@@ -63,18 +63,36 @@
 .hud-ci-server-area {
     font-family: "Roboto", serif;
     flex: 1;
+    height: 100%;
+    align-items: center;
     justify-content: center;
 
     color: prim-400();
     text-shadow: 0 0 2px prim-400(), 0 0 0px prim-400(), 0 0 0px prim-400();
+
+    &:hover {
+    }
 }
 
 .hud-ci-server-gateway {
+    padding-right: 8px;
     justify-content: flex-end;
 }
 
 .hud-ci-server-endpoint {
+    padding-left: 8px;
     justify-content: flex-start;
+}
+
+.hud-ci-server-selectable {
+    &:hover {
+        color: prim-300();
+        cursor: pointer;
+    }
+}
+
+.hud-ci-server-active {
+    text-shadow: 0 0 2px prim-300(), 0 0 0px prim-300(), 0 0 0px prim-300();
 }
 
 .hud-ci-vpn-area {

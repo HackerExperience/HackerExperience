@@ -162,33 +162,68 @@ viewConnectionInfo state model =
         [ viewActiveServerIndicator side
         , viewServerSelectorDropdown CIGateway model
         , viewServerSelectorDropdown CIEndpoint model
-        , viewGatewayServerNew state model
-        , viewVPNAreaNew state model
-        , viewEndpointServerNew state model
+        , viewGatewayServer state model
+        , viewVPNArea state model
+        , viewEndpointServer state model
         ]
 
 
-viewGatewayServerNew : State -> Model -> UI Msg
-viewGatewayServerNew state model =
+viewGatewayServer : State -> Model -> UI Msg
+viewGatewayServer state _ =
     let
         game =
             State.getActiveUniverse state
 
         gateway =
             Game.getActiveGateway game
+
+        canSwitchSession =
+            not (WM.isSessionLocal state.currentSession)
+
+        extraAttrs =
+            if canSwitchSession then
+                [ UI.pointer, UI.onClick ToggleWMSession ]
+
+            else
+                [ cl "hud-ci-server-active" ]
     in
-    row [ cl "hud-ci-server-area hud-ci-server-gateway" ]
+    row (cl "hud-ci-server-area hud-ci-server-gateway" :: extraAttrs)
         [ text (NIP.getIPString gateway.nip) ]
 
 
-viewEndpointServerNew : State -> Model -> UI Msg
-viewEndpointServerNew _ _ =
-    row [ cl "hud-ci-server-area hud-ci-server-endpoint" ]
-        [ text "93.84.190.205" ]
+viewEndpointServer : State -> Model -> UI Msg
+viewEndpointServer state _ =
+    let
+        endpoint =
+            state
+                |> State.getActiveUniverse
+                |> Game.getActiveEndpointNip
+
+        ( label, isConnected ) =
+            case endpoint of
+                Just nip ->
+                    ( NIP.getIPString nip, True )
+
+                Nothing ->
+                    ( "Not Connected", False )
+
+        canSwitchSession =
+            isConnected && WM.isSessionLocal state.currentSession
+
+        extraAttrs =
+            if canSwitchSession then
+                [ UI.onClick ToggleWMSession, cl "hud-ci-server-selectable" ]
+
+            else
+                [ cl "hud-ci-server-active" ]
+    in
+    row
+        (cl "hud-ci-server-area hud-ci-server-endpoint" :: extraAttrs)
+        [ text label ]
 
 
-viewVPNAreaNew : State -> Model -> UI Msg
-viewVPNAreaNew _ _ =
+viewVPNArea : State -> Model -> UI Msg
+viewVPNArea _ _ =
     let
         vpnIcon =
             UI.Icon.msOutline "public" Nothing
