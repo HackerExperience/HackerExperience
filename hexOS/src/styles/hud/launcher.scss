@@ -8,7 +8,6 @@
     height: d-hud-launcher-height();
     bottom: d-hud-launcher-s-bottom();
     left: d-hud-launcher-s-left();
-
 }
 
 .hud-l-launcher-area {
@@ -48,12 +47,28 @@
 }
 
 .hud-lo-area {
+    display: inline-block;
     background-color: sec-700();
-    width: 80%;
-    max-width: 1000px;
-    height: 80%;
-    margin: 100px auto 0 auto;
+    padding-bottom: s-7();
+    margin: auto;
     border: 1px solid prim-300();
+
+    max-height: 100%;
+    overflow: scroll;
+
+    @media (max-height: 2160px) {
+        width: 40%;
+        min-width: 1000px;
+    }
+
+    @media (max-height: 1200px) {
+        width: 70%;
+    }
+
+    @media (max-height: 900px) {
+        width: 90%;
+        padding-bottom: 20px;
+    }
 }
 
 .hud-lo-search-area {
