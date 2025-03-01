@@ -41,7 +41,7 @@ type Msg
 
 initialModel : Model
 initialModel =
-    { isOpen = True }
+    { isOpen = False }
 
 
 

@@ -10,6 +10,9 @@
 @function d-hud-ci-s-left() { @return v.get(d-hud-ci-s-left); }
 @function d-hud-ci-s-top() { @return v.get(d-hud-ci-s-top); }
 @function d-hud-ci-h-clearance() { @return v.get(d-hud-ci-h-clearance); }
+@function d-hud-ci-srvselector-width() { @return v.get(d-hud-ci-srvselector-width); }
+@function d-hud-ci-srvselector-height() { @return v.get(d-hud-ci-srvselector-height); }
+@function d-hud-ci-srvselector-s-top() { @return v.get(d-hud-ci-srvselector-s-top); }
 
 // HUD > Dock
 @function d-hud-dock-height() { @return v.get(d-hud-dock-height); }

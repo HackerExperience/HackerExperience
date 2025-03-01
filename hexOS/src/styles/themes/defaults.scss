@@ -27,6 +27,9 @@ $default-theme-vars: (
     d-hud-ci-s-left: calc(50% - d-hud-ci-width() / 2),
     d-hud-ci-s-top: s-3(),
     d-hud-ci-h-clearance: calc(d-hud-ci-height() + d-hud-ci-s-top()),
+    d-hud-ci-srvselector-width: 250px,
+    d-hud-ci-srvselector-height: 200px,
+    d-hud-ci-srvselector-s-top: 86px,
 
     // Dimensions > HUD > Dock
     d-hud-dock-height: d-hud-launcher-height(),

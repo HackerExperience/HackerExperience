@@ -160,8 +160,8 @@ viewConnectionInfo state model =
     in
     row [ id "hud-connection-info" ]
         [ viewActiveServerIndicator side
-        , viewSelectorDropdown CIGateway model
-        , viewSelectorDropdown CIEndpoint model
+        , viewServerSelectorDropdown CIGateway model
+        , viewServerSelectorDropdown CIEndpoint model
         , viewGatewayServerNew state model
         , viewVPNAreaNew state model
         , viewEndpointServerNew state model
@@ -213,12 +213,16 @@ viewActiveServerIndicator side =
                 CIEndpoint ->
                     "hud-ci-active-server-endpoint"
     in
-    div [ cl "hud-ci-active-server-indicator", cl activeServerClass ]
-        [ activeServerIcon ]
+    div
+        [ cl "hud-ci-active-server-indicator"
+        , cl activeServerClass
+        , cl "hud-ci-active-server-indicator-circle"
+        ]
+        []
 
 
-viewSelectorDropdown : CISide -> Model -> UI Msg
-viewSelectorDropdown side { selector } =
+viewServerSelectorDropdown : CISide -> Model -> UI Msg
+viewServerSelectorDropdown side { selector } =
     let
         ( dropdownIconName, onClickMsg ) =
             case ( side, selector ) of
@@ -245,48 +249,20 @@ viewSelectorDropdown side { selector } =
         selectorDropdownSide =
             case side of
                 CIGateway ->
-                    "hud-ci-selector-dropdown-gateway"
+                    "hud-ci-srvselector-dropdown-gateway"
 
                 CIEndpoint ->
-                    "hud-ci-selector-dropdown-endpoint"
-
-        hasNotification =
-            case side of
-                CIGateway ->
-                    True
-
-                CIEndpoint ->
-                    False
-
-        notificationClass =
-            if hasNotification then
-                "hud-ci-selector-dropdown-with-notification"
-
-            else
-                ""
-
-        notificationIcon =
-            if hasNotification then
-                row [ cl "hud-ci-selector-dropdown-notification" ]
-                    [ UI.Icon.msOutline "radio_button_checked" Nothing
-                        |> UI.Icon.toUI
-                    ]
-
-            else
-                UI.emptyEl
+                    "hud-ci-srvselector-dropdown-endpoint"
     in
     row
-        [ cl "hud-ci-selector-dropdown"
-        , cl notificationClass
+        [ cl "hud-ci-srvselector-dropdown"
         , cl selectorDropdownSide
         , UI.onClick onClickMsg
 
         -- Don't close the selector on "mousedown". We'll handle that ourselves.
         , stopPropagation "mousedown"
         ]
-        [ dropdownIcon
-        , notificationIcon
-        ]
+        [ dropdownIcon ]
 
 
 
@@ -300,16 +276,26 @@ viewSelector state model =
             UI.emptyEl
 
         SelectorGateway ->
-            renderSelector <| viewGatewaySelector state model
+            renderServerSelector CIGateway (viewGatewaySelector state model)
 
         SelectorEndpoint ->
-            renderSelector <| viewEndpointSelector state model
+            renderServerSelector CIEndpoint (viewEndpointSelector state model)
 
 
-renderSelector : UI Msg -> UI Msg
-renderSelector renderedSelector =
+renderServerSelector : CISide -> UI Msg -> UI Msg
+renderServerSelector side renderedSelector =
+    let
+        sideClass =
+            case side of
+                CIGateway ->
+                    "hud-ci-srvselector-gateway"
+
+                CIEndpoint ->
+                    "hud-ci-srvselector-endpoint"
+    in
     row
-        [ cl "hud-connection-info-selector"
+        [ id "hud-connection-info-srvselector"
+        , cl sideClass
         , stopPropagation "mousedown"
         ]
         [ renderedSelector ]
@@ -334,7 +320,7 @@ viewGatewaySelector state model__ =
         mpGateways =
             List.foldl (gatewaySelectorEntries Multiplayer) [] (Game.getGateways state.mp)
     in
-    col [] <|
+    col [ cl "hud-ci-selector-gateway-area" ] <|
         spGateways
             ++ mpGateways
 
