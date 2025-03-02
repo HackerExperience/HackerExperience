@@ -3,7 +3,11 @@ module HUD.Dock exposing
     , view
     )
 
+import Apps.Manifest as App
+import Dict exposing (Dict)
+import OS.AppID exposing (AppID)
 import OS.Bus
+import State exposing (State)
 import UI exposing (UI, cl, div, id, row, text)
 import UI.Icon
 import WM
@@ -18,17 +22,37 @@ type Msg
 -- View
 
 
-view : WM.Model -> UI Msg
-view _ =
-    row [ id "hud-dock" ]
-        [ viewAppEntry "Log Viewer" "list_alt"
-        , viewAppEntry "File Explorer" "folder"
-        ]
-
-
-viewAppEntry : String -> String -> UI Msg
-viewAppEntry name iconName =
+view : State -> WM.Model -> UI Msg
+view state wm =
+    -- TODO: Lazify
     let
+        appEntries =
+            Dict.foldr (renderAppEntry state) [] wm.windows
+    in
+    row [ id "hud-dock" ]
+        appEntries
+
+
+renderAppEntry : State -> AppID -> WM.Window -> List (UI Msg) -> List (UI Msg)
+renderAppEntry state appId window acc =
+    if shouldRenderEntry state window then
+        viewAppEntry window :: acc
+
+    else
+        acc
+
+
+shouldRenderEntry : State -> WM.Window -> Bool
+shouldRenderEntry state window =
+    not window.isPopup && window.sessionID == state.currentSession && window.universe == state.currentUniverse
+
+
+viewAppEntry : WM.Window -> UI Msg
+viewAppEntry { appId, app, isPopup } =
+    let
+        ( name, iconName ) =
+            ( App.getName app, App.getIcon app )
+
         icon =
             UI.Icon.msOutline iconName Nothing
                 |> UI.Icon.toUI
