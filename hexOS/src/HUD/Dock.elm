@@ -15,7 +15,7 @@ import WM
 
 type Msg
     = ToOS OS.Bus.Action
-    | NoOP
+    | NoOp
 
 
 
@@ -65,7 +65,10 @@ viewAppEntry { appId, app, isPopup } =
             row [ cl "hud-d-entry-name-area" ]
                 [ text name ]
     in
-    row [ cl "hud-d-entry-area" ]
+    row
+        [ cl "hud-d-entry-area"
+        , UI.onClick <| ToOS <| OS.Bus.RequestFocusApp appId
+        ]
         [ entryIconArea
         , div [ cl "hud-d-entry-icon-separator" ] []
         , entryNameArea

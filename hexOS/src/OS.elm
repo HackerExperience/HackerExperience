@@ -21,6 +21,7 @@ import Effect exposing (Effect)
 import Game
 import HUD
 import HUD.ConnectionInfo
+import HUD.Dock
 import HUD.Launcher
 import Html
 import Html.Attributes as HA
@@ -685,6 +686,9 @@ updateHud : State -> Model -> HUD.Msg -> ( Model, Effect Msg )
 updateHud state model hudMsg =
     case hudMsg of
         HUD.CIMsg (HUD.ConnectionInfo.ToOS action) ->
+            ( model, Effect.msgToCmd (PerformAction action) )
+
+        HUD.DockMsg (HUD.Dock.ToOS action) ->
             ( model, Effect.msgToCmd (PerformAction action) )
 
         HUD.LauncherMsg (HUD.Launcher.ToOS action) ->
