@@ -21,6 +21,7 @@ import Effect exposing (Effect)
 import Game
 import HUD
 import HUD.ConnectionInfo
+import HUD.Dock
 import HUD.Launcher
 import Html
 import Html.Attributes as HA
@@ -138,6 +139,9 @@ update state msg model =
 
         PerformAction (OS.Bus.CloseApp appId) ->
             performActionOnApp model appId performCloseApp
+
+        PerformAction (OS.Bus.CollapseApp appId) ->
+            performActionOnApp model appId performCollapseApp
 
         PerformAction (OS.Bus.FocusApp appId) ->
             performActionOnApp model appId performFocusApp
@@ -467,6 +471,15 @@ performCloseApp model appId =
     ( { model | appModels = newAppModels, appConfigs = newAppConfigs, wm = newWm }, parentCmd )
 
 
+performCollapseApp : Model -> AppID -> ( Model, Effect Msg )
+performCollapseApp model appId =
+    let
+        newWm =
+            WM.collapseApp model.wm appId
+    in
+    ( { model | wm = newWm }, Effect.none )
+
+
 maybeRemoveChildrenWindows : List ( App.Manifest, AppID ) -> WM.Model -> WM.Model
 maybeRemoveChildrenWindows linkedChildren wm =
     List.foldl
@@ -687,6 +700,9 @@ updateHud state model hudMsg =
         HUD.CIMsg (HUD.ConnectionInfo.ToOS action) ->
             ( model, Effect.msgToCmd (PerformAction action) )
 
+        HUD.DockMsg (HUD.Dock.ToOS action) ->
+            ( model, Effect.msgToCmd (PerformAction action) )
+
         HUD.LauncherMsg (HUD.Launcher.ToOS action) ->
             ( model, Effect.msgToCmd (PerformAction action) )
 
@@ -767,7 +783,7 @@ viewWindow state model appId window acc =
 
 1.  It is registered to the same Universe the OS is using; and
 2.  It is registered to the same Server the WM is using; and
-3.  It has the `isVisible` flag set to True (it's not minimized).
+3.  It has the `isVisible` flag set to True (it's not collapsed).
 
 -}
 shouldRenderWindow : State -> WM.Window -> Bool
@@ -832,6 +848,11 @@ renderWindowTitle appId window isDragging =
             row [ cl "os-w-title" ]
                 [ text window.title ]
 
+        collapseButtonHtml =
+            UI.Icon.msOutline "minimize" Nothing
+                |> UI.Icon.withOnClick (PerformAction <| OS.Bus.CollapseApp appId)
+                |> UI.Icon.toUI
+
         closeButtonHtml =
             UI.Icon.iClose Nothing
                 |> UI.Icon.withOnClick (PerformAction <| OS.Bus.RequestCloseApp appId)
@@ -843,7 +864,9 @@ renderWindowTitle appId window isDragging =
                 , stopPropagation "mousedown"
                 , stopPropagation "mouseup"
                 ]
-                [ closeButtonHtml ]
+                [ collapseButtonHtml
+                , closeButtonHtml
+                ]
     in
     row
         [ cl "os-w-header"

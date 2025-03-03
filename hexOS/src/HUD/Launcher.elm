@@ -137,32 +137,30 @@ viewOverlaySearch =
 viewOverlayApps : UI Msg
 viewOverlayApps =
     let
-        apps =
-            [ viewOverlayAppEntry "list_alt" "Log Viewer" App.LogViewerApp
-            , viewOverlayAppEntry "folder" "Remote Access" App.RemoteAccessApp
-            , viewOverlayAppEntry "folder" "File Explorer" App.DemoApp
-            , viewOverlayAppEntry "folder" "File Explorer" App.DemoApp
-            , viewOverlayAppEntry "folder" "File Explorer" App.DemoApp
-            , viewOverlayAppEntry "folder" "File Explorer" App.DemoApp
-            , viewOverlayAppEntry "folder" "File Explorer" App.DemoApp
-            , viewOverlayAppEntry "folder" "File Explorer" App.DemoApp
-            , viewOverlayAppEntry "folder" "File Explorer" App.DemoApp
-            , viewOverlayAppEntry "folder" "File Explorer" App.DemoApp
-            , viewOverlayAppEntry "folder" "File Explorer" App.DemoApp
-            , viewOverlayAppEntry "folder" "File Explorer" App.DemoApp
-            , viewOverlayAppEntry "folder" "File Explorer" App.DemoApp
-            , viewOverlayAppEntry "folder" "File Explorer" App.DemoApp
-            , viewOverlayAppEntry "folder" "File Explorer" App.DemoApp
-            , viewOverlayAppEntry "folder" "File Explorer" App.DemoApp
+        launchableApps =
+            [ App.LogViewerApp
+            , App.RemoteAccessApp
+            , App.DemoApp
             ]
+
+        appEntries =
+            List.foldr renderOverlayAppEntries [] launchableApps
     in
     row [ cl "hud-lo-apps-area" ]
-        apps
+        appEntries
 
 
-viewOverlayAppEntry : String -> String -> App.Manifest -> UI Msg
-viewOverlayAppEntry iconName name app =
+renderOverlayAppEntries : App.Manifest -> List (UI Msg) -> List (UI Msg)
+renderOverlayAppEntries app acc =
+    viewOverlayAppEntry app :: acc
+
+
+viewOverlayAppEntry : App.Manifest -> UI Msg
+viewOverlayAppEntry app =
     let
+        ( name, iconName ) =
+            ( App.getName app, App.getIcon app )
+
         icon =
             UI.Icon.msOutline iconName Nothing
                 |> UI.Icon.toUI

@@ -102,7 +102,7 @@ view state model wm =
     row [ id "hud" ]
         [ Html.map CIMsg <| CI.view state model.ci
         , Html.map LauncherMsg <| Launcher.view model.launcher
-        , Html.map DockMsg <| Dock.view wm
+        , Html.map DockMsg <| Dock.view state wm
         , Html.map SysTrayMsg <| SysTray.view state
         ]
 

@@ -9,6 +9,7 @@ module WM exposing
     , XY
     , Y
     , applyDrag
+    , collapseApp
     , createWindowInfo
     , deregisterApp
     , dummyWindowConfig
@@ -633,6 +634,34 @@ deregisterApp model appId =
     { model | windows = newWindows, dragging = newDragging, focusedWindow = newFocusedWindow }
 
 
+collapseApp : Model -> AppID -> Model
+collapseApp model appId =
+    case getWindowSafe model.windows appId of
+        Just window ->
+            doCollapseApp model window
+
+        Nothing ->
+            model
+
+
+doCollapseApp : Model -> Window -> Model
+doCollapseApp model window =
+    let
+        newFocusedWindow =
+            Nothing
+
+        newWindow =
+            { window | isVisible = False }
+
+        newWindows =
+            Dict.insert window.appId newWindow model.windows
+    in
+    { model
+        | focusedWindow = newFocusedWindow
+        , windows = newWindows
+    }
+
+
 focusApp : Model -> AppID -> Model
 focusApp model appId =
     case getWindowSafe model.windows appId of
@@ -667,6 +696,7 @@ doFocusApp model window isVibrating =
             { window
                 | zIndex = model.nextZIndex
                 , isVibrating = isVibrating
+                , isVisible = True
             }
 
         newWindows =

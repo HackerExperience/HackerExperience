@@ -21,4 +21,5 @@ type Action
     | FocusApp AppID
     | FocusVibrateApp AppID
     | UnvibrateApp AppID
+    | CollapseApp AppID
     | ToGame Game.Bus.Action

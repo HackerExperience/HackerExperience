@@ -12,7 +12,7 @@ import UI.Icon
 
 type Msg
     = ToOS OS.Bus.Action
-    | NoOP
+    | NoOp
 
 
 
