@@ -41,7 +41,7 @@ OS gerencia as Msgs/Updates etc. Tentar fazer assim (mas tudo bem se nao rolar)
 
 import Apps.Manifest as App
 import Dict exposing (Dict)
-import Game.Model.NIP exposing (NIP)
+import Game.Model.NIP as NIP exposing (NIP)
 import Game.Model.ServerID as ServerID exposing (ServerID)
 import Game.Universe as Universe exposing (Universe)
 import List.Extra as List
@@ -57,7 +57,7 @@ type SessionID
 
 type alias Model =
     { windows : Windows
-    , focusedWindow : Maybe AppID
+    , focusedWindows : Dict String (Maybe AppID)
     , dragging : Maybe ( AppID, XY, XY )
     , nextAppId : Int
     , nextZIndex : Int
@@ -156,7 +156,7 @@ type alias ViewportLimits =
 init : XY -> Model
 init ( viewportX, viewportY ) =
     { windows = Dict.empty
-    , focusedWindow = Nothing
+    , focusedWindows = Dict.empty
     , nextAppId = 1
     , nextZIndex = 1
     , dragging = Nothing
@@ -240,6 +240,16 @@ isSessionLocal session =
 
         RemoteSessionID _ ->
             False
+
+
+sessionIdToString : SessionID -> String
+sessionIdToString session =
+    case session of
+        LocalSessionID serverId ->
+            ServerID.toValue serverId
+
+        RemoteSessionID nip ->
+            NIP.toString nip
 
 
 toggleSession : ServerID -> NIP -> SessionID -> SessionID
@@ -466,11 +476,16 @@ isDraggingApp model appId =
 -- Model > Focus
 
 
-isFocusedApp : Model -> AppID -> Bool
-isFocusedApp model appId =
-    case model.focusedWindow of
-        Just id ->
-            id == appId
+isFocusedApp : Model -> SessionID -> AppID -> Bool
+isFocusedApp model sessionId appId =
+    case Dict.get (sessionIdToString sessionId) model.focusedWindows of
+        Just maybeAppId ->
+            case maybeAppId of
+                Just id ->
+                    id == appId
+
+                Nothing ->
+                    False
 
         Nothing ->
             False
@@ -586,19 +601,19 @@ registerApp model universe sessionId app appId windowConfig parentInfo =
         newNextZIndex =
             model.nextZIndex + 1
 
-        newFocusedWindow =
-            Just appId
+        newFocusedWindows =
+            Dict.insert (sessionIdToString sessionId) (Just appId) model.focusedWindows
     in
     { model
         | windows = newWindows
         , nextAppId = newNextAppId
         , nextZIndex = newNextZIndex
-        , focusedWindow = newFocusedWindow
+        , focusedWindows = newFocusedWindows
     }
 
 
-deregisterApp : Model -> AppID -> Model
-deregisterApp model appId =
+deregisterApp : Model -> SessionID -> AppID -> Model
+deregisterApp model sessionId appId =
     let
         window =
             getWindow model.windows appId
@@ -619,36 +634,27 @@ deregisterApp model appId =
                 Nothing ->
                     Nothing
 
-        newFocusedWindow =
-            case model.focusedWindow of
-                Just focusedId ->
-                    if focusedId == appId then
-                        Nothing
-
-                    else
-                        Just focusedId
-
-                Nothing ->
-                    Nothing
+        newFocusedWindows =
+            Dict.remove (sessionIdToString sessionId) model.focusedWindows
     in
-    { model | windows = newWindows, dragging = newDragging, focusedWindow = newFocusedWindow }
+    { model | windows = newWindows, dragging = newDragging, focusedWindows = newFocusedWindows }
 
 
-collapseApp : Model -> AppID -> Model
-collapseApp model appId =
+collapseApp : Model -> SessionID -> AppID -> Model
+collapseApp model sessionId appId =
     case getWindowSafe model.windows appId of
         Just window ->
-            doCollapseApp model window
+            doCollapseApp model sessionId window
 
         Nothing ->
             model
 
 
-doCollapseApp : Model -> Window -> Model
-doCollapseApp model window =
+doCollapseApp : Model -> SessionID -> Window -> Model
+doCollapseApp model sessionId window =
     let
-        newFocusedWindow =
-            Nothing
+        newFocusedWindows =
+            Dict.remove (sessionIdToString sessionId) model.focusedWindows
 
         newWindow =
             { window | isVisible = False }
@@ -657,16 +663,16 @@ doCollapseApp model window =
             Dict.insert window.appId newWindow model.windows
     in
     { model
-        | focusedWindow = newFocusedWindow
+        | focusedWindows = newFocusedWindows
         , windows = newWindows
     }
 
 
-focusApp : Model -> AppID -> Model
-focusApp model appId =
+focusApp : Model -> SessionID -> AppID -> Model
+focusApp model sessionId appId =
     case getWindowSafe model.windows appId of
         Just window ->
-            doFocusApp model window False
+            doFocusApp model sessionId window False
 
         Nothing ->
             model
@@ -676,21 +682,21 @@ focusApp model appId =
 -- TODO: Can be merged to `focusApp`
 
 
-focusVibrateApp : Model -> AppID -> Model
-focusVibrateApp model appId =
+focusVibrateApp : Model -> SessionID -> AppID -> Model
+focusVibrateApp model sessionId appId =
     case getWindowSafe model.windows appId of
         Just window ->
-            doFocusApp model window True
+            doFocusApp model sessionId window True
 
         Nothing ->
             model
 
 
-doFocusApp : Model -> Window -> Bool -> Model
-doFocusApp model window isVibrating =
+doFocusApp : Model -> SessionID -> Window -> Bool -> Model
+doFocusApp model sessionId window isVibrating =
     let
-        newFocusedWindow =
-            Just window.appId
+        newFocusedWindows =
+            Dict.insert (sessionIdToString sessionId) (Just window.appId) model.focusedWindows
 
         newWindow =
             { window
@@ -706,7 +712,7 @@ doFocusApp model window isVibrating =
             model.nextZIndex + 1
     in
     { model
-        | focusedWindow = newFocusedWindow
+        | focusedWindows = newFocusedWindows
         , windows = newWindows
         , nextZIndex = newNextZIndex
     }

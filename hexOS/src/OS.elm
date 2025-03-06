@@ -126,31 +126,31 @@ update state msg model =
             performRequestOpen state model app parentInfo
 
         PerformAction (OS.Bus.RequestCloseApp appId) ->
-            performActionOnApp model appId performRequestClose
+            performActionOnApp state model appId performRequestClose
 
         PerformAction (OS.Bus.RequestCloseChildren appId) ->
-            performActionOnApp model appId performRequestCloseChildren
+            performActionOnApp state model appId performRequestCloseChildren
 
         PerformAction (OS.Bus.RequestFocusApp appId) ->
-            performActionOnApp model appId performRequestFocus
+            performActionOnApp state model appId performRequestFocus
 
         PerformAction (OS.Bus.OpenApp app parentInfo) ->
             performOpenApp state model app parentInfo
 
         PerformAction (OS.Bus.CloseApp appId) ->
-            performActionOnApp model appId performCloseApp
+            performActionOnApp state model appId performCloseApp
 
         PerformAction (OS.Bus.CollapseApp appId) ->
-            performActionOnApp model appId performCollapseApp
+            performActionOnApp state model appId performCollapseApp
 
         PerformAction (OS.Bus.FocusApp appId) ->
-            performActionOnApp model appId performFocusApp
+            performActionOnApp state model appId performFocusApp
 
         PerformAction (OS.Bus.FocusVibrateApp appId) ->
-            performActionOnApp model appId performFocusVibrateApp
+            performActionOnApp state model appId performFocusVibrateApp
 
         PerformAction (OS.Bus.UnvibrateApp appId) ->
-            performActionOnApp model appId performUnvibrateApp
+            performActionOnApp state model appId performUnvibrateApp
 
         PerformAction (OS.Bus.ToGame _) ->
             -- Handled by parent
@@ -158,7 +158,7 @@ update state msg model =
 
         -- Drag
         StartDrag appId x y ->
-            performActionOnApp model appId (startDrag (truncate x) (truncate y))
+            performActionOnApp state model appId (startDrag (truncate x) (truncate y))
 
         Drag x y ->
             applyDrag model (truncate x) (truncate y)
@@ -183,13 +183,14 @@ update state msg model =
 
 
 performActionOnApp :
-    Model
+    State
+    -> Model
     -> AppID
-    -> (Model -> AppID -> ( Model, Effect Msg ))
+    -> (State -> Model -> AppID -> ( Model, Effect Msg ))
     -> ( Model, Effect Msg )
-performActionOnApp model appId fun =
+performActionOnApp state model appId fun =
     if WM.windowExists model.wm appId then
-        fun model appId
+        fun state model appId
         -- TODO: Display OSErrorPopup when this happens
 
     else
@@ -255,8 +256,8 @@ performRequestOpen { currentSession } model app parentInfo =
     ( model, Effect.msgToCmd (PerformAction finalAction) )
 
 
-performRequestClose : Model -> AppID -> ( Model, Effect Msg )
-performRequestClose model appId =
+performRequestClose : State -> Model -> AppID -> ( Model, Effect Msg )
+performRequestClose _ model appId =
     let
         window =
             WM.getWindow model.wm.windows appId
@@ -283,8 +284,8 @@ performRequestClose model appId =
     ( model, Effect.msgToCmd (PerformAction action) )
 
 
-performRequestCloseChildren : Model -> AppID -> ( Model, Effect Msg )
-performRequestCloseChildren model parentId =
+performRequestCloseChildren : State -> Model -> AppID -> ( Model, Effect Msg )
+performRequestCloseChildren _ model parentId =
     let
         children =
             WM.getLinkedChildren model.wm parentId
@@ -339,8 +340,8 @@ requestCloseChild model ( _, childId ) onReject =
             Stop baseAction
 
 
-performRequestFocus : Model -> AppID -> ( Model, Effect Msg )
-performRequestFocus model appId =
+performRequestFocus : State -> Model -> AppID -> ( Model, Effect Msg )
+performRequestFocus _ model appId =
     let
         window =
             WM.getWindow model.wm.windows appId
@@ -427,8 +428,8 @@ performOpenApp { currentUniverse, currentSession } model app parentInfo =
     )
 
 
-performCloseApp : Model -> AppID -> ( Model, Effect Msg )
-performCloseApp model appId =
+performCloseApp : State -> Model -> AppID -> ( Model, Effect Msg )
+performCloseApp { currentSession } model appId =
     let
         -- TODO: Implement didClose if we need to do in-app clean-up
         window =
@@ -456,8 +457,8 @@ performCloseApp model appId =
             WM.getLinkedChildren model.wm appId
 
         newWm =
-            WM.deregisterApp model.wm appId
-                |> maybeRemoveChildrenWindows linkedChildren
+            WM.deregisterApp model.wm currentSession appId
+                |> maybeRemoveChildrenWindows currentSession linkedChildren
 
         newAppModels =
             Dict.remove appId model.appModels
@@ -471,19 +472,19 @@ performCloseApp model appId =
     ( { model | appModels = newAppModels, appConfigs = newAppConfigs, wm = newWm }, parentCmd )
 
 
-performCollapseApp : Model -> AppID -> ( Model, Effect Msg )
-performCollapseApp model appId =
+performCollapseApp : State -> Model -> AppID -> ( Model, Effect Msg )
+performCollapseApp { currentSession } model appId =
     let
         newWm =
-            WM.collapseApp model.wm appId
+            WM.collapseApp model.wm currentSession appId
     in
     ( { model | wm = newWm }, Effect.none )
 
 
-maybeRemoveChildrenWindows : List ( App.Manifest, AppID ) -> WM.Model -> WM.Model
-maybeRemoveChildrenWindows linkedChildren wm =
+maybeRemoveChildrenWindows : WM.SessionID -> List ( App.Manifest, AppID ) -> WM.Model -> WM.Model
+maybeRemoveChildrenWindows sessionId linkedChildren wm =
     List.foldl
-        (\( _, childId ) accWm -> WM.deregisterApp accWm childId)
+        (\( _, childId ) accWm -> WM.deregisterApp accWm sessionId childId)
         wm
         linkedChildren
 
@@ -504,23 +505,23 @@ maybeRemoveChildrenConfigs linkedChildren appConfigs =
         linkedChildren
 
 
-performFocusApp : Model -> AppID -> ( Model, Effect Msg )
-performFocusApp model appId =
-    ( { model | wm = WM.focusApp model.wm appId }, Effect.none )
+performFocusApp : State -> Model -> AppID -> ( Model, Effect Msg )
+performFocusApp { currentSession } model appId =
+    ( { model | wm = WM.focusApp model.wm currentSession appId }, Effect.none )
 
 
-performFocusVibrateApp : Model -> AppID -> ( Model, Effect Msg )
-performFocusVibrateApp model appId =
+performFocusVibrateApp : State -> Model -> AppID -> ( Model, Effect Msg )
+performFocusVibrateApp { currentSession } model appId =
     let
         -- TODO: Also zIndex + 1 the parent popup
         cmd =
             Effect.msgToCmdWithDelay 1000.0 (PerformAction <| OS.Bus.UnvibrateApp appId)
     in
-    ( { model | wm = WM.focusVibrateApp model.wm appId }, cmd )
+    ( { model | wm = WM.focusVibrateApp model.wm currentSession appId }, cmd )
 
 
-performUnvibrateApp : Model -> AppID -> ( Model, Effect Msg )
-performUnvibrateApp model appId =
+performUnvibrateApp : State -> Model -> AppID -> ( Model, Effect Msg )
+performUnvibrateApp _ model appId =
     ( { model | wm = WM.unvibrateApp model.wm appId }, Effect.none )
 
 
@@ -528,8 +529,8 @@ performUnvibrateApp model appId =
 -- Update > Drag
 
 
-startDrag : WM.X -> WM.Y -> Model -> AppID -> ( Model, Effect Msg )
-startDrag x y model appId =
+startDrag : WM.X -> WM.Y -> State -> Model -> AppID -> ( Model, Effect Msg )
+startDrag x y _ model appId =
     ( { model | wm = WM.startDrag model.wm appId x y }, Effect.none )
 
 
@@ -771,7 +772,7 @@ viewWindow state model appId window acc =
                 Html.map AppMsg <| getWindowInnerContent appId window appModel game
 
             renderedWindow =
-                renderWindow model.wm appId window windowContent
+                renderWindow state.currentSession model.wm appId window windowContent
         in
         renderedWindow :: acc
 
@@ -792,11 +793,11 @@ shouldRenderWindow state window =
     window.isVisible && window.universe == state.currentUniverse && window.sessionID == state.currentSession
 
 
-renderWindow : WM.Model -> AppID -> WM.Window -> UI Msg -> UI Msg
-renderWindow wm appId window renderedContent =
+renderWindow : WM.SessionID -> WM.Model -> AppID -> WM.Window -> UI Msg -> UI Msg
+renderWindow sessionId wm appId window renderedContent =
     let
         isFocused =
-            WM.isFocusedApp wm appId
+            WM.isFocusedApp wm sessionId appId
 
         isBlocked =
             Maybe.isJust window.blockedByApp
