@@ -963,7 +963,7 @@ maybeAddGlobalMouseMoveEvent : WM.Model -> UI.Attribute Msg
 maybeAddGlobalMouseMoveEvent wm =
     if WM.isDragging wm then
         HE.on "mousemove" <|
-            JD.map2 (\x y -> Drag x y)
+            JD.map2 Drag
                 (JD.field "clientX" JD.float)
                 (JD.field "clientY" JD.float)
 
