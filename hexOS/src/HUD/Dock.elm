@@ -4,7 +4,7 @@ module HUD.Dock exposing
     )
 
 import Apps.Manifest as App
-import Dict exposing (Dict)
+import Dict
 import OS.AppID exposing (AppID)
 import OS.Bus
 import State exposing (State)
@@ -34,7 +34,7 @@ view state wm =
 
 
 renderAppEntry : State -> AppID -> WM.Window -> List (UI Msg) -> List (UI Msg)
-renderAppEntry state appId window acc =
+renderAppEntry state _ window acc =
     if shouldRenderEntry state window then
         viewAppEntry window :: acc
 
@@ -48,7 +48,7 @@ shouldRenderEntry state window =
 
 
 viewAppEntry : WM.Window -> UI Msg
-viewAppEntry { appId, app, isPopup } =
+viewAppEntry { appId, app } =
     let
         ( name, iconName ) =
             ( App.getName app, App.getIcon app )

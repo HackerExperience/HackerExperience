@@ -24,6 +24,7 @@ module WM exposing
     , isFocusedApp
     , isSessionLocal
     , registerApp
+    , sessionIdToString
     , startDrag
     , stopDrag
     , toLocalSessionId
