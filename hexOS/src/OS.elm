@@ -5,6 +5,7 @@ module OS exposing
     , Msg(..)
     , documentView
     , init
+    , subscriptions
     , update
     , updateViewport
     )
@@ -31,6 +32,7 @@ import List.Extra as List exposing (Step(..))
 import Maybe.Extra as Maybe
 import OS.AppID exposing (AppID)
 import OS.Bus
+import OS.CtxMenu as CtxMenu
 import State exposing (State)
 import UI exposing (UI, cl, col, div, id, row, style, text)
 import UI.Icon
@@ -57,6 +59,7 @@ type alias Model =
     , appModels : AppModels
     , appConfigs : AppConfigs
     , hud : HUD.Model
+    , ctxMenu : CtxMenu.Model Menu
     }
 
 
@@ -68,6 +71,11 @@ type Msg
     | StopDrag
     | BrowserVisibilityChanged
     | HudMsg HUD.Msg
+    | CtxMenuMsg (CtxMenu.Msg Menu)
+
+
+type Menu
+    = MenuRoot
 
 
 
@@ -84,6 +92,7 @@ init viewport =
       , appModels = Dict.empty
       , appConfigs = Dict.empty
       , hud = HUD.initialModel
+      , ctxMenu = CtxMenu.initialModel
       }
     , Effect.none
     )
@@ -176,6 +185,13 @@ update state msg model =
 
         HudMsg hudMsg ->
             updateHud state model hudMsg
+
+        CtxMenuMsg ctxMsg ->
+            let
+                ( newCtxMenu, ctxMenuEffect ) =
+                    CtxMenu.update ctxMsg model.ctxMenu
+            in
+            ( { model | ctxMenu = newCtxMenu }, Effect.map CtxMenuMsg ctxMenuEffect )
 
 
 
@@ -730,8 +746,24 @@ view gameState model =
         (id "hexOS" :: addGlobalEvents model)
         [ wmView gameState model
         , Html.map HudMsg <| HUD.view gameState model.hud model.wm
+        , CtxMenu.view model.ctxMenu CtxMenuMsg ctxMenuView model
         ]
     ]
+
+
+ctxMenuView : Menu -> Model -> UI Msg
+ctxMenuView menu model =
+    case menu of
+        MenuRoot ->
+            let
+                msg =
+                    PerformAction (OS.Bus.RequestOpenApp App.DemoApp Nothing)
+            in
+            col [ UI.onClick msg, UI.onClick msg ]
+                [ text "RootMenu"
+                , text "other opt"
+                , text "Option 3"
+                ]
 
 
 
@@ -741,6 +773,7 @@ view gameState model =
 addGlobalEvents : Model -> List (UI.Attribute Msg)
 addGlobalEvents model =
     maybeAddGlobalMouseMoveEvent model.wm
+        :: HA.map CtxMenuMsg (CtxMenu.event MenuRoot)
         :: List.map (HA.map HudMsg) (HUD.addGlobalEvents model.hud)
 
 
@@ -954,3 +987,13 @@ addFocusEvent isFocused isBlocked appId =
 
     else
         UI.emptyAttr
+
+
+
+-- Subscriptions
+
+
+subscriptions : Model -> Sub Msg
+subscriptions model =
+    Sub.batch
+        [ Sub.map CtxMenuMsg <| CtxMenu.subscriptions model.ctxMenu ]

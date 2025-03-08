@@ -83,6 +83,11 @@ img src =
     H.img [ HA.src src ] []
 
 
+attr : String -> String -> Attribute msg
+attr name value =
+    HA.attribute name value
+
+
 emptyAttr : Attribute msg
 emptyAttr =
     cl ""

@@ -90,3 +90,17 @@
     transform: translate3d(4px, 0, 0);
   }
 }
+
+
+// TODO: CtxMenu.css
+
+#ctx-menu {
+    position: absolute;
+    // top: 500px;
+    // left: 30px;
+
+    height: 300px;
+    min-width: 200px;
+
+    border: 1px solid red;
+}

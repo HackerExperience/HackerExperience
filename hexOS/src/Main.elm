@@ -391,6 +391,7 @@ subscriptions model =
                   else
                     Sub.none
                 , Ports.eventSubscriber OnRawEventReceived
+                , Sub.map OSMsg <| OS.subscriptions osModel
                 ]
 
         _ ->
