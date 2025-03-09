@@ -9,9 +9,11 @@ module HUD.Launcher exposing
 
 import Apps.Manifest as App
 import Effect exposing (Effect)
+import Html.Attributes as HA
 import Html.Events as HE
 import Json.Decode as JD
 import OS.Bus
+import OS.CtxMenu as CtxMenu
 import UI exposing (UI, cl, col, id, row, text)
 import UI.Icon
 import UI.Model.FormFields as FormFields
@@ -28,6 +30,7 @@ type alias Model =
 
 type Msg
     = ToOS OS.Bus.Action
+    | ToCtxMenu CtxMenu.Msg
     | OpenLauncherOverlay
     | CloseLauncherOverlay
     | LaunchApp App.Manifest
@@ -65,7 +68,11 @@ update msg model =
             ( model, Effect.none )
 
         ToOS _ ->
-            -- Handled by parent
+            -- Handled by OS
+            ( model, Effect.none )
+
+        ToCtxMenu _ ->
+            -- Handled by OS
             ( model, Effect.none )
 
 
@@ -75,7 +82,7 @@ update msg model =
 
 view : Model -> UI Msg
 view model =
-    row [ id "hud-launcher" ]
+    row (id "hud-launcher" :: addEvents model)
         [ viewLauncher model
         , if model.isOpen then
             viewOverlay
@@ -83,6 +90,11 @@ view model =
           else
             UI.emptyEl
         ]
+
+
+addEvents : Model -> List (UI.Attribute Msg)
+addEvents model =
+    [ HA.map ToCtxMenu CtxMenu.noop ]
 
 
 viewLauncher : Model -> UI Msg
