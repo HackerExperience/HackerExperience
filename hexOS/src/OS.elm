@@ -72,6 +72,7 @@ type Msg
     | BrowserVisibilityChanged
     | HudMsg HUD.Msg
     | CtxMenuMsg (CtxMenu.Msg Menu)
+    | NoOp
 
 
 type Menu
@@ -192,6 +193,9 @@ update state msg model =
                     CtxMenu.update ctxMsg model.ctxMenu
             in
             ( { model | ctxMenu = newCtxMenu }, Effect.map CtxMenuMsg ctxMenuEffect )
+
+        NoOp ->
+            ( model, Effect.none )
 
 
 
@@ -954,9 +958,18 @@ getWindowInnerContent appId _ appModel universe =
 onMouseDownEvent : AppID -> UI.Attribute Msg
 onMouseDownEvent appId =
     HE.on "mousedown" <|
-        JD.map2 (\x y -> StartDrag appId x y)
+        JD.map3
+            (\x y button ->
+                -- Only start dragging when using left click
+                if button == 0 then
+                    StartDrag appId x y
+
+                else
+                    NoOp
+            )
             (JD.field "clientX" JD.float)
             (JD.field "clientY" JD.float)
+            (JD.field "button" JD.int)
 
 
 maybeAddGlobalMouseMoveEvent : WM.Model -> UI.Attribute Msg
