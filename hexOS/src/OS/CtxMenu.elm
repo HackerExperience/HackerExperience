@@ -1,5 +1,7 @@
 module OS.CtxMenu exposing
-    ( Model
+    ( Config
+    , ConfigEntry(..)
+    , Model
     , Msg(..)
     , event
     , initialModel
@@ -14,7 +16,7 @@ import Effect exposing (Effect)
 import Html.Events as HE
 import Json.Decode as JD
 import Maybe.Extra as Maybe
-import UI exposing (UI, div, id)
+import UI exposing (UI, cl, col, div, id, row, text)
 
 
 
@@ -34,6 +36,24 @@ type alias Model menu =
     , posX : Float
     , posY : Float
     , isHovered : Bool
+    }
+
+
+type ConfigEntry msg
+    = SimpleItem (SimpleItemConfig msg)
+    | Divisor
+
+
+type alias SimpleItemConfig msg =
+    { label : String
+    , enabled : Bool
+    , onClick : Maybe msg
+    }
+
+
+type alias Config msg menu =
+    { entries : List (ConfigEntry msg)
+    , mapper : Msg menu -> msg
     }
 
 
@@ -58,12 +78,12 @@ update : Msg menu -> Model menu -> ( Model menu, Effect (Msg menu) )
 update msg model =
     case msg of
         Open posX posY menu ->
-            ( { model | openMenu = Just menu, posX = posX, posY = posY, isHovered = True }
+            ( { model | openMenu = Just menu, posX = posX, posY = posY }
             , Effect.none
             )
 
         Close ->
-            ( { model | openMenu = Nothing }, Effect.none )
+            ( { model | openMenu = Nothing, isHovered = False }, Effect.none )
 
         OnCtxMenuEnter ->
             ( { model | isHovered = True }, Effect.none )
@@ -76,7 +96,7 @@ update msg model =
 
 
 
--- View
+-- Events API
 
 
 noop : UI.Attribute (Msg menu)
@@ -95,21 +115,63 @@ event menu =
             (JD.field "clientY" JD.float)
 
 
-view : Model menu -> (Msg menu -> msg) -> (menu -> a -> UI msg) -> a -> UI msg
-view model msgMap renderer a =
+
+-- View
+
+
+view : Model menu -> (Msg menu -> msg) -> (menu -> a -> Config msg menu) -> a -> UI msg
+view model msgMap getConfig a =
     case model.openMenu of
         Just menu ->
-            div
-                [ id "ctx-menu"
+            let
+                config =
+                    getConfig menu a
+
+                entries =
+                    List.foldr (renderEntry config) [] config.entries
+            in
+            col
+                [ id "os-ctx-menu"
                 , UI.style "top" <| (String.fromFloat model.posY ++ "px")
                 , UI.style "left" <| (String.fromFloat model.posX ++ "px")
                 , HE.onMouseEnter (msgMap OnCtxMenuEnter)
                 , HE.onMouseLeave (msgMap OnCtxMenuLeave)
                 ]
-                [ renderer menu a ]
+                entries
 
         Nothing ->
             UI.emptyEl
+
+
+renderEntry : Config msg menu -> ConfigEntry msg -> List (UI msg) -> List (UI msg)
+renderEntry config configEntry acc =
+    case configEntry of
+        SimpleItem item ->
+            row
+                [ cl "os-cm-simple-item-area"
+                , case ( item.enabled, item.onClick ) of
+                    ( True, Just msg ) ->
+                        UI.onClick msg
+
+                    ( _, _ ) ->
+                        UI.emptyAttr
+                , case ( item.enabled, item.onClick ) of
+                    ( True, Just msg ) ->
+                        HE.onMouseUp (config.mapper Close)
+
+                    ( _, _ ) ->
+                        UI.emptyAttr
+                , if not item.enabled then
+                    cl "os-cm-simple-item-disabled"
+
+                  else
+                    UI.emptyAttr
+                ]
+                [ text item.label ]
+                :: acc
+
+        Divisor ->
+            row [ cl "os-cm-divisor-area" ] [ UI.hr ] :: acc
 
 
 

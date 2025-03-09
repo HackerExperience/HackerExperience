@@ -78,6 +78,11 @@ text val =
     H.span [ cl "ui-span" ] [ H.text val ]
 
 
+hr : Html msg
+hr =
+    H.hr [] []
+
+
 img : String -> Html msg
 img src =
     H.img [ HA.src src ] []

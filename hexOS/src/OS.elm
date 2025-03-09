@@ -750,24 +750,56 @@ view gameState model =
         (id "hexOS" :: addGlobalEvents model)
         [ wmView gameState model
         , Html.map HudMsg <| HUD.view gameState model.hud model.wm
-        , CtxMenu.view model.ctxMenu CtxMenuMsg ctxMenuView model
+        , CtxMenu.view model.ctxMenu CtxMenuMsg ctxMenuConfig model
         ]
     ]
 
 
-ctxMenuView : Menu -> Model -> UI Msg
-ctxMenuView menu model =
+ctxMenuConfig : Menu -> Model -> CtxMenu.Config Msg Menu
+ctxMenuConfig menu model =
     case menu of
         MenuRoot ->
             let
                 msg =
                     PerformAction (OS.Bus.RequestOpenApp App.DemoApp Nothing)
+
+                entries =
+                    [ CtxMenu.SimpleItem
+                        { label = "Option 1"
+                        , enabled = True
+                        , onClick = Just msg
+                        }
+                    , CtxMenu.SimpleItem
+                        { label = "Option 2"
+                        , enabled = False
+                        , onClick = Just msg
+                        }
+                    , CtxMenu.SimpleItem
+                        { label = "Option 3"
+                        , enabled = True
+                        , onClick = Nothing
+                        }
+                    , CtxMenu.Divisor
+                    , CtxMenu.SimpleItem
+                        { label = "Option 4"
+                        , enabled = True
+                        , onClick = Nothing
+                        }
+                    , CtxMenu.SimpleItem
+                        { label = "Option 5"
+                        , enabled = True
+                        , onClick = Nothing
+                        }
+                    , CtxMenu.SimpleItem
+                        { label = "Option 6"
+                        , enabled = True
+                        , onClick = Nothing
+                        }
+                    ]
             in
-            col [ UI.onClick msg, UI.onClick msg ]
-                [ text "RootMenu"
-                , text "other opt"
-                , text "Option 3"
-                ]
+            { entries = entries
+            , mapper = CtxMenuMsg
+            }
 
 
 
@@ -841,6 +873,7 @@ renderWindow sessionId wm appId window renderedContent =
     in
     col
         [ id <| "app-" ++ String.fromInt appId
+        , HA.map CtxMenuMsg CtxMenu.noop
         , cl "os-w"
         , style "left" (String.fromInt window.posX ++ "px")
         , style "top" (String.fromInt window.posY ++ "px")
