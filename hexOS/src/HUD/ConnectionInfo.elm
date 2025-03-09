@@ -19,6 +19,7 @@ import Game.Universe as Universe exposing (Universe(..))
 import Html.Events as HE
 import Json.Decode as JD
 import OS.Bus
+import OS.CtxMenu as CtxMenu
 import State exposing (State)
 import UI exposing (UI, cl, col, div, id, row, text)
 import UI.Icon
@@ -128,7 +129,10 @@ updateSwitchEndpoint model universe nip =
 view : State -> Model -> UI Msg
 view state model =
     -- TODO: Figure out a better way to identify the top-level and each child (all 3 are important to identify)
-    col [ addEvents model ]
+    col
+        [ addEvents model
+        , CtxMenu.noopSelf NoOp
+        ]
         [ viewConnectionInfo state model
         , viewSelector state model
         ]

@@ -6,6 +6,7 @@ module OS.CtxMenu exposing
     , event
     , initialModel
     , noop
+    , noopSelf
     , subscriptions
     , update
     , view
@@ -102,9 +103,13 @@ update msg model =
 noop : UI.Attribute (Msg menu)
 noop =
     HE.custom "contextmenu" <|
-        JD.map2 (\x y -> { message = NoOp, preventDefault = True, stopPropagation = True })
-            (JD.field "clientX" JD.float)
-            (JD.field "clientY" JD.float)
+        JD.succeed { message = NoOp, preventDefault = True, stopPropagation = True }
+
+
+noopSelf : msg -> UI.Attribute msg
+noopSelf msg =
+    HE.custom "contextmenu" <|
+        JD.succeed { message = msg, preventDefault = True, stopPropagation = True }
 
 
 event : menu -> UI.Attribute (Msg menu)
@@ -147,25 +152,45 @@ renderEntry : Config msg menu -> ConfigEntry msg -> List (UI msg) -> List (UI ms
 renderEntry config configEntry acc =
     case configEntry of
         SimpleItem item ->
+            let
+                onClickAttr =
+                    case ( item.enabled, item.onClick ) of
+                        ( True, Just msg ) ->
+                            UI.onClick msg
+
+                        ( _, _ ) ->
+                            UI.emptyAttr
+
+                onMouseUpAttr =
+                    case ( item.enabled, item.onClick ) of
+                        ( True, Just msg ) ->
+                            HE.on "mouseup" <|
+                                JD.map
+                                    (\button ->
+                                        -- Only close the menu when "mouseup" is from the left click
+                                        if button == 0 then
+                                            config.mapper Close
+
+                                        else
+                                            config.mapper NoOp
+                                    )
+                                    (JD.field "button" JD.int)
+
+                        ( _, _ ) ->
+                            UI.emptyAttr
+
+                maybeDisabledClass =
+                    if not item.enabled then
+                        cl "os-cm-simple-item-disabled"
+
+                    else
+                        UI.emptyAttr
+            in
             row
                 [ cl "os-cm-simple-item-area"
-                , case ( item.enabled, item.onClick ) of
-                    ( True, Just msg ) ->
-                        UI.onClick msg
-
-                    ( _, _ ) ->
-                        UI.emptyAttr
-                , case ( item.enabled, item.onClick ) of
-                    ( True, Just msg ) ->
-                        HE.onMouseUp (config.mapper Close)
-
-                    ( _, _ ) ->
-                        UI.emptyAttr
-                , if not item.enabled then
-                    cl "os-cm-simple-item-disabled"
-
-                  else
-                    UI.emptyAttr
+                , maybeDisabledClass
+                , onClickAttr
+                , onMouseUpAttr
                 ]
                 [ text item.label ]
                 :: acc
