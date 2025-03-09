@@ -33,12 +33,8 @@ type Msg
     | OpenLauncherOverlay
     | CloseLauncherOverlay
     | LaunchApp App.Manifest
-    | CtxMenuMsg (CtxMenu.Msg Menu)
+    | CtxMenuMsg CtxMenu.Msg
     | NoOp
-
-
-type Menu
-    = NoMenu
 
 
 

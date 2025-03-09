@@ -17,6 +17,7 @@ import Effect exposing (Effect)
 import Html.Events as HE
 import Json.Decode as JD
 import Maybe.Extra as Maybe
+import OS.CtxMenu.Menus exposing (..)
 import UI exposing (UI, cl, col, div, id, row, text)
 
 
@@ -24,16 +25,16 @@ import UI exposing (UI, cl, col, div, id, row, text)
 -- Types
 
 
-type Msg menu
+type Msg
     = NoOp
-    | Open Float Float menu
+    | Open Float Float Menu
     | OnCtxMenuEnter
     | OnCtxMenuLeave
     | Close
 
 
-type alias Model menu =
-    { openMenu : Maybe menu
+type alias Model =
+    { openMenu : Maybe Menu
     , posX : Float
     , posY : Float
     , isHovered : Bool
@@ -52,9 +53,9 @@ type alias SimpleItemConfig msg =
     }
 
 
-type alias Config msg menu =
+type alias Config msg =
     { entries : List (ConfigEntry msg)
-    , mapper : Msg menu -> msg
+    , mapper : Msg -> msg
     }
 
 
@@ -62,7 +63,7 @@ type alias Config msg menu =
 -- Model
 
 
-initialModel : Model menu
+initialModel : Model
 initialModel =
     { openMenu = Nothing
     , posX = 0
@@ -75,7 +76,7 @@ initialModel =
 -- Update
 
 
-update : Msg menu -> Model menu -> ( Model menu, Effect (Msg menu) )
+update : Msg -> Model -> ( Model, Effect Msg )
 update msg model =
     case msg of
         Open posX posY menu ->
@@ -100,7 +101,7 @@ update msg model =
 -- Events API
 
 
-noop : UI.Attribute (Msg menu)
+noop : UI.Attribute Msg
 noop =
     HE.custom "contextmenu" <|
         JD.succeed { message = NoOp, preventDefault = True, stopPropagation = True }
@@ -112,7 +113,7 @@ noopSelf msg =
         JD.succeed { message = msg, preventDefault = True, stopPropagation = True }
 
 
-event : menu -> UI.Attribute (Msg menu)
+event : Menu -> UI.Attribute Msg
 event menu =
     HE.custom "contextmenu" <|
         JD.map2 (\x y -> { message = Open x y menu, preventDefault = True, stopPropagation = True })
@@ -124,31 +125,38 @@ event menu =
 -- View
 
 
-view : Model menu -> (Msg menu -> msg) -> (menu -> a -> Config msg menu) -> a -> UI msg
+view : Model -> (Msg -> msg) -> (Menu -> a -> Maybe (Config msg)) -> a -> UI msg
 view model msgMap getConfig a =
     case model.openMenu of
         Just menu ->
-            let
-                config =
-                    getConfig menu a
+            case getConfig menu a of
+                Just config ->
+                    renderMenu model msgMap config
 
-                entries =
-                    List.foldr (renderEntry config) [] config.entries
-            in
-            col
-                [ id "os-ctx-menu"
-                , UI.style "top" <| (String.fromFloat model.posY ++ "px")
-                , UI.style "left" <| (String.fromFloat model.posX ++ "px")
-                , HE.onMouseEnter (msgMap OnCtxMenuEnter)
-                , HE.onMouseLeave (msgMap OnCtxMenuLeave)
-                ]
-                entries
+                Nothing ->
+                    UI.emptyEl
 
         Nothing ->
             UI.emptyEl
 
 
-renderEntry : Config msg menu -> ConfigEntry msg -> List (UI msg) -> List (UI msg)
+renderMenu : Model -> (Msg -> msg) -> Config msg -> UI msg
+renderMenu model msgMap config =
+    let
+        entries =
+            List.foldr (renderEntry config) [] config.entries
+    in
+    col
+        [ id "os-ctx-menu"
+        , UI.style "top" <| (String.fromFloat model.posY ++ "px")
+        , UI.style "left" <| (String.fromFloat model.posX ++ "px")
+        , HE.onMouseEnter (msgMap OnCtxMenuEnter)
+        , HE.onMouseLeave (msgMap OnCtxMenuLeave)
+        ]
+        entries
+
+
+renderEntry : Config msg -> ConfigEntry msg -> List (UI msg) -> List (UI msg)
 renderEntry config configEntry acc =
     case configEntry of
         SimpleItem item ->
@@ -203,12 +211,12 @@ renderEntry config configEntry acc =
 -- Subscriptions
 
 
-isOpen : Model menu -> Bool
+isOpen : Model -> Bool
 isOpen { openMenu } =
     Maybe.isJust openMenu
 
 
-subscriptions : Model menu -> Sub (Msg menu)
+subscriptions : Model -> Sub Msg
 subscriptions model =
     Sub.batch
         [ if isOpen model && not model.isHovered then

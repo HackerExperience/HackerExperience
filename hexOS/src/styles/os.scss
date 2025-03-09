@@ -96,7 +96,7 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 #os-ctx-menu {
-    position: absolute;
+    position: fixed;
     min-width: 200px;
     border: 1px solid prim-500();
     z-index: 9999999999;

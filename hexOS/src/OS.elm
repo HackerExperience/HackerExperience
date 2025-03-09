@@ -33,6 +33,7 @@ import Maybe.Extra as Maybe
 import OS.AppID exposing (AppID)
 import OS.Bus
 import OS.CtxMenu as CtxMenu
+import OS.CtxMenu.Menus as CtxMenu
 import State exposing (State)
 import UI exposing (UI, cl, col, div, id, row, style, text)
 import UI.Icon
@@ -59,7 +60,7 @@ type alias Model =
     , appModels : AppModels
     , appConfigs : AppConfigs
     , hud : HUD.Model
-    , ctxMenu : CtxMenu.Model Menu
+    , ctxMenu : CtxMenu.Model
     }
 
 
@@ -71,12 +72,8 @@ type Msg
     | StopDrag
     | BrowserVisibilityChanged
     | HudMsg HUD.Msg
-    | CtxMenuMsg (CtxMenu.Msg Menu)
+    | CtxMenuMsg CtxMenu.Msg
     | NoOp
-
-
-type Menu
-    = MenuRoot
 
 
 
@@ -162,6 +159,9 @@ update state msg model =
         PerformAction (OS.Bus.UnvibrateApp appId) ->
             performActionOnApp state model appId performUnvibrateApp
 
+        PerformAction (OS.Bus.ToCtxMenu ctxMsg) ->
+            updateCtxMenuMsg model ctxMsg
+
         PerformAction (OS.Bus.ToGame _) ->
             -- Handled by parent
             ( model, Effect.none )
@@ -188,11 +188,7 @@ update state msg model =
             updateHud state model hudMsg
 
         CtxMenuMsg ctxMsg ->
-            let
-                ( newCtxMenu, ctxMenuEffect ) =
-                    CtxMenu.update ctxMsg model.ctxMenu
-            in
-            ( { model | ctxMenu = newCtxMenu }, Effect.map CtxMenuMsg ctxMenuEffect )
+            updateCtxMenuMsg model ctxMsg
 
         NoOp ->
             ( model, Effect.none )
@@ -200,6 +196,15 @@ update state msg model =
 
 
 -- Update > Performs
+
+
+updateCtxMenuMsg : Model -> CtxMenu.Msg -> ( Model, Effect Msg )
+updateCtxMenuMsg model ctxMsg =
+    let
+        ( newCtxMenu, ctxMenuEffect ) =
+            CtxMenu.update ctxMsg model.ctxMenu
+    in
+    ( { model | ctxMenu = newCtxMenu }, Effect.map CtxMenuMsg ctxMenuEffect )
 
 
 performActionOnApp :
@@ -590,6 +595,9 @@ dispatchUpdateApp state model appMsg =
         Apps.LogViewerMsg _ (LogViewer.ToOS busAction) ->
             ( model, Effect.msgToCmd (PerformAction busAction) )
 
+        Apps.LogViewerMsg _ (LogViewer.ToCtxMenu ctxMenuMsg) ->
+            ( model, Effect.msgToCmd (PerformAction (OS.Bus.ToCtxMenu ctxMenuMsg)) )
+
         Apps.LogViewerMsg appId subMsg ->
             case getAppModel model.appModels appId of
                 Apps.LogViewerModel appModel ->
@@ -755,51 +763,57 @@ view gameState model =
     ]
 
 
-ctxMenuConfig : Menu -> Model -> CtxMenu.Config Msg Menu
+ctxMenuConfig : CtxMenu.Menu -> Model -> Maybe (CtxMenu.Config Msg)
 ctxMenuConfig menu model =
     case menu of
-        MenuRoot ->
-            let
-                msg =
-                    PerformAction (OS.Bus.RequestOpenApp App.DemoApp Nothing)
+        CtxMenu.OS submenu ->
+            case submenu of
+                CtxMenu.OSRootMenu ->
+                    let
+                        msg =
+                            PerformAction (OS.Bus.RequestOpenApp App.DemoApp Nothing)
 
-                entries =
-                    [ CtxMenu.SimpleItem
-                        { label = "Option 1"
-                        , enabled = True
-                        , onClick = Just msg
+                        entries =
+                            [ CtxMenu.SimpleItem
+                                { label = "Option 1"
+                                , enabled = True
+                                , onClick = Just msg
+                                }
+                            , CtxMenu.SimpleItem
+                                { label = "Option 2"
+                                , enabled = False
+                                , onClick = Just msg
+                                }
+                            , CtxMenu.SimpleItem
+                                { label = "Option 3"
+                                , enabled = True
+                                , onClick = Nothing
+                                }
+                            , CtxMenu.Divisor
+                            , CtxMenu.SimpleItem
+                                { label = "Option 4"
+                                , enabled = True
+                                , onClick = Nothing
+                                }
+                            , CtxMenu.SimpleItem
+                                { label = "Option 5"
+                                , enabled = True
+                                , onClick = Nothing
+                                }
+                            , CtxMenu.SimpleItem
+                                { label = "Option 6"
+                                , enabled = True
+                                , onClick = Nothing
+                                }
+                            ]
+                    in
+                    Just
+                        { entries = entries
+                        , mapper = CtxMenuMsg
                         }
-                    , CtxMenu.SimpleItem
-                        { label = "Option 2"
-                        , enabled = False
-                        , onClick = Just msg
-                        }
-                    , CtxMenu.SimpleItem
-                        { label = "Option 3"
-                        , enabled = True
-                        , onClick = Nothing
-                        }
-                    , CtxMenu.Divisor
-                    , CtxMenu.SimpleItem
-                        { label = "Option 4"
-                        , enabled = True
-                        , onClick = Nothing
-                        }
-                    , CtxMenu.SimpleItem
-                        { label = "Option 5"
-                        , enabled = True
-                        , onClick = Nothing
-                        }
-                    , CtxMenu.SimpleItem
-                        { label = "Option 6"
-                        , enabled = True
-                        , onClick = Nothing
-                        }
-                    ]
-            in
-            { entries = entries
-            , mapper = CtxMenuMsg
-            }
+
+        CtxMenu.LogViewer _ ->
+            Nothing
 
 
 
@@ -809,7 +823,7 @@ ctxMenuConfig menu model =
 addGlobalEvents : Model -> List (UI.Attribute Msg)
 addGlobalEvents model =
     maybeAddGlobalMouseMoveEvent model.wm
-        :: HA.map CtxMenuMsg (CtxMenu.event MenuRoot)
+        :: HA.map CtxMenuMsg (CtxMenu.event <| CtxMenu.OS CtxMenu.OSRootMenu)
         :: List.map (HA.map HudMsg) (HUD.addGlobalEvents model.hud)
 
 
@@ -838,7 +852,7 @@ viewWindow state model appId window acc =
             -- TODO: it may make sense for each App to implement a "stateFilter", thus letting
             -- each App decide which data it receives (based on its own needs)
             windowContent =
-                Html.map AppMsg <| getWindowInnerContent appId window appModel game
+                Html.map AppMsg <| getWindowInnerContent model appId window appModel game
 
             renderedWindow =
                 renderWindow state.currentSession model.wm appId window windowContent
@@ -966,14 +980,14 @@ stopPropagation event =
         (JD.succeed <| (\msg -> ( msg, True )) (PerformAction OS.Bus.NoOp))
 
 
-getWindowInnerContent : AppID -> WM.Window -> Apps.Model -> Game.Model -> UI Apps.Msg
-getWindowInnerContent appId _ appModel universe =
+getWindowInnerContent : Model -> AppID -> WM.Window -> Apps.Model -> Game.Model -> UI Apps.Msg
+getWindowInnerContent { ctxMenu } appId _ appModel universe =
     case appModel of
         Apps.InvalidModel ->
             UI.emptyEl
 
         Apps.LogViewerModel model ->
-            Html.map (Apps.LogViewerMsg appId) <| LogViewer.view model universe
+            Html.map (Apps.LogViewerMsg appId) <| LogViewer.view model universe ctxMenu
 
         Apps.RemoteAccessModel model ->
             Html.map (Apps.RemoteAccessMsg appId) <| RemoteAccess.view model universe

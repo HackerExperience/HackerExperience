@@ -5,9 +5,12 @@ import Effect exposing (Effect)
 import Game
 import Game.Model.Log exposing (Log)
 import Game.Model.LogID exposing (LogID)
+import Html.Attributes as HA
 import Html.Events as HE
 import OS.AppID exposing (AppID)
 import OS.Bus
+import OS.CtxMenu as CtxMenu
+import OS.CtxMenu.Menus as CtxMenu
 import UI exposing (UI, cl, col, div, row, text)
 import WM
 
@@ -18,6 +21,7 @@ import WM
 
 type Msg
     = ToOS OS.Bus.Action
+    | ToCtxMenu CtxMenu.Msg
     | SelectLog LogID
     | DeselectLog
 
@@ -50,26 +54,54 @@ filterLogs _ _ =
 update : Game.Model -> Msg -> Model -> ( Model, Effect Msg )
 update _ msg model =
     case msg of
-        ToOS _ ->
-            ( model, Effect.none )
-
         SelectLog logId ->
             ( { model | selectedLog = Just logId }, Effect.none )
 
         DeselectLog ->
             ( { model | selectedLog = Nothing }, Effect.none )
 
+        ToOS _ ->
+            -- Handled by OS
+            ( model, Effect.none )
+
+        ToCtxMenu _ ->
+            -- Handled by OS
+            ( model, Effect.none )
+
 
 
 -- View
 
 
-view : Model -> Game.Model -> UI Msg
-view model game =
-    col [ cl "app-log-viewer", UI.flexFill ]
+view : Model -> Game.Model -> CtxMenu.Model -> UI Msg
+view model game ctxMenu =
+    col
+        [ cl "app-log-viewer"
+        , UI.flexFill
+        , HA.map ToCtxMenu (CtxMenu.event <| CtxMenu.LogViewer CtxMenu.LVRootMenu)
+        ]
         [ vHeader
         , vBody model game
+        , CtxMenu.view ctxMenu ToCtxMenu ctxMenuConfig model
         ]
+
+
+ctxMenuConfig : CtxMenu.Menu -> Model -> Maybe (CtxMenu.Config Msg)
+ctxMenuConfig menu model =
+    case menu of
+        CtxMenu.LogViewer submenu ->
+            case submenu of
+                CtxMenu.LVRootMenu ->
+                    Just
+                        { entries = [ CtxMenu.SimpleItem { label = "Log 1", enabled = True, onClick = Nothing } ]
+                        , mapper = ToCtxMenu
+                        }
+
+                _ ->
+                    Nothing
+
+        _ ->
+            Nothing
 
 
 vHeader : UI Msg
