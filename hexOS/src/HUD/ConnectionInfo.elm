@@ -479,5 +479,7 @@ addGlobalEvents model =
         -- `mousedown` end up affecting the usability here. One such example is clicking in the "X"
         -- icon to close a window. Try that out: the experience is not great, and I don't yet have
         -- a solution for this problem.
+        -- Perhaps the best solution is using a proper subscription, similar to how I'm handling it
+        -- in the OS.CtxMenu module.
         _ ->
             [ HE.on "mousedown" <| JD.succeed CloseSelector ]
