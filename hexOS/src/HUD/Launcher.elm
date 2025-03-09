@@ -30,10 +30,10 @@ type alias Model =
 
 type Msg
     = ToOS OS.Bus.Action
+    | ToCtxMenu CtxMenu.Msg
     | OpenLauncherOverlay
     | CloseLauncherOverlay
     | LaunchApp App.Manifest
-    | CtxMenuMsg CtxMenu.Msg
     | NoOp
 
 
@@ -64,14 +64,15 @@ update msg model =
             , Effect.msgToCmd <| ToOS <| OS.Bus.RequestOpenApp app Nothing
             )
 
-        CtxMenuMsg _ ->
-            ( model, Effect.none )
-
         NoOp ->
             ( model, Effect.none )
 
         ToOS _ ->
-            -- Handled by parent
+            -- Handled by OS
+            ( model, Effect.none )
+
+        ToCtxMenu _ ->
+            -- Handled by OS
             ( model, Effect.none )
 
 
@@ -93,7 +94,7 @@ view model =
 
 addEvents : Model -> List (UI.Attribute Msg)
 addEvents model =
-    [ HA.map CtxMenuMsg CtxMenu.noop ]
+    [ HA.map ToCtxMenu CtxMenu.noop ]
 
 
 viewLauncher : Model -> UI Msg

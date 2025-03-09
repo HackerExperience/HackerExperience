@@ -735,6 +735,9 @@ updateHud state model hudMsg =
         HUD.LauncherMsg (HUD.Launcher.ToOS action) ->
             ( model, Effect.msgToCmd (PerformAction action) )
 
+        HUD.LauncherMsg (HUD.Launcher.ToCtxMenu ctxMsg) ->
+            ( model, Effect.msgToCmd (PerformAction <| OS.Bus.ToCtxMenu ctxMsg) )
+
         _ ->
             let
                 ( newHud, hudEffect ) =

@@ -104,7 +104,7 @@ update msg model =
 noop : UI.Attribute Msg
 noop =
     HE.custom "contextmenu" <|
-        JD.succeed { message = NoOp, preventDefault = True, stopPropagation = True }
+        JD.succeed { message = Close, preventDefault = True, stopPropagation = True }
 
 
 noopSelf : msg -> UI.Attribute msg
