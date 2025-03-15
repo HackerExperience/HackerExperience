@@ -8,6 +8,7 @@ import Game.Universe as Universe
 import OS exposing (Msg(..))
 import OS.AppID exposing (AppID)
 import OS.Bus as Bus
+import OS.CtxMenu as CtxMenu
 import Program exposing (program)
 import ProgramTest as PT
 import State exposing (State)
@@ -168,7 +169,14 @@ msgPerformActionTests =
                         -- after closing the other app. This is doable, but I fail to see a clear
                         -- benefit. We can always revert this change if needed.
                         , assertFocusedWindow newModel.wm TM.state Nothing
-                        , E.effectNone effect
+
+                        -- When closing a window, we also relay a Close message to the CtxMenu; this
+                        -- is needed due to "stopPropagations" around header actions
+                        , let
+                            expectedEffect =
+                                Effect.msgToCmd <| PerformAction (Bus.ToCtxMenu CtxMenu.Close)
+                          in
+                          E.effectContains effect expectedEffect
                         ]
             , test "closing a focused window marks it as unfocused" <|
                 \_ ->
@@ -176,14 +184,13 @@ msgPerformActionTests =
                         ( initialModel, appId ) =
                             TM.osWithApp TM.os
 
-                        ( newModel, effect ) =
+                        ( newModel, _ ) =
                             OS.update TM.state (PerformAction (Bus.CloseApp appId)) initialModel
                     in
                     E.batch
                         [ -- Initially, app 1 was focused. Now it's no longer focused
                           assertFocusedWindow initialModel.wm TM.state (Just 1)
                         , assertFocusedWindow newModel.wm TM.state Nothing
-                        , E.effectNone effect
                         ]
             ]
         , describe "FocusApp"

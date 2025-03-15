@@ -1,8 +1,10 @@
 module HUD exposing
     ( Model
     , Msg(..)
-    , addGlobalEvents
     , initialModel
+    , onWindowClose
+    , onWindowCollapse
+    , subscriptions
     , update
     , view
     )
@@ -13,7 +15,6 @@ import HUD.Dock as Dock
 import HUD.Launcher as Launcher
 import HUD.SysTray as SysTray
 import Html
-import Html.Attributes as HA
 import OS.Bus
 import State exposing (State)
 import UI exposing (UI, id, row)
@@ -51,6 +52,16 @@ initialModel =
     , launcher = Launcher.initialModel
     , sysTray = 0
     }
+
+
+onWindowClose : Model -> Model
+onWindowClose model =
+    { model | ci = CI.onWindowClose model.ci }
+
+
+onWindowCollapse : Model -> Model
+onWindowCollapse model =
+    { model | ci = CI.onWindowCollapse model.ci }
 
 
 
@@ -107,7 +118,13 @@ view state model wm =
         ]
 
 
-addGlobalEvents : Model -> List (UI.Attribute Msg)
-addGlobalEvents model =
-    List.map (HA.map CIMsg) (CI.addGlobalEvents model.ci)
-        ++ List.map (HA.map LauncherMsg) (Launcher.addGlobalEvents model.launcher)
+
+-- Subscriptions
+
+
+subscriptions : Model -> Sub Msg
+subscriptions model =
+    Sub.batch
+        [ Sub.map CIMsg <| CI.subscriptions model.ci
+        , Sub.map LauncherMsg <| Launcher.subscriptions model.launcher
+        ]

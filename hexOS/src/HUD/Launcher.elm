@@ -1,17 +1,20 @@
 module HUD.Launcher exposing
     ( Model
     , Msg(..)
-    , addGlobalEvents
     , initialModel
+    , subscriptions
     , update
     , view
     )
 
 import Apps.Manifest as App
+import Browser.Events
 import Effect exposing (Effect)
+import Html.Attributes as HA
 import Html.Events as HE
 import Json.Decode as JD
 import OS.Bus
+import OS.CtxMenu as CtxMenu
 import UI exposing (UI, cl, col, id, row, text)
 import UI.Icon
 import UI.Model.FormFields as FormFields
@@ -23,13 +26,18 @@ import UI.TextInput
 
 
 type alias Model =
-    { isOpen : Bool }
+    { isOpen : Bool
+    , isOverlayHovered : Bool
+    }
 
 
 type Msg
     = ToOS OS.Bus.Action
+    | ToCtxMenu CtxMenu.Msg
     | OpenLauncherOverlay
     | CloseLauncherOverlay
+    | OnOverlayEnter
+    | OnOverlayLeave
     | LaunchApp App.Manifest
     | NoOp
 
@@ -40,7 +48,9 @@ type Msg
 
 initialModel : Model
 initialModel =
-    { isOpen = False }
+    { isOpen = False
+    , isOverlayHovered = False
+    }
 
 
 
@@ -56,6 +66,12 @@ update msg model =
         CloseLauncherOverlay ->
             ( { model | isOpen = False }, Effect.none )
 
+        OnOverlayEnter ->
+            ( { model | isOverlayHovered = True }, Effect.none )
+
+        OnOverlayLeave ->
+            ( { model | isOverlayHovered = False }, Effect.none )
+
         LaunchApp app ->
             ( { model | isOpen = False }
             , Effect.msgToCmd <| ToOS <| OS.Bus.RequestOpenApp app Nothing
@@ -65,7 +81,11 @@ update msg model =
             ( model, Effect.none )
 
         ToOS _ ->
-            -- Handled by parent
+            -- Handled by OS
+            ( model, Effect.none )
+
+        ToCtxMenu _ ->
+            -- Handled by OS
             ( model, Effect.none )
 
 
@@ -75,7 +95,10 @@ update msg model =
 
 view : Model -> UI Msg
 view model =
-    row [ id "hud-launcher" ]
+    row
+        [ id "hud-launcher"
+        , HA.map ToCtxMenu CtxMenu.noop
+        ]
         [ viewLauncher model
         , if model.isOpen then
             viewOverlay
@@ -111,7 +134,7 @@ viewLauncher { isOpen } =
 viewOverlay : UI Msg
 viewOverlay =
     row [ id "hud-launcher-overlay" ]
-        [ col [ cl "hud-lo-area", stopPropagation "click" ]
+        [ col [ cl "hud-lo-area" ]
             [ viewOverlaySearch
             , viewOverlayApps
             ]
@@ -130,7 +153,11 @@ viewOverlaySearch =
                 |> UI.TextInput.withID "hud-lo-search-input"
                 |> UI.TextInput.toUI
     in
-    row [ cl "hud-lo-search-area" ]
+    row
+        [ cl "hud-lo-search-area"
+        , HE.onMouseEnter OnOverlayEnter
+        , HE.onMouseLeave OnOverlayLeave
+        ]
         [ textInput ]
 
 
@@ -146,7 +173,11 @@ viewOverlayApps =
         appEntries =
             List.foldr renderOverlayAppEntries [] launchableApps
     in
-    row [ cl "hud-lo-apps-area" ]
+    row
+        [ cl "hud-lo-apps-area"
+        , HE.onMouseEnter OnOverlayEnter
+        , HE.onMouseLeave OnOverlayLeave
+        ]
         appEntries
 
 
@@ -180,19 +211,13 @@ viewOverlayAppEntry app =
 
 
 
--- TODO: stopPropagation should be a util (also used in OS and HUD.CI)
+-- Subscriptions
 
 
-stopPropagation : String -> UI.Attribute Msg
-stopPropagation event =
-    HE.stopPropagationOn event
-        (JD.succeed <| (\msg -> ( msg, True )) NoOp)
-
-
-addGlobalEvents : Model -> List (UI.Attribute Msg)
-addGlobalEvents model =
-    if model.isOpen then
-        [ HE.on "click" <| JD.succeed CloseLauncherOverlay ]
+subscriptions : Model -> Sub Msg
+subscriptions model =
+    if model.isOpen && not model.isOverlayHovered then
+        Browser.Events.onMouseDown (JD.succeed CloseLauncherOverlay)
 
     else
-        []
+        Sub.none

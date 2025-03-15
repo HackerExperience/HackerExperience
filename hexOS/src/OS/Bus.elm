@@ -3,6 +3,7 @@ module OS.Bus exposing (Action(..), ParentInfo)
 import Apps.Manifest as App
 import Game.Bus
 import OS.AppID exposing (AppID)
+import OS.CtxMenu as CtxMenu
 
 
 type alias ParentInfo =
@@ -23,3 +24,4 @@ type Action
     | UnvibrateApp AppID
     | CollapseApp AppID
     | ToGame Game.Bus.Action
+    | ToCtxMenu CtxMenu.Msg

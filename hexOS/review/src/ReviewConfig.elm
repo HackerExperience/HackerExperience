@@ -69,7 +69,12 @@ config =
         |> Rule.ignoreErrorsForFiles [ "src/Main.elm" ]
     , NoExposingEverything.rule
         |> Rule.ignoreErrorsForDirectories [ "tests", "src/UI", "src/Apps", "src/API" ]
-        |> Rule.ignoreErrorsForFiles [ "src/UI.elm", "src/Utils.elm", "src/Effect.elm" ]
+        |> Rule.ignoreErrorsForFiles
+            [ "src/UI.elm"
+            , "src/Utils.elm"
+            , "src/Effect.elm"
+            , "src/OS/CtxMenu/Menus.elm"
+            ]
     , NoImportingEverything.rule [ "Test" ]
     , NoDeprecated.rule NoDeprecated.defaults
     , NoMissingTypeAnnotation.rule

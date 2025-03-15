@@ -78,9 +78,19 @@ text val =
     H.span [ cl "ui-span" ] [ H.text val ]
 
 
+hr : Html msg
+hr =
+    H.hr [] []
+
+
 img : String -> Html msg
 img src =
     H.img [ HA.src src ] []
+
+
+attr : String -> String -> Attribute msg
+attr name value =
+    HA.attribute name value
 
 
 emptyAttr : Attribute msg

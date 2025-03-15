@@ -4,6 +4,7 @@ import Dict exposing (Dict)
 import Dict.Extra as Dict
 import Effect exposing (Effect)
 import Expect as E
+import List.Extra as List
 import Maybe.Extra as Maybe
 import TestHelpers.Utils as TU exposing (str)
 
@@ -105,3 +106,20 @@ effectNone effect =
         -- TODO: handle batch with only Nones in it
         _ ->
             E.equal effect Effect.None
+
+
+effectContains : Effect msg -> Effect msg -> Expectation
+effectContains effect expectedEffect =
+    case effect of
+        Effect.Batch batchedEffects ->
+            case List.find (\e -> e == expectedEffect) batchedEffects of
+                Just _ ->
+                    E.pass
+
+                Nothing ->
+                    -- We run this comparison so the error output contains both the expected effect
+                    -- and the received one, making it easier to understand why it failed.
+                    E.equal effect (Effect.batch [ expectedEffect ])
+
+        _ ->
+            E.equal effect expectedEffect
