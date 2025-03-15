@@ -17,8 +17,8 @@ import Effect exposing (Effect)
 import Html.Events as HE
 import Json.Decode as JD
 import Maybe.Extra as Maybe
-import OS.CtxMenu.Menus exposing (..)
-import UI exposing (UI, cl, col, div, id, row, text)
+import OS.CtxMenu.Menus exposing (Menu)
+import UI exposing (UI, cl, col, id, row, text)
 
 
 
@@ -148,8 +148,8 @@ renderMenu model msgMap config =
     in
     col
         [ id "os-ctx-menu"
-        , UI.style "top" <| (String.fromFloat model.posY ++ "px")
-        , UI.style "left" <| (String.fromFloat model.posX ++ "px")
+        , UI.style "top" <| String.fromFloat model.posY ++ "px"
+        , UI.style "left" <| String.fromFloat model.posX ++ "px"
         , HE.onMouseEnter (msgMap OnCtxMenuEnter)
         , HE.onMouseLeave (msgMap OnCtxMenuLeave)
         ]
@@ -166,12 +166,12 @@ renderEntry config configEntry acc =
                         ( True, Just msg ) ->
                             UI.onClick msg
 
-                        ( _, _ ) ->
+                        _ ->
                             UI.emptyAttr
 
                 onMouseUpAttr =
                     case ( item.enabled, item.onClick ) of
-                        ( True, Just msg ) ->
+                        ( True, Just _ ) ->
                             HE.on "mouseup" <|
                                 JD.map
                                     (\button ->
@@ -184,7 +184,7 @@ renderEntry config configEntry acc =
                                     )
                                     (JD.field "button" JD.int)
 
-                        ( _, _ ) ->
+                        _ ->
                             UI.emptyAttr
 
                 maybeDisabledClass =
@@ -218,12 +218,10 @@ isOpen { openMenu } =
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    Sub.batch
-        [ if isOpen model && not model.isHovered then
-            -- TODO: Decide between onClick and onMouseDown. UX issues with other areas that are
-            -- stopping propagation (close window; drag window; open CI selector)
-            Browser.Events.onMouseDown (JD.succeed Close)
+    if isOpen model && not model.isHovered then
+        -- TODO: Decide between onClick and onMouseDown. UX issues with other areas that are
+        -- stopping propagation (close window; drag window; open CI selector)
+        Browser.Events.onMouseDown (JD.succeed Close)
 
-          else
-            Sub.none
-        ]
+    else
+        Sub.none

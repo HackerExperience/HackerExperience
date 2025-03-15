@@ -783,7 +783,7 @@ view gameState model =
 
 
 ctxMenuConfig : CtxMenu.Menu -> Model -> Maybe (CtxMenu.Config Msg)
-ctxMenuConfig menu model =
+ctxMenuConfig menu _ =
     case menu of
         CtxMenu.OS submenu ->
             case submenu of

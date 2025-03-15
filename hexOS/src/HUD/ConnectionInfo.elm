@@ -485,14 +485,12 @@ endpointSelectorEntries universe activeEndpoint tunnel acc =
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    Sub.batch
-        [ case ( model.selector, model.isSelectorHovered ) of
-            ( NoSelector, _ ) ->
-                Sub.none
+    case ( model.selector, model.isSelectorHovered ) of
+        ( NoSelector, _ ) ->
+            Sub.none
 
-            ( _, True ) ->
-                Sub.none
+        ( _, True ) ->
+            Sub.none
 
-            ( _, False ) ->
-                Browser.Events.onMouseDown (JD.succeed CloseSelector)
-        ]
+        ( _, False ) ->
+            Browser.Events.onMouseDown (JD.succeed CloseSelector)

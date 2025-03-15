@@ -15,7 +15,6 @@ import HUD.Dock as Dock
 import HUD.Launcher as Launcher
 import HUD.SysTray as SysTray
 import Html
-import Html.Attributes as HA
 import OS.Bus
 import State exposing (State)
 import UI exposing (UI, id, row)

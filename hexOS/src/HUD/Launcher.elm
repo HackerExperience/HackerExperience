@@ -95,7 +95,10 @@ update msg model =
 
 view : Model -> UI Msg
 view model =
-    row (id "hud-launcher" :: addEvents model)
+    row
+        [ id "hud-launcher"
+        , HA.map ToCtxMenu CtxMenu.noop
+        ]
         [ viewLauncher model
         , if model.isOpen then
             viewOverlay
@@ -103,11 +106,6 @@ view model =
           else
             UI.emptyEl
         ]
-
-
-addEvents : Model -> List (UI.Attribute Msg)
-addEvents model =
-    [ HA.map ToCtxMenu CtxMenu.noop ]
 
 
 viewLauncher : Model -> UI Msg
@@ -218,10 +216,8 @@ viewOverlayAppEntry app =
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    Sub.batch
-        [ if model.isOpen && not model.isOverlayHovered then
-            Browser.Events.onMouseDown (JD.succeed CloseLauncherOverlay)
+    if model.isOpen && not model.isOverlayHovered then
+        Browser.Events.onMouseDown (JD.succeed CloseLauncherOverlay)
 
-          else
-            Sub.none
-        ]
+    else
+        Sub.none
