@@ -219,8 +219,6 @@ isOpen { openMenu } =
 subscriptions : Model -> Sub Msg
 subscriptions model =
     if isOpen model && not model.isHovered then
-        -- TODO: Decide between onClick and onMouseDown. UX issues with other areas that are
-        -- stopping propagation (close window; drag window; open CI selector)
         Browser.Events.onMouseDown (JD.succeed Close)
 
     else
