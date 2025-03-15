@@ -546,6 +546,8 @@ createWindow model universe sessionId app appId config parentInfo =
 Enforces that a singleton popup is opened only once. Additional enforcements can
 be added in the future.
 
+TODO: Can we get rid of this function? It's the only thing importing OS.Bus here
+
 -}
 willOpenApp :
     Model

@@ -7,6 +7,7 @@ module OS.CtxMenu exposing
     , initialModel
     , noop
     , noopSelf
+    , setViewport
     , subscriptions
     , update
     , view
@@ -27,7 +28,7 @@ import UI exposing (UI, cl, col, id, row, text)
 
 type Msg
     = NoOp
-    | Open Float Float Menu
+    | Open Int Int Menu
     | OnCtxMenuEnter
     | OnCtxMenuLeave
     | Close
@@ -35,8 +36,10 @@ type Msg
 
 type alias Model =
     { openMenu : Maybe Menu
-    , posX : Float
-    , posY : Float
+    , posX : Int
+    , posY : Int
+    , viewportX : Int
+    , viewportY : Int
     , isHovered : Bool
     }
 
@@ -63,13 +66,88 @@ type alias Config msg =
 -- Model
 
 
-initialModel : Model
-initialModel =
+initialModel : ( Int, Int ) -> Model
+initialModel ( viewportX, viewportY ) =
     { openMenu = Nothing
     , posX = 0
     , posY = 0
+    , viewportX = viewportX
+    , viewportY = viewportY
     , isHovered = False
     }
+
+
+setViewport : Model -> ( Int, Int ) -> Model
+setViewport model ( viewportX, viewportY ) =
+    { model | viewportX = viewportX, viewportY = viewportY }
+
+
+calculateMenuPosition : Model -> Config msg -> ( Int, Int )
+calculateMenuPosition { posX, posY, viewportX, viewportY } config =
+    let
+        inferredMenuHeight =
+            ceiling <| calculateMenuHeight config
+
+        inferredMenuWidth =
+            200
+
+        offsetX =
+            viewportX - posX
+
+        offsetY =
+            viewportY - posY
+
+        newPosY =
+            if offsetY < inferredMenuHeight then
+                viewportY - inferredMenuHeight - offsetY
+
+            else
+                posY
+
+        newPosX =
+            if offsetX < inferredMenuWidth then
+                viewportX - inferredMenuWidth - offsetX
+
+            else
+                posX
+    in
+    ( newPosX, newPosY )
+
+
+{-| The goal of this function is to calculate / infer the height of the context menu _before_ it
+gets rendered. We need to know it (beforehand) in order to know where to render it (if in the bottom
+right direction, which is the default, or alternative directions, like top right or top left or
+bottom right).
+
+If after render, we could simply ask DOM for the full height of the node. We can't (unless we render
+it hidden, at first, and then make it visible afterwards, which is not a bad idea per se). As such,
+we are simply "inferring" what the likely height will be, based on the contents of the menu.
+
+This works very well, however it is prone to changes in the CSS file (e.g. increased padding)
+silently breaking the functionality of positional rendering of the Context Menu. It will still
+render just fine, but possibly in the wrong location.
+
+The other caveat is that this will break under different zoom levels, fonts etc. Really, we should
+render it off-screen / with hidden visibility, calculate the height and then make it visible. This
+is TODO for now.
+
+-}
+calculateMenuHeight : Config msg -> Float
+calculateMenuHeight config =
+    let
+        getEntryHeight =
+            \entry ->
+                case entry of
+                    SimpleItem _ ->
+                        29
+
+                    Divisor ->
+                        17
+    in
+    List.foldl
+        (\entry acc -> acc + getEntryHeight entry)
+        2
+        config.entries
 
 
 
@@ -117,8 +195,8 @@ event : Menu -> UI.Attribute Msg
 event menu =
     HE.custom "contextmenu" <|
         JD.map2 (\x y -> { message = Open x y menu, preventDefault = True, stopPropagation = True })
-            (JD.field "clientX" JD.float)
-            (JD.field "clientY" JD.float)
+            (JD.field "clientX" JD.int)
+            (JD.field "clientY" JD.int)
 
 
 
@@ -145,11 +223,14 @@ renderMenu model msgMap config =
     let
         entries =
             List.foldr (renderEntry config) [] config.entries
+
+        ( posLeft, posTop ) =
+            calculateMenuPosition model config
     in
     col
         [ id "os-ctx-menu"
-        , UI.style "top" <| String.fromFloat model.posY ++ "px"
-        , UI.style "left" <| String.fromFloat model.posX ++ "px"
+        , UI.style "top" <| String.fromInt posTop ++ "px"
+        , UI.style "left" <| String.fromInt posLeft ++ "px"
         , HE.onMouseEnter (msgMap OnCtxMenuEnter)
         , HE.onMouseLeave (msgMap OnCtxMenuLeave)
         ]

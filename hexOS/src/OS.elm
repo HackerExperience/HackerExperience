@@ -91,7 +91,7 @@ init viewport =
       , appModels = Dict.empty
       , appConfigs = Dict.empty
       , hud = HUD.initialModel
-      , ctxMenu = CtxMenu.initialModel
+      , ctxMenu = CtxMenu.initialModel viewport
       }
     , Effect.none
     )
@@ -116,7 +116,14 @@ updateViewport model viewport =
     -- TODO: Add doc stating this is triggered on browser resize
     -- TODO: When resizing, we should move windows that overflow the
     -- viewport to within the viewport
-    { model | wm = WM.updateViewport model.wm viewport }
+    let
+        newWm =
+            WM.updateViewport model.wm viewport
+
+        newCtxMenu =
+            CtxMenu.setViewport model.ctxMenu ( newWm.viewportX, newWm.viewportY )
+    in
+    { model | wm = newWm, ctxMenu = newCtxMenu }
 
 
 
