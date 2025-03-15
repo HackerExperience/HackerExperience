@@ -17,6 +17,7 @@ import Apps.Popups.ConfirmationDialog as ConfirmationDialog
 import Apps.Popups.DemoSingleton as DemoSingleton
 import Apps.RemoteAccess as RemoteAccess
 import Apps.Types as Apps
+import Browser.Events
 import Dict exposing (Dict)
 import Effect exposing (Effect)
 import Game
@@ -493,8 +494,16 @@ performCloseApp { currentSession } model appId =
         newAppConfigs =
             Dict.remove appId model.appConfigs
                 |> maybeRemoveChildrenConfigs linkedChildren
+
+        newHud =
+            HUD.onWindowClose model.hud
     in
-    ( { model | appModels = newAppModels, appConfigs = newAppConfigs, wm = newWm }, parentCmd )
+    ( { model | appModels = newAppModels, appConfigs = newAppConfigs, wm = newWm, hud = newHud }
+    , Effect.batch
+        [ Effect.msgToCmd <| PerformAction (OS.Bus.ToCtxMenu CtxMenu.Close)
+        , parentCmd
+        ]
+    )
 
 
 performCollapseApp : State -> Model -> AppID -> ( Model, Effect Msg )
@@ -502,8 +511,13 @@ performCollapseApp { currentSession } model appId =
     let
         newWm =
             WM.collapseApp model.wm currentSession appId
+
+        newHud =
+            HUD.onWindowCollapse model.hud
     in
-    ( { model | wm = newWm }, Effect.none )
+    ( { model | wm = newWm, hud = newHud }
+    , Effect.msgToCmd (PerformAction (OS.Bus.ToCtxMenu CtxMenu.Close))
+    )
 
 
 maybeRemoveChildrenWindows : WM.SessionID -> List ( App.Manifest, AppID ) -> WM.Model -> WM.Model
@@ -758,7 +772,9 @@ documentView gameState model =
 view : State -> Model -> List (UI Msg)
 view gameState model =
     [ col
-        (id "hexOS" :: addGlobalEvents model)
+        [ id "hexOS"
+        , HA.map CtxMenuMsg (CtxMenu.event <| CtxMenu.OS CtxMenu.OSRootMenu)
+        ]
         [ wmView gameState model
         , Html.map HudMsg <| HUD.view gameState model.hud model.wm
         , CtxMenu.view model.ctxMenu CtxMenuMsg ctxMenuConfig model
@@ -817,17 +833,6 @@ ctxMenuConfig menu model =
 
         CtxMenu.LogViewer _ ->
             Nothing
-
-
-
--- TODO: Move to another part of this module if this is confirmed to be accurate
-
-
-addGlobalEvents : Model -> List (UI.Attribute Msg)
-addGlobalEvents model =
-    maybeAddGlobalMouseMoveEvent model.wm
-        :: HA.map CtxMenuMsg (CtxMenu.event <| CtxMenu.OS CtxMenu.OSRootMenu)
-        :: List.map (HA.map HudMsg) (HUD.addGlobalEvents model.hud)
 
 
 wmView : State -> Model -> UI Msg
@@ -1022,18 +1027,6 @@ onMouseDownEvent appId =
             (JD.field "button" JD.int)
 
 
-maybeAddGlobalMouseMoveEvent : WM.Model -> UI.Attribute Msg
-maybeAddGlobalMouseMoveEvent wm =
-    if WM.isDragging wm then
-        HE.on "mousemove" <|
-            JD.map2 Drag
-                (JD.field "clientX" JD.float)
-                (JD.field "clientY" JD.float)
-
-    else
-        UI.emptyAttr
-
-
 addFocusedWindowClass : Bool -> Bool -> UI.Attribute Msg
 addFocusedWindowClass isFocused isBlocked =
     if isFocused && not isBlocked then
@@ -1059,4 +1052,15 @@ addFocusEvent isFocused isBlocked appId =
 subscriptions : Model -> Sub Msg
 subscriptions model =
     Sub.batch
-        [ Sub.map CtxMenuMsg <| CtxMenu.subscriptions model.ctxMenu ]
+        [ if WM.isDragging model.wm then
+            Browser.Events.onMouseMove <|
+                JD.map2
+                    Drag
+                    (JD.field "clientX" JD.float)
+                    (JD.field "clientY" JD.float)
+
+          else
+            Sub.none
+        , Sub.map CtxMenuMsg <| CtxMenu.subscriptions model.ctxMenu
+        , Sub.map HudMsg <| HUD.subscriptions model.hud
+        ]

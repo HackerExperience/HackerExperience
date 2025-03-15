@@ -1,13 +1,14 @@
 module HUD.Launcher exposing
     ( Model
     , Msg(..)
-    , addGlobalEvents
     , initialModel
+    , subscriptions
     , update
     , view
     )
 
 import Apps.Manifest as App
+import Browser.Events
 import Effect exposing (Effect)
 import Html.Attributes as HA
 import Html.Events as HE
@@ -25,7 +26,9 @@ import UI.TextInput
 
 
 type alias Model =
-    { isOpen : Bool }
+    { isOpen : Bool
+    , isOverlayHovered : Bool
+    }
 
 
 type Msg
@@ -33,6 +36,8 @@ type Msg
     | ToCtxMenu CtxMenu.Msg
     | OpenLauncherOverlay
     | CloseLauncherOverlay
+    | OnOverlayEnter
+    | OnOverlayLeave
     | LaunchApp App.Manifest
     | NoOp
 
@@ -43,7 +48,9 @@ type Msg
 
 initialModel : Model
 initialModel =
-    { isOpen = False }
+    { isOpen = False
+    , isOverlayHovered = False
+    }
 
 
 
@@ -58,6 +65,12 @@ update msg model =
 
         CloseLauncherOverlay ->
             ( { model | isOpen = False }, Effect.none )
+
+        OnOverlayEnter ->
+            ( { model | isOverlayHovered = True }, Effect.none )
+
+        OnOverlayLeave ->
+            ( { model | isOverlayHovered = False }, Effect.none )
 
         LaunchApp app ->
             ( { model | isOpen = False }
@@ -123,7 +136,7 @@ viewLauncher { isOpen } =
 viewOverlay : UI Msg
 viewOverlay =
     row [ id "hud-launcher-overlay" ]
-        [ col [ cl "hud-lo-area", stopPropagation "click" ]
+        [ col [ cl "hud-lo-area" ]
             [ viewOverlaySearch
             , viewOverlayApps
             ]
@@ -142,7 +155,11 @@ viewOverlaySearch =
                 |> UI.TextInput.withID "hud-lo-search-input"
                 |> UI.TextInput.toUI
     in
-    row [ cl "hud-lo-search-area" ]
+    row
+        [ cl "hud-lo-search-area"
+        , HE.onMouseEnter OnOverlayEnter
+        , HE.onMouseLeave OnOverlayLeave
+        ]
         [ textInput ]
 
 
@@ -158,7 +175,11 @@ viewOverlayApps =
         appEntries =
             List.foldr renderOverlayAppEntries [] launchableApps
     in
-    row [ cl "hud-lo-apps-area" ]
+    row
+        [ cl "hud-lo-apps-area"
+        , HE.onMouseEnter OnOverlayEnter
+        , HE.onMouseLeave OnOverlayLeave
+        ]
         appEntries
 
 
@@ -192,19 +213,15 @@ viewOverlayAppEntry app =
 
 
 
--- TODO: stopPropagation should be a util (also used in OS and HUD.CI)
+-- Subscriptions
 
 
-stopPropagation : String -> UI.Attribute Msg
-stopPropagation event =
-    HE.stopPropagationOn event
-        (JD.succeed <| (\msg -> ( msg, True )) NoOp)
+subscriptions : Model -> Sub Msg
+subscriptions model =
+    Sub.batch
+        [ if model.isOpen && not model.isOverlayHovered then
+            Browser.Events.onMouseDown (JD.succeed CloseLauncherOverlay)
 
-
-addGlobalEvents : Model -> List (UI.Attribute Msg)
-addGlobalEvents model =
-    if model.isOpen then
-        [ HE.on "click" <| JD.succeed CloseLauncherOverlay ]
-
-    else
-        []
+          else
+            Sub.none
+        ]

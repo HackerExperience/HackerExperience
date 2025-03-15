@@ -2,12 +2,15 @@ module HUD.ConnectionInfo exposing
     ( Model
     , Msg(..)
     , Selector(..)
-    , addGlobalEvents
     , initialModel
+    , onWindowClose
+    , onWindowCollapse
+    , subscriptions
     , update
     , view
     )
 
+import Browser.Events
 import Effect exposing (Effect)
 import Game
 import Game.Bus as Game
@@ -31,7 +34,9 @@ import WM
 
 
 type alias Model =
-    { selector : Selector }
+    { selector : Selector
+    , isSelectorHovered : Bool
+    }
 
 
 type Selector
@@ -52,6 +57,8 @@ type CISide
 type Msg
     = OpenSelector Selector
     | CloseSelector
+    | OnSelectorEnter
+    | OnSelectorLeave
     | SwitchGateway Universe ServerID
     | SwitchEndpoint Universe NIP
     | ToggleWMSession
@@ -65,7 +72,19 @@ type Msg
 
 initialModel : Model
 initialModel =
-    { selector = NoSelector }
+    { selector = NoSelector
+    , isSelectorHovered = False
+    }
+
+
+onWindowClose : Model -> Model
+onWindowClose model =
+    { model | selector = NoSelector, isSelectorHovered = False }
+
+
+onWindowCollapse : Model -> Model
+onWindowCollapse model =
+    { model | selector = NoSelector, isSelectorHovered = False }
 
 
 
@@ -82,7 +101,13 @@ update state msg model =
             ( { model | selector = selector }, Effect.none )
 
         CloseSelector ->
-            ( { model | selector = NoSelector }, Effect.none )
+            ( { model | selector = NoSelector, isSelectorHovered = False }, Effect.none )
+
+        OnSelectorEnter ->
+            ( { model | isSelectorHovered = True }, Effect.none )
+
+        OnSelectorLeave ->
+            ( { model | isSelectorHovered = False }, Effect.none )
 
         SwitchGateway universe gatewayId ->
             updateSwitchGateway state model universe gatewayId
@@ -293,9 +318,6 @@ viewServerSelectorDropdown side { selector } =
         [ cl "hud-ci-srvselector-dropdown"
         , cl selectorDropdownSide
         , UI.onClick onClickMsg
-
-        -- Don't close the selector on "mousedown". We'll handle that ourselves.
-        , stopPropagation "mousedown"
         ]
         [ dropdownIcon ]
 
@@ -331,19 +353,10 @@ renderServerSelector side renderedSelector =
     row
         [ id "hud-connection-info-srvselector"
         , cl sideClass
-        , stopPropagation "mousedown"
+        , HE.onMouseEnter OnSelectorEnter
+        , HE.onMouseLeave OnSelectorLeave
         ]
         [ renderedSelector ]
-
-
-
--- TODO: stopPropagation should be a util (also used in OS)
-
-
-stopPropagation : String -> UI.Attribute Msg
-stopPropagation event =
-    HE.stopPropagationOn event
-        (JD.succeed <| (\msg -> ( msg, True )) NoOp)
 
 
 viewGatewaySelector : State -> Model -> UI Msg
@@ -466,20 +479,20 @@ endpointSelectorEntries universe activeEndpoint tunnel acc =
     div classes [ text <| label ++ indicator ] :: acc
 
 
-addGlobalEvents : Model -> List (UI.Attribute Msg)
-addGlobalEvents model =
-    case model.selector of
-        NoSelector ->
-            []
 
-        -- If there's a Selector open, we want any "mousedown" outside it to automatically close it.
-        -- In order to achieve the "outside it" part, we need to `stopPropagation "mousedown"` in
-        -- some parts, as can be seen in this file.
-        -- One issue is that other parts of the application that also stop the propagation of
-        -- `mousedown` end up affecting the usability here. One such example is clicking in the "X"
-        -- icon to close a window. Try that out: the experience is not great, and I don't yet have
-        -- a solution for this problem.
-        -- Perhaps the best solution is using a proper subscription, similar to how I'm handling it
-        -- in the OS.CtxMenu module.
-        _ ->
-            [ HE.on "mousedown" <| JD.succeed CloseSelector ]
+-- Subscriptions
+
+
+subscriptions : Model -> Sub Msg
+subscriptions model =
+    Sub.batch
+        [ case ( model.selector, model.isSelectorHovered ) of
+            ( NoSelector, _ ) ->
+                Sub.none
+
+            ( _, True ) ->
+                Sub.none
+
+            ( _, False ) ->
+                Browser.Events.onMouseDown (JD.succeed CloseSelector)
+        ]

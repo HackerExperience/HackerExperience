@@ -222,7 +222,7 @@ subscriptions model =
         [ if isOpen model && not model.isHovered then
             -- TODO: Decide between onClick and onMouseDown. UX issues with other areas that are
             -- stopping propagation (close window; drag window; open CI selector)
-            Browser.Events.onClick (JD.succeed Close)
+            Browser.Events.onMouseDown (JD.succeed Close)
 
           else
             Sub.none
