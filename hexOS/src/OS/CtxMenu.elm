@@ -77,6 +77,11 @@ initialModel ( viewportX, viewportY ) =
     }
 
 
+isOpen : Model -> Bool
+isOpen { openMenu } =
+    Maybe.isJust openMenu
+
+
 setViewport : Model -> ( Int, Int ) -> Model
 setViewport model ( viewportX, viewportY ) =
     { model | viewportX = viewportX, viewportY = viewportY }
@@ -290,11 +295,6 @@ renderEntry config configEntry acc =
 
 
 -- Subscriptions
-
-
-isOpen : Model -> Bool
-isOpen { openMenu } =
-    Maybe.isJust openMenu
 
 
 subscriptions : Model -> Sub Msg
