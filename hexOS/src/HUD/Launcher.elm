@@ -27,6 +27,7 @@ import UI.TextInput
 
 type alias Model =
     { isOpen : Bool
+    , isLauncherHovered : Bool
     , isOverlayHovered : Bool
     }
 
@@ -36,6 +37,8 @@ type Msg
     | ToCtxMenu CtxMenu.Msg
     | OpenLauncherOverlay
     | CloseLauncherOverlay
+    | OnLauncherEnter
+    | OnLauncherLeave
     | OnOverlayEnter
     | OnOverlayLeave
     | LaunchApp App.Manifest
@@ -49,6 +52,7 @@ type Msg
 initialModel : Model
 initialModel =
     { isOpen = False
+    , isLauncherHovered = False
     , isOverlayHovered = False
     }
 
@@ -64,7 +68,13 @@ update msg model =
             ( { model | isOpen = True }, Effect.domFocus "hud-lo-search-input" NoOp )
 
         CloseLauncherOverlay ->
-            ( { model | isOpen = False }, Effect.none )
+            ( { model | isOpen = False, isOverlayHovered = False }, Effect.none )
+
+        OnLauncherEnter ->
+            ( { model | isLauncherHovered = True }, Effect.none )
+
+        OnLauncherLeave ->
+            ( { model | isLauncherHovered = False }, Effect.none )
 
         OnOverlayEnter ->
             ( { model | isOverlayHovered = True }, Effect.none )
@@ -113,18 +123,22 @@ viewLauncher { isOpen } =
     let
         onClickMsg =
             if isOpen then
-                NoOp
+                CloseLauncherOverlay
 
             else
                 OpenLauncherOverlay
 
         icon =
             UI.Icon.msOutline "apps" Nothing
-                |> UI.Icon.withOnClick onClickMsg
                 |> UI.Icon.toUI
 
         iconArea =
-            row [ cl "hud-l-launcher-icon-area" ]
+            row
+                [ cl "hud-l-launcher-icon-area"
+                , UI.onClick onClickMsg
+                , HE.onMouseEnter OnLauncherEnter
+                , HE.onMouseLeave OnLauncherLeave
+                ]
                 [ icon ]
     in
     row [ cl "hud-l-launcher-area" ]
@@ -134,7 +148,11 @@ viewLauncher { isOpen } =
 viewOverlay : UI Msg
 viewOverlay =
     row [ id "hud-launcher-overlay" ]
-        [ col [ cl "hud-lo-area" ]
+        [ col
+            [ cl "hud-lo-area"
+            , HE.onMouseEnter OnOverlayEnter
+            , HE.onMouseLeave OnOverlayLeave
+            ]
             [ viewOverlaySearch
             , viewOverlayApps
             ]
@@ -155,8 +173,6 @@ viewOverlaySearch =
     in
     row
         [ cl "hud-lo-search-area"
-        , HE.onMouseEnter OnOverlayEnter
-        , HE.onMouseLeave OnOverlayLeave
         ]
         [ textInput ]
 
@@ -173,11 +189,7 @@ viewOverlayApps =
         appEntries =
             List.foldr renderOverlayAppEntries [] launchableApps
     in
-    row
-        [ cl "hud-lo-apps-area"
-        , HE.onMouseEnter OnOverlayEnter
-        , HE.onMouseLeave OnOverlayLeave
-        ]
+    row [ cl "hud-lo-apps-area" ]
         appEntries
 
 
@@ -216,7 +228,7 @@ viewOverlayAppEntry app =
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    if model.isOpen && not model.isOverlayHovered then
+    if model.isOpen && not model.isOverlayHovered && not model.isLauncherHovered then
         Browser.Events.onMouseDown (JD.succeed CloseLauncherOverlay)
 
     else
