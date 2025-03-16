@@ -164,8 +164,8 @@ init ( viewportX, viewportY ) =
     , viewportX = viewportX
     , viewportY = viewportY
     , hud =
-        { topHeight = 60
-        , dockHeight = 80
+        { topHeight = 77
+        , dockHeight = 87
         }
     }
 
