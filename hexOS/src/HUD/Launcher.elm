@@ -1,17 +1,20 @@
 module HUD.Launcher exposing
     ( Model
     , Msg(..)
-    , addGlobalEvents
     , initialModel
+    , subscriptions
     , update
     , view
     )
 
 import Apps.Manifest as App
+import Browser.Events
 import Effect exposing (Effect)
+import Html.Attributes as HA
 import Html.Events as HE
 import Json.Decode as JD
 import OS.Bus
+import OS.CtxMenu as CtxMenu
 import UI exposing (UI, cl, col, id, row, text)
 import UI.Icon
 import UI.Model.FormFields as FormFields
@@ -23,13 +26,21 @@ import UI.TextInput
 
 
 type alias Model =
-    { isOpen : Bool }
+    { isOpen : Bool
+    , isLauncherHovered : Bool
+    , isOverlayHovered : Bool
+    }
 
 
 type Msg
     = ToOS OS.Bus.Action
+    | ToCtxMenu CtxMenu.Msg
     | OpenLauncherOverlay
     | CloseLauncherOverlay
+    | OnLauncherEnter
+    | OnLauncherLeave
+    | OnOverlayEnter
+    | OnOverlayLeave
     | LaunchApp App.Manifest
     | NoOp
 
@@ -40,7 +51,10 @@ type Msg
 
 initialModel : Model
 initialModel =
-    { isOpen = False }
+    { isOpen = False
+    , isLauncherHovered = False
+    , isOverlayHovered = False
+    }
 
 
 
@@ -54,7 +68,19 @@ update msg model =
             ( { model | isOpen = True }, Effect.domFocus "hud-lo-search-input" NoOp )
 
         CloseLauncherOverlay ->
-            ( { model | isOpen = False }, Effect.none )
+            ( { model | isOpen = False, isOverlayHovered = False }, Effect.none )
+
+        OnLauncherEnter ->
+            ( { model | isLauncherHovered = True }, Effect.none )
+
+        OnLauncherLeave ->
+            ( { model | isLauncherHovered = False }, Effect.none )
+
+        OnOverlayEnter ->
+            ( { model | isOverlayHovered = True }, Effect.none )
+
+        OnOverlayLeave ->
+            ( { model | isOverlayHovered = False }, Effect.none )
 
         LaunchApp app ->
             ( { model | isOpen = False }
@@ -65,7 +91,11 @@ update msg model =
             ( model, Effect.none )
 
         ToOS _ ->
-            -- Handled by parent
+            -- Handled by OS
+            ( model, Effect.none )
+
+        ToCtxMenu _ ->
+            -- Handled by OS
             ( model, Effect.none )
 
 
@@ -75,7 +105,10 @@ update msg model =
 
 view : Model -> UI Msg
 view model =
-    row [ id "hud-launcher" ]
+    row
+        [ id "hud-launcher"
+        , HA.map ToCtxMenu CtxMenu.noop
+        ]
         [ viewLauncher model
         , if model.isOpen then
             viewOverlay
@@ -90,18 +123,22 @@ viewLauncher { isOpen } =
     let
         onClickMsg =
             if isOpen then
-                NoOp
+                CloseLauncherOverlay
 
             else
                 OpenLauncherOverlay
 
         icon =
             UI.Icon.msOutline "apps" Nothing
-                |> UI.Icon.withOnClick onClickMsg
                 |> UI.Icon.toUI
 
         iconArea =
-            row [ cl "hud-l-launcher-icon-area" ]
+            row
+                [ cl "hud-l-launcher-icon-area"
+                , UI.onClick onClickMsg
+                , HE.onMouseEnter OnLauncherEnter
+                , HE.onMouseLeave OnLauncherLeave
+                ]
                 [ icon ]
     in
     row [ cl "hud-l-launcher-area" ]
@@ -111,7 +148,11 @@ viewLauncher { isOpen } =
 viewOverlay : UI Msg
 viewOverlay =
     row [ id "hud-launcher-overlay" ]
-        [ col [ cl "hud-lo-area", stopPropagation "click" ]
+        [ col
+            [ cl "hud-lo-area"
+            , HE.onMouseEnter OnOverlayEnter
+            , HE.onMouseLeave OnOverlayLeave
+            ]
             [ viewOverlaySearch
             , viewOverlayApps
             ]
@@ -130,7 +171,9 @@ viewOverlaySearch =
                 |> UI.TextInput.withID "hud-lo-search-input"
                 |> UI.TextInput.toUI
     in
-    row [ cl "hud-lo-search-area" ]
+    row
+        [ cl "hud-lo-search-area"
+        ]
         [ textInput ]
 
 
@@ -180,19 +223,13 @@ viewOverlayAppEntry app =
 
 
 
--- TODO: stopPropagation should be a util (also used in OS and HUD.CI)
+-- Subscriptions
 
 
-stopPropagation : String -> UI.Attribute Msg
-stopPropagation event =
-    HE.stopPropagationOn event
-        (JD.succeed <| (\msg -> ( msg, True )) NoOp)
-
-
-addGlobalEvents : Model -> List (UI.Attribute Msg)
-addGlobalEvents model =
-    if model.isOpen then
-        [ HE.on "click" <| JD.succeed CloseLauncherOverlay ]
+subscriptions : Model -> Sub Msg
+subscriptions model =
+    if model.isOpen && not model.isOverlayHovered && not model.isLauncherHovered then
+        Browser.Events.onMouseDown (JD.succeed CloseLauncherOverlay)
 
     else
-        []
+        Sub.none

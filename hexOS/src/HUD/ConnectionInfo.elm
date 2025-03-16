@@ -2,12 +2,15 @@ module HUD.ConnectionInfo exposing
     ( Model
     , Msg(..)
     , Selector(..)
-    , addGlobalEvents
     , initialModel
+    , onWindowClose
+    , onWindowCollapse
+    , subscriptions
     , update
     , view
     )
 
+import Browser.Events
 import Effect exposing (Effect)
 import Game
 import Game.Bus as Game
@@ -19,6 +22,7 @@ import Game.Universe as Universe exposing (Universe(..))
 import Html.Events as HE
 import Json.Decode as JD
 import OS.Bus
+import OS.CtxMenu as CtxMenu
 import State exposing (State)
 import UI exposing (UI, cl, col, div, id, row, text)
 import UI.Icon
@@ -30,7 +34,10 @@ import WM
 
 
 type alias Model =
-    { selector : Selector }
+    { selector : Selector
+    , isDropdownHovered : Bool
+    , isSelectorHovered : Bool
+    }
 
 
 type Selector
@@ -51,6 +58,10 @@ type CISide
 type Msg
     = OpenSelector Selector
     | CloseSelector
+    | OnSelectorEnter
+    | OnSelectorLeave
+    | OnDropdownEnter
+    | OnDropdownLeave
     | SwitchGateway Universe ServerID
     | SwitchEndpoint Universe NIP
     | ToggleWMSession
@@ -64,7 +75,20 @@ type Msg
 
 initialModel : Model
 initialModel =
-    { selector = NoSelector }
+    { selector = NoSelector
+    , isDropdownHovered = False
+    , isSelectorHovered = False
+    }
+
+
+onWindowClose : Model -> Model
+onWindowClose model =
+    { model | selector = NoSelector, isSelectorHovered = False }
+
+
+onWindowCollapse : Model -> Model
+onWindowCollapse model =
+    { model | selector = NoSelector, isSelectorHovered = False }
 
 
 
@@ -81,7 +105,19 @@ update state msg model =
             ( { model | selector = selector }, Effect.none )
 
         CloseSelector ->
-            ( { model | selector = NoSelector }, Effect.none )
+            ( { model | selector = NoSelector, isSelectorHovered = False }, Effect.none )
+
+        OnSelectorEnter ->
+            ( { model | isSelectorHovered = True }, Effect.none )
+
+        OnSelectorLeave ->
+            ( { model | isSelectorHovered = False }, Effect.none )
+
+        OnDropdownEnter ->
+            ( { model | isDropdownHovered = True }, Effect.none )
+
+        OnDropdownLeave ->
+            ( { model | isDropdownHovered = False }, Effect.none )
 
         SwitchGateway universe gatewayId ->
             updateSwitchGateway state model universe gatewayId
@@ -128,7 +164,10 @@ updateSwitchEndpoint model universe nip =
 view : State -> Model -> UI Msg
 view state model =
     -- TODO: Figure out a better way to identify the top-level and each child (all 3 are important to identify)
-    col [ addEvents model ]
+    col
+        [ addEvents model
+        , CtxMenu.noopSelf NoOp
+        ]
         [ viewConnectionInfo state model
         , viewSelector state model
         ]
@@ -289,9 +328,8 @@ viewServerSelectorDropdown side { selector } =
         [ cl "hud-ci-srvselector-dropdown"
         , cl selectorDropdownSide
         , UI.onClick onClickMsg
-
-        -- Don't close the selector on "mousedown". We'll handle that ourselves.
-        , stopPropagation "mousedown"
+        , HE.onMouseEnter OnDropdownEnter
+        , HE.onMouseLeave OnDropdownLeave
         ]
         [ dropdownIcon ]
 
@@ -327,19 +365,10 @@ renderServerSelector side renderedSelector =
     row
         [ id "hud-connection-info-srvselector"
         , cl sideClass
-        , stopPropagation "mousedown"
+        , HE.onMouseEnter OnSelectorEnter
+        , HE.onMouseLeave OnSelectorLeave
         ]
         [ renderedSelector ]
-
-
-
--- TODO: stopPropagation should be a util (also used in OS)
-
-
-stopPropagation : String -> UI.Attribute Msg
-stopPropagation event =
-    HE.stopPropagationOn event
-        (JD.succeed <| (\msg -> ( msg, True )) NoOp)
 
 
 viewGatewaySelector : State -> Model -> UI Msg
@@ -462,18 +491,18 @@ endpointSelectorEntries universe activeEndpoint tunnel acc =
     div classes [ text <| label ++ indicator ] :: acc
 
 
-addGlobalEvents : Model -> List (UI.Attribute Msg)
-addGlobalEvents model =
-    case model.selector of
-        NoSelector ->
-            []
 
-        -- If there's a Selector open, we want any "mousedown" outside it to automatically close it.
-        -- In order to achieve the "outside it" part, we need to `stopPropagation "mousedown"` in
-        -- some parts, as can be seen in this file.
-        -- One issue is that other parts of the application that also stop the propagation of
-        -- `mousedown` end up affecting the usability here. One such example is clicking in the "X"
-        -- icon to close a window. Try that out: the experience is not great, and I don't yet have
-        -- a solution for this problem.
+-- Subscriptions
+
+
+subscriptions : Model -> Sub Msg
+subscriptions model =
+    case ( model.selector, model.isSelectorHovered, model.isDropdownHovered ) of
+        ( NoSelector, _, _ ) ->
+            Sub.none
+
+        ( _, False, False ) ->
+            Browser.Events.onMouseDown (JD.succeed CloseSelector)
+
         _ ->
-            [ HE.on "mousedown" <| JD.succeed CloseSelector ]
+            Sub.none

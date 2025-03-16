@@ -90,3 +90,47 @@
     transform: translate3d(4px, 0, 0);
   }
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+// OS > CtxMenu
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+#os-ctx-menu {
+    position: fixed;
+    min-width: 200px;
+    border: 1px solid prim-500();
+    z-index: 9999999999;
+
+    font-size: 14px;
+
+    background-color: sec-700();
+}
+
+.os-cm-simple-item-area {
+    padding: s-1() s-2();
+
+    &:hover {
+        background-color: sec-500();
+        cursor: pointer;
+    }
+}
+
+.os-cm-simple-item-disabled {
+    // background-color: base-300();
+    color: gray;
+
+    &:hover {
+        cursor: default;
+        background-color: sec-700();
+    }
+}
+
+.os-cm-divisor-area {
+    margin: s-2() 0;
+
+    hr {
+        // border: 1px solid red;
+        width: 100%;
+        color: base-300();
+    }
+}

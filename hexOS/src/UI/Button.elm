@@ -65,6 +65,7 @@ toUI (Config props ({ onClick } as opts)) =
                 HE.onClick msg
 
             Nothing ->
+                -- NOTE: This `HA.disabled` is causing `contextmenu` event to bypass stopPropagation
                 HA.disabled True
         ]
         [ body props opts ]
