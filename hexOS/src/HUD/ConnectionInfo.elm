@@ -35,6 +35,7 @@ import WM
 
 type alias Model =
     { selector : Selector
+    , isDropdownHovered : Bool
     , isSelectorHovered : Bool
     }
 
@@ -59,6 +60,8 @@ type Msg
     | CloseSelector
     | OnSelectorEnter
     | OnSelectorLeave
+    | OnDropdownEnter
+    | OnDropdownLeave
     | SwitchGateway Universe ServerID
     | SwitchEndpoint Universe NIP
     | ToggleWMSession
@@ -73,6 +76,7 @@ type Msg
 initialModel : Model
 initialModel =
     { selector = NoSelector
+    , isDropdownHovered = False
     , isSelectorHovered = False
     }
 
@@ -108,6 +112,12 @@ update state msg model =
 
         OnSelectorLeave ->
             ( { model | isSelectorHovered = False }, Effect.none )
+
+        OnDropdownEnter ->
+            ( { model | isDropdownHovered = True }, Effect.none )
+
+        OnDropdownLeave ->
+            ( { model | isDropdownHovered = False }, Effect.none )
 
         SwitchGateway universe gatewayId ->
             updateSwitchGateway state model universe gatewayId
@@ -318,6 +328,8 @@ viewServerSelectorDropdown side { selector } =
         [ cl "hud-ci-srvselector-dropdown"
         , cl selectorDropdownSide
         , UI.onClick onClickMsg
+        , HE.onMouseEnter OnDropdownEnter
+        , HE.onMouseLeave OnDropdownLeave
         ]
         [ dropdownIcon ]
 
@@ -485,12 +497,12 @@ endpointSelectorEntries universe activeEndpoint tunnel acc =
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    case ( model.selector, model.isSelectorHovered ) of
-        ( NoSelector, _ ) ->
+    case ( model.selector, model.isSelectorHovered, model.isDropdownHovered ) of
+        ( NoSelector, _, _ ) ->
             Sub.none
 
-        ( _, True ) ->
-            Sub.none
-
-        ( _, False ) ->
+        ( _, False, False ) ->
             Browser.Events.onMouseDown (JD.succeed CloseSelector)
+
+        _ ->
+            Sub.none
