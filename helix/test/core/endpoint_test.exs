@@ -9,11 +9,9 @@ defmodule Core.EndpointTest do
       %{server: server, entity: entity} = Setup.server()
       file = Setup.file!(server.id)
 
-      server_eid = U.to_eid(server.id, entity.id)
       file_eid = U.to_eid(file.id, entity.id, server.id)
       put_entity_in_process(entity.id)
 
-      assert {:ok, server.id} == Endpoint.cast_id(:field, server_eid, Game.Server)
       assert {:ok, file.id} == Endpoint.cast_id(:field, file_eid, Game.File)
 
       # When the external ID is not found, it returns the :id_not_found error
@@ -39,17 +37,17 @@ defmodule Core.EndpointTest do
 
     test "returns an error if the external ID belongs to a different object" do
       %{server: server, entity: entity} = Setup.server()
-      file = Setup.file!(server.id)
+      %{file: file, installation: installation} = Setup.file(server.id, installed?: true)
 
-      server_eid = U.to_eid(server.id, entity.id)
       file_eid = U.to_eid(file.id, entity.id, server.id)
+      installation_eid = U.to_eid(installation.id, entity.id, server.id)
       put_entity_in_process(entity.id)
 
       # I'm passing the external ID for my file in a field that was expecting a Server external ID
       assert {:error, {:field, :id_not_found}} = Endpoint.cast_id(:field, file_eid, Game.Server)
 
       # But it works if I pass in the correct external ID
-      assert {:ok, server.id} == Endpoint.cast_id(:field, server_eid, Game.Server)
+      assert {:ok, installation.id} == Endpoint.cast_id(:field, installation_eid, Game.Installation)
     end
   end
 

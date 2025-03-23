@@ -6,7 +6,7 @@ defmodule Game.Index.PlayerTest do
 
   describe "index/1" do
     test "it returns the expected data" do
-      %{server: mainframe, player: player} = Setup.server()
+      %{nip: nip, player: player} = Setup.server()
 
       index = Index.Player.index(player)
 
@@ -16,7 +16,7 @@ defmodule Game.Index.PlayerTest do
       end)
 
       # Keys have the expected values
-      assert index.mainframe_id == mainframe.id
+      assert index.mainframe_nip == nip
     end
 
     test "index with multiple endpoints" do
@@ -40,12 +40,12 @@ defmodule Game.Index.PlayerTest do
 
   describe "render_index/1" do
     test "it returns the rendered version of the index" do
-      %{server: mainframe, player: player} = Setup.server()
+      %{nip: nip, player: player} = Setup.server()
 
       index = Index.Player.index(player)
       rendered_index = Index.Player.render_index(index, player.id)
 
-      assert rendered_index.mainframe_id |> U.from_eid(player.id) == mainframe.id
+      assert rendered_index.mainframe_nip == nip |> NIP.to_external()
 
       # Rendered index conforms to the Norm contract
       assert {:ok, _} = Norm.conform(rendered_index, Index.Player.output_spec())

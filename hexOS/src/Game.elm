@@ -18,16 +18,15 @@ import Dict exposing (Dict)
 import Dict.Extra as Dict
 import Game.Model.NIP as NIP exposing (NIP, RawNIP)
 import Game.Model.Server as Server exposing (Endpoint, Gateway)
-import Game.Model.ServerID as ServerID exposing (RawServerID, ServerID)
 import Game.Model.Tunnel as Tunnel exposing (Tunnels)
 import Game.Universe exposing (Universe(..))
 
 
 type alias Model =
     { universe : Universe
-    , mainframeID : ServerID
-    , activeGateway : ServerID
-    , gateways : Dict RawServerID Gateway
+    , mainframeNip : NIP
+    , activeGateway : NIP
+    , gateways : Dict RawNIP Gateway
     , endpoints : Dict RawNIP Endpoint
     , apiCtx : API.Types.InputContext
     }
@@ -40,17 +39,17 @@ type alias Model =
 init : API.Types.InputToken -> Universe -> Events.IndexRequested -> Model
 init token universe index =
     { universe = universe
-    , mainframeID = index.player.mainframe_id
-    , activeGateway = index.player.mainframe_id
+    , mainframeNip = index.player.mainframe_nip
+    , activeGateway = index.player.mainframe_nip
     , gateways = Server.parseGateways index.player.gateways
     , endpoints = Server.parseEndpoints index.player.endpoints
     , apiCtx = buildApiContext token universe
     }
 
 
-getGateway : Model -> ServerID -> Gateway
-getGateway model gatewayId =
-    Dict.get (ServerID.toValue gatewayId) model.gateways
+getGateway : Model -> NIP -> Gateway
+getGateway model nip =
+    Dict.get (NIP.toString nip) model.gateways
         |> Maybe.withDefault Server.invalidGateway
 
 
@@ -69,12 +68,12 @@ getActiveEndpointNip model =
     (getActiveGateway model).activeEndpoint
 
 
-updateGateway : ServerID -> (Gateway -> Gateway) -> Model -> Model
-updateGateway gatewayId updater model =
+updateGateway : NIP -> (Gateway -> Gateway) -> Model -> Model
+updateGateway nip updater model =
     let
         newGateways =
             Dict.update
-                (ServerID.toValue gatewayId)
+                (NIP.toString nip)
                 (Maybe.map (\gtw -> updater gtw))
                 model.gateways
     in
@@ -86,9 +85,9 @@ updateActiveGateway updater model =
     updateGateway model.activeGateway updater model
 
 
-switchActiveGateway : ServerID -> Model -> Model
-switchActiveGateway newActiveGatewayId model =
-    { model | activeGateway = newActiveGatewayId }
+switchActiveGateway : NIP -> Model -> Model
+switchActiveGateway newActiveGatewayNip model =
+    { model | activeGateway = newActiveGatewayNip }
 
 
 {-| Switches the "activeEndpoint" entry. There's no guarantee that the `newActiveEndpointNip` is in
@@ -113,7 +112,7 @@ switchActiveEndpoint newActiveEndpointNip model =
                     Server.invalidGateway
     in
     model
-        |> switchActiveGateway gateway.id
+        |> switchActiveGateway gateway.nip
         |> updateActiveGateway (\gtw -> Server.switchActiveEndpoint gtw newActiveEndpointNip)
 
 
@@ -160,7 +159,7 @@ onTunnelCreatedEvent model event =
             \model_ ->
                 case gateway of
                     Just gtw ->
-                        updateGateway gtw.id (Server.onTunnelCreatedEvent event) model_
+                        updateGateway gtw.nip (Server.onTunnelCreatedEvent event) model_
 
                     Nothing ->
                         model

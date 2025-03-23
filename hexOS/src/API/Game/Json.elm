@@ -50,7 +50,6 @@ module API.Game.Json exposing
 
 import API.Game.Types
 import Game.Model.NIP as NIP exposing (NIP(..))
-import Game.Model.ServerID as ServerID exposing (ServerID(..))
 import Game.Model.TunnelID as TunnelID exposing (TunnelID(..))
 import Json.Decode
 import Json.Encode

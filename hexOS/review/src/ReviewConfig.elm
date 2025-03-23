@@ -127,7 +127,6 @@ config =
         -- The same comment applies to "RawNIP".
         |> Rule.ignoreErrorsForFiles
             [ "src/Game/Model/LogID.elm"
-            , "src/Game/Model/ServerID.elm"
             , "src/Game/Model/TunnelID.elm"
             , "src/Game/Model/NIP.elm"
             ]

@@ -24,10 +24,7 @@ components:
         - logs
         - tunnels
         - nip
-        - id
       properties:
-        id:
-          type: string
         nip:
           type: string
         tunnels:
@@ -54,7 +51,7 @@ components:
     IdxPlayer:
       type: object
       required:
-        - mainframe_id
+        - mainframe_nip
         - gateways
         - endpoints
       properties:
@@ -66,7 +63,7 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/IdxGateway'
-        mainframe_id:
+        mainframe_nip:
           type: string
     IdxTunnel:
       type: object

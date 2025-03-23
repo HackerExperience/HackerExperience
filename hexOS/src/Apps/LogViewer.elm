@@ -86,24 +86,6 @@ view model game ctxMenu =
         ]
 
 
-ctxMenuConfig : CtxMenu.Menu -> Model -> Maybe (CtxMenu.Config Msg)
-ctxMenuConfig menu _ =
-    case menu of
-        CtxMenu.LogViewer submenu ->
-            case submenu of
-                CtxMenu.LVRootMenu ->
-                    Just
-                        { entries = [ CtxMenu.SimpleItem { label = "Log 1", enabled = True, onClick = Nothing } ]
-                        , mapper = ToCtxMenu
-                        }
-
-                _ ->
-                    Nothing
-
-        _ ->
-            Nothing
-
-
 vHeader : UI Msg
 vHeader =
     row [ cl "a-log-header", UI.centerItems ] [ text "Header" ]
@@ -219,6 +201,28 @@ vSelectedLogRow log =
         , vLogRowHorizontalSeparator
         , vLogActionsRow
         ]
+
+
+
+-- CtxMenu
+
+
+ctxMenuConfig : CtxMenu.Menu -> Model -> Maybe (CtxMenu.Config Msg)
+ctxMenuConfig menu _ =
+    case menu of
+        CtxMenu.LogViewer submenu ->
+            case submenu of
+                CtxMenu.LVRootMenu ->
+                    Just
+                        { entries = [ CtxMenu.SimpleItem { label = "Log 1", enabled = True, onClick = Nothing } ]
+                        , mapper = ToCtxMenu
+                        }
+
+                _ ->
+                    Nothing
+
+        _ ->
+            Nothing
 
 
 

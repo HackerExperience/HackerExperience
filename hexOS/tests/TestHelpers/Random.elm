@@ -3,26 +3,19 @@ module TestHelpers.Random exposing (..)
 import API.Types
 import Dict
 import Game
-import Game.Model.ServerID as ServerID exposing (ServerID)
 import Game.Universe as Universe exposing (Universe(..))
 import HUD.ConnectionInfo as CI
 import Random as R exposing (Generator, map, map4)
 import Random.Extra as R
 import Random.List as R
 import State exposing (State)
-import TestHelpers.Random.Utils exposing (randomId)
+import TestHelpers.Random.Utils exposing (randomId, randomNip)
 import TestHelpers.Support.RandomUtils as R
 import WM
 
 
 
 -- Game
-
-
-serverId : Generator ServerID
-serverId =
-    randomId
-        |> map (\rawId -> ServerID.fromValue rawId)
 
 
 universeId : Generator Universe
@@ -34,10 +27,10 @@ game : Universe -> Generator Game.Model
 game universe =
     let
         genGame =
-            \gatewayId ->
+            \gtwNip ->
                 { universe = universe
-                , mainframeID = gatewayId
-                , activeGateway = gatewayId
+                , mainframeNip = gtwNip
+                , activeGateway = gtwNip
                 , apiCtx = Game.buildApiContext (API.Types.InputToken "s3cr3t") universe
 
                 -- TODO
@@ -45,21 +38,21 @@ game universe =
                 , endpoints = Dict.empty
                 }
     in
-    map genGame serverId
+    map genGame randomNip
 
 
 state : Generator State
 state =
     let
         genState =
-            \sp mp universe_ gatewayId ->
+            \sp mp universe_ gtwNip ->
                 { sp = sp
                 , mp = mp
                 , currentUniverse = universe_
-                , currentSession = WM.toLocalSessionId gatewayId
+                , currentSession = WM.toLocalSessionId gtwNip
                 }
     in
-    map4 genState (game Singleplayer) (game Multiplayer) universeId serverId
+    map4 genState (game Singleplayer) (game Multiplayer) universeId randomNip
 
 
 

@@ -15,7 +15,6 @@ defmodule OpenAPI.Elm.Formatter do
   ]
 
   @custom_types [
-    :server_id,
     :tunnel_id,
     :nip
   ]
@@ -40,10 +39,7 @@ defmodule OpenAPI.Elm.Formatter do
     replace("nip", "String", "NIP", file)
     replace("source_nip", "String", "NIP", file)
     replace("target_nip", "String", "NIP", file)
-  end
-
-  defp handle(:server_id, file) do
-    replace("mainframe_id", "String", "ServerID", file)
+    replace("mainframe_nip", "String", "NIP", file)
   end
 
   defp handle(:tunnel_id, file) do
