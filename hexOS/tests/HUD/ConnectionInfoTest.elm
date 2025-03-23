@@ -2,7 +2,7 @@ module HUD.ConnectionInfoTest exposing (suite)
 
 import Effect
 import Game.Bus
-import Game.Model.ServerID as ServerID
+import Game.Model.NIP as NIP
 import Game.Universe exposing (Universe(..))
 import HUD.ConnectionInfo as CI exposing (Selector(..))
 import OS
@@ -61,17 +61,17 @@ suite =
                         ]
             ]
         , describe "SwitchGateway"
-            [ test "requests Game.SwitchGateway (same universe but different serverIds)" <|
+            [ test "requests Game.SwitchGateway (same universe but different nips)" <|
                 \_ ->
                     let
                         ( state, model ) =
                             ( TM.state, TM.hudCiWithSelector SelectorGateway )
 
-                        serverId =
-                            ServerID.fromValue "other"
+                        otherNip =
+                            NIP.fromString "0@2.2.2.2"
 
                         msg =
-                            CI.SwitchGateway state.currentUniverse serverId
+                            CI.SwitchGateway state.currentUniverse otherNip
 
                         ( newModel, effect ) =
                             CI.update state msg model
@@ -79,27 +79,27 @@ suite =
                     E.batch
                         [ -- We request (via Game.Bus) that the gateway is switched
                           E.effectMsgToCmd effect <|
-                            CI.ToOS (OS.Bus.ToGame (Game.Bus.SwitchGateway Singleplayer serverId))
+                            CI.ToOS (OS.Bus.ToGame (Game.Bus.SwitchGateway Singleplayer otherNip))
 
                         -- The selector was closed
                         , E.notEqual model newModel
                         , E.equal newModel { model | selector = NoSelector }
                         ]
-            , test "requests Game.SwitchGateway (same serverId but different gateway)" <|
+            , test "requests Game.SwitchGateway (same NIP but different gateway)" <|
                 \_ ->
                     let
                         ( state, model ) =
                             ( TM.state, TM.hudCiWithSelector SelectorGateway )
 
-                        gatewayId =
-                            State.getActiveGatewayId state
+                        gtwNip =
+                            State.getActiveGatewayNip state
 
                         { otherUniverse } =
                             TG.universeInfo state
 
-                        -- Same server ID but different universe
+                        -- Same server NIP but different universe
                         msg =
-                            CI.SwitchGateway otherUniverse gatewayId
+                            CI.SwitchGateway otherUniverse gtwNip
 
                         ( _, effect ) =
                             CI.update state msg model
@@ -107,7 +107,7 @@ suite =
                     E.batch
                         [ -- We request (via Game.Bus) that the gateway is switched
                           E.effectMsgToCmd effect <|
-                            CI.ToOS (OS.Bus.ToGame (Game.Bus.SwitchGateway otherUniverse gatewayId))
+                            CI.ToOS (OS.Bus.ToGame (Game.Bus.SwitchGateway otherUniverse gtwNip))
                         ]
             ]
         , test "does not request Game.SwitchGateway if same server is selected" <|
@@ -117,7 +117,7 @@ suite =
                         ( TM.state, TM.hudCiWithSelector SelectorGateway )
 
                     msg =
-                        CI.SwitchGateway state.currentUniverse (State.getActiveGatewayId state)
+                        CI.SwitchGateway state.currentUniverse (State.getActiveGatewayNip state)
 
                     ( newModel, effect ) =
                         CI.update state msg model

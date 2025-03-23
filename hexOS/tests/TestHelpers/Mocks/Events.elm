@@ -1,13 +1,13 @@
 module TestHelpers.Mocks.Events exposing (..)
 
 import API.Events.Types as Events
-import Game.Model.ServerID as ServerID
+import Game.Model.NIP as NIP
 
 
 indexRequested : Events.IndexRequested
 indexRequested =
     { player =
-        { mainframe_id = ServerID.fromValue "gateway_id"
+        { mainframe_nip = NIP.fromString "0@99.98.97.96"
         , gateways = []
         , endpoints = []
         }

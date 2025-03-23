@@ -14,7 +14,6 @@ import API.Events.Types as Events
 import Dict exposing (Dict)
 import Game.Model.Log as Log exposing (Logs)
 import Game.Model.NIP as NIP exposing (NIP, RawNIP)
-import Game.Model.ServerID as ServerID exposing (RawServerID, ServerID)
 import Game.Model.Tunnel as Tunnel exposing (Tunnels)
 import OrderedDict
 
@@ -24,8 +23,7 @@ import OrderedDict
 
 
 type alias Gateway =
-    { id : ServerID
-    , nip : NIP
+    { nip : NIP
     , logs : Logs
     , tunnels : Tunnels
     , activeEndpoint : Maybe NIP
@@ -42,9 +40,9 @@ type alias Endpoint =
 -- Model > Gateway
 
 
-parseGateways : List Events.IdxGateway -> Dict RawServerID Gateway
+parseGateways : List Events.IdxGateway -> Dict RawNIP Gateway
 parseGateways idxGateways =
-    List.map (\idxGateway -> ( idxGateway.id, parseGateway idxGateway )) idxGateways
+    List.map (\idxGateway -> ( NIP.toString idxGateway.nip, parseGateway idxGateway )) idxGateways
         |> Dict.fromList
 
 
@@ -57,8 +55,7 @@ parseGateway gateway =
         activeEndpoint =
             Maybe.map (\t -> t.targetNip) (List.head tunnels)
     in
-    { id = ServerID.fromValue gateway.id
-    , nip = gateway.nip
+    { nip = gateway.nip
     , logs = Log.parse gateway.logs
     , tunnels = Tunnel.parse gateway.tunnels
     , activeEndpoint = activeEndpoint
@@ -67,8 +64,7 @@ parseGateway gateway =
 
 invalidGateway : Gateway
 invalidGateway =
-    { id = ServerID.fromValue "invalid_server"
-    , nip = NIP.invalidNip
+    { nip = NIP.invalidNip
     , logs = OrderedDict.empty
     , tunnels = []
     , activeEndpoint = Nothing

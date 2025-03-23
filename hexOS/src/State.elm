@@ -1,6 +1,6 @@
 module State exposing
     ( State
-    , getActiveGatewayId
+    , getActiveGatewayNip
     , getActiveUniverse
     , getInactiveUniverse
     , init
@@ -12,7 +12,6 @@ import Event exposing (Event)
 import Game exposing (Model)
 import Game.Bus exposing (Action(..))
 import Game.Model.NIP exposing (NIP)
-import Game.Model.ServerID exposing (ServerID)
 import Game.Msg exposing (Msg(..))
 import Game.Universe exposing (Universe(..))
 import WM
@@ -118,16 +117,16 @@ switchSession sessionId state =
 -- Model > Universe API
 
 
-getActiveGatewayId : State -> ServerID
-getActiveGatewayId state =
+getActiveGatewayNip : State -> NIP
+getActiveGatewayNip state =
     (getActiveUniverse state).activeGateway
 
 
-switchActiveGateway : ServerID -> State -> State
-switchActiveGateway newActiveGatewayId state =
+switchActiveGateway : NIP -> State -> State
+switchActiveGateway newActiveGatewayNip state =
     state
         |> getActiveUniverse
-        |> Game.switchActiveGateway newActiveGatewayId
+        |> Game.switchActiveGateway newActiveGatewayNip
         |> replaceActiveUniverse state
 
 
@@ -159,13 +158,13 @@ update msg state =
 updateAction : State -> Action -> ( State, Effect Msg )
 updateAction state action =
     case action of
-        SwitchGateway universe gatewayId ->
+        SwitchGateway universe nip ->
             let
                 newState =
                     state
                         |> switchUniverse universe
-                        |> switchActiveGateway gatewayId
-                        |> switchSession (WM.toLocalSessionId gatewayId)
+                        |> switchActiveGateway nip
+                        |> switchSession (WM.toLocalSessionId nip)
             in
             ( newState, Effect.none )
 

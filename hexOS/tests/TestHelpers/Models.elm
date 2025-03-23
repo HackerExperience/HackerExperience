@@ -3,7 +3,6 @@ module TestHelpers.Models exposing (..)
 import API.Types
 import Apps.Manifest as App
 import Game
-import Game.Model.ServerID as ServerID
 import Game.Universe as Universe exposing (Universe(..))
 import HUD.ConnectionInfo as CI
 import OS
@@ -24,13 +23,13 @@ state =
         index =
             Mocks.indexRequested
 
-        gatewayId =
-            index.player.mainframe_id
+        gtwNip =
+            index.player.mainframe_nip
 
         spModel =
             Game.init (API.Types.InputToken "t0k3n") Singleplayer index
     in
-    State.init Singleplayer (WM.toLocalSessionId gatewayId) spModel spModel
+    State.init Singleplayer (WM.toLocalSessionId gtwNip) spModel spModel
         |> Tuple.first
 
 

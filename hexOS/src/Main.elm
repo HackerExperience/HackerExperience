@@ -186,7 +186,7 @@ update msg model =
                             Singleplayer
 
                         wmSessionId =
-                            WM.toLocalSessionId spModel.mainframeID
+                            WM.toLocalSessionId spModel.mainframeNip
 
                         ( osModel, osCmd ) =
                             OS.init ( model.flags.viewportX, model.flags.viewportY )

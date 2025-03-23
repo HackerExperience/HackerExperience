@@ -20,7 +20,6 @@ import API.Game.Json
 import API.Game.Types
 import Dict
 import Game.Model.NIP as NIP exposing (NIP(..))
-import Game.Model.ServerID as ServerID exposing (ServerID(..))
 import Game.Model.TunnelID as TunnelID exposing (TunnelID(..))
 import Http
 import Json.Decode

@@ -22,7 +22,6 @@ module API.Events.Types exposing
     )
 
 import Game.Model.NIP as NIP exposing (NIP(..))
-import Game.Model.ServerID as ServerID exposing (ServerID(..))
 import Game.Model.TunnelID as TunnelID exposing (TunnelID(..))
 
 
@@ -100,7 +99,7 @@ type alias IdxTunnel =
 type alias IdxPlayer =
     { endpoints : List IdxEndpoint
     , gateways : List IdxGateway
-    , mainframe_id : ServerID
+    , mainframe_nip : NIP
     }
 
 
@@ -109,7 +108,7 @@ type alias IdxLog =
 
 
 type alias IdxGateway =
-    { id : String, logs : List IdxLog, nip : NIP, tunnels : List IdxTunnel }
+    { logs : List IdxLog, nip : NIP, tunnels : List IdxTunnel }
 
 
 type alias IdxEndpoint =

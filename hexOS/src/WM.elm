@@ -43,7 +43,6 @@ OS gerencia as Msgs/Updates etc. Tentar fazer assim (mas tudo bem se nao rolar)
 import Apps.Manifest as App
 import Dict exposing (Dict)
 import Game.Model.NIP as NIP exposing (NIP)
-import Game.Model.ServerID as ServerID exposing (ServerID)
 import Game.Universe as Universe exposing (Universe)
 import List.Extra as List
 import Maybe.Extra as Maybe
@@ -52,7 +51,7 @@ import OS.Bus
 
 
 type SessionID
-    = LocalSessionID ServerID
+    = LocalSessionID NIP
     | RemoteSessionID NIP
 
 
@@ -223,9 +222,9 @@ getViewportLimits model lenX lenY =
 -- Model > Session
 
 
-toLocalSessionId : ServerID -> SessionID
-toLocalSessionId serverId =
-    LocalSessionID serverId
+toLocalSessionId : NIP -> SessionID
+toLocalSessionId nip =
+    LocalSessionID nip
 
 
 toRemoteSessionId : NIP -> SessionID
@@ -246,21 +245,21 @@ isSessionLocal session =
 sessionIdToString : SessionID -> String
 sessionIdToString session =
     case session of
-        LocalSessionID serverId ->
-            ServerID.toValue serverId
+        LocalSessionID nip ->
+            NIP.toString nip
 
         RemoteSessionID nip ->
             NIP.toString nip
 
 
-toggleSession : ServerID -> NIP -> SessionID -> SessionID
-toggleSession gatewayId endpointNip currentSession =
+toggleSession : NIP -> NIP -> SessionID -> SessionID
+toggleSession gatewayNip endpointNip currentSession =
     case currentSession of
         LocalSessionID _ ->
             RemoteSessionID endpointNip
 
         RemoteSessionID _ ->
-            LocalSessionID gatewayId
+            LocalSessionID gatewayNip
 
 
 
@@ -763,7 +762,7 @@ dummyWindow =
     , blockedByApp = Nothing
     , childBehavior = Nothing
     , universe = Universe.Singleplayer
-    , sessionID = LocalSessionID (ServerID.fromValue "invalid_wm_server")
+    , sessionID = LocalSessionID NIP.invalidNip
     }
 
 
