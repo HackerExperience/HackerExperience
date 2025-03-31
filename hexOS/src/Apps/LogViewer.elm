@@ -104,21 +104,8 @@ vLogList model game =
     let
         logs =
             filterLogs model game
-
-        logFn =
-            \log ->
-                case model.selectedLog of
-                    Just selectedId ->
-                        if selectedId == log.id then
-                            vSelectedLogRow log
-
-                        else
-                            vLogRow log
-
-                    Nothing ->
-                        vLogRow log
     in
-    List.map logFn logs
+    List.map (\log -> vLogRow log) logs
 
 
 vLogRow : Log -> UI Msg
@@ -149,57 +136,6 @@ vLogRow log =
         [ vLogRowDateTime
         , vLogRowSeparator
         , vLogRowText
-        ]
-
-
-vSelectedLogRow : Log -> UI Msg
-vSelectedLogRow log =
-    let
-        date =
-            "26/01/2019"
-
-        time =
-            "19:29:18"
-
-        microseconds =
-            ".123"
-
-        vLogRowDateTime =
-            col [ cl "a-log-row-date", UI.centerItems ]
-                [ row [ UI.centerItems, UI.heightFill ] [ text date ]
-                , row [ UI.centerItems, UI.heightFill ]
-                    [ text time
-                    , div [ cl "a-log-row-date-microseconds" ] [ text microseconds ]
-                    ]
-                ]
-
-        vLogRowInternalSeparator =
-            div [ cl "a-log-row-internal-separator" ] []
-
-        vLogRowText =
-            row [ cl "a-log-row-text", UI.centerItems ] [ text log.rawText ]
-
-        vLogRowHorizontalSeparator =
-            div [ cl "a-log-row-vertical-separator" ] []
-
-        vLogContentRow =
-            row [ cl "a-log-srow-body" ]
-                [ vLogRowDateTime
-                , vLogRowInternalSeparator
-                , vLogRowText
-                ]
-
-        vLogActionsRow =
-            row [ cl "a-log-srow-actions", UI.centerXY ]
-                [ text "Actions icons here" ]
-    in
-    col
-        [ cl "a-log-srow"
-        , HE.onClick DeselectLog
-        ]
-        [ vLogContentRow
-        , vLogRowHorizontalSeparator
-        , vLogActionsRow
         ]
 
 
