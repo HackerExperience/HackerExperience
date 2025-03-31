@@ -12,6 +12,7 @@ import OS.Bus
 import OS.CtxMenu as CtxMenu
 import OS.CtxMenu.Menus as CtxMenu
 import UI exposing (UI, cl, col, div, row, text)
+import UI.Icon
 import WM
 
 
@@ -111,31 +112,52 @@ vLogList model game =
 vLogRow : Log -> UI Msg
 vLogRow log =
     let
-        date =
-            "26/01/2019"
-
         time =
-            "19:29:18"
+            "26/01 19:29:18"
 
-        vLogRowDateTime =
-            col [ cl "a-log-row-date", UI.centerItems ]
-                [ row [ UI.centerItems, UI.heightFill ] [ text date ]
-                , row [ UI.centerItems, UI.heightFill ] [ text time ]
+        dateTime =
+            row [ cl "a-log-row-date" ]
+                [ text time
                 ]
 
-        vLogRowSeparator =
+        separator =
             div [ cl "a-log-row-internal-separator" ] []
 
-        vLogRowText =
-            row [ cl "a-log-row-text", UI.centerItems ] [ text log.rawText ]
+        editIcon =
+            UI.Icon.msOutline "edit" Nothing
+                |> UI.Icon.toUI
+
+        deleteIcon =
+            UI.Icon.msOutline "delete" Nothing
+                |> UI.Icon.toUI
+
+        editEntry =
+            col [ cl "a-lr-action-entry" ]
+                [ editIcon ]
+
+        deleteEntry =
+            col [ cl "a-lr-action-entry" ]
+                [ deleteIcon ]
+
+        actions =
+            row [ cl "a-log-row-actions" ]
+                [ editEntry, deleteEntry ]
+
+        logText =
+            row [ cl "a-log-row-text", UI.centerItems ]
+                [ text log.rawText
+
+                -- , row [ cl "a-log-row-actions" ] [ actions ]
+                ]
     in
     row
         [ cl "a-log-row"
         , HE.onClick <| SelectLog log.id
         ]
-        [ vLogRowDateTime
-        , vLogRowSeparator
-        , vLogRowText
+        [ dateTime
+        , separator
+        , logText
+        , actions
         ]
 
 

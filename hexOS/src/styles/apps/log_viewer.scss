@@ -16,9 +16,21 @@
 }
 
 .a-log-row {
-    min-height: 50px;
-    padding: 5px 15px;
+    min-height: 44px;
+    padding: 5px 0px 5px 10px;
+    padding: 5px 10px;
     border-bottom: 1px solid prim-500();
+
+    color: white;
+    position: relative;
+
+    &:hover .a-log-row-actions {
+        display: flex;
+    }
+
+    &:hover .a-log-row-date {
+        color: white;
+    }
 }
 
 .a-log-row:nth-child(odd) {
@@ -31,17 +43,16 @@
 
 .a-log-row:hover {
     background-color: sec-700();
-    cursor: pointer;
 }
 
 .a-log-row-date {
     min-width: 80px;
-    color: white;
     font-size: 12px;
-}
 
-.a-log-row-date-microseconds {
-    color: white;
+    display: flex;
+    align-items: center;
+
+    color: gray;
 }
 
 .a-log-row-text {
@@ -51,36 +62,47 @@
     text-overflow: ellipsis;
     white-space: nowrap;
     margin: auto 0 auto 7px;
+    flex: 1;
 }
 
 .a-log-row-internal-separator {
     margin-left: 7px;
-    border-left: 1px solid var(--c-1-darker);
+    border-left: 1px solid sec-600();
 }
 
-.a-log-row-vertical-separator {
-    width: 90%;
-    margin: 10px auto 10px auto;
-    border-top: 1px solid var(--c-1-darker);
+.a-log-row-actions {
+    right: 0;
+    margin-right: -5px;
+    padding-left: 5px;
+    top: 0px;
+    height: 100%;
+    display: none;
+
+    justify-content: center;
+    align-items: center;
+    align-self: center;
 }
 
-.a-log-srow {
-    padding: 5px 15px;
-    border-bottom: 1px solid var(--c-1);
-    background: var(--c-1-darkest-a75);
+.a-lr-action-entry {
+    height: 100%;
+    width: 30px;
+
+    .ui-icon {
+        font-size: 18px;
+        padding: 0px 4px;
+        height: 100%;
+
+        display: flex;
+        justify-content: flex-start;
+        align-items: center;
+    }
+
+    &:hover .ui-icon {
+        cursor: pointer;
+        text-shadow: 0 0 2px #fff, 0 0 0px #fff, 0 0 0px #fff;
+    }
 }
 
-.a-log-srow:hover {
-    background: var(--c-1-darkest-a85);
-    cursor: pointer;
-}
-
-.a-log-srow-body {
-    min-height: 50px;
-    padding: 5px 0;
-}
-
-.a-log-srow-actions {
-    color: var(--c-1-dark);
-    min-height: 50px;
+.a-lr-action-entry + .a-lr-action-entry {
+    margin-left: 0px;
 }
