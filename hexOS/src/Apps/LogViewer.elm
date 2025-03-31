@@ -12,6 +12,7 @@ import OS.Bus
 import OS.CtxMenu as CtxMenu
 import OS.CtxMenu.Menus as CtxMenu
 import UI exposing (UI, cl, col, div, row, text)
+import UI.Icon
 import WM
 
 
@@ -104,102 +105,59 @@ vLogList model game =
     let
         logs =
             filterLogs model game
-
-        logFn =
-            \log ->
-                case model.selectedLog of
-                    Just selectedId ->
-                        if selectedId == log.id then
-                            vSelectedLogRow log
-
-                        else
-                            vLogRow log
-
-                    Nothing ->
-                        vLogRow log
     in
-    List.map logFn logs
+    List.map (\log -> vLogRow log) logs
 
 
 vLogRow : Log -> UI Msg
 vLogRow log =
     let
-        date =
-            "26/01/2019"
-
         time =
-            "19:29:18"
+            "26/01 19:29:18"
 
-        vLogRowDateTime =
-            col [ cl "a-log-row-date", UI.centerItems ]
-                [ row [ UI.centerItems, UI.heightFill ] [ text date ]
-                , row [ UI.centerItems, UI.heightFill ] [ text time ]
+        dateTime =
+            row [ cl "a-log-row-date" ]
+                [ text time
                 ]
 
-        vLogRowSeparator =
+        separator =
             div [ cl "a-log-row-internal-separator" ] []
 
-        vLogRowText =
-            row [ cl "a-log-row-text", UI.centerItems ] [ text log.rawText ]
+        editIcon =
+            UI.Icon.msOutline "edit" Nothing
+                |> UI.Icon.toUI
+
+        deleteIcon =
+            UI.Icon.msOutline "delete" Nothing
+                |> UI.Icon.toUI
+
+        editEntry =
+            col [ cl "a-lr-action-entry" ]
+                [ editIcon ]
+
+        deleteEntry =
+            col [ cl "a-lr-action-entry" ]
+                [ deleteIcon ]
+
+        actions =
+            row [ cl "a-log-row-actions" ]
+                [ editEntry, deleteEntry ]
+
+        logText =
+            row [ cl "a-log-row-text", UI.centerItems ]
+                [ text log.rawText
+
+                -- , row [ cl "a-log-row-actions" ] [ actions ]
+                ]
     in
     row
         [ cl "a-log-row"
         , HE.onClick <| SelectLog log.id
         ]
-        [ vLogRowDateTime
-        , vLogRowSeparator
-        , vLogRowText
-        ]
-
-
-vSelectedLogRow : Log -> UI Msg
-vSelectedLogRow log =
-    let
-        date =
-            "26/01/2019"
-
-        time =
-            "19:29:18"
-
-        microseconds =
-            ".123"
-
-        vLogRowDateTime =
-            col [ cl "a-log-row-date", UI.centerItems ]
-                [ row [ UI.centerItems, UI.heightFill ] [ text date ]
-                , row [ UI.centerItems, UI.heightFill ]
-                    [ text time
-                    , div [ cl "a-log-row-date-microseconds" ] [ text microseconds ]
-                    ]
-                ]
-
-        vLogRowInternalSeparator =
-            div [ cl "a-log-row-internal-separator" ] []
-
-        vLogRowText =
-            row [ cl "a-log-row-text", UI.centerItems ] [ text log.rawText ]
-
-        vLogRowHorizontalSeparator =
-            div [ cl "a-log-row-vertical-separator" ] []
-
-        vLogContentRow =
-            row [ cl "a-log-srow-body" ]
-                [ vLogRowDateTime
-                , vLogRowInternalSeparator
-                , vLogRowText
-                ]
-
-        vLogActionsRow =
-            row [ cl "a-log-srow-actions", UI.centerXY ]
-                [ text "Actions icons here" ]
-    in
-    col
-        [ cl "a-log-srow"
-        , HE.onClick DeselectLog
-        ]
-        [ vLogContentRow
-        , vLogRowHorizontalSeparator
-        , vLogActionsRow
+        [ dateTime
+        , separator
+        , logText
+        , actions
         ]
 
 
