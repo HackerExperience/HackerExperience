@@ -47,12 +47,22 @@ defmodule Test.Setup.Log do
     do: player_id |> new_visibility(opts) |> Map.fetch!(:log_visibility)
 
   def params(opts \\ []) do
+    {deleted_at, deleted_by} =
+      if Kw.has_key?(opts, :is_deleted) || Kw.has_key?(opts, :deleted_at) ||
+           Kw.has_key?(opts, :deleted_by) do
+        {Kw.get(opts, :deleted_at, DateTime.utc_now()), Kw.get(opts, :deleted_by, 1)}
+      else
+        {nil, nil}
+      end
+
     %{
       id: Kw.get(opts, :id, Random.int()),
       revision_id: Kw.get(opts, :revision_id, 1),
       type: Kw.get(opts, :type, :server_login),
       direction: Kw.get(opts, :direction, :self),
-      data: Kw.get(opts, :data, %Log.Data.EmptyData{})
+      data: Kw.get(opts, :data, %Log.Data.EmptyData{}),
+      deleted_at: deleted_at,
+      deleted_by: deleted_by
     }
   end
 

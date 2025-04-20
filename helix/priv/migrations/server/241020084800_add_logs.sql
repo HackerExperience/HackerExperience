@@ -8,6 +8,6 @@ CREATE TABLE logs (
   data TEXT NOT NULL,
   inserted_at TEXT NOT NULL,
   deleted_at TEXT NULL,
-  deleted_by TEXT NULL,
+  deleted_by INTEGER NULL,
   UNIQUE (id, revision_id)
 ) STRICT;
