@@ -21,10 +21,12 @@ defmodule Game.Player.ID do
   def cast!(v, _, _) when is_integer(v), do: %__MODULE__{id: v}
   def cast!(%__MODULE__{} = id, _, _), do: id
   def cast!(%Game.Entity.ID{id: entity_id}, _, _), do: %__MODULE__{id: entity_id}
+  def cast!(nil, %{nullable: true}, _), do: nil
 
   @impl true
   def dump!(v, _, _) when is_integer(v), do: v
   def dump!(%__MODULE__{id: v}, _, _), do: v
+  def dump!(nil, %{nullable: true}, _), do: nil
 
   @impl true
   def load!(v, _, _) when is_integer(v), do: %__MODULE__{id: v}
