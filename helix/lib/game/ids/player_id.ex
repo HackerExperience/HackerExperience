@@ -28,6 +28,7 @@ defmodule Game.Player.ID do
 
   @impl true
   def load!(v, _, _) when is_integer(v), do: %__MODULE__{id: v}
+  def load!(nil, %{nullable: true}, _), do: nil
 
   defimpl String.Chars do
     def to_string(%{id: id}), do: "#{id}"

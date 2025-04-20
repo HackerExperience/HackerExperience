@@ -104,7 +104,7 @@ type alias IdxPlayer =
 
 
 type alias IdxLog =
-    { id : String, revision_id : String, type_ : String }
+    { id : String, is_deleted : Bool, revision_id : String, type_ : String }
 
 
 type alias IdxGateway =

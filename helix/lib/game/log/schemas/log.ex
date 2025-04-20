@@ -40,7 +40,10 @@ defmodule Game.Log do
     {:direction, {:enum, values: @log_directions}},
     {:data, {:map, load_structs: true, after_read: :hydrate_data}},
     {:inserted_at, {:datetime_utc, [precision: :millisecond], mod: :inserted_at}},
-    {:server_id, {ID.Definition.ref(:server_id), virtual: true, after_read: :get_server_id}}
+    {:deleted_at, {:datetime_utc, nullable: true, precision: :millisecond}},
+    {:deleted_by, {ID.Definition.ref(:entity_id), nullable: true}},
+    {:server_id, {ID.Definition.ref(:server_id), virtual: true, after_read: :get_server_id}},
+    {:is_deleted, {:boolean, virtual: true, after_read: :get_is_deleted}}
   ]
 
   def new(params) do
@@ -51,6 +54,9 @@ defmodule Game.Log do
   end
 
   def get_server_id(_, _row, %{shard_id: raw_server_id}), do: Server.ID.new(raw_server_id)
+
+  def get_is_deleted(_, %{deleted_at: nil}, _), do: false
+  def get_is_deleted(_, %{deleted_at: %DateTime{}}, _), do: true
 
   def hydrate_data(data, %{type: type, direction: direction}, _),
     do: data_mod({type, direction}).load!(data)

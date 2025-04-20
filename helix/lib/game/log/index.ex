@@ -14,7 +14,8 @@ defmodule Game.Index.Log do
   @typep rendered_log :: %{
            id: ID.external(),
            revision_id: ID.external(),
-           type: String.t()
+           type: String.t(),
+           is_deleted: boolean()
          }
 
   def spec do
@@ -23,9 +24,10 @@ defmodule Game.Index.Log do
         __openapi_name: "IdxLog",
         id: external_id(),
         revision_id: external_id(),
-        type: binary()
+        type: binary(),
+        is_deleted: boolean()
       }),
-      [:id, :revision_id, :type]
+      [:id, :revision_id, :type, :is_deleted]
     )
   end
 
@@ -58,7 +60,8 @@ defmodule Game.Index.Log do
     %{
       id: ID.to_external(log.id, entity_id, log.server_id),
       revision_id: ID.to_external(log.revision_id, entity_id, log.server_id, log.id),
-      type: "#{log.type}"
+      type: "#{log.type}",
+      is_deleted: log.is_deleted
     }
   end
 end

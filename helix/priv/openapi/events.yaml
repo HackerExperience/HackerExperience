@@ -38,6 +38,7 @@ components:
     IdxLog:
       type: object
       required:
+        - is_deleted
         - revision_id
         - type
         - id
@@ -48,6 +49,8 @@ components:
           type: string
         revision_id:
           type: string
+        is_deleted:
+          type: boolean
     IdxPlayer:
       type: object
       required:
