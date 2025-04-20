@@ -43,6 +43,14 @@ defmodule Game.Webserver.Spec do
       {Endpoint.Installation.Uninstall, :post} => %{
         path: "/v1/server/{nip}/installation/{installation_id}/uninstall",
         responses: [200]
+      },
+      {Endpoint.Log.Delete, :post} => %{
+        path: "/v1/server/{nip}/log/{log_id}/delete",
+        responses: [200]
+      },
+      {Endpoint.Log.Edit, :post} => %{
+        path: "/v1/server/{nip}/log/{log_id}/edit",
+        responses: [200]
       }
     }
   end

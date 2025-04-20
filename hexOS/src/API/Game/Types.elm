@@ -23,6 +23,14 @@ module API.Game.Types exposing
     , InstallationUninstallOkResponse
     , InstallationUninstallOutput
     , InstallationUninstallRequest
+    , LogDeleteInput
+    , LogDeleteOkResponse
+    , LogDeleteOutput
+    , LogDeleteRequest
+    , LogEditInput
+    , LogEditOkResponse
+    , LogEditOutput
+    , LogEditRequest
     , PlayerSyncInput
     , PlayerSyncOkResponse
     , PlayerSyncOutput
@@ -46,9 +54,10 @@ import Game.Model.TunnelID as TunnelID exposing (TunnelID(..))
 @docs FileInstallOkResponse, FileInstallOutput, FileInstallRequest, FileTransferInput, FileTransferOkResponse
 @docs FileTransferOutput, FileTransferRequest, GenericBadRequest, GenericBadRequestResponse, GenericError
 @docs GenericErrorResponse, GenericUnauthorizedResponse, InstallationUninstallInput
-@docs InstallationUninstallOkResponse, InstallationUninstallOutput, InstallationUninstallRequest
-@docs PlayerSyncInput, PlayerSyncOkResponse, PlayerSyncOutput, PlayerSyncRequest, ServerLoginInput
-@docs ServerLoginOkResponse, ServerLoginOutput, ServerLoginRequest
+@docs InstallationUninstallOkResponse, InstallationUninstallOutput, InstallationUninstallRequest, LogDeleteInput
+@docs LogDeleteOkResponse, LogDeleteOutput, LogDeleteRequest, LogEditInput, LogEditOkResponse, LogEditOutput
+@docs LogEditRequest, PlayerSyncInput, PlayerSyncOkResponse, PlayerSyncOutput, PlayerSyncRequest
+@docs ServerLoginInput, ServerLoginOkResponse, ServerLoginOutput, ServerLoginRequest
 
 -}
 type alias ServerLoginOutput =
@@ -65,6 +74,22 @@ type alias PlayerSyncOutput =
 
 type alias PlayerSyncInput =
     { token : Maybe String }
+
+
+type alias LogEditOutput =
+    {}
+
+
+type alias LogEditInput =
+    { tunnel_id : Maybe Int }
+
+
+type alias LogDeleteOutput =
+    {}
+
+
+type alias LogDeleteInput =
+    { tunnel_id : Maybe Int }
 
 
 type alias InstallationUninstallOutput =
@@ -115,6 +140,14 @@ type alias PlayerSyncOkResponse =
     { data : PlayerSyncOutput }
 
 
+type alias LogEditOkResponse =
+    { data : LogEditOutput }
+
+
+type alias LogDeleteOkResponse =
+    { data : LogDeleteOutput }
+
+
 type alias InstallationUninstallOkResponse =
     { data : InstallationUninstallOutput }
 
@@ -149,6 +182,14 @@ type alias ServerLoginRequest =
 
 type alias PlayerSyncRequest =
     PlayerSyncInput
+
+
+type alias LogEditRequest =
+    LogEditInput
+
+
+type alias LogDeleteRequest =
+    LogDeleteInput
 
 
 type alias InstallationUninstallRequest =
