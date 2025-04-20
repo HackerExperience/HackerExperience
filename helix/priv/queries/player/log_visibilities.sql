@@ -22,6 +22,7 @@ GROUP BY log_id
 ORDER BY log_id DESC
 LIMIT 50;
 
--- SELECT * FROM log_visibilities WHERE server_id = ? ORDER BY log_id DESC;
+-- :__fetch
+SELECT * FROM log_visibilities WHERE server_id = ? AND log_id = ? AND revision_id = ?;
 
 

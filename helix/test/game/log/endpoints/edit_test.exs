@@ -12,7 +12,7 @@ defmodule Game.Endpoint.Log.EditTest do
       jwt = U.jwt_token(uid: player.external_id)
 
       %{server: gateway, nip: gtw_nip} = Setup.server(entity_id: player.id)
-      log = Setup.log!(gateway.id)
+      log = Setup.log!(gateway.id, visible_by: player.id)
 
       DB.commit()
 

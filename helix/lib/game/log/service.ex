@@ -19,6 +19,21 @@ defmodule Game.Services.Log do
   end
 
   @doc """
+  Returns the LogVisibility for a particular Log.
+  """
+  @spec fetch_visibility(Entity.id(), list, list) ::
+          LogVisibility.t() | nil
+  def fetch_visibility(%Entity.ID{} = entity_id, filter_params, opts \\ []) do
+    filters = [
+      by_log: &query_visibility_by_log/1
+    ]
+
+    Core.with_context(:player, entity_id, :read, fn ->
+      Core.Fetch.query(filter_params, opts, filters)
+    end)
+  end
+
+  @doc """
   Returns a list of LogVisibility matching the given filters.
   """
   @spec list_visibility(Entity.id(), list, list) ::
@@ -81,6 +96,10 @@ defmodule Game.Services.Log do
 
   defp query_by_id_and_revision_id({log_id, revision_id}) do
     DB.one({:logs, :fetch_by_id_and_revision_id}, [log_id, revision_id])
+  end
+
+  defp query_visibility_by_log(%Log{} = log) do
+    DB.one({:log_visibilities, :fetch}, [log.server_id, log.id, log.revision_id])
   end
 
   # If this is useful here, move to a util because it will be useful elsewhere

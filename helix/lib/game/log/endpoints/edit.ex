@@ -36,8 +36,7 @@ defmodule Game.Endpoint.Log.Edit do
         %{
           nip: nip,
           log_id: log_id,
-          tunnel_id: tunnel_id,
-          is_local?: is_nil(tunnel_id)
+          tunnel_id: tunnel_id
         }
 
       {:ok, %{request | params: params}}
@@ -47,21 +46,18 @@ defmodule Game.Endpoint.Log.Edit do
     end
   end
 
-  def get_context(request, %{is_local?: true} = params, session) do
-    with {true, %{server: server}} <- Henforcers.Network.nip_exists?(params.nip),
-         {true, _} <- Henforcers.Server.belongs_to_entity?(server, session.data.entity_id),
-         {true, %{log: log}} <- Henforcers.Log.log_exists?(params.log_id, nil, server),
-         # TODO: Check entity has visibility (access) on this log
-         true <- true do
-      context =
-        %{
-          log: log,
-          server: server,
-          entity_id: session.data.entity_id,
-          tunnel: nil
-        }
+  def get_context(request, params, session) do
+    %{nip: nip, log_id: log_id, tunnel_id: tunnel_id} = params
 
+    with {true, %{entity: entity, target: target_server, tunnel: tunnel}} <-
+           Henforcers.Server.has_access?(session.data.entity_id, nip, tunnel_id),
+         {true, %{log: log}} <- Henforcers.Log.can_edit?(target_server, entity, log_id) do
+      context = %{log: log, server: target_server, entity: entity, tunnel: tunnel}
       {:ok, %{request | context: context}}
+    else
+      {false, henforcer_error, _} ->
+        error_msg = format_henforcer_error(henforcer_error)
+        {:error, %{request | response: {400, error_msg}}}
     end
   end
 
@@ -76,7 +72,7 @@ defmodule Game.Endpoint.Log.Edit do
 
     meta = %{log: ctx.log, tunnel: ctx.tunnel}
 
-    case Svc.TOP.execute(LogEditProcess, ctx.server.id, ctx.entity_id, process_params, meta) do
+    case Svc.TOP.execute(LogEditProcess, ctx.server.id, ctx.entity.id, process_params, meta) do
       {:ok, process} ->
         {:ok, %{request | result: %{process: process}}}
 
@@ -89,4 +85,11 @@ defmodule Game.Endpoint.Log.Edit do
     process_eid = ID.to_external(process.id, session.data.entity_id, process.server_id)
     {:ok, %{request | response: {200, %{process_id: process_eid}}}}
   end
+
+  defp format_henforcer_error({:server, :not_belongs}), do: "nip_not_found"
+  defp format_henforcer_error({:tunnel, :not_found}), do: "nip_not_found"
+  defp format_henforcer_error({:nip, :not_found}), do: "nip_not_found"
+  defp format_henforcer_error({:log, :not_found}), do: "log_not_found"
+  defp format_henforcer_error({:log, :deleted}), do: "log_deleted"
+  defp format_henforcer_error({:log_visibility, :not_found}), do: "log_not_found"
 end

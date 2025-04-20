@@ -5,7 +5,21 @@ defmodule Game.Services.LogTest do
 
   setup [:with_game_db]
 
-  describe "list/1 - visible_on_server" do
+  describe "fetch_visibility/3 - :by_log" do
+    test "returns the visibility if the log is visible" do
+      %{server: server, entity: entity} = Setup.server()
+
+      # `entity` can see `log`, so the visibility is returned
+      %{log: log, log_visibility: visibility} = Setup.log(server.id, visible_by: entity.id)
+      assert visibility == Svc.Log.fetch_visibility(entity.id, by_log: log)
+
+      # `entity` can't see `other_log`; nothing is returned
+      other_log = Setup.log!(server.id)
+      refute Svc.Log.fetch_visibility(entity.id, by_log: other_log)
+    end
+  end
+
+  describe "list_visibility/3 - visible_on_server" do
     test "returns all visible logs from entity on server" do
       %{server: server, entity: entity} = Setup.server()
 
