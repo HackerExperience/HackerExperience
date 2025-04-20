@@ -81,7 +81,7 @@ type alias LogEditOutput =
 
 
 type alias LogEditInput =
-    { tunnel_id : Maybe Int }
+    { tunnel_id : Maybe TunnelID }
 
 
 type alias LogDeleteOutput =
@@ -89,7 +89,7 @@ type alias LogDeleteOutput =
 
 
 type alias LogDeleteInput =
-    { tunnel_id : Maybe Int }
+    { tunnel_id : Maybe TunnelID }
 
 
 type alias InstallationUninstallOutput =

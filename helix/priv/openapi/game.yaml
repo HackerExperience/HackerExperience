@@ -238,7 +238,7 @@ components:
       required: []
       properties:
         tunnel_id:
-          type: integer
+          type: string
     LogDeleteOutput:
       type: object
       required: []
@@ -248,7 +248,7 @@ components:
       required: []
       properties:
         tunnel_id:
-          type: integer
+          type: string
     LogEditOutput:
       type: object
       required: []

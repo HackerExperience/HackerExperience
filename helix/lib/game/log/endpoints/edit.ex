@@ -17,7 +17,7 @@ defmodule Game.Endpoint.Log.Edit do
         :__openapi_path_parameters => ["nip", "log_id"],
         "nip" => binary(),
         "log_id" => binary(),
-        "tunnel_id" => integer()
+        "tunnel_id" => binary()
       }),
       ["nip", "log_id"]
     )

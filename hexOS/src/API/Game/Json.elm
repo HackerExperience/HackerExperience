@@ -147,7 +147,7 @@ decodeLogEditInput =
         |> OpenApi.Common.jsonDecodeAndMap
             (OpenApi.Common.decodeOptionalField
                 "tunnel_id"
-                Json.Decode.int
+                (Json.Decode.map TunnelID Json.Decode.string)
             )
 
 
@@ -157,7 +157,7 @@ encodeLogEditInput rec =
         (List.filterMap
             Basics.identity
             [ Maybe.map
-                (\mapUnpack -> ( "tunnel_id", Json.Encode.int mapUnpack ))
+                (\mapUnpack -> ( "tunnel_id", Json.Encode.string (TunnelID.toValue mapUnpack) ))
                 rec.tunnel_id
             ]
         )
@@ -180,7 +180,7 @@ decodeLogDeleteInput =
         |> OpenApi.Common.jsonDecodeAndMap
             (OpenApi.Common.decodeOptionalField
                 "tunnel_id"
-                Json.Decode.int
+                (Json.Decode.map TunnelID Json.Decode.string)
             )
 
 
@@ -190,7 +190,7 @@ encodeLogDeleteInput rec =
         (List.filterMap
             Basics.identity
             [ Maybe.map
-                (\mapUnpack -> ( "tunnel_id", Json.Encode.int mapUnpack ))
+                (\mapUnpack -> ( "tunnel_id", Json.Encode.string (TunnelID.toValue mapUnpack) ))
                 rec.tunnel_id
             ]
         )
