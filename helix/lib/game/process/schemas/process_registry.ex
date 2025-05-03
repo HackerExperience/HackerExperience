@@ -10,6 +10,8 @@ defmodule Game.ProcessRegistry do
   @context :game
   @table :processes_registry
 
+  @primary_keys [:server_id, :process_id]
+
   @schema [
     {:server_id, ID.Definition.ref(:server_id)},
     {:process_id, ID.Definition.ref(:process_id)},

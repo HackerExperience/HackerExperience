@@ -183,9 +183,7 @@ defmodule Game.Services.Process do
     end)
 
     Core.with_context(:universe, :write, fn ->
-      # This is TODO. FeebDB needs to support delete based on query (like Repo.delete_all)
-      process_registry = fetch_registry!(by_process: process)
-      DB.delete!({:processes_registry, :delete}, process_registry, [process.server_id, process.id])
+      DB.delete_all!({:processes_registry, :delete}, [process.server_id, process.id])
     end)
 
     event =

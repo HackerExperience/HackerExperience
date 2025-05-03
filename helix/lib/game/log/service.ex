@@ -72,6 +72,13 @@ defmodule Game.Services.Log do
   def create_revision() do
   end
 
+  def delete(%Log{is_deleted: false} = log, %Entity.ID{} = entity_id) do
+    Core.with_context(:server, log.server_id, :write, fn ->
+      DB.update_all!({:logs, :soft_delete_all_revisions}, [DateTime.utc_now(), entity_id, log.id])
+      :ok
+    end)
+  end
+
   defp insert_log(server_id, params) do
     Core.with_context(:server, server_id, :write, fn ->
       params

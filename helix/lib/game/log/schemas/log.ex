@@ -1,6 +1,6 @@
 defmodule Game.Log do
   use Core.Schema
-  alias Game.Server
+  alias Game.{Entity, Server}
   alias __MODULE__.Data, as: LogData
 
   # TODO
@@ -33,6 +33,8 @@ defmodule Game.Log do
     :hop
   ]
 
+  @primary_keys [:id, :revision_id]
+
   @schema [
     {:id, ID.Definition.ref(:log_id)},
     {:revision_id, ID.Definition.ref(:log_revision_id)},
@@ -51,6 +53,11 @@ defmodule Game.Log do
     |> validate_data_struct!()
     |> Schema.cast()
     |> Schema.create()
+  end
+
+  def delete(%_{} = log, %Entity.ID{} = deleted_by) do
+    log
+    |> Schema.update(%{deleted_at: DateTime.utc_now(), deleted_by: deleted_by})
   end
 
   def get_server_id(_, _row, %{shard_id: raw_server_id}), do: Server.ID.new(raw_server_id)

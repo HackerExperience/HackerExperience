@@ -73,4 +73,34 @@ defmodule Game.Services.LogTest do
       assert visibility_1.revision_id.id == 1
     end
   end
+
+  describe "delete/2" do
+    test "deletes a log and all its revisions" do
+      %{server: server, entity: entity} = Setup.server()
+
+      log_rev_1 = Setup.log!(server.id, visible_by: entity.id)
+      log_rev_2 = Setup.log!(server.id, id: log_rev_1.id, revision_id: 2, visible_by: entity.id)
+      other_log = Setup.log!(server.id, visible_by: entity.id)
+
+      Core.begin_context(:server, server.id, :read)
+
+      # Delete the log (and all its revisions)
+      assert :ok == Svc.Log.delete(log_rev_2, entity.id)
+
+      # Both revisions were flagged as deleted
+      log_rev_1 = DB.reload(log_rev_1)
+      assert log_rev_1.is_deleted
+      assert log_rev_1.deleted_at
+      assert log_rev_1.deleted_by == entity.id
+
+      log_rev_2 = DB.reload(log_rev_2)
+      assert log_rev_2.is_deleted
+      assert log_rev_2.deleted_at == log_rev_1.deleted_at
+      assert log_rev_2.deleted_by == entity.id
+
+      # `other_log` remains unchanged
+      other_log = DB.reload(other_log)
+      refute other_log.is_deleted
+    end
+  end
 end
