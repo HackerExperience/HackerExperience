@@ -8,6 +8,7 @@ defmodule Game.Process.Resources.Behaviour.Default.Implementation do
   @type v :: Decimal.t()
 
   @zero Decimal.new(0)
+  @error_threshold Decimal.new("0.0001")
 
   @spec initial(name) :: v
   def initial(_), do: build(@zero)
@@ -80,7 +81,7 @@ defmodule Game.Process.Resources.Behaviour.Default.Implementation do
 
   @spec overflow?(name, v) ::
           boolean
-  def overflow?(_, %Decimal{} = v), do: Decimal.lt?(v, @zero)
+  def overflow?(_, %Decimal{} = v), do: Decimal.compare(v, @zero, @error_threshold) == :lt
 
   @spec completed?(name, v, v) ::
           boolean
