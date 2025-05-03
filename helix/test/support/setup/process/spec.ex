@@ -7,12 +7,17 @@ defmodule Test.Setup.Process.Spec do
   alias Game.Process.File.Install, as: FileInstallProcess
   alias Game.Process.File.Transfer, as: FileTransferProcess
   alias Game.Process.Installation.Uninstall, as: InstallationUninstallProcess
+  alias Game.Process.Log.Delete, as: LogDeleteProcess
   alias Game.Process.Log.Edit, as: LogEditProcess
   alias Test.Process.NoopCPU, as: NoopCPUProcess
   alias Test.Process.NoopDLK, as: NoopDLKProcess
 
   @implementations [
-    :ile_install,
+    :file_delete,
+    :file_install,
+    :file_transfer,
+    :installation_uninstall,
+    :log_delete,
     :log_edit
   ]
 
@@ -110,6 +115,22 @@ defmodule Test.Setup.Process.Spec do
     relay = %{installation: installation}
 
     build_spec(InstallationUninstallProcess, server_id, entity_id, params, meta, relay)
+  end
+
+  def spec(:log_delete, server_id, entity_id, opts) do
+    default_params = %{}
+
+    default_meta = fn ->
+      log = opts[:log] || S.log!(server_id, visible_by: entity_id)
+      tunnel = opts[:tunnel] || nil
+
+      %{log: log, tunnel: tunnel}
+    end
+
+    params = opts[:params] || default_params
+    meta = opts[:meta] || default_meta.()
+
+    build_spec(LogDeleteProcess, server_id, entity_id, params, meta, %{})
   end
 
   def spec(:log_edit, server_id, entity_id, opts) do

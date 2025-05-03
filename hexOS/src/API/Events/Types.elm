@@ -16,6 +16,8 @@ module API.Events.Types exposing
     , IndexRequested
     , InstallationUninstallFailed
     , InstallationUninstalled
+    , LogDeleteFailed
+    , LogDeleted
     , ProcessCompleted
     , ProcessKilled
     , TunnelCreated
@@ -32,7 +34,7 @@ import Game.Model.TunnelID as TunnelID exposing (TunnelID(..))
 
 @docs FileDeleteFailed, FileDeleted, FileInstallFailed, FileInstalled, FileTransferFailed, FileTransferred
 @docs IdxEndpoint, IdxGateway, IdxLog, IdxPlayer, IdxTunnel, IndexRequested, InstallationUninstallFailed
-@docs InstallationUninstalled, ProcessCompleted, ProcessKilled, TunnelCreated
+@docs InstallationUninstalled, LogDeleteFailed, LogDeleted, ProcessCompleted, ProcessKilled, TunnelCreated
 
 -}
 type alias TunnelCreated =
@@ -50,6 +52,14 @@ type alias ProcessKilled =
 
 type alias ProcessCompleted =
     { process_id : String }
+
+
+type alias LogDeleted =
+    { log_id : String, process_id : String }
+
+
+type alias LogDeleteFailed =
+    { process_id : String, reason : String }
 
 
 type alias InstallationUninstalled =

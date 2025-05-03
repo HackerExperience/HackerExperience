@@ -82,7 +82,8 @@ defmodule Game.Services.Process do
     filters = [
       query: &registry_query/1,
       by_src_file_id: {:all, {:processes_registry, :by_src_file_id}},
-      by_tgt_file_id: {:all, {:processes_registry, :by_tgt_file_id}}
+      by_tgt_file_id: {:all, {:processes_registry, :by_tgt_file_id}},
+      by_tgt_log_id: {:all, {:processes_registry, :by_tgt_log_id}}
     ]
 
     Core.Fetch.query(filter_params, opts, filters)

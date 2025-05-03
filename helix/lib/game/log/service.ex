@@ -18,6 +18,14 @@ defmodule Game.Services.Log do
     end)
   end
 
+  @spec fetch(Server.id(), list, list) ::
+          Log.t() | no_return
+  def fetch!(%Server.ID{} = server_id, filter_params, opts \\ []) do
+    server_id
+    |> fetch(filter_params, opts)
+    |> Core.Fetch.assert_non_empty_result!(filter_params, opts)
+  end
+
   @doc """
   Returns the LogVisibility for a particular Log.
   """
@@ -50,8 +58,7 @@ defmodule Game.Services.Log do
 
   def create_new(entity_id, server_id, log_params) do
     Core.with_context(:server, server_id, :write, fn ->
-      [last_inserted_id] =
-        DB.one({:logs, :get_last_inserted_id}, [], format: :raw)
+      [last_inserted_id] = DB.one({:logs, :get_last_inserted_id}, [], format: :raw)
 
       params =
         log_params

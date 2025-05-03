@@ -8,6 +8,7 @@ defmodule Game.Process.Signalable do
           | :sig_renice
           | :sig_src_file_deleted
           | :sig_tgt_file_deleted
+          | :sig_tgt_log_deleted
 
   @type action ::
           :delete
@@ -51,6 +52,12 @@ defmodule Game.Process.Signalable do
           | :noop
   def sig_tgt_file_deleted(process, args \\ []),
     do: signal_handler(process, :on_sig_tgt_file_deleted, args)
+
+  @spec sig_tgt_log_deleted(Process.t(), args :: [term]) ::
+          :delete
+          | :noop
+  def sig_tgt_log_deleted(process, args \\ []),
+    do: signal_handler(process, :on_sig_tgt_log_deleted, args)
 
   def signal_handler(%Process{data: %process_mod{}} = process, callback, args) when is_list(args) do
     signalable = get_signalable(process_mod)

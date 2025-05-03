@@ -5,11 +5,13 @@ module API.Events.Json exposing
     ( encodeFileDeleteFailed, encodeFileDeleted, encodeFileInstallFailed, encodeFileInstalled
     , encodeFileTransferFailed, encodeFileTransferred, encodeIdxEndpoint, encodeIdxGateway, encodeIdxLog
     , encodeIdxPlayer, encodeIdxTunnel, encodeIndexRequested, encodeInstallationUninstallFailed
-    , encodeInstallationUninstalled, encodeProcessCompleted, encodeProcessKilled, encodeTunnelCreated
+    , encodeInstallationUninstalled, encodeLogDeleteFailed, encodeLogDeleted, encodeProcessCompleted
+    , encodeProcessKilled, encodeTunnelCreated
     , decodeFileDeleteFailed, decodeFileDeleted, decodeFileInstallFailed, decodeFileInstalled
     , decodeFileTransferFailed, decodeFileTransferred, decodeIdxEndpoint, decodeIdxGateway, decodeIdxLog
     , decodeIdxPlayer, decodeIdxTunnel, decodeIndexRequested, decodeInstallationUninstallFailed
-    , decodeInstallationUninstalled, decodeProcessCompleted, decodeProcessKilled, decodeTunnelCreated
+    , decodeInstallationUninstalled, decodeLogDeleteFailed, decodeLogDeleted, decodeProcessCompleted
+    , decodeProcessKilled, decodeTunnelCreated
     )
 
 {-|
@@ -20,7 +22,8 @@ module API.Events.Json exposing
 @docs encodeFileDeleteFailed, encodeFileDeleted, encodeFileInstallFailed, encodeFileInstalled
 @docs encodeFileTransferFailed, encodeFileTransferred, encodeIdxEndpoint, encodeIdxGateway, encodeIdxLog
 @docs encodeIdxPlayer, encodeIdxTunnel, encodeIndexRequested, encodeInstallationUninstallFailed
-@docs encodeInstallationUninstalled, encodeProcessCompleted, encodeProcessKilled, encodeTunnelCreated
+@docs encodeInstallationUninstalled, encodeLogDeleteFailed, encodeLogDeleted, encodeProcessCompleted
+@docs encodeProcessKilled, encodeTunnelCreated
 
 
 ## Decoders
@@ -28,7 +31,8 @@ module API.Events.Json exposing
 @docs decodeFileDeleteFailed, decodeFileDeleted, decodeFileInstallFailed, decodeFileInstalled
 @docs decodeFileTransferFailed, decodeFileTransferred, decodeIdxEndpoint, decodeIdxGateway, decodeIdxLog
 @docs decodeIdxPlayer, decodeIdxTunnel, decodeIndexRequested, decodeInstallationUninstallFailed
-@docs decodeInstallationUninstalled, decodeProcessCompleted, decodeProcessKilled, decodeTunnelCreated
+@docs decodeInstallationUninstalled, decodeLogDeleteFailed, decodeLogDeleted, decodeProcessCompleted
+@docs decodeProcessKilled, decodeTunnelCreated
 
 -}
 
@@ -112,6 +116,45 @@ decodeProcessCompleted =
 encodeProcessCompleted : API.Events.Types.ProcessCompleted -> Json.Encode.Value
 encodeProcessCompleted rec =
     Json.Encode.object [ ( "process_id", Json.Encode.string rec.process_id ) ]
+
+
+decodeLogDeleted : Json.Decode.Decoder API.Events.Types.LogDeleted
+decodeLogDeleted =
+    Json.Decode.succeed
+        (\log_id process_id -> { log_id = log_id, process_id = process_id })
+        |> OpenApi.Common.jsonDecodeAndMap
+            (Json.Decode.field "log_id" Json.Decode.string)
+        |> OpenApi.Common.jsonDecodeAndMap
+            (Json.Decode.field
+                "process_id"
+                Json.Decode.string
+            )
+
+
+encodeLogDeleted : API.Events.Types.LogDeleted -> Json.Encode.Value
+encodeLogDeleted rec =
+    Json.Encode.object
+        [ ( "log_id", Json.Encode.string rec.log_id )
+        , ( "process_id", Json.Encode.string rec.process_id )
+        ]
+
+
+decodeLogDeleteFailed : Json.Decode.Decoder API.Events.Types.LogDeleteFailed
+decodeLogDeleteFailed =
+    Json.Decode.succeed
+        (\process_id reason -> { process_id = process_id, reason = reason })
+        |> OpenApi.Common.jsonDecodeAndMap
+            (Json.Decode.field "process_id" Json.Decode.string)
+        |> OpenApi.Common.jsonDecodeAndMap
+            (Json.Decode.field "reason" Json.Decode.string)
+
+
+encodeLogDeleteFailed : API.Events.Types.LogDeleteFailed -> Json.Encode.Value
+encodeLogDeleteFailed rec =
+    Json.Encode.object
+        [ ( "process_id", Json.Encode.string rec.process_id )
+        , ( "reason", Json.Encode.string rec.reason )
+        ]
 
 
 decodeInstallationUninstalled : Json.Decode.Decoder API.Events.Types.InstallationUninstalled

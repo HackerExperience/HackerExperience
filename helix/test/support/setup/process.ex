@@ -135,6 +135,7 @@ defmodule Test.Setup.Process do
       # Required changes for a process to be deemed as complete (picked up next by the TOP)
       changes =
         %{
+          status: :running,
           resources: new_resources,
           last_checkpoint_ts: now,
           estimated_completion_ts: now

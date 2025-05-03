@@ -17,6 +17,9 @@ SELECT * FROM processes_registry WHERE src_file_id = ?;
 -- :by_tgt_file_id
 SELECT * FROM processes_registry WHERE tgt_file_id = ?;
 
+-- :by_tgt_log_id
+SELECT * FROM processes_registry WHERE tgt_log_id = ?;
+
 -- :by_src_installation_id
 SELECT * FROM processes_registry WHERE src_installation_id = ?;
 
