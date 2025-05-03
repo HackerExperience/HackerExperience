@@ -128,6 +128,7 @@ config =
         |> Rule.ignoreErrorsForFiles
             [ "src/Game/Model/LogID.elm"
             , "src/Game/Model/TunnelID.elm"
+            , "src/Game/Model/ProcessID.elm"
             , "src/Game/Model/NIP.elm"
             ]
         -- Below files are wrong and should eventually be fixed

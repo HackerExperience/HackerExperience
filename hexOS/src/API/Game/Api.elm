@@ -19,7 +19,9 @@ module API.Game.Api exposing
 import API.Game.Json
 import API.Game.Types
 import Dict
+import Game.Model.LogID as LogID exposing (LogID(..))
 import Game.Model.NIP as NIP exposing (NIP(..))
+import Game.Model.ProcessID as ProcessID exposing (ProcessID(..))
 import Game.Model.TunnelID as TunnelID exposing (TunnelID(..))
 import Http
 import Json.Decode
@@ -188,7 +190,7 @@ logDeleteTask :
     { server : String
     , authorization : { authorization : String }
     , body : API.Game.Types.LogDeleteRequest
-    , params : { nip : NIP, log_id : String }
+    , params : { nip : NIP, log_id : LogID }
     }
     -> Task.Task (OpenApi.Common.Error e String) API.Game.Types.LogDeleteOkResponse
 logDeleteTask config =
@@ -200,7 +202,7 @@ logDeleteTask config =
                 , "server"
                 , NIP.toString config.params.nip
                 , "log"
-                , config.params.log_id
+                , LogID.toString config.params.log_id
                 , "delete"
                 ]
                 []
@@ -221,7 +223,7 @@ logEditTask :
     { server : String
     , authorization : { authorization : String }
     , body : API.Game.Types.LogEditRequest
-    , params : { nip : NIP, log_id : String }
+    , params : { nip : NIP, log_id : LogID }
     }
     -> Task.Task (OpenApi.Common.Error e String) API.Game.Types.LogEditOkResponse
 logEditTask config =
@@ -233,7 +235,7 @@ logEditTask config =
                 , "server"
                 , NIP.toString config.params.nip
                 , "log"
-                , config.params.log_id
+                , LogID.toString config.params.log_id
                 , "edit"
                 ]
                 []

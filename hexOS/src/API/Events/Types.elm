@@ -23,7 +23,9 @@ module API.Events.Types exposing
     , TunnelCreated
     )
 
+import Game.Model.LogID as LogID exposing (LogID(..))
 import Game.Model.NIP as NIP exposing (NIP(..))
+import Game.Model.ProcessID as ProcessID exposing (ProcessID(..))
 import Game.Model.TunnelID as TunnelID exposing (TunnelID(..))
 
 
@@ -47,27 +49,27 @@ type alias TunnelCreated =
 
 
 type alias ProcessKilled =
-    { process_id : String, reason : String }
+    { process_id : ProcessID, reason : String }
 
 
 type alias ProcessCompleted =
-    { process_id : String }
+    { process_id : ProcessID }
 
 
 type alias LogDeleted =
-    { log_id : String, process_id : String }
+    { log_id : LogID, process_id : ProcessID }
 
 
 type alias LogDeleteFailed =
-    { process_id : String, reason : String }
+    { process_id : ProcessID, reason : String }
 
 
 type alias InstallationUninstalled =
-    { installation_id : String, process_id : String }
+    { installation_id : String, process_id : ProcessID }
 
 
 type alias InstallationUninstallFailed =
-    { process_id : String, reason : String }
+    { process_id : ProcessID, reason : String }
 
 
 type alias IndexRequested =
@@ -75,31 +77,31 @@ type alias IndexRequested =
 
 
 type alias FileTransferred =
-    { file_id : String, process_id : String }
+    { file_id : String, process_id : ProcessID }
 
 
 type alias FileTransferFailed =
-    { process_id : String, reason : String }
+    { process_id : ProcessID, reason : String }
 
 
 type alias FileInstalled =
     { file_name : String
     , installation_id : String
     , memory_usage : Int
-    , process_id : String
+    , process_id : ProcessID
     }
 
 
 type alias FileInstallFailed =
-    { process_id : String, reason : String }
+    { process_id : ProcessID, reason : String }
 
 
 type alias FileDeleted =
-    { file_id : String, process_id : String }
+    { file_id : String, process_id : ProcessID }
 
 
 type alias FileDeleteFailed =
-    { process_id : String, reason : String }
+    { process_id : ProcessID, reason : String }
 
 
 type alias IdxTunnel =

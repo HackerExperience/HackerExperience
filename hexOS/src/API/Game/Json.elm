@@ -57,7 +57,9 @@ module API.Game.Json exposing
 -}
 
 import API.Game.Types
+import Game.Model.LogID as LogID exposing (LogID(..))
 import Game.Model.NIP as NIP exposing (NIP(..))
+import Game.Model.ProcessID as ProcessID exposing (ProcessID(..))
 import Game.Model.TunnelID as TunnelID exposing (TunnelID(..))
 import Json.Decode
 import Json.Encode

@@ -1,7 +1,8 @@
 module Game.Model.LogID exposing
-    ( LogID
+    ( LogID(..)
     , RawLogID
     , fromValue
+    , toString
     , toValue
     )
 
@@ -18,6 +19,11 @@ type alias RawLogID =
 
 
 -- Functions
+
+
+toString : LogID -> String
+toString logId =
+    toValue logId
 
 
 toValue : LogID -> String

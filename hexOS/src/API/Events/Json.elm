@@ -37,7 +37,9 @@ module API.Events.Json exposing
 -}
 
 import API.Events.Types
+import Game.Model.LogID as LogID exposing (LogID(..))
 import Game.Model.NIP as NIP exposing (NIP(..))
+import Game.Model.ProcessID as ProcessID exposing (ProcessID(..))
 import Game.Model.TunnelID as TunnelID exposing (TunnelID(..))
 import Json.Decode
 import Json.Encode
@@ -92,7 +94,7 @@ decodeProcessKilled =
     Json.Decode.succeed
         (\process_id reason -> { process_id = process_id, reason = reason })
         |> OpenApi.Common.jsonDecodeAndMap
-            (Json.Decode.field "process_id" Json.Decode.string)
+            (Json.Decode.field "process_id" (Json.Decode.map ProcessID Json.Decode.string))
         |> OpenApi.Common.jsonDecodeAndMap
             (Json.Decode.field "reason" Json.Decode.string)
 
@@ -100,7 +102,7 @@ decodeProcessKilled =
 encodeProcessKilled : API.Events.Types.ProcessKilled -> Json.Encode.Value
 encodeProcessKilled rec =
     Json.Encode.object
-        [ ( "process_id", Json.Encode.string rec.process_id )
+        [ ( "process_id", Json.Encode.string (ProcessID.toValue rec.process_id) )
         , ( "reason", Json.Encode.string rec.reason )
         ]
 
@@ -110,12 +112,12 @@ decodeProcessCompleted =
     Json.Decode.succeed
         (\process_id -> { process_id = process_id })
         |> OpenApi.Common.jsonDecodeAndMap
-            (Json.Decode.field "process_id" Json.Decode.string)
+            (Json.Decode.field "process_id" (Json.Decode.map ProcessID Json.Decode.string))
 
 
 encodeProcessCompleted : API.Events.Types.ProcessCompleted -> Json.Encode.Value
 encodeProcessCompleted rec =
-    Json.Encode.object [ ( "process_id", Json.Encode.string rec.process_id ) ]
+    Json.Encode.object [ ( "process_id", Json.Encode.string (ProcessID.toValue rec.process_id) ) ]
 
 
 decodeLogDeleted : Json.Decode.Decoder API.Events.Types.LogDeleted
@@ -123,19 +125,19 @@ decodeLogDeleted =
     Json.Decode.succeed
         (\log_id process_id -> { log_id = log_id, process_id = process_id })
         |> OpenApi.Common.jsonDecodeAndMap
-            (Json.Decode.field "log_id" Json.Decode.string)
+            (Json.Decode.field "log_id" (Json.Decode.map LogID Json.Decode.string))
         |> OpenApi.Common.jsonDecodeAndMap
             (Json.Decode.field
                 "process_id"
-                Json.Decode.string
+                (Json.Decode.map ProcessID Json.Decode.string)
             )
 
 
 encodeLogDeleted : API.Events.Types.LogDeleted -> Json.Encode.Value
 encodeLogDeleted rec =
     Json.Encode.object
-        [ ( "log_id", Json.Encode.string rec.log_id )
-        , ( "process_id", Json.Encode.string rec.process_id )
+        [ ( "log_id", Json.Encode.string (LogID.toValue rec.log_id) )
+        , ( "process_id", Json.Encode.string (ProcessID.toValue rec.process_id) )
         ]
 
 
@@ -144,7 +146,7 @@ decodeLogDeleteFailed =
     Json.Decode.succeed
         (\process_id reason -> { process_id = process_id, reason = reason })
         |> OpenApi.Common.jsonDecodeAndMap
-            (Json.Decode.field "process_id" Json.Decode.string)
+            (Json.Decode.field "process_id" (Json.Decode.map ProcessID Json.Decode.string))
         |> OpenApi.Common.jsonDecodeAndMap
             (Json.Decode.field "reason" Json.Decode.string)
 
@@ -152,7 +154,7 @@ decodeLogDeleteFailed =
 encodeLogDeleteFailed : API.Events.Types.LogDeleteFailed -> Json.Encode.Value
 encodeLogDeleteFailed rec =
     Json.Encode.object
-        [ ( "process_id", Json.Encode.string rec.process_id )
+        [ ( "process_id", Json.Encode.string (ProcessID.toValue rec.process_id) )
         , ( "reason", Json.Encode.string rec.reason )
         ]
 
@@ -168,7 +170,7 @@ decodeInstallationUninstalled =
         |> OpenApi.Common.jsonDecodeAndMap
             (Json.Decode.field
                 "process_id"
-                Json.Decode.string
+                (Json.Decode.map ProcessID Json.Decode.string)
             )
 
 
@@ -176,7 +178,7 @@ encodeInstallationUninstalled : API.Events.Types.InstallationUninstalled -> Json
 encodeInstallationUninstalled rec =
     Json.Encode.object
         [ ( "installation_id", Json.Encode.string rec.installation_id )
-        , ( "process_id", Json.Encode.string rec.process_id )
+        , ( "process_id", Json.Encode.string (ProcessID.toValue rec.process_id) )
         ]
 
 
@@ -185,7 +187,7 @@ decodeInstallationUninstallFailed =
     Json.Decode.succeed
         (\process_id reason -> { process_id = process_id, reason = reason })
         |> OpenApi.Common.jsonDecodeAndMap
-            (Json.Decode.field "process_id" Json.Decode.string)
+            (Json.Decode.field "process_id" (Json.Decode.map ProcessID Json.Decode.string))
         |> OpenApi.Common.jsonDecodeAndMap
             (Json.Decode.field "reason" Json.Decode.string)
 
@@ -193,7 +195,7 @@ decodeInstallationUninstallFailed =
 encodeInstallationUninstallFailed : API.Events.Types.InstallationUninstallFailed -> Json.Encode.Value
 encodeInstallationUninstallFailed rec =
     Json.Encode.object
-        [ ( "process_id", Json.Encode.string rec.process_id )
+        [ ( "process_id", Json.Encode.string (ProcessID.toValue rec.process_id) )
         , ( "reason", Json.Encode.string rec.reason )
         ]
 
@@ -223,7 +225,7 @@ decodeFileTransferred =
         |> OpenApi.Common.jsonDecodeAndMap
             (Json.Decode.field
                 "process_id"
-                Json.Decode.string
+                (Json.Decode.map ProcessID Json.Decode.string)
             )
 
 
@@ -231,7 +233,7 @@ encodeFileTransferred : API.Events.Types.FileTransferred -> Json.Encode.Value
 encodeFileTransferred rec =
     Json.Encode.object
         [ ( "file_id", Json.Encode.string rec.file_id )
-        , ( "process_id", Json.Encode.string rec.process_id )
+        , ( "process_id", Json.Encode.string (ProcessID.toValue rec.process_id) )
         ]
 
 
@@ -240,7 +242,7 @@ decodeFileTransferFailed =
     Json.Decode.succeed
         (\process_id reason -> { process_id = process_id, reason = reason })
         |> OpenApi.Common.jsonDecodeAndMap
-            (Json.Decode.field "process_id" Json.Decode.string)
+            (Json.Decode.field "process_id" (Json.Decode.map ProcessID Json.Decode.string))
         |> OpenApi.Common.jsonDecodeAndMap
             (Json.Decode.field "reason" Json.Decode.string)
 
@@ -248,7 +250,7 @@ decodeFileTransferFailed =
 encodeFileTransferFailed : API.Events.Types.FileTransferFailed -> Json.Encode.Value
 encodeFileTransferFailed rec =
     Json.Encode.object
-        [ ( "process_id", Json.Encode.string rec.process_id )
+        [ ( "process_id", Json.Encode.string (ProcessID.toValue rec.process_id) )
         , ( "reason", Json.Encode.string rec.reason )
         ]
 
@@ -278,7 +280,7 @@ decodeFileInstalled =
         |> OpenApi.Common.jsonDecodeAndMap
             (Json.Decode.field
                 "process_id"
-                Json.Decode.string
+                (Json.Decode.map ProcessID Json.Decode.string)
             )
 
 
@@ -288,7 +290,7 @@ encodeFileInstalled rec =
         [ ( "file_name", Json.Encode.string rec.file_name )
         , ( "installation_id", Json.Encode.string rec.installation_id )
         , ( "memory_usage", Json.Encode.int rec.memory_usage )
-        , ( "process_id", Json.Encode.string rec.process_id )
+        , ( "process_id", Json.Encode.string (ProcessID.toValue rec.process_id) )
         ]
 
 
@@ -297,7 +299,7 @@ decodeFileInstallFailed =
     Json.Decode.succeed
         (\process_id reason -> { process_id = process_id, reason = reason })
         |> OpenApi.Common.jsonDecodeAndMap
-            (Json.Decode.field "process_id" Json.Decode.string)
+            (Json.Decode.field "process_id" (Json.Decode.map ProcessID Json.Decode.string))
         |> OpenApi.Common.jsonDecodeAndMap
             (Json.Decode.field "reason" Json.Decode.string)
 
@@ -305,7 +307,7 @@ decodeFileInstallFailed =
 encodeFileInstallFailed : API.Events.Types.FileInstallFailed -> Json.Encode.Value
 encodeFileInstallFailed rec =
     Json.Encode.object
-        [ ( "process_id", Json.Encode.string rec.process_id )
+        [ ( "process_id", Json.Encode.string (ProcessID.toValue rec.process_id) )
         , ( "reason", Json.Encode.string rec.reason )
         ]
 
@@ -319,7 +321,7 @@ decodeFileDeleted =
         |> OpenApi.Common.jsonDecodeAndMap
             (Json.Decode.field
                 "process_id"
-                Json.Decode.string
+                (Json.Decode.map ProcessID Json.Decode.string)
             )
 
 
@@ -327,7 +329,7 @@ encodeFileDeleted : API.Events.Types.FileDeleted -> Json.Encode.Value
 encodeFileDeleted rec =
     Json.Encode.object
         [ ( "file_id", Json.Encode.string rec.file_id )
-        , ( "process_id", Json.Encode.string rec.process_id )
+        , ( "process_id", Json.Encode.string (ProcessID.toValue rec.process_id) )
         ]
 
 
@@ -336,7 +338,7 @@ decodeFileDeleteFailed =
     Json.Decode.succeed
         (\process_id reason -> { process_id = process_id, reason = reason })
         |> OpenApi.Common.jsonDecodeAndMap
-            (Json.Decode.field "process_id" Json.Decode.string)
+            (Json.Decode.field "process_id" (Json.Decode.map ProcessID Json.Decode.string))
         |> OpenApi.Common.jsonDecodeAndMap
             (Json.Decode.field "reason" Json.Decode.string)
 
@@ -344,7 +346,7 @@ decodeFileDeleteFailed =
 encodeFileDeleteFailed : API.Events.Types.FileDeleteFailed -> Json.Encode.Value
 encodeFileDeleteFailed rec =
     Json.Encode.object
-        [ ( "process_id", Json.Encode.string rec.process_id )
+        [ ( "process_id", Json.Encode.string (ProcessID.toValue rec.process_id) )
         , ( "reason", Json.Encode.string rec.reason )
         ]
 
