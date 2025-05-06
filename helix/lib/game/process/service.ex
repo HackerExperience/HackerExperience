@@ -225,13 +225,13 @@ defmodule Game.Services.Process do
   end
 
   defp query(:all),
-    do: DB.all({:processes, :__all}, [])
+    do: DB.all(Process)
 
   defp registry_query(:servers_with_processes),
-    do: DB.all({:processes_registry, :servers_with_processes}, [], format: :type)
+    do: DB.all({:processes_registry, :servers_with_processes}, [], format: :map)
 
   defp registry_query(:all),
-    do: DB.all({:processes_registry, :__all}, [])
+    do: DB.all(ProcessRegistry, [])
 
   defp query_registry_by_process(%Process{id: process_id, server_id: server_id}),
     do: DB.one({:processes_registry, :fetch}, [server_id, process_id])

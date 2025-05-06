@@ -7,6 +7,8 @@ defmodule Game.LogVisibility do
   @context :player
   @table :log_visibilities
 
+  @primary_keys [:server_id, :log_id, :revision_id]
+
   @schema [
     {:server_id, ID.Definition.ref(:server_id)},
     {:log_id, ID.Definition.ref(:log_id)},

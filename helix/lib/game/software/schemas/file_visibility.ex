@@ -7,6 +7,8 @@ defmodule Game.FileVisibility do
   @context :player
   @table :file_visibilities
 
+  @primary_keys [:server_id, :file_id]
+
   @schema [
     {:server_id, ID.Definition.ref(:server_id)},
     {:file_id, ID.Definition.ref(:file_id)},

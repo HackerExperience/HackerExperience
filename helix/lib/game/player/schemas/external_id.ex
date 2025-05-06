@@ -16,6 +16,8 @@ defmodule Game.ExternalID do
     :tunnel_id
   ]
 
+  @primary_keys [:external_id]
+
   @schema [
     {:external_id, :string},
     {:object_id, :integer},
