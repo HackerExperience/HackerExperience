@@ -5,6 +5,7 @@ module Game exposing
     , getActiveGateway
     , getGateway
     , getGateways
+    , getServer
     , init
     , onTunnelCreatedEvent
     , switchActiveEndpoint
@@ -17,9 +18,10 @@ import API.Utils
 import Dict exposing (Dict)
 import Dict.Extra as Dict
 import Game.Model.NIP as NIP exposing (NIP, RawNIP)
-import Game.Model.Server as Server exposing (Endpoint, Gateway)
+import Game.Model.Server as Server exposing (Endpoint, Gateway, Server)
 import Game.Model.Tunnel as Tunnel exposing (Tunnels)
 import Game.Universe exposing (Universe(..))
+import Maybe.Extra as Maybe
 
 
 type alias Model =
@@ -45,6 +47,14 @@ init token universe index =
     , endpoints = Server.parseEndpoints index.player.endpoints
     , apiCtx = buildApiContext token universe
     }
+
+
+getServer : Model -> NIP -> Server
+getServer model nip =
+    Dict.get (NIP.toString nip) model.gateways
+        |> Maybe.map .server
+        |> Maybe.or (Dict.get (NIP.toString nip) model.endpoints |> Maybe.map .server)
+        |> Maybe.withDefault Server.invalidServer
 
 
 getGateway : Model -> NIP -> Gateway
@@ -122,6 +132,7 @@ switchActiveEndpoint newActiveEndpointNip model =
 
 maybeFindGatewayByNip : Model -> NIP -> Maybe Gateway
 maybeFindGatewayByNip model nip =
+    -- TODO: No longer relevant since we now index gateways by nip
     Dict.find (\_ gtw -> gtw.nip == nip) model.gateways
         |> Maybe.map Tuple.second
 
@@ -131,6 +142,7 @@ exist. If there is a possibility it won't, use the `maybeFindGatewayByNip` varia
 -}
 findGatewayByNip : Model -> NIP -> Gateway
 findGatewayByNip model nip =
+    -- TODO: No longer relevant since we now index gateways by nip
     maybeFindGatewayByNip model nip
         |> Maybe.withDefault Server.invalidGateway
 

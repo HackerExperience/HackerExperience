@@ -1,7 +1,9 @@
 module Game.Model.Server exposing
     ( Endpoint
     , Gateway
+    , Server
     , invalidGateway
+    , invalidServer
       -- , listLogs
     , onTunnelCreatedEvent
     , parseEndpoint
@@ -22,17 +24,23 @@ import OrderedDict
 -- Types
 
 
-type alias Gateway =
+type alias Server =
     { nip : NIP
     , logs : Logs
+    }
+
+
+type alias Gateway =
+    { nip : NIP
     , tunnels : Tunnels
     , activeEndpoint : Maybe NIP
+    , server : Server
     }
 
 
 type alias Endpoint =
     { nip : NIP
-    , logs : Logs
+    , server : Server
     }
 
 
@@ -56,18 +64,18 @@ parseGateway gateway =
             Maybe.map (\t -> t.targetNip) (List.head tunnels)
     in
     { nip = gateway.nip
-    , logs = Log.parse gateway.logs
     , tunnels = Tunnel.parse gateway.tunnels
     , activeEndpoint = activeEndpoint
+    , server = buildServer gateway.logs gateway.nip
     }
 
 
 invalidGateway : Gateway
 invalidGateway =
     { nip = NIP.invalidNip
-    , logs = OrderedDict.empty
     , tunnels = []
     , activeEndpoint = Nothing
+    , server = invalidServer
     }
 
 
@@ -84,7 +92,7 @@ parseEndpoints idxEndpoints =
 parseEndpoint : Events.IdxEndpoint -> Endpoint
 parseEndpoint endpoint =
     { nip = endpoint.nip
-    , logs = Log.parse endpoint.logs
+    , server = buildServer endpoint.logs endpoint.nip
     }
 
 
@@ -96,6 +104,24 @@ switchActiveEndpoint gateway endpointNip =
 
         Nothing ->
             gateway
+
+
+
+-- Model > Server
+
+
+buildServer : List Events.IdxLog -> NIP -> Server
+buildServer idxLogs nip =
+    { nip = nip
+    , logs = Log.parse idxLogs
+    }
+
+
+invalidServer : Server
+invalidServer =
+    { nip = NIP.invalidNip
+    , logs = OrderedDict.empty
+    }
 
 
 
