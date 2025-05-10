@@ -17,6 +17,7 @@ import Dict exposing (Dict)
 import Game.Model.Log as Log exposing (Logs)
 import Game.Model.NIP as NIP exposing (NIP, RawNIP)
 import Game.Model.Tunnel as Tunnel exposing (Tunnels)
+import Game.Model.TunnelID exposing (TunnelID)
 import OrderedDict
 
 
@@ -27,6 +28,8 @@ import OrderedDict
 type alias Server =
     { nip : NIP
     , logs : Logs
+    , type_ : ServerType
+    , tunnelId : Maybe TunnelID
     }
 
 
@@ -42,6 +45,11 @@ type alias Endpoint =
     { nip : NIP
     , server : Server
     }
+
+
+type ServerType
+    = ServerGateway
+    | ServerEndpoint
 
 
 
@@ -66,7 +74,7 @@ parseGateway gateway =
     { nip = gateway.nip
     , tunnels = Tunnel.parse gateway.tunnels
     , activeEndpoint = activeEndpoint
-    , server = buildServer gateway.logs gateway.nip
+    , server = buildServer gateway.logs gateway.nip ServerGateway Nothing
     }
 
 
@@ -91,8 +99,13 @@ parseEndpoints idxEndpoints =
 
 parseEndpoint : Events.IdxEndpoint -> Endpoint
 parseEndpoint endpoint =
+    let
+        -- TODO: Extract tunnel from previous parsers
+        tunnelId =
+            Nothing
+    in
     { nip = endpoint.nip
-    , server = buildServer endpoint.logs endpoint.nip
+    , server = buildServer endpoint.logs endpoint.nip ServerEndpoint tunnelId
     }
 
 
@@ -110,10 +123,12 @@ switchActiveEndpoint gateway endpointNip =
 -- Model > Server
 
 
-buildServer : List Events.IdxLog -> NIP -> Server
-buildServer idxLogs nip =
+buildServer : List Events.IdxLog -> NIP -> ServerType -> Maybe TunnelID -> Server
+buildServer idxLogs nip serverType tunnelId =
     { nip = nip
     , logs = Log.parse idxLogs
+    , type_ = serverType
+    , tunnelId = tunnelId
     }
 
 
