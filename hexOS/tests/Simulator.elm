@@ -35,9 +35,13 @@ simulateEffect effect =
 
         Effect.APIRequest apiRequest ->
             case apiRequest of
-                LobbyLogin result config ->
-                    SimulatedEffect.Task.attempt result (LobbyAPI.loginTask config)
+                LogDelete _ _ ->
+                    -- TODO
+                    SimulatedEffect.Cmd.none
 
                 ServerLogin _ _ ->
                     -- TODO
                     SimulatedEffect.Cmd.none
+
+                LobbyLogin result config ->
+                    SimulatedEffect.Task.attempt result (LobbyAPI.loginTask config)
