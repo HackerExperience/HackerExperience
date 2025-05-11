@@ -1,7 +1,7 @@
 module WM exposing
     ( Model
     , ParentInfo
-    , SessionID
+    , SessionID(..)
     , Window
     , WindowConfig
     , WindowInfo

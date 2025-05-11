@@ -4,7 +4,7 @@ module Game.Model.Server exposing
     , Server
     , invalidGateway
     , invalidServer
-      -- , listLogs
+    , listLogs
     , onTunnelCreatedEvent
     , parseEndpoint
     , parseEndpoints
@@ -14,7 +14,7 @@ module Game.Model.Server exposing
 
 import API.Events.Types as Events
 import Dict exposing (Dict)
-import Game.Model.Log as Log exposing (Logs)
+import Game.Model.Log as Log exposing (Log, Logs)
 import Game.Model.NIP as NIP exposing (NIP, RawNIP)
 import Game.Model.Tunnel as Tunnel exposing (Tunnels)
 import Game.Model.TunnelID exposing (TunnelID)
@@ -136,14 +136,21 @@ invalidServer : Server
 invalidServer =
     { nip = NIP.invalidNip
     , logs = OrderedDict.empty
+    , type_ = ServerGateway
+    , tunnelId = Nothing
     }
 
 
 
 -- Model > Logs
--- listLogs : Gateway -> List Log
--- listLogs server =
---     Log.logsToList server.logs
+
+
+listLogs : Server -> List Log
+listLogs server =
+    Log.logsToList server.logs
+
+
+
 -- Event handlers
 
 

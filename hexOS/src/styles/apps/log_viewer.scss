@@ -55,6 +55,28 @@
     color: gray;
 }
 
+.a-log-row-badges {
+    align-items: center;
+    justify-content: center;
+    margin: auto 0 auto 7px;
+
+    .ui-icon {
+        font-size: 16px;
+    }
+
+    .a-lr-badge-broken {
+        color: yellow;
+    }
+
+    .a-lr-badge-deleted {
+        color: red;
+    }
+
+    .a-lr-badge-broken + .a-lr-badge-deleted {
+        margin-left: 7px;
+    }
+}
+
 .a-log-row-text {
     /* Overflow is tricky. Always test any changes here */
     display: inline-block;
@@ -105,4 +127,26 @@
 
 .a-lr-action-entry + .a-lr-action-entry {
     margin-left: 0px;
+}
+
+.a-log-row-deleted {
+    background: repeating-linear-gradient(
+        -45deg,
+        rgba(255, 0, 0, 0.2),
+        rgba(255, 0, 0, 0.2) 5px,
+        transparent 5px,
+        transparent 10px
+    ) !important;
+
+    .a-log-row-text {
+        opacity: 0.4;
+        text-decoration: line-through;
+    }
+
+    &:hover {
+        .a-log-row-text {
+            opacity: 1;
+            text-decoration: none;
+        }
+    }
 }

@@ -1,7 +1,8 @@
 module Game.Model.Log exposing
     ( Log
+    , LogType(..)
     , Logs
-      -- , logsToList
+    , logsToList
     , parse
     )
 
@@ -23,21 +24,26 @@ type alias Log =
     , revisionId : String
     , type_ : LogType
     , rawText : String
+    , isDeleted : Bool
     }
 
 
 type LogType
     = LocalhostLoggedIn
     | CustomLog
-    | UnknownLog
 
 
 
 -- Model
--- logsToList : Logs -> List Log
--- logsToList logs =
---     OrderedDict.toList logs
---         |> List.map (\( _, log ) -> log)
+
+
+logsToList : Logs -> List Log
+logsToList logs =
+    OrderedDict.toList logs
+        |> List.map (\( _, log ) -> log)
+
+
+
 -- Model > Parser
 
 
@@ -57,6 +63,7 @@ parseLog log =
     , revisionId = log.revision_id
     , type_ = type_
     , rawText = rawText
+    , isDeleted = log.is_deleted
     }
 
 
@@ -67,4 +74,5 @@ parseLogType strLogType =
             ( LocalhostLoggedIn, "localhost logged in" )
 
         _ ->
-            ( UnknownLog, "Unknown log" )
+            -- ( UnknownLog, "Unknown log" )
+            ( LocalhostLoggedIn, "localhost logged in" )

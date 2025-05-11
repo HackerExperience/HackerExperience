@@ -1,10 +1,14 @@
 module Apps.LogViewer exposing (..)
 
+import API.Game as GameAPI
+import API.Types
 import Apps.Manifest as App
 import Effect exposing (Effect)
 import Game
-import Game.Model.Log exposing (Log)
-import Game.Model.LogID exposing (LogID)
+import Game.Model.Log exposing (Log, LogType(..))
+import Game.Model.LogID as LogID exposing (LogID)
+import Game.Model.NIP exposing (NIP)
+import Game.Model.Server as Server
 import Html.Attributes as HA
 import Html.Events as HE
 import OS.AppID exposing (AppID)
@@ -25,10 +29,13 @@ type Msg
     | ToCtxMenu CtxMenu.Msg
     | SelectLog LogID
     | DeselectLog
+    | OnDeleteLog Log
+    | OnDeleteLogResponse API.Types.LogDeleteResult
 
 
 type alias Model =
-    { selectedLog : Maybe LogID
+    { nip : NIP
+    , selectedLog : Maybe LogID
     }
 
 
@@ -37,15 +44,16 @@ type alias Model =
 
 
 filterLogs : Model -> Game.Model -> List Log
-filterLogs _ _ =
-    -- TODO: Figure out a way to handle ServerID (for gateways) and NIPs (for endpoints)
+filterLogs model game =
     -- TODO: Currently this is not doing any filtering other than grabbing all logs in the server
-    -- let
-    --     server =
-    --         Game.getGateway game model.serverId
-    -- in
-    -- Server.listLogs server
-    []
+    let
+        server =
+            Game.getServer game model.nip
+
+        logs =
+            Server.listLogs server
+    in
+    logs
 
 
 
@@ -53,13 +61,34 @@ filterLogs _ _ =
 
 
 update : Game.Model -> Msg -> Model -> ( Model, Effect Msg )
-update _ msg model =
+update game msg model =
     case msg of
         SelectLog logId ->
             ( { model | selectedLog = Just logId }, Effect.none )
 
         DeselectLog ->
             ( { model | selectedLog = Nothing }, Effect.none )
+
+        OnDeleteLog log ->
+            let
+                server =
+                    Game.getServer game model.nip
+
+                config =
+                    GameAPI.logDeleteConfig game.apiCtx model.nip log.id server.tunnelId
+            in
+            ( model, Effect.logDelete OnDeleteLogResponse config )
+
+        OnDeleteLogResponse (Ok res) ->
+            let
+                _ =
+                    Debug.log "OK!" res
+            in
+            ( model, Effect.none )
+
+        OnDeleteLogResponse (Err _) ->
+            -- TODO
+            ( model, Effect.none )
 
         ToOS _ ->
             -- Handled by OS
@@ -140,22 +169,58 @@ vLogRow log =
                 [ deleteIcon ]
 
         actions =
-            row [ cl "a-log-row-actions" ]
-                [ editEntry, deleteEntry ]
+            if not log.isDeleted then
+                row [ cl "a-log-row-actions" ]
+                    [ editEntry, deleteEntry ]
+
+            else
+                UI.emptyEl
 
         logText =
             row [ cl "a-log-row-text", UI.centerItems ]
-                [ text log.rawText
+                [ text log.rawText ]
 
-                -- , row [ cl "a-log-row-actions" ] [ actions ]
-                ]
+        -- TODO: Move to dedicate function
+        brokenBadgeIcon =
+            UI.Icon.msOutline "warning" Nothing
+                |> UI.Icon.withClass "a-lr-badge-broken"
+                |> UI.Icon.toUI
+
+        deletedBadgeIcon =
+            UI.Icon.msOutline "cancel" Nothing
+                |> UI.Icon.withClass "a-lr-badge-deleted"
+                |> UI.Icon.toUI
+
+        badges =
+            case ( log.isDeleted, log.type_ ) of
+                ( True, CustomLog ) ->
+                    row [ cl "a-log-row-badges" ]
+                        [ brokenBadgeIcon, deletedBadgeIcon ]
+
+                ( True, _ ) ->
+                    row [ cl "a-log-row-badges" ]
+                        [ deletedBadgeIcon ]
+
+                ( False, CustomLog ) ->
+                    row [ cl "a-log-row-badges" ]
+                        [ brokenBadgeIcon ]
+
+                ( False, _ ) ->
+                    UI.emptyEl
     in
     row
         [ cl "a-log-row"
+        , if log.isDeleted then
+            cl "a-log-row-deleted"
+
+          else
+            UI.emptyAttr
         , HE.onClick <| SelectLog log.id
+        , HA.map ToCtxMenu (CtxMenu.event <| CtxMenu.LogViewer <| CtxMenu.LVEntryMenu log)
         ]
         [ dateTime
         , separator
+        , badges
         , logText
         , actions
         ]
@@ -171,16 +236,33 @@ ctxMenuConfig menu _ =
         CtxMenu.LogViewer submenu ->
             case submenu of
                 CtxMenu.LVRootMenu ->
-                    Just
-                        { entries = [ CtxMenu.SimpleItem { label = "Log 1", enabled = True, onClick = Nothing } ]
-                        , mapper = ToCtxMenu
-                        }
-
-                _ ->
                     Nothing
+
+                CtxMenu.LVEntryMenu log ->
+                    ctxMenuConfigEntry log
 
         _ ->
             Nothing
+
+
+ctxMenuConfigEntry : Log -> Maybe (CtxMenu.Config Msg)
+ctxMenuConfigEntry log =
+    Just
+        { entries = ctxMenuLogEntries log
+        , mapper = ToCtxMenu
+        }
+
+
+ctxMenuLogEntries : Log -> List (CtxMenu.ConfigEntry Msg)
+ctxMenuLogEntries log =
+    if not log.isDeleted then
+        [ CtxMenu.SimpleItem { label = "Edit", enabled = True, onClick = Nothing }
+        , CtxMenu.SimpleItem { label = "Delete", enabled = True, onClick = Just <| OnDeleteLog log }
+        ]
+
+    else
+        -- Note: Not sure that's the actual mechanic
+        [ CtxMenu.SimpleItem { label = "Recover", enabled = False, onClick = Nothing } ]
 
 
 
@@ -203,8 +285,19 @@ willOpen _ =
 
 
 didOpen : WM.WindowInfo -> ( Model, Effect Msg )
-didOpen _ =
-    ( { selectedLog = Nothing
+didOpen { sessionId } =
+    let
+        -- TODO: Not worrying about this for now.
+        nip =
+            case sessionId of
+                WM.LocalSessionID nip_ ->
+                    nip_
+
+                WM.RemoteSessionID nip_ ->
+                    nip_
+    in
+    ( { nip = nip
+      , selectedLog = Nothing
       }
     , Effect.none
     )
