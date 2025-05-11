@@ -189,7 +189,10 @@ components:
       required:
         - process_id
         - log_id
+        - nip
       properties:
+        nip:
+          type: string
         log_id:
           type: string
         process_id:

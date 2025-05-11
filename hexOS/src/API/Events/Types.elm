@@ -57,7 +57,7 @@ type alias ProcessCompleted =
 
 
 type alias LogDeleted =
-    { log_id : LogID, process_id : ProcessID }
+    { log_id : LogID, nip : NIP, process_id : ProcessID }
 
 
 type alias LogDeleteFailed =

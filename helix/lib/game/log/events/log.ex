@@ -33,10 +33,11 @@ defmodule Game.Events.Log do
       def spec do
         selection(
           schema(%{
+            nip: nip(),
             log_id: external_id(),
             process_id: external_id()
           }),
-          [:log_id, :process_id]
+          [:nip, :log_id, :process_id]
         )
       end
 
@@ -44,8 +45,11 @@ defmodule Game.Events.Log do
         entity_id = process.entity_id
         server_id = process.server_id
 
+        %{nip: nip} = Svc.NetworkConnection.fetch!(by_server_id: server_id)
+
         payload =
           %{
+            nip: NIP.to_external(nip),
             log_id: log.id |> ID.to_external(entity_id, server_id),
             process_id: process.id |> ID.to_external(entity_id, server_id)
           }

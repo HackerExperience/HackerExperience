@@ -182,7 +182,7 @@ defmodule Game.Process.Log.DeleteTest do
 
   describe "E2E - Processable" do
     test "upon completion, deletes the log", ctx do
-      %{server: server, entity: entity, player: player} = Setup.server()
+      %{server: server, entity: entity, player: player, nip: nip} = Setup.server()
 
       log_rev_1 = Setup.log!(server.id, visible_by: entity.id)
       log_rev_2 = Setup.log!(server.id, id: log_rev_1.id, revision_id: 2, visible_by: entity.id)
@@ -207,6 +207,7 @@ defmodule Game.Process.Log.DeleteTest do
       assert proc_completed_sse.data.process_id |> U.from_eid(player.id) == process.id
 
       log_deleted_sse = U.wait_sse_event!("log_deleted")
+      assert log_deleted_sse.data.nip == nip |> NIP.to_external()
       assert log_deleted_sse.data.process_id |> U.from_eid(player.id) == process.id
       assert log_deleted_sse.data.log_id |> U.from_eid(player.id) == log_rev_2.id
 

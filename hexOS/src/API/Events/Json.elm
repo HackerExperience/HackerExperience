@@ -123,9 +123,13 @@ encodeProcessCompleted rec =
 decodeLogDeleted : Json.Decode.Decoder API.Events.Types.LogDeleted
 decodeLogDeleted =
     Json.Decode.succeed
-        (\log_id process_id -> { log_id = log_id, process_id = process_id })
+        (\log_id nip process_id ->
+            { log_id = log_id, nip = nip, process_id = process_id }
+        )
         |> OpenApi.Common.jsonDecodeAndMap
             (Json.Decode.field "log_id" (Json.Decode.map LogID Json.Decode.string))
+        |> OpenApi.Common.jsonDecodeAndMap
+            (Json.Decode.field "nip" (Json.Decode.map (\nip -> NIP.fromString nip) Json.Decode.string))
         |> OpenApi.Common.jsonDecodeAndMap
             (Json.Decode.field
                 "process_id"
@@ -137,6 +141,7 @@ encodeLogDeleted : API.Events.Types.LogDeleted -> Json.Encode.Value
 encodeLogDeleted rec =
     Json.Encode.object
         [ ( "log_id", Json.Encode.string (LogID.toValue rec.log_id) )
+        , ( "nip", Json.Encode.string (NIP.toString rec.nip) )
         , ( "process_id", Json.Encode.string (ProcessID.toValue rec.process_id) )
         ]
 
