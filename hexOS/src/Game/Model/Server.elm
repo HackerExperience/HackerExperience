@@ -6,6 +6,7 @@ module Game.Model.Server exposing
     , invalidGateway
     , invalidServer
     , listLogs
+    , onLogDeletedEvent
     , onTunnelCreatedEvent
     , parseEndpoint
     , parseEndpoints
@@ -189,6 +190,11 @@ listLogs server =
 
 
 -- Event handlers
+
+
+onLogDeletedEvent : Events.LogDeleted -> Server -> Server
+onLogDeletedEvent event server =
+    { server | logs = Log.onLogDeletedEvent event server.logs }
 
 
 onTunnelCreatedEvent : Events.TunnelCreated -> Gateway -> Gateway

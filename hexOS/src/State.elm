@@ -203,6 +203,16 @@ updateAction state action =
 updateEvent : State -> Event -> ( State, Effect Msg )
 updateEvent state event_ =
     case event_ of
+        Event.LogDeleted event universe ->
+            let
+                game =
+                    getUniverse state universe
+
+                newModel =
+                    Game.onLogDeletedEvent game event
+            in
+            ( replaceUniverse state newModel universe, Effect.none )
+
         Event.TunnelCreated event universe ->
             let
                 game =

@@ -1,12 +1,15 @@
 module Game exposing
     ( Model
     , buildApiContext
+    , findEndpointServer
+    , findGatewayServer
     , getActiveEndpointNip
     , getActiveGateway
     , getGateway
     , getGateways
     , getServer
     , init
+    , onLogDeletedEvent
     , onTunnelCreatedEvent
     , switchActiveEndpoint
     , switchActiveGateway
@@ -79,6 +82,14 @@ findGatewayServer : Model -> NIP -> Maybe Server
 findGatewayServer model nip =
     findServer model nip
         |> Maybe.filter (\server -> server.type_ == ServerGateway)
+
+
+{-| Returns the Server, if it exists and if it's a Endpoint.
+-}
+findEndpointServer : Model -> NIP -> Maybe Server
+findEndpointServer model nip =
+    findServer model nip
+        |> Maybe.filter (\server -> server.type_ == ServerEndpoint)
 
 
 {-| Updates the Server, if it exists. Perform a no-op if it doesn't.
@@ -189,12 +200,7 @@ getAllTunnels model =
 
 onLogDeletedEvent : Model -> Events.LogDeleted -> Model
 onLogDeletedEvent model event =
-    case findGatewayServer model event.nip of
-        Just _ ->
-            updateServer event.nip (Server.onLogDeletedEvent event) model
-
-        Nothing ->
-            model
+    updateServer event.nip (Server.onLogDeletedEvent event) model
 
 
 onTunnelCreatedEvent : Model -> Events.TunnelCreated -> Model

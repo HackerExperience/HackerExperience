@@ -3,10 +3,11 @@ module Game.Model.Log exposing
     , LogType(..)
     , Logs
     , logsToList
+    , onLogDeletedEvent
     , parse
     )
 
-import API.Events.Types as EventTypes
+import API.Events.Types as Events
 import Game.Model.LogID as LogID exposing (LogID, RawLogID)
 import OrderedDict exposing (OrderedDict)
 
@@ -47,13 +48,13 @@ logsToList logs =
 -- Model > Parser
 
 
-parse : List EventTypes.IdxLog -> Logs
+parse : List Events.IdxLog -> Logs
 parse idxLogs =
     List.map (\idxLog -> ( idxLog.id, parseLog idxLog )) idxLogs
         |> OrderedDict.fromList
 
 
-parseLog : EventTypes.IdxLog -> Log
+parseLog : Events.IdxLog -> Log
 parseLog log =
     let
         ( type_, rawText ) =
@@ -76,3 +77,15 @@ parseLogType strLogType =
         _ ->
             -- ( UnknownLog, "Unknown log" )
             ( LocalhostLoggedIn, "localhost logged in" )
+
+
+
+-- Event Handlers
+
+
+onLogDeletedEvent : Events.LogDeleted -> Logs -> Logs
+onLogDeletedEvent event logs =
+    OrderedDict.update
+        (LogID.toString event.log_id)
+        (Maybe.map (\log -> { log | isDeleted = True }))
+        logs

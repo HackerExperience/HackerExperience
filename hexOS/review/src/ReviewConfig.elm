@@ -94,6 +94,7 @@ config =
             [ "src/UI.elm"
             , "src/Utils.elm"
             , "src/Effect.elm"
+            , "src/Game.elm"
             , "src/DevTools/ReviewBypass.elm"
             ]
         -- Below ignored files are WIP and should eventually be fixed (either used or removed)
