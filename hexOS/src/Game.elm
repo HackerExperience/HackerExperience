@@ -16,9 +16,8 @@ import API.Events.Types as Events
 import API.Types
 import API.Utils
 import Dict exposing (Dict)
-import Dict.Extra as Dict
 import Game.Model.NIP as NIP exposing (NIP, RawNIP)
-import Game.Model.Server as Server exposing (Endpoint, Gateway, Server)
+import Game.Model.Server as Server exposing (Endpoint, Gateway, Server, ServerType(..))
 import Game.Model.Tunnel as Tunnel exposing (Tunnels)
 import Game.Universe exposing (Universe(..))
 import Maybe.Extra as Maybe
@@ -30,6 +29,7 @@ type alias Model =
     , activeGateway : NIP
     , gateways : Dict RawNIP Gateway
     , endpoints : Dict RawNIP Endpoint
+    , servers : Dict RawNIP Server
     , apiCtx : API.Types.InputContext
     }
 
@@ -40,27 +40,74 @@ type alias Model =
 
 init : API.Types.InputToken -> Universe -> Events.IndexRequested -> Model
 init token universe index =
+    let
+        gateways =
+            Server.parseGateways index.player.gateways
+    in
     { universe = universe
     , mainframeNip = index.player.mainframe_nip
     , activeGateway = index.player.mainframe_nip
-    , gateways = Server.parseGateways index.player.gateways
+    , gateways = gateways
     , endpoints = Server.parseEndpoints index.player.endpoints
+    , servers = Server.parseServers gateways index.player.gateways index.player.endpoints
     , apiCtx = buildApiContext token universe
     }
 
 
+
+-- Model > Server
+
+
+{-| Returns the Server, assuming it must exist.
+-}
 getServer : Model -> NIP -> Server
 getServer model nip =
-    Dict.get (NIP.toString nip) model.gateways
-        |> Maybe.map .server
-        |> Maybe.or (Dict.get (NIP.toString nip) model.endpoints |> Maybe.map .server)
+    findServer model nip
         |> Maybe.withDefault Server.invalidServer
+
+
+{-| Returns the Server, if it exists.
+-}
+findServer : Model -> NIP -> Maybe Server
+findServer model nip =
+    Dict.get (NIP.toString nip) model.servers
+
+
+{-| Returns the Server, if it exists and if it's a Gateway.
+-}
+findGatewayServer : Model -> NIP -> Maybe Server
+findGatewayServer model nip =
+    findServer model nip
+        |> Maybe.filter (\server -> server.type_ == ServerGateway)
+
+
+{-| Updates the Server, if it exists. Perform a no-op if it doesn't.
+-}
+updateServer : NIP -> (Server -> Server) -> Model -> Model
+updateServer nip updater model =
+    let
+        newServers =
+            Dict.update
+                (NIP.toString nip)
+                (Maybe.map (\gtw -> updater gtw))
+                model.servers
+    in
+    { model | servers = newServers }
+
+
+
+-- Model > Gateway
 
 
 getGateway : Model -> NIP -> Gateway
 getGateway model nip =
-    Dict.get (NIP.toString nip) model.gateways
+    findGateway model nip
         |> Maybe.withDefault Server.invalidGateway
+
+
+findGateway : Model -> NIP -> Maybe Gateway
+findGateway model nip =
+    Dict.get (NIP.toString nip) model.gateways
 
 
 getGateways : Model -> List Gateway
@@ -111,12 +158,12 @@ switchActiveEndpoint newActiveEndpointNip model =
             getAllTunnels model
 
         tunnel =
-            Tunnel.findTunnelWithTargetNip tunnels newActiveEndpointNip
+            Tunnel.findTunnelByTargetNip tunnels newActiveEndpointNip
 
         gateway =
             case tunnel of
                 Just { sourceNip } ->
-                    findGatewayByNip model sourceNip
+                    getGateway model sourceNip
 
                 Nothing ->
                     Server.invalidGateway
@@ -124,27 +171,6 @@ switchActiveEndpoint newActiveEndpointNip model =
     model
         |> switchActiveGateway gateway.nip
         |> updateActiveGateway (\gtw -> Server.switchActiveEndpoint gtw newActiveEndpointNip)
-
-
-
--- Model > Gateways
-
-
-maybeFindGatewayByNip : Model -> NIP -> Maybe Gateway
-maybeFindGatewayByNip model nip =
-    -- TODO: No longer relevant since we now index gateways by nip
-    Dict.find (\_ gtw -> gtw.nip == nip) model.gateways
-        |> Maybe.map Tuple.second
-
-
-{-| Returns the gateway with the corresponding NIP. This function assumes that the NIP will always
-exist. If there is a possibility it won't, use the `maybeFindGatewayByNip` variant.
--}
-findGatewayByNip : Model -> NIP -> Gateway
-findGatewayByNip model nip =
-    -- TODO: No longer relevant since we now index gateways by nip
-    maybeFindGatewayByNip model nip
-        |> Maybe.withDefault Server.invalidGateway
 
 
 
@@ -161,11 +187,21 @@ getAllTunnels model =
 -- Event handlers
 
 
+onLogDeletedEvent : Model -> Events.LogDeleted -> Model
+onLogDeletedEvent model event =
+    case findGatewayServer model event.nip of
+        Just _ ->
+            updateServer event.nip (Server.onLogDeletedEvent event) model
+
+        Nothing ->
+            model
+
+
 onTunnelCreatedEvent : Model -> Events.TunnelCreated -> Model
 onTunnelCreatedEvent model event =
     let
         gateway =
-            maybeFindGatewayByNip model event.source_nip
+            findGateway model event.source_nip
 
         updateGatewayFn =
             \model_ ->

@@ -2,6 +2,7 @@ module Game.Model.Server exposing
     ( Endpoint
     , Gateway
     , Server
+    , ServerType(..)
     , invalidGateway
     , invalidServer
     , listLogs
@@ -9,6 +10,7 @@ module Game.Model.Server exposing
     , parseEndpoint
     , parseEndpoints
     , parseGateways
+    , parseServers
     , switchActiveEndpoint
     )
 
@@ -37,19 +39,84 @@ type alias Gateway =
     { nip : NIP
     , tunnels : Tunnels
     , activeEndpoint : Maybe NIP
-    , server : Server
     }
 
 
 type alias Endpoint =
     { nip : NIP
-    , server : Server
     }
 
 
 type ServerType
     = ServerGateway
     | ServerEndpoint
+
+
+
+-- Model > Server
+
+
+buildServer : ServerType -> List Events.IdxLog -> NIP -> Maybe TunnelID -> Server
+buildServer serverType idxLogs nip tunnelId =
+    { nip = nip
+    , logs = Log.parse idxLogs
+    , type_ = serverType
+    , tunnelId = tunnelId
+    }
+
+
+parseServers :
+    Dict RawNIP Gateway
+    -> List Events.IdxGateway
+    -> List Events.IdxEndpoint
+    -> Dict RawNIP Server
+parseServers gateways idxGateways idxEndpoints =
+    let
+        gatewaysList =
+            Dict.values gateways
+
+        allTunnels =
+            List.concatMap (\{ tunnels } -> tunnels) gatewaysList
+    in
+    Dict.fromList (buildGatewayServers idxGateways ++ buildEndpointServers allTunnels idxEndpoints)
+
+
+buildGatewayServers : List Events.IdxGateway -> List ( RawNIP, Server )
+buildGatewayServers idxGateways =
+    let
+        buildGatewayServer =
+            \gtw ->
+                buildServer ServerGateway gtw.logs gtw.nip Nothing
+    in
+    List.foldl (\gtw acc -> ( NIP.toString gtw.nip, buildGatewayServer gtw ) :: acc)
+        []
+        idxGateways
+
+
+buildEndpointServers : Tunnels -> List Events.IdxEndpoint -> List ( RawNIP, Server )
+buildEndpointServers allTunnels idxEndpoints =
+    let
+        findTunnel =
+            \nip ->
+                Tunnel.findTunnelByTargetNip allTunnels nip
+                    |> Maybe.map .id
+
+        buildEndpointServer =
+            \endp ->
+                buildServer ServerEndpoint endp.logs endp.nip (findTunnel endp.nip)
+    in
+    List.foldl (\endp acc -> ( NIP.toString endp.nip, buildEndpointServer endp ) :: acc)
+        []
+        idxEndpoints
+
+
+invalidServer : Server
+invalidServer =
+    { nip = NIP.invalidNip
+    , logs = OrderedDict.empty
+    , type_ = ServerGateway
+    , tunnelId = Nothing
+    }
 
 
 
@@ -74,7 +141,6 @@ parseGateway gateway =
     { nip = gateway.nip
     , tunnels = Tunnel.parse gateway.tunnels
     , activeEndpoint = activeEndpoint
-    , server = buildServer gateway.logs gateway.nip ServerGateway Nothing
     }
 
 
@@ -83,7 +149,6 @@ invalidGateway =
     { nip = NIP.invalidNip
     , tunnels = []
     , activeEndpoint = Nothing
-    , server = invalidServer
     }
 
 
@@ -99,46 +164,18 @@ parseEndpoints idxEndpoints =
 
 parseEndpoint : Events.IdxEndpoint -> Endpoint
 parseEndpoint endpoint =
-    let
-        -- TODO: Extract tunnel from previous parsers
-        tunnelId =
-            Nothing
-    in
     { nip = endpoint.nip
-    , server = buildServer endpoint.logs endpoint.nip ServerEndpoint tunnelId
     }
 
 
 switchActiveEndpoint : Gateway -> NIP -> Gateway
 switchActiveEndpoint gateway endpointNip =
-    case Tunnel.findTunnelWithTargetNip gateway.tunnels endpointNip of
+    case Tunnel.findTunnelByTargetNip gateway.tunnels endpointNip of
         Just _ ->
             { gateway | activeEndpoint = Just endpointNip }
 
         Nothing ->
             gateway
-
-
-
--- Model > Server
-
-
-buildServer : List Events.IdxLog -> NIP -> ServerType -> Maybe TunnelID -> Server
-buildServer idxLogs nip serverType tunnelId =
-    { nip = nip
-    , logs = Log.parse idxLogs
-    , type_ = serverType
-    , tunnelId = tunnelId
-    }
-
-
-invalidServer : Server
-invalidServer =
-    { nip = NIP.invalidNip
-    , logs = OrderedDict.empty
-    , type_ = ServerGateway
-    , tunnelId = Nothing
-    }
 
 
 
