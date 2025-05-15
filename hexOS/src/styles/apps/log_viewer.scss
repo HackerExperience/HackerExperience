@@ -130,6 +130,7 @@
 }
 
 .a-log-row-deleted {
+    // We need !important because the :nth-child rules also set the background
     background: repeating-linear-gradient(
         -45deg,
         rgba(255, 0, 0, 0.2),
