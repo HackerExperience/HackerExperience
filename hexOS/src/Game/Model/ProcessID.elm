@@ -1,5 +1,6 @@
 module Game.Model.ProcessID exposing
     ( ProcessID(..)
+    , fromValue
     , toValue
     )
 
@@ -17,3 +18,8 @@ type ProcessID
 toValue : ProcessID -> String
 toValue (ProcessID id) =
     id
+
+
+fromValue : String -> ProcessID
+fromValue id =
+    ProcessID id

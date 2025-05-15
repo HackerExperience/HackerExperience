@@ -3,6 +3,7 @@ module Game.Model.Server exposing
     , Gateway
     , Server
     , ServerType(..)
+    , buildServer
     , invalidGateway
     , invalidServer
     , listLogs
@@ -10,6 +11,7 @@ module Game.Model.Server exposing
     , onTunnelCreatedEvent
     , parseEndpoint
     , parseEndpoints
+    , parseGateway
     , parseGateways
     , parseServers
     , switchActiveEndpoint

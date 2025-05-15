@@ -2,7 +2,10 @@ module TestHelpers.Models exposing (..)
 
 import API.Types
 import Apps.Manifest as App
-import Game
+import Dict
+import Game exposing (Model)
+import Game.Model.NIP as NIP
+import Game.Model.Server exposing (Endpoint, Gateway, Server)
 import Game.Universe as Universe exposing (Universe(..))
 import HUD.ConnectionInfo as CI
 import OS
@@ -14,7 +17,7 @@ import WM
 
 
 
--- Game
+-- State
 
 
 state : State
@@ -38,7 +41,47 @@ stateWithUniverse universe state_ =
     { state_ | currentUniverse = universe }
 
 
+stateWithModel : Model -> State -> State
+stateWithModel model state_ =
+    case state_.currentUniverse of
+        Singleplayer ->
+            stateWithSpModel model state_
 
+        Multiplayer ->
+            stateWithMpModel model state_
+
+
+stateWithSpModel : Model -> State -> State
+stateWithSpModel spModel state_ =
+    { state_ | sp = spModel }
+
+
+stateWithMpModel : Model -> State -> State
+stateWithMpModel mpModel state_ =
+    { state_ | mp = mpModel }
+
+
+
+-- Game
+
+
+game : Model
+game =
+    Game.init (API.Types.InputToken "t0k3n") Singleplayer Mocks.indexRequested
+
+
+withServer : Server -> Model -> Model
+withServer server model =
+    { model | servers = Dict.insert (NIP.toString server.nip) server model.servers }
+
+
+withGateway : Gateway -> Model -> Model
+withGateway gateway model =
+    { model | gateways = Dict.insert (NIP.toString gateway.nip) gateway model.gateways }
+
+
+
+-- gameWith
 -- OS
 
 

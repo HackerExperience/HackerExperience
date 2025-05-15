@@ -5,6 +5,7 @@ module Game.Model.Log exposing
     , logsToList
     , onLogDeletedEvent
     , parse
+    , parseLog
     )
 
 import API.Events.Types as Events

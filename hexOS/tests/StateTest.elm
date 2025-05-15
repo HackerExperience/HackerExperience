@@ -1,13 +1,17 @@
 module StateTest exposing (suite)
 
 import Game.Bus exposing (Action(..))
+import Game.Model.Log as Log
 import Game.Model.NIP as NIP
 import Game.Msg exposing (Msg(..))
 import Game.Universe as Universe exposing (Universe(..))
 import State
 import TestHelpers.Expect as E
 import TestHelpers.Game as TG
+import TestHelpers.Mocks.Events as Mocks
 import TestHelpers.Models as TM
+import TestHelpers.Models.Log as TMLog
+import TestHelpers.Models.Server as TMServer
 import TestHelpers.Random as TR
 import TestHelpers.Test exposing (Test, describe, test)
 import WM
@@ -22,7 +26,9 @@ suite =
 msgTests : Test
 msgTests =
     describe "Msg"
-        [ msgPerformActionTests ]
+        [ msgPerformActionTests
+        , msgOnEventReceivedTests
+        ]
 
 
 msgPerformActionTests : Test
@@ -67,5 +73,47 @@ msgPerformActionTests =
                         -- No effects
                         , E.effectNone effect
                         ]
+            ]
+        ]
+
+
+msgOnEventReceivedTests : Test
+msgOnEventReceivedTests =
+    describe "OnEventReceived"
+        [ describe "Event.LogDeleted"
+            [ test "foo" <|
+                \_ ->
+                    let
+                        idxLog =
+                            Mocks.idxLog
+                                |> Mocks.withId "xyz"
+
+                        log =
+                            TMLog.fromIndex idxLog
+
+                        server =
+                            TMServer.new
+                                |> TMServer.withLogs [ log ]
+
+                        gateway =
+                            TMServer.gatewayFromServer server
+
+                        game =
+                            TM.game
+                                |> TM.withServer server
+                                |> TM.withGateway gateway
+
+                        _ =
+                            Debug.log "game" game
+
+                        -- |> TM.withLog log
+                        initialState =
+                            TM.state
+
+                        _ =
+                            Debug.log "initialState" initialState
+                    in
+                    E.batch
+                        [ E.equal 1 1 ]
             ]
         ]
