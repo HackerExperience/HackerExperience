@@ -17,6 +17,9 @@ defmodule Game.Endpoint.Log.DeleteTest do
       assert {:ok, %{status: 200, data: data}} =
                post(build_path(nip, log, player.id), %{}, token: jwt)
 
+      assert data.process_id
+      assert data.log_id == log.id |> U.to_eid(player.id)
+
       assert [registry] = U.get_all_process_registries()
       assert registry.process_id == data.process_id |> U.from_eid(player.id)
       assert registry.entity_id.id == player.id.id
@@ -47,6 +50,9 @@ defmodule Game.Endpoint.Log.DeleteTest do
 
       assert {:ok, %{status: 200, data: data}} =
                post(build_path(endp_nip, log, player.id), params, token: jwt)
+
+      assert data.process_id
+      assert data.log_id == log.id |> U.to_eid(player.id)
 
       assert [registry] = U.get_all_process_registries()
       assert registry.process_id == data.process_id |> U.from_eid(player.id)

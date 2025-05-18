@@ -26,9 +26,10 @@ defmodule Game.Endpoint.Log.Delete do
   def output_spec(200) do
     selection(
       schema(%{
-        process_id: binary()
+        process_id: binary(),
+        log_id: binary()
       }),
-      [:process_id]
+      [:process_id, :log_id]
     )
   end
 
@@ -40,6 +41,7 @@ defmodule Game.Endpoint.Log.Delete do
         %{
           nip: nip,
           log_id: log_id,
+          log_eid: parsed[:log_id],
           tunnel_id: tunnel_id
         }
 
@@ -65,22 +67,22 @@ defmodule Game.Endpoint.Log.Delete do
     end
   end
 
-  def handle_request(request, _params, ctx, _session) do
+  def handle_request(request, %{log_eid: log_eid}, ctx, _session) do
     process_params = %{}
     meta = %{log: ctx.log, tunnel: ctx.tunnel}
 
     case Svc.TOP.execute(LogDeleteProcess, ctx.server.id, ctx.entity.id, process_params, meta) do
       {:ok, process} ->
-        {:ok, %{request | result: %{process: process}}}
+        {:ok, %{request | result: %{log_eid: log_eid, process: process}}}
 
       {:error, reason} ->
         raise "Error creating log delete process: #{inspect(reason)}"
     end
   end
 
-  def render_response(request, %{process: process}, session) do
+  def render_response(request, %{process: process, log_eid: log_eid}, session) do
     process_eid = ID.to_external(process.id, session.data.entity_id, process.server_id)
-    {:ok, %{request | response: {200, %{process_id: process_eid}}}}
+    {:ok, %{request | response: {200, %{process_id: process_eid, log_id: log_eid}}}}
   end
 
   defp format_henforcer_error({:server, :not_belongs}), do: "nip_not_found"
