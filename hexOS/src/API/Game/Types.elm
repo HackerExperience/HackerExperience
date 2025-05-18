@@ -87,7 +87,7 @@ type alias LogEditInput =
 
 
 type alias LogDeleteOutput =
-    {}
+    { process_id : ProcessID }
 
 
 type alias LogDeleteInput =

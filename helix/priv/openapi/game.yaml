@@ -241,8 +241,11 @@ components:
           type: string
     LogDeleteOutput:
       type: object
-      required: []
-      properties: {}
+      required:
+        - process_id
+      properties:
+        process_id:
+          type: string
     LogEditInput:
       type: object
       required: []

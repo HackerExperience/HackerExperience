@@ -167,12 +167,15 @@ encodeLogEditInput rec =
 
 decodeLogDeleteOutput : Json.Decode.Decoder API.Game.Types.LogDeleteOutput
 decodeLogDeleteOutput =
-    Json.Decode.succeed {}
+    Json.Decode.succeed
+        (\process_id -> { process_id = process_id })
+        |> OpenApi.Common.jsonDecodeAndMap
+            (Json.Decode.field "process_id" (Json.Decode.map ProcessID Json.Decode.string))
 
 
 encodeLogDeleteOutput : API.Game.Types.LogDeleteOutput -> Json.Encode.Value
 encodeLogDeleteOutput rec =
-    Json.Encode.object []
+    Json.Encode.object [ ( "process_id", Json.Encode.string (ProcessID.toValue rec.process_id) ) ]
 
 
 decodeLogDeleteInput : Json.Decode.Decoder API.Game.Types.LogDeleteInput

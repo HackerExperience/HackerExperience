@@ -24,8 +24,12 @@ defmodule Game.Endpoint.Log.Delete do
   end
 
   def output_spec(200) do
-    # TODO
-    selection(schema(%{}), [])
+    selection(
+      schema(%{
+        process_id: binary()
+      }),
+      [:process_id]
+    )
   end
 
   def get_params(request, parsed, _session) do
