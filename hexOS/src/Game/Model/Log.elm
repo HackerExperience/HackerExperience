@@ -2,6 +2,8 @@ module Game.Model.Log exposing
     ( Log
     , LogType(..)
     , Logs
+    , findLog
+    , getLog
     , logsToList
     , onLogDeletedEvent
     , parse
@@ -43,6 +45,27 @@ logsToList : Logs -> List Log
 logsToList logs =
     OrderedDict.toList logs
         |> List.map (\( _, log ) -> log)
+
+
+getLog : LogID -> Logs -> Log
+getLog logId logs =
+    findLog logId logs
+        |> Maybe.withDefault invalidLog
+
+
+findLog : LogID -> Logs -> Maybe Log
+findLog logId logs =
+    OrderedDict.get (LogID.toString logId) logs
+
+
+invalidLog : Log
+invalidLog =
+    { id = LogID.fromValue "invalid"
+    , revisionId = "revId"
+    , type_ = CustomLog
+    , rawText = "Invalid log"
+    , isDeleted = False
+    }
 
 
 

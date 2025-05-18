@@ -4,6 +4,7 @@ import API.Events.Types as Events
 import Game.Model.Log exposing (Log, Logs)
 import Game.Model.Server as Server exposing (Endpoint, Gateway, Server, ServerType(..))
 import TestHelpers.Mocks.Events as Mocks
+import TestHelpers.Models.Log as TMLog
 
 
 
@@ -38,4 +39,4 @@ gatewayFromServer server =
 
 withLogs : List Log -> Server -> Server
 withLogs logs server =
-    server
+    { server | logs = TMLog.toLogs logs }

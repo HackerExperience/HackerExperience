@@ -4,7 +4,7 @@ import API.Types
 import Apps.Manifest as App
 import Dict
 import Game exposing (Model)
-import Game.Model.NIP as NIP
+import Game.Model.NIP as NIP exposing (NIP)
 import Game.Model.Server exposing (Endpoint, Gateway, Server)
 import Game.Universe as Universe exposing (Universe(..))
 import HUD.ConnectionInfo as CI
@@ -36,29 +36,49 @@ state =
         |> Tuple.first
 
 
-stateWithUniverse : Universe -> State -> State
-stateWithUniverse universe state_ =
+withUniverse : Universe -> State -> State
+withUniverse universe state_ =
     { state_ | currentUniverse = universe }
 
 
-stateWithModel : Model -> State -> State
-stateWithModel model state_ =
+withGame : Model -> State -> State
+withGame game_ state_ =
     case state_.currentUniverse of
         Singleplayer ->
-            stateWithSpModel model state_
+            withSpGame game_ state_
 
         Multiplayer ->
-            stateWithMpModel model state_
+            withMpGame game_ state_
 
 
-stateWithSpModel : Model -> State -> State
-stateWithSpModel spModel state_ =
-    { state_ | sp = spModel }
+withSpGame : Model -> State -> State
+withSpGame spGame state_ =
+    { state_ | sp = spGame }
 
 
-stateWithMpModel : Model -> State -> State
-stateWithMpModel mpModel state_ =
-    { state_ | mp = mpModel }
+withMpGame : Model -> State -> State
+withMpGame mpGame state_ =
+    { state_ | mp = mpGame }
+
+
+getGame : State -> Model
+getGame state_ =
+    case state_.currentUniverse of
+        Singleplayer ->
+            getSpGame state_
+
+        Multiplayer ->
+            getMpGame state_
+
+
+getSpGame : State -> Model
+getSpGame state_ =
+    state_.sp
+
+
+getMpGame : State -> Model
+getMpGame state_ =
+    state_.mp
 
 
 
@@ -71,13 +91,18 @@ game =
 
 
 withServer : Server -> Model -> Model
-withServer server model =
-    { model | servers = Dict.insert (NIP.toString server.nip) server model.servers }
+withServer server game_ =
+    { game_ | servers = Dict.insert (NIP.toString server.nip) server game_.servers }
 
 
 withGateway : Gateway -> Model -> Model
-withGateway gateway model =
-    { model | gateways = Dict.insert (NIP.toString gateway.nip) gateway model.gateways }
+withGateway gateway game_ =
+    { game_ | gateways = Dict.insert (NIP.toString gateway.nip) gateway game_.gateways }
+
+
+getServer : NIP -> Model -> Server
+getServer nip game_ =
+    Game.getServer game_ nip
 
 
 

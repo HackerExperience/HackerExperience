@@ -1,8 +1,8 @@
 module TestHelpers.Mocks.Events exposing (..)
 
 import API.Events.Types as Events
-import Game.Model.LogID as LogID
-import Game.Model.NIP as NIP
+import Game.Model.LogID as LogID exposing (LogID)
+import Game.Model.NIP as NIP exposing (NIP)
 import Game.Model.ProcessID as ProcessID
 
 
@@ -13,7 +13,7 @@ import Game.Model.ProcessID as ProcessID
 indexRequested : Events.IndexRequested
 indexRequested =
     { player =
-        { mainframe_nip = NIP.fromString "0@99.98.97.96"
+        { mainframe_nip = defaultNip
         , gateways = []
         , endpoints = []
         }
@@ -23,7 +23,7 @@ indexRequested =
 idxGateway : Events.IdxGateway
 idxGateway =
     { logs = []
-    , nip = NIP.fromString "0@99.98.97.96"
+    , nip = defaultNip
     , tunnels = []
     }
 
@@ -41,8 +41,13 @@ logDeleted : Events.LogDeleted
 logDeleted =
     { log_id = LogID.fromValue "abc"
     , process_id = ProcessID.fromValue "abc"
-    , nip = NIP.fromString "0@99.98.97.96"
+    , nip = defaultNip
     }
+
+
+defaultNip : NIP
+defaultNip =
+    NIP.fromString "0@99.98.97.96"
 
 
 
@@ -52,3 +57,8 @@ logDeleted =
 withId : String -> { a | id : String } -> { a | id : String }
 withId id event =
     { event | id = id }
+
+
+withLog_id : LogID -> { a | log_id : LogID } -> { a | log_id : LogID }
+withLog_id id event =
+    { event | log_id = id }
