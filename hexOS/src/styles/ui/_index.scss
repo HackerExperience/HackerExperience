@@ -50,3 +50,13 @@ UI
 .ui-cursor-pointer {
     cursor: pointer
 }
+
+// TODO: Move to a UI.Spinner component
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}

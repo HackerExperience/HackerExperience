@@ -64,6 +64,12 @@
         font-size: 16px;
     }
 
+    // TODO: Move to a UI.Spinner component
+    .a-lr-badge-spinner {
+        color: grey;
+        animation: spin 2s linear infinite;
+    }
+
     .a-lr-badge-broken {
         color: yellow;
     }

@@ -4,6 +4,7 @@ module Game.Model.Server exposing
     , Server
     , ServerType(..)
     , buildServer
+    , handleProcessOperation
     , invalidGateway
     , invalidServer
     , listLogs
@@ -11,7 +12,6 @@ module Game.Model.Server exposing
     , onTunnelCreatedEvent
     , parseEndpoint
     , parseEndpoints
-    , parseGateway
     , parseGateways
     , parseServers
     , switchActiveEndpoint
@@ -21,6 +21,7 @@ import API.Events.Types as Events
 import Dict exposing (Dict)
 import Game.Model.Log as Log exposing (Log, Logs)
 import Game.Model.NIP as NIP exposing (NIP, RawNIP)
+import Game.Model.Process as Process
 import Game.Model.Tunnel as Tunnel exposing (Tunnels)
 import Game.Model.TunnelID exposing (TunnelID)
 import OrderedDict
@@ -188,6 +189,25 @@ switchActiveEndpoint gateway endpointNip =
 listLogs : Server -> List Log
 listLogs server =
     Log.logsToList server.logs
+
+
+
+-- Process handlers
+
+
+handleProcessOperation : Process.Operation -> Server -> Server
+handleProcessOperation operation server =
+    case operation of
+        Process.Starting (Process.LogDeleteStarting _) ->
+            handleProcessOperationLog operation server
+
+        Process.Started (Process.LogDeleteStarted _ _) ->
+            handleProcessOperationLog operation server
+
+
+handleProcessOperationLog : Process.Operation -> Server -> Server
+handleProcessOperationLog operation server =
+    { server | logs = Log.handleProcessOperation operation server.logs }
 
 
 

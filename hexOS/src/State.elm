@@ -196,6 +196,16 @@ updateAction state action =
             in
             ( { state | currentSession = newSessionId }, Effect.none )
 
+        ProcessOperation nip operation ->
+            let
+                game =
+                    getActiveUniverse state
+
+                newModel =
+                    Game.handleProcessOperation game nip operation
+            in
+            ( replaceActiveUniverse state newModel, Effect.none )
+
         ActionNoOp ->
             ( state, Effect.none )
 

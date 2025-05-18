@@ -5,9 +5,11 @@ import API.Types
 import Apps.Manifest as App
 import Effect exposing (Effect)
 import Game
+import Game.Bus as Game
 import Game.Model.Log exposing (Log, LogType(..))
-import Game.Model.LogID as LogID exposing (LogID)
+import Game.Model.LogID exposing (LogID)
 import Game.Model.NIP exposing (NIP)
+import Game.Model.Process as Process
 import Game.Model.Server as Server
 import Html.Attributes as HA
 import Html.Events as HE
@@ -76,15 +78,27 @@ update game msg model =
 
                 config =
                     GameAPI.logDeleteConfig game.apiCtx model.nip log.id server.tunnelId
-            in
-            ( model, Effect.logDelete OnDeleteLogResponse config )
 
-        OnDeleteLogResponse (Ok res) ->
-            let
-                _ =
-                    Debug.log "OK!" res
+                toGameMsg =
+                    Game.ProcessOperation
+                        model.nip
+                        (Process.Starting <| Process.LogDeleteStarting log.id)
             in
-            ( model, Effect.none )
+            ( model
+            , Effect.batch
+                [ Effect.logDelete OnDeleteLogResponse config
+                , Effect.msgToCmd <| ToOS <| OS.Bus.ToGame toGameMsg
+                ]
+            )
+
+        OnDeleteLogResponse (Ok { log_id, process_id }) ->
+            let
+                toGameMsg =
+                    Game.ProcessOperation
+                        model.nip
+                        (Process.Started <| Process.LogDeleteStarted log_id process_id)
+            in
+            ( model, Effect.msgToCmd <| ToOS <| OS.Bus.ToGame toGameMsg )
 
         OnDeleteLogResponse (Err _) ->
             -- TODO
@@ -181,6 +195,12 @@ vLogRow log =
                 [ text log.rawText ]
 
         -- TODO: Move to dedicate function
+        -- TODO: UI.Spinner?
+        spinnerIcon =
+            UI.Icon.msOutline "progress_activity" Nothing
+                |> UI.Icon.withClass "a-lr-badge-spinner"
+                |> UI.Icon.toUI
+
         brokenBadgeIcon =
             UI.Icon.msOutline "warning" Nothing
                 |> UI.Icon.withClass "a-lr-badge-broken"
@@ -191,22 +211,35 @@ vLogRow log =
                 |> UI.Icon.withClass "a-lr-badge-deleted"
                 |> UI.Icon.toUI
 
-        badges =
+        statusBadges =
             case ( log.isDeleted, log.type_ ) of
                 ( True, CustomLog ) ->
-                    row [ cl "a-log-row-badges" ]
-                        [ brokenBadgeIcon, deletedBadgeIcon ]
+                    [ brokenBadgeIcon, deletedBadgeIcon ]
 
                 ( True, _ ) ->
-                    row [ cl "a-log-row-badges" ]
-                        [ deletedBadgeIcon ]
+                    [ deletedBadgeIcon ]
 
                 ( False, CustomLog ) ->
-                    row [ cl "a-log-row-badges" ]
-                        [ brokenBadgeIcon ]
+                    [ brokenBadgeIcon ]
 
                 ( False, _ ) ->
-                    UI.emptyEl
+                    []
+
+        allBadges =
+            case log.currentOp of
+                Nothing ->
+                    statusBadges
+
+                Just _ ->
+                    spinnerIcon :: statusBadges
+
+        badges =
+            if not <| List.isEmpty allBadges then
+                row [ cl "a-log-row-badges" ]
+                    allBadges
+
+            else
+                UI.emptyEl
     in
     row
         [ cl "a-log-row"

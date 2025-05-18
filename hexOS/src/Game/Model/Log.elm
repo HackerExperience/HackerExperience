@@ -4,6 +4,7 @@ module Game.Model.Log exposing
     , Logs
     , findLog
     , getLog
+    , handleProcessOperation
     , logsToList
     , onLogDeletedEvent
     , parse
@@ -12,6 +13,8 @@ module Game.Model.Log exposing
 
 import API.Events.Types as Events
 import Game.Model.LogID as LogID exposing (LogID, RawLogID)
+import Game.Model.Process as Process
+import Game.Model.ProcessID exposing (ProcessID)
 import OrderedDict exposing (OrderedDict)
 
 
@@ -29,12 +32,18 @@ type alias Log =
     , type_ : LogType
     , rawText : String
     , isDeleted : Bool
+    , currentOp : Maybe LogOperation
     }
 
 
 type LogType
     = LocalhostLoggedIn
     | CustomLog
+
+
+type LogOperation
+    = OpStartingLogDelete
+    | OpDeletingLog ProcessID
 
 
 
@@ -58,6 +67,21 @@ findLog logId logs =
     OrderedDict.get (LogID.toString logId) logs
 
 
+updateLog : LogID -> (Log -> Log) -> Logs -> Logs
+updateLog logId updater logs =
+    let
+        justUpdateIt =
+            \maybeLog ->
+                case maybeLog of
+                    Just log ->
+                        Just <| updater log
+
+                    Nothing ->
+                        Nothing
+    in
+    OrderedDict.update (LogID.toString logId) justUpdateIt logs
+
+
 invalidLog : Log
 invalidLog =
     { id = LogID.fromValue "invalid"
@@ -65,6 +89,7 @@ invalidLog =
     , type_ = CustomLog
     , rawText = "Invalid log"
     , isDeleted = False
+    , currentOp = Nothing
     }
 
 
@@ -89,6 +114,7 @@ parseLog log =
     , type_ = type_
     , rawText = rawText
     , isDeleted = log.is_deleted
+    , currentOp = Nothing
     }
 
 
@@ -101,6 +127,20 @@ parseLogType strLogType =
         _ ->
             -- ( UnknownLog, "Unknown log" )
             ( LocalhostLoggedIn, "localhost logged in" )
+
+
+
+-- Process handlers
+
+
+handleProcessOperation : Process.Operation -> Logs -> Logs
+handleProcessOperation operation logs =
+    case operation of
+        Process.Starting (Process.LogDeleteStarting logId) ->
+            updateLog logId (\log -> { log | currentOp = Just OpStartingLogDelete }) logs
+
+        Process.Started (Process.LogDeleteStarted logId processId) ->
+            updateLog logId (\log -> { log | currentOp = Just <| OpDeletingLog processId }) logs
 
 
 
