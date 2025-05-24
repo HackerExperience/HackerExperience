@@ -21,7 +21,7 @@ import API.Types
 import API.Utils
 import Dict exposing (Dict)
 import Game.Model.NIP as NIP exposing (NIP, RawNIP)
-import Game.Model.Process as Process
+import Game.Model.ProcessOperation as Operation exposing (Operation)
 import Game.Model.Server as Server exposing (Endpoint, Gateway, Server, ServerType(..))
 import Game.Model.Tunnel as Tunnel exposing (Tunnels)
 import Game.Universe exposing (Universe(..))
@@ -190,22 +190,22 @@ switchActiveEndpoint newActiveEndpointNip model =
 -- Model > Processes
 
 
-handleProcessOperation : Model -> NIP -> Process.Operation -> Model
+handleProcessOperation : Model -> NIP -> Operation -> Model
 handleProcessOperation model nip operation =
     case operation of
-        Process.Starting _ ->
+        Operation.Starting _ ->
             defaultProcessStartingHandler model nip operation
 
-        Process.Started _ ->
+        Operation.Started _ _ ->
             defaultProcessStartedHandler model nip operation
 
 
-defaultProcessStartingHandler : Model -> NIP -> Process.Operation -> Model
+defaultProcessStartingHandler : Model -> NIP -> Operation -> Model
 defaultProcessStartingHandler model nip operation =
     updateServer nip (Server.handleProcessOperation operation) model
 
 
-defaultProcessStartedHandler : Model -> NIP -> Process.Operation -> Model
+defaultProcessStartedHandler : Model -> NIP -> Operation -> Model
 defaultProcessStartedHandler model nip operation =
     updateServer nip (Server.handleProcessOperation operation) model
 

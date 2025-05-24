@@ -13,8 +13,8 @@ module Game.Model.Log exposing
 
 import API.Events.Types as Events
 import Game.Model.LogID as LogID exposing (LogID, RawLogID)
-import Game.Model.Process as Process
 import Game.Model.ProcessID exposing (ProcessID)
+import Game.Model.ProcessOperation as Operation exposing (Operation)
 import OrderedDict exposing (OrderedDict)
 
 
@@ -133,13 +133,13 @@ parseLogType strLogType =
 -- Process handlers
 
 
-handleProcessOperation : Process.Operation -> Logs -> Logs
+handleProcessOperation : Operation -> Logs -> Logs
 handleProcessOperation operation logs =
     case operation of
-        Process.Starting (Process.LogDeleteStarting logId) ->
+        Operation.Starting (Operation.LogDelete logId) ->
             updateLog logId (\log -> { log | currentOp = Just OpStartingLogDelete }) logs
 
-        Process.Started (Process.LogDeleteStarted logId processId) ->
+        Operation.Started (Operation.LogDelete logId) processId ->
             updateLog logId (\log -> { log | currentOp = Just <| OpDeletingLog processId }) logs
 
 

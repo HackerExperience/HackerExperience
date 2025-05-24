@@ -9,7 +9,7 @@ import Game.Bus as Game
 import Game.Model.Log exposing (Log, LogType(..))
 import Game.Model.LogID exposing (LogID)
 import Game.Model.NIP exposing (NIP)
-import Game.Model.Process as Process
+import Game.Model.ProcessOperation as Operation exposing (Operation)
 import Game.Model.Server as Server
 import Html.Attributes as HA
 import Html.Events as HE
@@ -82,7 +82,7 @@ update game msg model =
                 toGameMsg =
                     Game.ProcessOperation
                         model.nip
-                        (Process.Starting <| Process.LogDeleteStarting log.id)
+                        (Operation.Starting <| Operation.LogDelete log.id)
             in
             ( model
             , Effect.batch
@@ -96,7 +96,7 @@ update game msg model =
                 toGameMsg =
                     Game.ProcessOperation
                         model.nip
-                        (Process.Started <| Process.LogDeleteStarted log_id process_id)
+                        (Operation.Started (Operation.LogDelete log_id) process_id)
             in
             ( model, Effect.msgToCmd <| ToOS <| OS.Bus.ToGame toGameMsg )
 
