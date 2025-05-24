@@ -40,7 +40,8 @@ defmodule Game.Services.Process do
   """
   def list(%Server.ID{} = server_id, filter_params, opts \\ []) do
     filters = [
-      query: &query/1
+      query: &query/1,
+      by_entity: {:all, {:processes, :by_entity}}
     ]
 
     Core.with_context(:server, server_id, :read, fn ->

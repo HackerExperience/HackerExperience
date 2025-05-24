@@ -11,7 +11,12 @@ components:
       required:
         - logs
         - nip
+        - processes
       properties:
+        processes:
+          type: array
+          items:
+            $ref: '#/components/schemas/IdxProcess'
         nip:
           type: string
         logs:
@@ -24,7 +29,12 @@ components:
         - logs
         - tunnels
         - nip
+        - processes
       properties:
+        processes:
+          type: array
+          items:
+            $ref: '#/components/schemas/IdxProcess'
         nip:
           type: string
         tunnels:
@@ -62,11 +72,24 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/IdxEndpoint'
+        mainframe_nip:
+          type: string
         gateways:
           type: array
           items:
             $ref: '#/components/schemas/IdxGateway'
-        mainframe_nip:
+    IdxProcess:
+      type: object
+      required:
+        - type
+        - id
+        - data
+      properties:
+        data:
+          type: string
+        id:
+          type: string
+        type:
           type: string
     IdxTunnel:
       type: object

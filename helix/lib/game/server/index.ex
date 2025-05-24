@@ -10,27 +10,31 @@ defmodule Game.Index.Server do
           %{
             id: Server.id(),
             nip: NIP.t(),
+            tunnels: Index.Tunnel.index(),
             logs: Index.Log.index(),
-            tunnels: Index.Tunnel.index()
+            processes: Index.Process.index()
           }
 
   @type endpoint_index ::
           %{
             nip: NIP.t(),
-            logs: Index.Log.index()
+            logs: Index.Log.index(),
+            processes: Index.Process.index()
           }
 
   @type rendered_gateway_index ::
           %{
             nip: binary(),
+            tunnels: Index.Tunnel.rendered_index(),
             logs: Index.Log.rendered_index(),
-            tunnels: Index.Tunnel.rendered_index()
+            processes: Index.Process.rendered_index()
           }
 
   @type rendered_endpoint_index ::
           %{
             nip: NIP.external(),
-            logs: Index.Log.rendered_index()
+            logs: Index.Log.rendered_index(),
+            processes: Index.Process.rendered_index()
           }
 
   def gateway_spec do
@@ -38,10 +42,11 @@ defmodule Game.Index.Server do
       schema(%{
         __openapi_name: "IdxGateway",
         nip: nip(),
+        tunnels: coll_of(Index.Tunnel.spec()),
         logs: coll_of(Index.Log.spec()),
-        tunnels: coll_of(Index.Tunnel.spec())
+        processes: coll_of(Index.Process.spec())
       }),
-      [:logs, :nip, :tunnels]
+      [:nip, :tunnels, :logs, :processes]
     )
   end
 
@@ -50,9 +55,10 @@ defmodule Game.Index.Server do
       schema(%{
         __openapi_name: "IdxEndpoint",
         nip: binary(),
+        processes: coll_of(Index.Process.spec()),
         logs: coll_of(Index.Log.spec())
       }),
-      [:logs, :nip]
+      [:nip, :logs, :processes]
     )
   end
 
@@ -65,6 +71,7 @@ defmodule Game.Index.Server do
       id: server.id,
       nip: nip,
       logs: Index.Log.index(entity.id, server.id),
+      processes: Index.Process.index(entity.id, server.id),
       tunnels: Index.Tunnel.index(nip)
     }
   end
@@ -74,7 +81,8 @@ defmodule Game.Index.Server do
   def endpoint_index(%Entity.ID{} = entity_id, server_id, nip) do
     %{
       nip: nip,
-      logs: Index.Log.index(entity_id, server_id)
+      logs: Index.Log.index(entity_id, server_id),
+      processes: Index.Process.index(entity_id, server_id)
     }
   end
 
@@ -84,6 +92,7 @@ defmodule Game.Index.Server do
     %{
       nip: index.nip |> NIP.to_external(),
       logs: Index.Log.render_index(index.logs, entity_id),
+      processes: Index.Process.render_index(index.processes, entity_id),
       tunnels: Index.Tunnel.render_index(index.tunnels, index.id, entity_id)
     }
   end
@@ -93,7 +102,10 @@ defmodule Game.Index.Server do
   def render_endpoint_index(index, _entity_id) do
     %{
       nip: index.nip |> NIP.to_external(),
-      logs: []
+      # TODO
+      logs: [],
+      # TODO
+      processes: []
     }
   end
 end
