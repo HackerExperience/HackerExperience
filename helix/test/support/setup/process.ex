@@ -14,15 +14,21 @@ defmodule Test.Setup.Process do
   - static: Modify the process static resources. Accepts: %{paused: R}, %{paused: R, running: R}
             or R. Any missing information will default to using the original process static.
   - completed?: When true, the process is created with its `objective` goal already reached.
+  - entity: Entity who started this process. Defaults to the owner of the server.
   - entity_id: Entity who started this process. Defaults to the owner of the server.
   - priority: Customize the process priority.
   """
   def new(server_id, opts \\ []) do
     entity_id =
-      if opts[:entity_id] do
-        opts[:entity_id]
-      else
-        Svc.Server.fetch!(by_id: server_id).entity_id
+      cond do
+        opts[:entity_id] ->
+          opts[:entity_id]
+
+        entity = opts[:entity] ->
+          entity.id
+
+        true ->
+          Svc.Server.fetch!(by_id: server_id).entity_id
       end
 
     spec_opts = (opts[:spec] || []) ++ [type: opts[:type]]
@@ -53,17 +59,25 @@ defmodule Test.Setup.Process do
   Retrieves every possible information from the process.
 
   Opts:
-  - type: Defines process type. If not set, NoopCPU is used
+  - type: Defines process type. If not set, NoopCPU is used. If `:random`, a random type is picked.
   - params: Overwrites the process params. If nil, a per-process default is applied
   - meta: Overwrites the process meta. If nil, a per-process default is applied
   - <custom>: Each process may define their own custom opts for improved ergonomics
   """
   def spec(server_id, entity_id, opts \\ []) do
-    if opts[:type] do
-      ProcessSpecSetup.spec(opts[:type], server_id, entity_id, opts)
-    else
-      ProcessSpecSetup.spec(:noop_cpu, server_id, entity_id, opts)
-    end
+    type =
+      cond do
+        opts[:type] == :random ->
+          ProcessSpecSetup.random_type()
+
+        opts[:type] ->
+          opts[:type]
+
+        true ->
+          :noop_cpu
+      end
+
+    ProcessSpecSetup.spec(type, server_id, entity_id, opts)
   end
 
   defp maybe_update_resources(process, opts) do

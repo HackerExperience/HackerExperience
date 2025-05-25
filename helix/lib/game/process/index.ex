@@ -32,8 +32,6 @@ defmodule Game.Index.Process do
   @spec index(Entity.id(), Server.id()) ::
           index
   def index(entity_id, server_id) do
-    []
-
     Svc.Process.list(server_id, by_entity: entity_id)
   end
 
@@ -44,14 +42,6 @@ defmodule Game.Index.Process do
   end
 
   defp render_process(%Process{} = process, entity_id) do
-    IO.inspect(process)
-    IO.inspect(process.data)
-    IO.inspect(process.data |> Map.from_struct())
-
-    %{
-      id: ID.to_external(process.id, entity_id, process.server_id),
-      type: "#{process.type}",
-      data: "{\"foo\":\"bar\"}"
-    }
+    Process.Viewable.render(process, entity_id)
   end
 end

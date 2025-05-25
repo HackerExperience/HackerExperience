@@ -33,7 +33,7 @@ defmodule Game.Index.ProcessTest do
     test "output conforms to the Norm contract" do
       %{server: gateway, entity: entity} = Setup.server()
 
-      proc_1 = Setup.process!(gateway.id, type: :log_edit)
+      proc_1 = Setup.process!(gateway.id, type: :log_delete)
       # proc_2 = Setup.process!(gateway.id, type: :file_install)
 
       rendered_index =

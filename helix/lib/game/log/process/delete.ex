@@ -89,4 +89,14 @@ defmodule Game.Process.Log.Delete do
     def target_log(_server_id, _entity_id, _params, %{log: log}, _),
       do: log
   end
+
+  defmodule Viewable do
+    use Game.Process.Viewable.Definition
+    alias Game.{Entity, Log}
+
+    def render_data(process, %{log_id: log_id}, %Entity.ID{} = entity_id) do
+      log_eid = ID.to_external(log_id, entity_id, process.server_id)
+      data = %{log_id: log_eid}
+    end
+  end
 end

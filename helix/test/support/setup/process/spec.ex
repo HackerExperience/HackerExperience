@@ -22,13 +22,12 @@ defmodule Test.Setup.Process.Spec do
   ]
 
   @doc """
-  Grabs a random (non-test) implementation and use it as type for the spec.
+  Grabs a random (non-test) implementation type.
   """
-  def random(server_id, entity_id, opts) do
+  def random_type do
     @implementations
     |> Enum.take_random(1)
     |> List.first()
-    |> spec(server_id, entity_id, opts)
   end
 
   def spec(:noop_cpu, server_id, entity_id, _opts),
