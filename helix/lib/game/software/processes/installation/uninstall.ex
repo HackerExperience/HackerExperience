@@ -81,4 +81,19 @@ defmodule Game.Process.Installation.Uninstall do
     def target_installation(_, _, _, %{installation: %Installation{} = installation}, _),
       do: installation
   end
+
+  defmodule Viewable do
+    use Game.Process.Viewable.Definition
+
+    def spec do
+      selection(
+        schema(%{}),
+        []
+      )
+    end
+
+    def render_data(_, _, _) do
+      %{}
+    end
+  end
 end

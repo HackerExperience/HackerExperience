@@ -166,6 +166,24 @@ defmodule Webserver.OpenApi.Spec.GeneratorTest do
     end
   end
 
+  describe "generate/1 for the Processes spec" do
+    setup do
+      spec = Game.Process.Viewable.Spec.spec()
+      {:ok, %{spec: spec}}
+    end
+
+    test "includes the process schemas", %{spec: spec} do
+      assert %{components: %{schemas: schemas}} = Generator.generate(spec)
+
+      # Grab a few random schemas and make sure they have the correct definition
+      log_delete = Map.fetch!(schemas, "log_delete")
+
+      assert log_delete.type == :object
+      assert log_delete.required == [:log_id]
+      assert log_delete.properties[:log_id] == %{type: :string}
+    end
+  end
+
   describe "normalize_helix_spec/1" do
     test "normalizes the endpoint id" do
       endpoint_1 = test_spec_endpoint()

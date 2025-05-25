@@ -10,10 +10,21 @@ defmodule Game.Process.Definition do
     process = env.module
     resourceable = get_resourceable_mod(process)
     _executable = get_executable_mod(process)
+    _viewable = get_viewable_mod(process)
 
     quote do
       if not Module.defines?(__MODULE__, {:on_db_load, 1}) do
         def on_db_load(data), do: data
+      end
+
+      if not Module.defines?(__MODULE__, {:get_name, 0}) do
+        def get_name do
+          [_, _ | rest] = Module.split(__MODULE__)
+
+          rest
+          |> Enum.join("_")
+          |> String.downcase()
+        end
       end
 
       def resources(params) do
@@ -27,6 +38,9 @@ defmodule Game.Process.Definition do
 
   def get_executable_mod(process),
     do: get_mod(process, Executable)
+
+  def get_viewable_mod(process),
+    do: get_mod(process, Viewable)
 
   def get_mod(process, implementation) do
     mod = Module.concat(process, implementation)

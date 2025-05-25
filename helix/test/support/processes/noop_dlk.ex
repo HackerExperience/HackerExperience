@@ -42,4 +42,7 @@ defmodule Test.Process.NoopDLK do
 
   defmodule Executable do
   end
+
+  defmodule Viewable do
+  end
 end

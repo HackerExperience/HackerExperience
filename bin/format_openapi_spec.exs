@@ -11,7 +11,9 @@ defmodule OpenAPI.Elm.Formatter do
     "src/API/Events/Json.elm",
     "src/API/Game/Types.elm",
     "src/API/Game/Json.elm",
-    "src/API/Game/Api.elm"
+    "src/API/Game/Api.elm",
+    "src/API/Processes/Types.elm",
+    "src/API/Processes/Json.elm"
   ]
 
   @custom_types [

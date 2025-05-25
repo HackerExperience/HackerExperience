@@ -38,4 +38,7 @@ defmodule Test.Process.NoopCPU do
 
   defmodule Executable do
   end
+
+  defmodule Viewable do
+  end
 end

@@ -34,14 +34,25 @@ defmodule Game.Index.ProcessTest do
       %{server: gateway, entity: entity} = Setup.server()
 
       proc_1 = Setup.process!(gateway.id, type: :log_delete)
-      # proc_2 = Setup.process!(gateway.id, type: :file_install)
+      proc_2 = Setup.process!(gateway.id, type: :file_install)
 
       rendered_index =
         entity.id
         |> Index.Process.index(gateway.id)
         |> Index.Process.render_index(entity.id)
 
-      IO.inspect(rendered_index)
+      assert [rendered_proc_2, rendered_proc_1] = rendered_index
+
+      assert proc_2.id == rendered_proc_2.id |> U.from_eid(entity.id)
+      assert rendered_proc_2.type == "file_install"
+      assert rendered_proc_2.data == "{}"
+
+      assert proc_1.id == rendered_proc_1.id |> U.from_eid(entity.id)
+      assert rendered_proc_1.type == "log_delete"
+      assert rendered_proc_1.data =~ "{\"log_id\":"
+
+      # Rendered index conforms to the Norm contract
+      assert {:ok, _} = Norm.conform(rendered_index, Norm.coll_of(Index.Process.spec()))
     end
   end
 end

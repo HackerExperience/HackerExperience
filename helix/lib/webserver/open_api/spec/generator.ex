@@ -22,8 +22,9 @@ defmodule Webserver.OpenApi.Spec.Generator do
     }
   end
 
-  # Paths are not used the by Event Spec
+  # Paths are not used the by Event nor Process Spec
   defp generate_paths(%{type: :events}), do: %{}
+  defp generate_paths(%{type: :processes}), do: %{}
 
   defp generate_paths(%{endpoints: endpoints}) do
     endpoints
@@ -107,8 +108,9 @@ defmodule Webserver.OpenApi.Spec.Generator do
     }
   end
 
-  # Request bodies are not used by the Event spec
+  # Request bodies are not used by the Event nor Process Spec
   defp generate_request_bodies(%{type: :events}), do: %{}
+  defp generate_request_bodies(%{type: :processes}), do: %{}
 
   defp generate_request_bodies(%{endpoints: endpoints}) do
     Enum.map(endpoints, fn {{_endpoint, _method}, entry} ->
@@ -137,8 +139,9 @@ defmodule Webserver.OpenApi.Spec.Generator do
     |> Map.new()
   end
 
-  # Responses are not used by the Event spec
+  # Responses are not used by the Event nor Process spec
   defp generate_responses(%{type: :events}), do: %{}
+  defp generate_responses(%{type: :processes}), do: %{}
 
   defp generate_responses(%{endpoints: endpoints, default_responses: default_responses}) do
     Enum.reduce(endpoints, default_responses, fn {{_endpoint, _method}, entry}, acc ->
@@ -192,6 +195,18 @@ defmodule Webserver.OpenApi.Spec.Generator do
     Enum.reduce(events, %{}, fn {event_mod, entry}, acc ->
       publishable_mod = Core.Event.Publishable.get_publishable_mod(event_mod)
       spec = apply(publishable_mod, :spec, [])
+      build_schema(spec, "#{entry.id}", acc)
+    end)
+    |> Enum.map(fn {schema_name, schema_entries} ->
+      {schema_name, schema_definition_to_oas31_format(schema_entries)}
+    end)
+    |> Map.new()
+  end
+
+  defp generate_schemas(%{type: :processes, endpoints: processes}) do
+    Enum.reduce(processes, %{}, fn {process_mod, entry}, acc ->
+      viewable_mod = Game.Process.Viewable.get_viewable_mod(process_mod)
+      spec = apply(viewable_mod, :spec, [])
       build_schema(spec, "#{entry.id}", acc)
     end)
     |> Enum.map(fn {schema_name, schema_entries} ->
@@ -360,6 +375,17 @@ defmodule Webserver.OpenApi.Spec.Generator do
     %{helix_spec | endpoints: events}
   end
 
+  def normalize_helix_spec(%{type: :processes} = helix_spec) do
+    processes =
+      helix_spec.endpoints
+      |> Enum.map(fn process_module ->
+        id = get_process_id(process_module)
+        {process_module, %{id: id}}
+      end)
+
+    %{helix_spec | endpoints: processes}
+  end
+
   defp normalize_id(entry, id),
     do: Map.put(entry, :id, id)
 
@@ -391,6 +417,10 @@ defmodule Webserver.OpenApi.Spec.Generator do
 
   defp get_event_id(event) do
     apply(event, :get_name, [])
+  end
+
+  defp get_process_id(process) do
+    apply(process, :get_name, [])
   end
 
   defp get_request_body(%{request_body: name}, _), do: name

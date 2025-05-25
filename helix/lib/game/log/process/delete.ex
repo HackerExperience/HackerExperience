@@ -92,11 +92,20 @@ defmodule Game.Process.Log.Delete do
 
   defmodule Viewable do
     use Game.Process.Viewable.Definition
-    alias Game.{Entity, Log}
+    alias Game.{Entity}
+
+    def spec do
+      selection(
+        schema(%{
+          log_id: external_id()
+        }),
+        [:log_id]
+      )
+    end
 
     def render_data(process, %{log_id: log_id}, %Entity.ID{} = entity_id) do
       log_eid = ID.to_external(log_id, entity_id, process.server_id)
-      data = %{log_id: log_eid}
+      %{log_id: log_eid}
     end
   end
 end
