@@ -1,5 +1,6 @@
 module Game.Model.ProcessID exposing
     ( ProcessID(..)
+    , RawProcessID
     , fromValue
     , toValue
     )
@@ -9,6 +10,10 @@ module Game.Model.ProcessID exposing
 
 type ProcessID
     = ProcessID String
+
+
+type alias RawProcessID =
+    String
 
 
 

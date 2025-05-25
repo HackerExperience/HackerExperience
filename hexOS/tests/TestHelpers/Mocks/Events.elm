@@ -22,9 +22,10 @@ indexRequested =
 
 idxGateway : Events.IdxGateway
 idxGateway =
-    { logs = []
-    , nip = defaultNip
+    { nip = defaultNip
     , tunnels = []
+    , logs = []
+    , processes = []
     }
 
 

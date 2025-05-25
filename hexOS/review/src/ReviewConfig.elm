@@ -48,11 +48,14 @@ ignoreSdkFiles : Rule -> Rule
 ignoreSdkFiles =
     Rule.ignoreErrorsForFiles
         [ "src/API/Lobby/Api.elm"
+        , "src/API/Lobby/Json.elm"
         , "src/API/Game/Api.elm"
         , "src/API/Game/Types.elm"
         , "src/API/Game/Json.elm"
         , "src/API/Events/Types.elm"
         , "src/API/Events/Json.elm"
+        , "src/API/Processes/Types.elm"
+        , "src/API/Processes/Json.elm"
         ]
 
 
@@ -100,7 +103,7 @@ config =
         -- Below ignored files are WIP and should eventually be fixed (either used or removed)
         |> Rule.ignoreErrorsForFiles [ "src/Common/Assets.elm" ]
     , NoUnused.Parameters.rule
-        |> Rule.ignoreErrorsForDirectories [ "src/API/Lobby", "src/API/Game" ]
+        |> ignoreSdkFiles
     , NoUnused.Patterns.rule
         |> Rule.ignoreErrorsForDirectories [ "src/OpenApi" ]
         -- WIP files; remove when no longer WIP

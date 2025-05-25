@@ -21,6 +21,7 @@ import API.Events.Types as Events
 import Dict exposing (Dict)
 import Game.Model.Log as Log exposing (Log, Logs)
 import Game.Model.NIP as NIP exposing (NIP, RawNIP)
+import Game.Model.Process as Process exposing (Processes)
 import Game.Model.ProcessOperation as Operation exposing (Operation)
 import Game.Model.Tunnel as Tunnel exposing (Tunnels)
 import Game.Model.TunnelID exposing (TunnelID)
@@ -32,10 +33,11 @@ import OrderedDict
 
 
 type alias Server =
-    { nip : NIP
+    { type_ : ServerType
+    , nip : NIP
     , logs : Logs
-    , type_ : ServerType
     , tunnelId : Maybe TunnelID
+    , processes : Processes
     }
 
 
@@ -60,12 +62,13 @@ type ServerType
 -- Model > Server
 
 
-buildServer : ServerType -> List Events.IdxLog -> NIP -> Maybe TunnelID -> Server
-buildServer serverType idxLogs nip tunnelId =
-    { nip = nip
-    , logs = Log.parse idxLogs
-    , type_ = serverType
+buildServer : ServerType -> NIP -> Maybe TunnelID -> List Events.IdxLog -> List Events.IdxProcess -> Server
+buildServer serverType nip tunnelId idxLogs idxProcesses =
+    { type_ = serverType
+    , nip = nip
     , tunnelId = tunnelId
+    , logs = Log.parse idxLogs
+    , processes = Process.parse idxProcesses
     }
 
 
@@ -90,7 +93,7 @@ buildGatewayServers idxGateways =
     let
         buildGatewayServer =
             \gtw ->
-                buildServer ServerGateway gtw.logs gtw.nip Nothing
+                buildServer ServerGateway gtw.nip Nothing gtw.logs gtw.processes
     in
     List.foldl (\gtw acc -> ( NIP.toString gtw.nip, buildGatewayServer gtw ) :: acc)
         []
@@ -107,7 +110,7 @@ buildEndpointServers allTunnels idxEndpoints =
 
         buildEndpointServer =
             \endp ->
-                buildServer ServerEndpoint endp.logs endp.nip (findTunnel endp.nip)
+                buildServer ServerEndpoint endp.nip (findTunnel endp.nip) endp.logs endp.processes
     in
     List.foldl (\endp acc -> ( NIP.toString endp.nip, buildEndpointServer endp ) :: acc)
         []
@@ -116,10 +119,11 @@ buildEndpointServers allTunnels idxEndpoints =
 
 invalidServer : Server
 invalidServer =
-    { nip = NIP.invalidNip
-    , logs = OrderedDict.empty
-    , type_ = ServerGateway
+    { type_ = ServerGateway
+    , nip = NIP.invalidNip
     , tunnelId = Nothing
+    , logs = OrderedDict.empty
+    , processes = OrderedDict.empty
     }
 
 
