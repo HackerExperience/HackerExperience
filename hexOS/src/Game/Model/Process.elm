@@ -21,7 +21,13 @@ type alias Process =
 
 parse : List Events.IdxProcess -> Processes
 parse idxProcesses =
-    List.map (\idxProcess -> ( idxProcess.id, parseProcess idxProcess )) idxProcesses
+    List.map
+        (\idxProcess ->
+            ( ProcessID.toValue idxProcess.process_id
+            , parseProcess idxProcess
+            )
+        )
+        idxProcesses
         |> OrderedDict.fromList
 
 
@@ -31,6 +37,6 @@ parseProcess idxProcess =
         data =
             ProcessData.parse idxProcess
     in
-    { id = ProcessID.fromValue idxProcess.id
+    { id = idxProcess.process_id
     , data = data
     }

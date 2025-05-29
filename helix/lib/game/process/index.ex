@@ -1,6 +1,4 @@
 defmodule Game.Index.Process do
-  use Norm
-  import Core.Spec
   alias Core.ID
   alias Game.Services, as: Svc
   alias Game.{Process}
@@ -17,17 +15,8 @@ defmodule Game.Index.Process do
            data: String.t()
          }
 
-  def spec do
-    selection(
-      schema(%{
-        __openapi_name: "IdxProcess",
-        id: external_id(),
-        type: binary(),
-        data: binary()
-      }),
-      [:id, :type, :data]
-    )
-  end
+  def spec,
+    do: Process.Viewable.spec()
 
   @spec index(Entity.id(), Server.id()) ::
           index

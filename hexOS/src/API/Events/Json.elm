@@ -391,11 +391,16 @@ encodeIdxTunnel rec =
 decodeIdxProcess : Json.Decode.Decoder API.Events.Types.IdxProcess
 decodeIdxProcess =
     Json.Decode.succeed
-        (\data id type_ -> { data = data, id = id, type_ = type_ })
+        (\data process_id type_ ->
+            { data = data, process_id = process_id, type_ = type_ }
+        )
         |> OpenApi.Common.jsonDecodeAndMap
             (Json.Decode.field "data" Json.Decode.string)
         |> OpenApi.Common.jsonDecodeAndMap
-            (Json.Decode.field "id" Json.Decode.string)
+            (Json.Decode.field
+                "process_id"
+                (Json.Decode.map ProcessID Json.Decode.string)
+            )
         |> OpenApi.Common.jsonDecodeAndMap
             (Json.Decode.field
                 "type"
@@ -407,7 +412,7 @@ encodeIdxProcess : API.Events.Types.IdxProcess -> Json.Encode.Value
 encodeIdxProcess rec =
     Json.Encode.object
         [ ( "data", Json.Encode.string rec.data )
-        , ( "id", Json.Encode.string rec.id )
+        , ( "process_id", Json.Encode.string (ProcessID.toValue rec.process_id) )
         , ( "type", Json.Encode.string rec.type_ )
         ]
 

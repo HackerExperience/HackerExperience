@@ -117,6 +117,124 @@ components:
             properties:
               data:
                 $ref: '#/components/schemas/ServerLoginOutput'
+  schemas:
+    FileDeleteInput:
+      type: object
+      required: []
+      properties:
+        tunnel_id:
+          type: string
+    FileDeleteOutput:
+      type: object
+      required: []
+      properties: {}
+    FileInstallInput:
+      type: object
+      required: []
+      properties: {}
+    FileInstallOutput:
+      type: object
+      required: []
+      properties: {}
+    FileTransferInput:
+      type: object
+      required:
+        - tunnel_id
+        - transfer_type
+      properties:
+        transfer_type:
+          type: string
+        tunnel_id:
+          type: string
+    FileTransferOutput:
+      type: object
+      required: []
+      properties: {}
+    GenericBadRequest:
+      type: object
+      required:
+        - msg
+      properties:
+        msg:
+          type: string
+        details:
+          type: string
+    GenericError:
+      type: object
+      required:
+        - msg
+      properties:
+        msg:
+          type: string
+        details:
+          type: string
+    IdxProcess:
+      type: object
+      required:
+        - process_id
+        - type
+        - data
+      properties:
+        data:
+          type: string
+        type:
+          type: string
+        process_id:
+          type: string
+    InstallationUninstallInput:
+      type: object
+      required: []
+      properties: {}
+    InstallationUninstallOutput:
+      type: object
+      required: []
+      properties: {}
+    LogDeleteInput:
+      type: object
+      required: []
+      properties:
+        tunnel_id:
+          type: string
+    LogDeleteOutput:
+      type: object
+      required:
+        - log_id
+        - process
+      properties:
+        process:
+          $ref: '#/components/schemas/IdxProcess'
+        log_id:
+          type: string
+    LogEditInput:
+      type: object
+      required: []
+      properties:
+        tunnel_id:
+          type: string
+    LogEditOutput:
+      type: object
+      required: []
+      properties: {}
+    PlayerSyncInput:
+      type: object
+      required: []
+      properties:
+        token:
+          type: string
+    PlayerSyncOutput:
+      type: object
+      required: []
+      properties: {}
+    ServerLoginInput:
+      type: object
+      required: []
+      properties:
+        tunnel_id:
+          type: string
+    ServerLoginOutput:
+      type: object
+      required: []
+      properties: {}
   requestBodies:
     FileDeleteRequest:
       description: TODO description
@@ -174,111 +292,6 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/ServerLoginInput'
-  schemas:
-    FileDeleteInput:
-      type: object
-      required: []
-      properties:
-        tunnel_id:
-          type: string
-    FileDeleteOutput:
-      type: object
-      required: []
-      properties: {}
-    FileInstallInput:
-      type: object
-      required: []
-      properties: {}
-    FileInstallOutput:
-      type: object
-      required: []
-      properties: {}
-    FileTransferInput:
-      type: object
-      required:
-        - tunnel_id
-        - transfer_type
-      properties:
-        transfer_type:
-          type: string
-        tunnel_id:
-          type: string
-    FileTransferOutput:
-      type: object
-      required: []
-      properties: {}
-    GenericBadRequest:
-      type: object
-      required:
-        - msg
-      properties:
-        msg:
-          type: string
-        details:
-          type: string
-    GenericError:
-      type: object
-      required:
-        - msg
-      properties:
-        msg:
-          type: string
-        details:
-          type: string
-    InstallationUninstallInput:
-      type: object
-      required: []
-      properties: {}
-    InstallationUninstallOutput:
-      type: object
-      required: []
-      properties: {}
-    LogDeleteInput:
-      type: object
-      required: []
-      properties:
-        tunnel_id:
-          type: string
-    LogDeleteOutput:
-      type: object
-      required:
-        - log_id
-        - process_id
-      properties:
-        process_id:
-          type: string
-        log_id:
-          type: string
-    LogEditInput:
-      type: object
-      required: []
-      properties:
-        tunnel_id:
-          type: string
-    LogEditOutput:
-      type: object
-      required: []
-      properties: {}
-    PlayerSyncInput:
-      type: object
-      required: []
-      properties:
-        token:
-          type: string
-    PlayerSyncOutput:
-      type: object
-      required: []
-      properties: {}
-    ServerLoginInput:
-      type: object
-      required: []
-      properties:
-        tunnel_id:
-          type: string
-    ServerLoginOutput:
-      type: object
-      required: []
-      properties: {}
   securitySchemes:
     AuthorizationToken:
       in: header

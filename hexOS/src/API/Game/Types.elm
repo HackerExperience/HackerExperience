@@ -19,6 +19,7 @@ module API.Game.Types exposing
     , GenericError
     , GenericErrorResponse
     , GenericUnauthorizedResponse
+    , IdxProcess
     , InstallationUninstallInput
     , InstallationUninstallOkResponse
     , InstallationUninstallOutput
@@ -55,7 +56,7 @@ import Game.Model.TunnelID as TunnelID exposing (TunnelID(..))
 @docs FileDeleteInput, FileDeleteOkResponse, FileDeleteOutput, FileDeleteRequest, FileInstallInput
 @docs FileInstallOkResponse, FileInstallOutput, FileInstallRequest, FileTransferInput, FileTransferOkResponse
 @docs FileTransferOutput, FileTransferRequest, GenericBadRequest, GenericBadRequestResponse, GenericError
-@docs GenericErrorResponse, GenericUnauthorizedResponse, InstallationUninstallInput
+@docs GenericErrorResponse, GenericUnauthorizedResponse, IdxProcess, InstallationUninstallInput
 @docs InstallationUninstallOkResponse, InstallationUninstallOutput, InstallationUninstallRequest, LogDeleteInput
 @docs LogDeleteOkResponse, LogDeleteOutput, LogDeleteRequest, LogEditInput, LogEditOkResponse, LogEditOutput
 @docs LogEditRequest, PlayerSyncInput, PlayerSyncOkResponse, PlayerSyncOutput, PlayerSyncRequest
@@ -87,7 +88,7 @@ type alias LogEditInput =
 
 
 type alias LogDeleteOutput =
-    { log_id : LogID, process_id : ProcessID }
+    { log_id : LogID, process : IdxProcess }
 
 
 type alias LogDeleteInput =
@@ -100,6 +101,10 @@ type alias InstallationUninstallOutput =
 
 type alias InstallationUninstallInput =
     {}
+
+
+type alias IdxProcess =
+    { data : String, process_id : ProcessID, type_ : String }
 
 
 type alias GenericError =

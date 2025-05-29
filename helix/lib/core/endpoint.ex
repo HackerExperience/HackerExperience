@@ -1,5 +1,6 @@
 defmodule Core.Endpoint do
   alias Core.{ID, NIP}
+  alias Game.Process.Viewable, as: ProcessViewable
 
   @doc """
   Casts an external ID (string) into the internal Core.ID format (integer). It relies on the
@@ -74,4 +75,10 @@ defmodule Core.Endpoint do
   def format_cast_error({field, :id_not_found}), do: "#{field}:id_not_found"
   def format_cast_error({field, :invalid}), do: "#{field}:invalid_input"
   def format_cast_error({field, :empty}), do: "#{field}:missing"
+
+  def render_process(request, process, session, additional_data) do
+    rendered_process = ProcessViewable.render(process, session.data.entity_id)
+    payload = Map.merge(%{process: rendered_process}, additional_data)
+    {:ok, %{request | response: {200, payload}}}
+  end
 end

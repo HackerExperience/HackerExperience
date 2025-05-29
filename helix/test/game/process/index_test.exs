@@ -43,11 +43,11 @@ defmodule Game.Index.ProcessTest do
 
       assert [rendered_proc_2, rendered_proc_1] = rendered_index
 
-      assert proc_2.id == rendered_proc_2.id |> U.from_eid(entity.id)
+      assert proc_2.id == rendered_proc_2.process_id |> U.from_eid(entity.id)
       assert rendered_proc_2.type == "file_install"
       assert rendered_proc_2.data == "{}"
 
-      assert proc_1.id == rendered_proc_1.id |> U.from_eid(entity.id)
+      assert proc_1.id == rendered_proc_1.process_id |> U.from_eid(entity.id)
       assert rendered_proc_1.type == "log_delete"
       assert rendered_proc_1.data =~ "{\"log_id\":"
 

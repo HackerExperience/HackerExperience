@@ -111,7 +111,7 @@ type alias IdxTunnel =
 
 
 type alias IdxProcess =
-    { data : String, id : String, type_ : String }
+    { data : String, process_id : ProcessID, type_ : String }
 
 
 type alias IdxPlayer =

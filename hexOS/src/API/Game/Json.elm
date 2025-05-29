@@ -6,22 +6,24 @@ module API.Game.Json exposing
     , encodeFileInstallInput, encodeFileInstallOkResponse, encodeFileInstallOutput, encodeFileInstallRequest
     , encodeFileTransferInput, encodeFileTransferOkResponse, encodeFileTransferOutput, encodeFileTransferRequest
     , encodeGenericBadRequest, encodeGenericBadRequestResponse, encodeGenericError, encodeGenericErrorResponse
-    , encodeGenericUnauthorizedResponse, encodeInstallationUninstallInput, encodeInstallationUninstallOkResponse
-    , encodeInstallationUninstallOutput, encodeInstallationUninstallRequest, encodeLogDeleteInput
-    , encodeLogDeleteOkResponse, encodeLogDeleteOutput, encodeLogDeleteRequest, encodeLogEditInput
-    , encodeLogEditOkResponse, encodeLogEditOutput, encodeLogEditRequest, encodePlayerSyncInput
-    , encodePlayerSyncOkResponse, encodePlayerSyncOutput, encodePlayerSyncRequest, encodeServerLoginInput
-    , encodeServerLoginOkResponse, encodeServerLoginOutput, encodeServerLoginRequest
+    , encodeGenericUnauthorizedResponse, encodeIdxProcess, encodeInstallationUninstallInput
+    , encodeInstallationUninstallOkResponse, encodeInstallationUninstallOutput
+    , encodeInstallationUninstallRequest, encodeLogDeleteInput, encodeLogDeleteOkResponse, encodeLogDeleteOutput
+    , encodeLogDeleteRequest, encodeLogEditInput, encodeLogEditOkResponse, encodeLogEditOutput
+    , encodeLogEditRequest, encodePlayerSyncInput, encodePlayerSyncOkResponse, encodePlayerSyncOutput
+    , encodePlayerSyncRequest, encodeServerLoginInput, encodeServerLoginOkResponse, encodeServerLoginOutput
+    , encodeServerLoginRequest
     , decodeFileDeleteInput, decodeFileDeleteOkResponse, decodeFileDeleteOutput, decodeFileDeleteRequest
     , decodeFileInstallInput, decodeFileInstallOkResponse, decodeFileInstallOutput, decodeFileInstallRequest
     , decodeFileTransferInput, decodeFileTransferOkResponse, decodeFileTransferOutput, decodeFileTransferRequest
     , decodeGenericBadRequest, decodeGenericBadRequestResponse, decodeGenericError, decodeGenericErrorResponse
-    , decodeGenericUnauthorizedResponse, decodeInstallationUninstallInput, decodeInstallationUninstallOkResponse
-    , decodeInstallationUninstallOutput, decodeInstallationUninstallRequest, decodeLogDeleteInput
-    , decodeLogDeleteOkResponse, decodeLogDeleteOutput, decodeLogDeleteRequest, decodeLogEditInput
-    , decodeLogEditOkResponse, decodeLogEditOutput, decodeLogEditRequest, decodePlayerSyncInput
-    , decodePlayerSyncOkResponse, decodePlayerSyncOutput, decodePlayerSyncRequest, decodeServerLoginInput
-    , decodeServerLoginOkResponse, decodeServerLoginOutput, decodeServerLoginRequest
+    , decodeGenericUnauthorizedResponse, decodeIdxProcess, decodeInstallationUninstallInput
+    , decodeInstallationUninstallOkResponse, decodeInstallationUninstallOutput
+    , decodeInstallationUninstallRequest, decodeLogDeleteInput, decodeLogDeleteOkResponse, decodeLogDeleteOutput
+    , decodeLogDeleteRequest, decodeLogEditInput, decodeLogEditOkResponse, decodeLogEditOutput
+    , decodeLogEditRequest, decodePlayerSyncInput, decodePlayerSyncOkResponse, decodePlayerSyncOutput
+    , decodePlayerSyncRequest, decodeServerLoginInput, decodeServerLoginOkResponse, decodeServerLoginOutput
+    , decodeServerLoginRequest
     )
 
 {-|
@@ -33,12 +35,13 @@ module API.Game.Json exposing
 @docs encodeFileInstallInput, encodeFileInstallOkResponse, encodeFileInstallOutput, encodeFileInstallRequest
 @docs encodeFileTransferInput, encodeFileTransferOkResponse, encodeFileTransferOutput, encodeFileTransferRequest
 @docs encodeGenericBadRequest, encodeGenericBadRequestResponse, encodeGenericError, encodeGenericErrorResponse
-@docs encodeGenericUnauthorizedResponse, encodeInstallationUninstallInput, encodeInstallationUninstallOkResponse
-@docs encodeInstallationUninstallOutput, encodeInstallationUninstallRequest, encodeLogDeleteInput
-@docs encodeLogDeleteOkResponse, encodeLogDeleteOutput, encodeLogDeleteRequest, encodeLogEditInput
-@docs encodeLogEditOkResponse, encodeLogEditOutput, encodeLogEditRequest, encodePlayerSyncInput
-@docs encodePlayerSyncOkResponse, encodePlayerSyncOutput, encodePlayerSyncRequest, encodeServerLoginInput
-@docs encodeServerLoginOkResponse, encodeServerLoginOutput, encodeServerLoginRequest
+@docs encodeGenericUnauthorizedResponse, encodeIdxProcess, encodeInstallationUninstallInput
+@docs encodeInstallationUninstallOkResponse, encodeInstallationUninstallOutput
+@docs encodeInstallationUninstallRequest, encodeLogDeleteInput, encodeLogDeleteOkResponse, encodeLogDeleteOutput
+@docs encodeLogDeleteRequest, encodeLogEditInput, encodeLogEditOkResponse, encodeLogEditOutput
+@docs encodeLogEditRequest, encodePlayerSyncInput, encodePlayerSyncOkResponse, encodePlayerSyncOutput
+@docs encodePlayerSyncRequest, encodeServerLoginInput, encodeServerLoginOkResponse, encodeServerLoginOutput
+@docs encodeServerLoginRequest
 
 
 ## Decoders
@@ -47,12 +50,13 @@ module API.Game.Json exposing
 @docs decodeFileInstallInput, decodeFileInstallOkResponse, decodeFileInstallOutput, decodeFileInstallRequest
 @docs decodeFileTransferInput, decodeFileTransferOkResponse, decodeFileTransferOutput, decodeFileTransferRequest
 @docs decodeGenericBadRequest, decodeGenericBadRequestResponse, decodeGenericError, decodeGenericErrorResponse
-@docs decodeGenericUnauthorizedResponse, decodeInstallationUninstallInput, decodeInstallationUninstallOkResponse
-@docs decodeInstallationUninstallOutput, decodeInstallationUninstallRequest, decodeLogDeleteInput
-@docs decodeLogDeleteOkResponse, decodeLogDeleteOutput, decodeLogDeleteRequest, decodeLogEditInput
-@docs decodeLogEditOkResponse, decodeLogEditOutput, decodeLogEditRequest, decodePlayerSyncInput
-@docs decodePlayerSyncOkResponse, decodePlayerSyncOutput, decodePlayerSyncRequest, decodeServerLoginInput
-@docs decodeServerLoginOkResponse, decodeServerLoginOutput, decodeServerLoginRequest
+@docs decodeGenericUnauthorizedResponse, decodeIdxProcess, decodeInstallationUninstallInput
+@docs decodeInstallationUninstallOkResponse, decodeInstallationUninstallOutput
+@docs decodeInstallationUninstallRequest, decodeLogDeleteInput, decodeLogDeleteOkResponse, decodeLogDeleteOutput
+@docs decodeLogDeleteRequest, decodeLogEditInput, decodeLogEditOkResponse, decodeLogEditOutput
+@docs decodeLogEditRequest, decodePlayerSyncInput, decodePlayerSyncOkResponse, decodePlayerSyncOutput
+@docs decodePlayerSyncRequest, decodeServerLoginInput, decodeServerLoginOkResponse, decodeServerLoginOutput
+@docs decodeServerLoginRequest
 
 -}
 
@@ -168,21 +172,18 @@ encodeLogEditInput rec =
 decodeLogDeleteOutput : Json.Decode.Decoder API.Game.Types.LogDeleteOutput
 decodeLogDeleteOutput =
     Json.Decode.succeed
-        (\log_id process_id -> { log_id = log_id, process_id = process_id })
+        (\log_id process -> { log_id = log_id, process = process })
         |> OpenApi.Common.jsonDecodeAndMap
             (Json.Decode.field "log_id" (Json.Decode.map LogID Json.Decode.string))
         |> OpenApi.Common.jsonDecodeAndMap
-            (Json.Decode.field
-                "process_id"
-                (Json.Decode.map ProcessID Json.Decode.string)
-            )
+            (Json.Decode.field "process" decodeIdxProcess)
 
 
 encodeLogDeleteOutput : API.Game.Types.LogDeleteOutput -> Json.Encode.Value
 encodeLogDeleteOutput rec =
     Json.Encode.object
         [ ( "log_id", Json.Encode.string (LogID.toValue rec.log_id) )
-        , ( "process_id", Json.Encode.string (ProcessID.toValue rec.process_id) )
+        , ( "process", encodeIdxProcess rec.process )
         ]
 
 
@@ -227,6 +228,35 @@ decodeInstallationUninstallInput =
 encodeInstallationUninstallInput : API.Game.Types.InstallationUninstallInput -> Json.Encode.Value
 encodeInstallationUninstallInput rec =
     Json.Encode.object []
+
+
+decodeIdxProcess : Json.Decode.Decoder API.Game.Types.IdxProcess
+decodeIdxProcess =
+    Json.Decode.succeed
+        (\data process_id type_ ->
+            { data = data, process_id = process_id, type_ = type_ }
+        )
+        |> OpenApi.Common.jsonDecodeAndMap
+            (Json.Decode.field "data" Json.Decode.string)
+        |> OpenApi.Common.jsonDecodeAndMap
+            (Json.Decode.field
+                "process_id"
+                (Json.Decode.map ProcessID Json.Decode.string)
+            )
+        |> OpenApi.Common.jsonDecodeAndMap
+            (Json.Decode.field
+                "type"
+                Json.Decode.string
+            )
+
+
+encodeIdxProcess : API.Game.Types.IdxProcess -> Json.Encode.Value
+encodeIdxProcess rec =
+    Json.Encode.object
+        [ ( "data", Json.Encode.string rec.data )
+        , ( "process_id", Json.Encode.string (ProcessID.toValue rec.process_id) )
+        , ( "type", Json.Encode.string rec.type_ )
+        ]
 
 
 decodeGenericError : Json.Decode.Decoder API.Game.Types.GenericError

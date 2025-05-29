@@ -91,12 +91,12 @@ update game msg model =
                 ]
             )
 
-        OnDeleteLogResponse (Ok { log_id, process_id }) ->
+        OnDeleteLogResponse (Ok { log_id, process }) ->
             let
                 toGameMsg =
                     Game.ProcessOperation
                         model.nip
-                        (Operation.Started (Operation.LogDelete log_id) process_id)
+                        (Operation.Started (Operation.LogDelete log_id) process.process_id)
             in
             ( model, Effect.msgToCmd <| ToOS <| OS.Bus.ToGame toGameMsg )
 

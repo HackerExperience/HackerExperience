@@ -5,8 +5,8 @@ defmodule Game.Endpoint.Log.Delete do
   import Core.Spec
   import Core.Endpoint
 
-  alias Core.ID
   alias Game.Process.Log.Delete, as: LogDeleteProcess
+  alias Game.Process.Viewable, as: ProcessViewable
   alias Game.Services, as: Svc
   alias Game.Henforcers
   alias Game.{Log, Tunnel}
@@ -26,10 +26,10 @@ defmodule Game.Endpoint.Log.Delete do
   def output_spec(200) do
     selection(
       schema(%{
-        process_id: binary(),
+        process: ProcessViewable.spec(),
         log_id: binary()
       }),
-      [:process_id, :log_id]
+      [:process, :log_id]
     )
   end
 
@@ -81,8 +81,7 @@ defmodule Game.Endpoint.Log.Delete do
   end
 
   def render_response(request, %{process: process, log_eid: log_eid}, session) do
-    process_eid = ID.to_external(process.id, session.data.entity_id, process.server_id)
-    {:ok, %{request | response: {200, %{process_id: process_eid, log_id: log_eid}}}}
+    render_process(request, process, session, %{log_id: log_eid})
   end
 
   defp format_henforcer_error({:server, :not_belongs}), do: "nip_not_found"
