@@ -55,7 +55,7 @@ type alias ProcessKilled =
 
 
 type alias ProcessCompleted =
-    { nip : NIP, process_id : ProcessID }
+    { data : String, nip : NIP, process_id : ProcessID, type_ : String }
 
 
 type alias LogDeleted =

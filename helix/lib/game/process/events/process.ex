@@ -76,25 +76,19 @@ defmodule Game.Events.Process do
 
     defmodule Publishable do
       use Core.Event.Publishable.Definition
+      alias Game.Process.Viewable
 
       def spec do
-        selection(
-          schema(%{
-            nip: nip(),
-            process_id: external_id()
-          }),
-          [:nip, :process_id]
-        )
+        Viewable.spec(:nip)
       end
 
       def generate_payload(%{data: %{process: process}}) do
         %{nip: nip} = Svc.NetworkConnection.fetch!(by_server_id: process.server_id)
 
         payload =
-          %{
-            nip: nip |> NIP.to_external(),
-            process_id: process.id |> ID.to_external(process.entity_id, process.server_id)
-          }
+          process
+          |> Viewable.render(process.entity_id)
+          |> Map.merge(%{nip: NIP.to_external(nip)})
 
         {:ok, payload}
       end

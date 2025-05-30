@@ -29,11 +29,9 @@ type alias Process =
 -- getProcess processId processes =
 --     findProcess processId processes
 --         |> Maybe.withDefault invalidProcess
-
-
-findProcess : ProcessID -> Processes -> Maybe Process
-findProcess processId processes =
-    OrderedDict.get (ProcessID.toString processId) processes
+-- findProcess : ProcessID -> Processes -> Maybe Process
+-- findProcess processId processes =
+--     OrderedDict.get (ProcessID.toString processId) processes
 
 
 updateProcess : ProcessID -> (Process -> Process) -> Processes -> Processes
@@ -92,19 +90,15 @@ parseProcess idxProcess =
 onProcessCompletedEvent : Events.ProcessCompleted -> Processes -> ( Processes, Action )
 onProcessCompletedEvent event processes =
     let
-        maybeProcessData =
-            findProcess event.process_id processes
-                |> Maybe.map .data
+        processData =
+            ProcessData.parse event
 
         maybeOperation =
-            case maybeProcessData of
-                Just (ProcessData.LogDelete { logId }) ->
+            case processData of
+                ProcessData.LogDelete { logId } ->
                     Just <| ProcessOperation.LogDelete logId
 
-                Just _ ->
-                    Nothing
-
-                Nothing ->
+                _ ->
                     Nothing
 
         action =

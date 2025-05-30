@@ -110,7 +110,11 @@ encodeProcessKilled rec =
 decodeProcessCompleted : Json.Decode.Decoder API.Events.Types.ProcessCompleted
 decodeProcessCompleted =
     Json.Decode.succeed
-        (\nip process_id -> { nip = nip, process_id = process_id })
+        (\data nip process_id type_ ->
+            { data = data, nip = nip, process_id = process_id, type_ = type_ }
+        )
+        |> OpenApi.Common.jsonDecodeAndMap
+            (Json.Decode.field "data" Json.Decode.string)
         |> OpenApi.Common.jsonDecodeAndMap
             (Json.Decode.field "nip" (Json.Decode.map (\nip -> NIP.fromString nip) Json.Decode.string))
         |> OpenApi.Common.jsonDecodeAndMap
@@ -118,13 +122,20 @@ decodeProcessCompleted =
                 "process_id"
                 (Json.Decode.map ProcessID Json.Decode.string)
             )
+        |> OpenApi.Common.jsonDecodeAndMap
+            (Json.Decode.field
+                "type"
+                Json.Decode.string
+            )
 
 
 encodeProcessCompleted : API.Events.Types.ProcessCompleted -> Json.Encode.Value
 encodeProcessCompleted rec =
     Json.Encode.object
-        [ ( "nip", Json.Encode.string (NIP.toString rec.nip) )
+        [ ( "data", Json.Encode.string rec.data )
+        , ( "nip", Json.Encode.string (NIP.toString rec.nip) )
         , ( "process_id", Json.Encode.string (ProcessID.toValue rec.process_id) )
+        , ( "type", Json.Encode.string rec.type_ )
         ]
 
 

@@ -223,12 +223,18 @@ components:
     process_completed:
       type: object
       required:
-        - process_id
         - nip
+        - process_id
+        - type
+        - data
       properties:
-        nip:
+        data:
+          type: string
+        type:
           type: string
         process_id:
+          type: string
+        nip:
           type: string
     process_killed:
       type: object

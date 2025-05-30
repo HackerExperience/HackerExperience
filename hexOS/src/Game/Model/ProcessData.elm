@@ -44,7 +44,7 @@ type alias LogDeleteData =
     { logId : LogID }
 
 
-parse : Events.IdxProcess -> ProcessData
+parse : { p | type_ : String, data : String } -> ProcessData
 parse idxProcess =
     case idxProcess.type_ of
         "file_delete" ->
@@ -69,7 +69,11 @@ parse idxProcess =
             invalidData "unknown_type"
 
 
-parseData : Events.IdxProcess -> JD.Decoder apiData -> (apiData -> ProcessData) -> ProcessData
+parseData :
+    { p | type_ : String, data : String }
+    -> JD.Decoder apiData
+    -> (apiData -> ProcessData)
+    -> ProcessData
 parseData { data, type_ } decoder builder =
     let
         result =

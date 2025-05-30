@@ -266,6 +266,8 @@ defmodule Game.Process.Log.DeleteTest do
                other_process.id
 
       assert process_completed_event.data.nip == gtw_nip |> NIP.to_external()
+      assert process_completed_event.data.type == "log_delete"
+      assert process_completed_event.data.data =~ "\"log_id\":"
 
       log_deleted_event = U.wait_sse_event!("log_deleted")
       assert log_deleted_event.data.log_id |> U.from_eid(other_player.id) == log_rev_2.id
