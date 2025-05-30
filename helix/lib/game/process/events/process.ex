@@ -77,16 +77,27 @@ defmodule Game.Events.Process do
     defmodule Publishable do
       use Core.Event.Publishable.Definition
 
-      # TODO: server NIP should be included here
       def spec do
         selection(
-          schema(%{process_id: external_id()}),
-          [:process_id]
+          schema(%{
+            nip: nip(),
+            process_id: external_id()
+          }),
+          [:nip, :process_id]
         )
       end
 
-      def generate_payload(%{data: %{process: process}}),
-        do: {:ok, %{process_id: process.id |> ID.to_external(process.entity_id, process.server_id)}}
+      def generate_payload(%{data: %{process: process}}) do
+        %{nip: nip} = Svc.NetworkConnection.fetch!(by_server_id: process.server_id)
+
+        payload =
+          %{
+            nip: nip |> NIP.to_external(),
+            process_id: process.id |> ID.to_external(process.entity_id, process.server_id)
+          }
+
+        {:ok, payload}
+      end
 
       @doc """
       Only the Process owner receives this event.

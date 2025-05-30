@@ -224,7 +224,10 @@ components:
       type: object
       required:
         - process_id
+        - nip
       properties:
+        nip:
+          type: string
         process_id:
           type: string
     process_killed:
