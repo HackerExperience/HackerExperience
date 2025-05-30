@@ -10,6 +10,7 @@ module Game.Model.Server exposing
     , listLogs
     , onLogDeletedEvent
     , onProcessCompletedEvent
+    , onProcessCreatedEvent
     , onTunnelCreatedEvent
     , parseEndpoint
     , parseEndpoints
@@ -235,6 +236,11 @@ onProcessCompletedEvent event server =
             Process.onProcessCompletedEvent event server.processes
     in
     ( { server | processes = processes }, action )
+
+
+onProcessCreatedEvent : Events.ProcessCreated -> Server -> Server
+onProcessCreatedEvent event server =
+    { server | processes = Process.onProcessCreatedEvent event server.processes }
 
 
 onTunnelCreatedEvent : Events.TunnelCreated -> Gateway -> Gateway

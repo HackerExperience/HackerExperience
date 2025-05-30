@@ -13,6 +13,7 @@ type Event
     = IndexRequested Events.IndexRequested Universe
     | LogDeleted Events.LogDeleted Universe
     | ProcessCompleted Events.ProcessCompleted Universe
+    | ProcessCreated Events.ProcessCreated Universe
     | TunnelCreated Events.TunnelCreated Universe
 
 
@@ -62,6 +63,10 @@ dataDecoder universe eventName =
                 "process_completed" ->
                     JD.map (\x -> ProcessCompleted x universe)
                         Events.decodeProcessCompleted
+
+                "process_created" ->
+                    JD.map (\x -> ProcessCreated x universe)
+                        Events.decodeProcessCreated
 
                 "tunnel_created" ->
                     JD.map (\x -> TunnelCreated x universe)

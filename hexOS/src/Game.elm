@@ -12,6 +12,7 @@ module Game exposing
     , init
     , onLogDeletedEvent
     , onProcessCompletedEvent
+    , onProcessCreatedEvent
     , onTunnelCreatedEvent
     , switchActiveEndpoint
     , switchActiveGateway
@@ -267,6 +268,11 @@ onLogDeletedEvent model event =
 onProcessCompletedEvent : Model -> Events.ProcessCompleted -> ( Model, Action )
 onProcessCompletedEvent model event =
     updateServerWithAction event.nip (Server.onProcessCompletedEvent event) model
+
+
+onProcessCreatedEvent : Model -> Events.ProcessCreated -> Model
+onProcessCreatedEvent model event =
+    updateServer event.nip (Server.onProcessCreatedEvent event) model
 
 
 onTunnelCreatedEvent : Model -> Events.TunnelCreated -> Model

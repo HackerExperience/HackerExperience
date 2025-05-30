@@ -1,6 +1,7 @@
 module Game.Model.Process exposing
     ( Processes
     , onProcessCompletedEvent
+    , onProcessCreatedEvent
     , parse
     )
 
@@ -34,6 +35,11 @@ type alias Process =
 --     OrderedDict.get (ProcessID.toString processId) processes
 
 
+addProcess : Process -> Processes -> Processes
+addProcess process processes =
+    OrderedDict.insert (ProcessID.toString process.id) process processes
+
+
 updateProcess : ProcessID -> (Process -> Process) -> Processes -> Processes
 updateProcess processId updater processes =
     let
@@ -64,20 +70,32 @@ parse idxProcesses =
     List.map
         (\idxProcess ->
             ( ProcessID.toValue idxProcess.process_id
-            , parseProcess idxProcess
+            , parseIndexProcess idxProcess
             )
         )
         idxProcesses
         |> OrderedDict.fromList
 
 
-parseProcess : Events.IdxProcess -> Process
-parseProcess idxProcess =
+parseIndexProcess : Events.IdxProcess -> Process
+parseIndexProcess idxProcess =
     let
         data =
             ProcessData.parse idxProcess
     in
     { id = idxProcess.process_id
+    , data = data
+    , isCompleted = False
+    }
+
+
+parseViewableProcess : { a | process_id : ProcessID, data : String, type_ : String } -> Process
+parseViewableProcess viewableProcess =
+    let
+        data =
+            ProcessData.parse viewableProcess
+    in
+    { id = viewableProcess.process_id
     , data = data
     , isCompleted = False
     }
@@ -114,3 +132,12 @@ onProcessCompletedEvent event processes =
     ( updateProcess event.process_id (\process -> { process | isCompleted = True }) processes
     , action
     )
+
+
+onProcessCreatedEvent : Events.ProcessCreated -> Processes -> Processes
+onProcessCreatedEvent event processes =
+    let
+        process =
+            parseViewableProcess event
+    in
+    addProcess process processes
