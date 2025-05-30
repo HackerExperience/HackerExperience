@@ -9,6 +9,7 @@ module Game.Model.Server exposing
     , invalidServer
     , listLogs
     , onLogDeletedEvent
+    , onProcessCompletedEvent
     , onTunnelCreatedEvent
     , parseEndpoint
     , parseEndpoints
@@ -19,6 +20,7 @@ module Game.Model.Server exposing
 
 import API.Events.Types as Events
 import Dict exposing (Dict)
+import Game.Bus exposing (Action)
 import Game.Model.Log as Log exposing (Log, Logs)
 import Game.Model.NIP as NIP exposing (NIP, RawNIP)
 import Game.Model.Process as Process exposing (Processes)
@@ -208,6 +210,9 @@ handleProcessOperation operation server =
         Operation.Started (Operation.LogDelete _) _ ->
             handleProcessOperationLog operation server
 
+        Operation.Finished (Operation.LogDelete _) _ ->
+            handleProcessOperationLog operation server
+
 
 handleProcessOperationLog : Operation -> Server -> Server
 handleProcessOperationLog operation server =
@@ -221,6 +226,15 @@ handleProcessOperationLog operation server =
 onLogDeletedEvent : Events.LogDeleted -> Server -> Server
 onLogDeletedEvent event server =
     { server | logs = Log.onLogDeletedEvent event server.logs }
+
+
+onProcessCompletedEvent : Events.ProcessCompleted -> Server -> ( Server, Action )
+onProcessCompletedEvent event server =
+    let
+        ( processes, action ) =
+            Process.onProcessCompletedEvent event server.processes
+    in
+    ( { server | processes = processes }, action )
 
 
 onTunnelCreatedEvent : Events.TunnelCreated -> Gateway -> Gateway

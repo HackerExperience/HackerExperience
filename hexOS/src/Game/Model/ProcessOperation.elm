@@ -22,6 +22,7 @@ type OperationType
 type Operation
     = Starting OperationType
     | Started OperationType ProcessID
+    | Finished OperationType ProcessID
 
 
 

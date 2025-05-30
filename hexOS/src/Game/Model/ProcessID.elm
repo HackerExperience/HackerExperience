@@ -2,6 +2,7 @@ module Game.Model.ProcessID exposing
     ( ProcessID(..)
     , RawProcessID
     , fromValue
+    , toString
     , toValue
     )
 
@@ -18,6 +19,11 @@ type alias RawProcessID =
 
 
 -- Functions
+
+
+toString : ProcessID -> String
+toString logId =
+    toValue logId
 
 
 toValue : ProcessID -> String

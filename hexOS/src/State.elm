@@ -223,6 +223,18 @@ updateEvent state event_ =
             in
             ( replaceUniverse state newModel universe, Effect.none )
 
+        Event.ProcessCompleted event universe ->
+            let
+                game =
+                    getUniverse state universe
+
+                ( newModel, action ) =
+                    Game.onProcessCompletedEvent game event
+            in
+            ( replaceUniverse state newModel universe
+            , Effect.msgToCmd <| PerformAction action
+            )
+
         Event.TunnelCreated event universe ->
             let
                 game =

@@ -11,6 +11,7 @@ module Game exposing
     , handleProcessOperation
     , init
     , onLogDeletedEvent
+    , onProcessCompletedEvent
     , onTunnelCreatedEvent
     , switchActiveEndpoint
     , switchActiveGateway
@@ -20,6 +21,7 @@ import API.Events.Types as Events
 import API.Types
 import API.Utils
 import Dict exposing (Dict)
+import Game.Bus as Action exposing (Action)
 import Game.Model.NIP as NIP exposing (NIP, RawNIP)
 import Game.Model.ProcessOperation as Operation exposing (Operation)
 import Game.Model.Server as Server exposing (Endpoint, Gateway, Server, ServerType(..))
@@ -102,10 +104,40 @@ updateServer nip updater model =
         newServers =
             Dict.update
                 (NIP.toString nip)
-                (Maybe.map (\gtw -> updater gtw))
+                (Maybe.map (\server -> updater server))
                 model.servers
     in
     { model | servers = newServers }
+
+
+updateServerWithAction : NIP -> (Server -> ( Server, Action )) -> Model -> ( Model, Action )
+updateServerWithAction nip updater model =
+    case findServer model nip of
+        Just server ->
+            doUpdateServerWithAction nip updater server model
+
+        Nothing ->
+            ( model, Action.ActionNoOp )
+
+
+doUpdateServerWithAction :
+    NIP
+    -> (Server -> ( Server, Action ))
+    -> Server
+    -> Model
+    -> ( Model, Action )
+doUpdateServerWithAction nip updater server model =
+    let
+        ( newServer, action ) =
+            updater server
+
+        newServers =
+            Dict.update
+                (NIP.toString nip)
+                (Maybe.map (\_ -> newServer))
+                model.servers
+    in
+    ( { model | servers = newServers }, action )
 
 
 
@@ -199,6 +231,9 @@ handleProcessOperation model nip operation =
         Operation.Started _ _ ->
             defaultProcessStartedHandler model nip operation
 
+        Operation.Finished _ _ ->
+            defaultProcessStartedHandler model nip operation
+
 
 defaultProcessStartingHandler : Model -> NIP -> Operation -> Model
 defaultProcessStartingHandler model nip operation =
@@ -227,6 +262,11 @@ getAllTunnels model =
 onLogDeletedEvent : Model -> Events.LogDeleted -> Model
 onLogDeletedEvent model event =
     updateServer event.nip (Server.onLogDeletedEvent event) model
+
+
+onProcessCompletedEvent : Model -> Events.ProcessCompleted -> ( Model, Action )
+onProcessCompletedEvent model event =
+    updateServerWithAction event.nip (Server.onProcessCompletedEvent event) model
 
 
 onTunnelCreatedEvent : Model -> Events.TunnelCreated -> Model

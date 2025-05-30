@@ -12,6 +12,7 @@ import Json.Decode as JD
 type Event
     = IndexRequested Events.IndexRequested Universe
     | LogDeleted Events.LogDeleted Universe
+    | ProcessCompleted Events.ProcessCompleted Universe
     | TunnelCreated Events.TunnelCreated Universe
 
 
@@ -57,6 +58,10 @@ dataDecoder universe eventName =
                 "log_deleted" ->
                     JD.map (\x -> LogDeleted x universe)
                         Events.decodeLogDeleted
+
+                "process_completed" ->
+                    JD.map (\x -> ProcessCompleted x universe)
+                        Events.decodeProcessCompleted
 
                 "tunnel_created" ->
                     JD.map (\x -> TunnelCreated x universe)

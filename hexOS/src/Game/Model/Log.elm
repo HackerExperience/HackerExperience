@@ -142,6 +142,9 @@ handleProcessOperation operation logs =
         Operation.Started (Operation.LogDelete logId) processId ->
             updateLog logId (\log -> { log | currentOp = Just <| OpDeletingLog processId }) logs
 
+        Operation.Finished (Operation.LogDelete logId) _ ->
+            updateLog logId (\log -> { log | currentOp = Nothing }) logs
+
 
 
 -- Event Handlers
@@ -149,7 +152,4 @@ handleProcessOperation operation logs =
 
 onLogDeletedEvent : Events.LogDeleted -> Logs -> Logs
 onLogDeletedEvent event logs =
-    OrderedDict.update
-        (LogID.toString event.log_id)
-        (Maybe.map (\log -> { log | isDeleted = True }))
-        logs
+    updateLog event.log_id (\log -> { log | isDeleted = True }) logs
