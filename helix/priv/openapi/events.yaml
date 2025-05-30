@@ -72,24 +72,24 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/IdxEndpoint'
-        mainframe_nip:
-          type: string
         gateways:
           type: array
           items:
             $ref: '#/components/schemas/IdxGateway'
+        mainframe_nip:
+          type: string
     IdxProcess:
       type: object
       required:
+        - process_id
         - type
-        - id
         - data
       properties:
         data:
           type: string
-        id:
-          type: string
         type:
+          type: string
+        process_id:
           type: string
     IdxTunnel:
       type: object
@@ -232,9 +232,25 @@ components:
           type: string
         type:
           type: string
+        nip:
+          type: string
         process_id:
           type: string
+    process_created:
+      type: object
+      required:
+        - process_id
+        - nip
+        - type
+        - data
+      properties:
+        data:
+          type: string
+        type:
+          type: string
         nip:
+          type: string
+        process_id:
           type: string
     process_killed:
       type: object

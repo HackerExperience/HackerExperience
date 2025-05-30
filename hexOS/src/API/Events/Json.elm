@@ -6,12 +6,12 @@ module API.Events.Json exposing
     , encodeFileTransferFailed, encodeFileTransferred, encodeIdxEndpoint, encodeIdxGateway, encodeIdxLog
     , encodeIdxPlayer, encodeIdxProcess, encodeIdxTunnel, encodeIndexRequested
     , encodeInstallationUninstallFailed, encodeInstallationUninstalled, encodeLogDeleteFailed, encodeLogDeleted
-    , encodeProcessCompleted, encodeProcessKilled, encodeTunnelCreated
+    , encodeProcessCompleted, encodeProcessCreated, encodeProcessKilled, encodeTunnelCreated
     , decodeFileDeleteFailed, decodeFileDeleted, decodeFileInstallFailed, decodeFileInstalled
     , decodeFileTransferFailed, decodeFileTransferred, decodeIdxEndpoint, decodeIdxGateway, decodeIdxLog
     , decodeIdxPlayer, decodeIdxProcess, decodeIdxTunnel, decodeIndexRequested
     , decodeInstallationUninstallFailed, decodeInstallationUninstalled, decodeLogDeleteFailed, decodeLogDeleted
-    , decodeProcessCompleted, decodeProcessKilled, decodeTunnelCreated
+    , decodeProcessCompleted, decodeProcessCreated, decodeProcessKilled, decodeTunnelCreated
     )
 
 {-|
@@ -23,7 +23,7 @@ module API.Events.Json exposing
 @docs encodeFileTransferFailed, encodeFileTransferred, encodeIdxEndpoint, encodeIdxGateway, encodeIdxLog
 @docs encodeIdxPlayer, encodeIdxProcess, encodeIdxTunnel, encodeIndexRequested
 @docs encodeInstallationUninstallFailed, encodeInstallationUninstalled, encodeLogDeleteFailed, encodeLogDeleted
-@docs encodeProcessCompleted, encodeProcessKilled, encodeTunnelCreated
+@docs encodeProcessCompleted, encodeProcessCreated, encodeProcessKilled, encodeTunnelCreated
 
 
 ## Decoders
@@ -32,7 +32,7 @@ module API.Events.Json exposing
 @docs decodeFileTransferFailed, decodeFileTransferred, decodeIdxEndpoint, decodeIdxGateway, decodeIdxLog
 @docs decodeIdxPlayer, decodeIdxProcess, decodeIdxTunnel, decodeIndexRequested
 @docs decodeInstallationUninstallFailed, decodeInstallationUninstalled, decodeLogDeleteFailed, decodeLogDeleted
-@docs decodeProcessCompleted, decodeProcessKilled, decodeTunnelCreated
+@docs decodeProcessCompleted, decodeProcessCreated, decodeProcessKilled, decodeTunnelCreated
 
 -}
 
@@ -104,6 +104,38 @@ encodeProcessKilled rec =
     Json.Encode.object
         [ ( "process_id", Json.Encode.string (ProcessID.toValue rec.process_id) )
         , ( "reason", Json.Encode.string rec.reason )
+        ]
+
+
+decodeProcessCreated : Json.Decode.Decoder API.Events.Types.ProcessCreated
+decodeProcessCreated =
+    Json.Decode.succeed
+        (\data nip process_id type_ ->
+            { data = data, nip = nip, process_id = process_id, type_ = type_ }
+        )
+        |> OpenApi.Common.jsonDecodeAndMap
+            (Json.Decode.field "data" Json.Decode.string)
+        |> OpenApi.Common.jsonDecodeAndMap
+            (Json.Decode.field "nip" (Json.Decode.map (\nip -> NIP.fromString nip) Json.Decode.string))
+        |> OpenApi.Common.jsonDecodeAndMap
+            (Json.Decode.field
+                "process_id"
+                (Json.Decode.map ProcessID Json.Decode.string)
+            )
+        |> OpenApi.Common.jsonDecodeAndMap
+            (Json.Decode.field
+                "type"
+                Json.Decode.string
+            )
+
+
+encodeProcessCreated : API.Events.Types.ProcessCreated -> Json.Encode.Value
+encodeProcessCreated rec =
+    Json.Encode.object
+        [ ( "data", Json.Encode.string rec.data )
+        , ( "nip", Json.Encode.string (NIP.toString rec.nip) )
+        , ( "process_id", Json.Encode.string (ProcessID.toValue rec.process_id) )
+        , ( "type", Json.Encode.string rec.type_ )
         ]
 
 

@@ -31,6 +31,12 @@ defmodule Game.Endpoint.Log.DeleteTest do
       assert process.type == :log_delete
       assert process.data.log_id == log.id
       assert process.registry.tgt_log_id == log.id
+
+      # Emits a ProcessCreatedEvent
+      assert [process_created_event] = wait_events_on_server!(gateway.id, :process_created)
+      assert process_created_event.name == :process_created
+      assert process_created_event.data.process.id == process.id
+      assert process_created_event.data.process.data.log_id == log.id
     end
 
     test "successfully starts a LogDeleteProcess (endpoint)" do
