@@ -235,6 +235,9 @@ handleProcessOperation model nip operation =
         Operation.Finished _ _ ->
             defaultProcessStartedHandler model nip operation
 
+        Operation.StartFailed _ ->
+            defaultProcessStartedHandler model nip operation
+
 
 defaultProcessStartingHandler : Model -> NIP -> Operation -> Model
 defaultProcessStartingHandler model nip operation =

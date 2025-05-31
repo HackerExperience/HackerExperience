@@ -32,7 +32,7 @@ type Msg
     | SelectLog LogID
     | DeselectLog
     | OnDeleteLog Log
-    | OnDeleteLogResponse API.Types.LogDeleteResult
+    | OnDeleteLogResponse LogID API.Types.LogDeleteResult
 
 
 type alias Model =
@@ -86,18 +86,23 @@ update game msg model =
             in
             ( model
             , Effect.batch
-                [ Effect.logDelete OnDeleteLogResponse config
+                [ Effect.logDelete (OnDeleteLogResponse log.id) config
                 , Effect.msgToCmd <| ToOS <| OS.Bus.ToGame toGameMsg
                 ]
             )
 
-        OnDeleteLogResponse (Ok _) ->
+        OnDeleteLogResponse _ (Ok _) ->
             -- Side-effects are handled by the ProcessCreatedEvent
             ( model, Effect.none )
 
-        OnDeleteLogResponse (Err _) ->
-            -- TODO
-            ( model, Effect.none )
+        OnDeleteLogResponse logId (Err _) ->
+            let
+                toGameMsg =
+                    Game.ProcessOperation
+                        model.nip
+                        (Operation.StartFailed (Operation.LogDelete logId))
+            in
+            ( model, Effect.msgToCmd <| ToOS <| OS.Bus.ToGame toGameMsg )
 
         ToOS _ ->
             -- Handled by OS

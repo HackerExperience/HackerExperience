@@ -214,6 +214,9 @@ handleProcessOperation operation server =
         Operation.Finished (Operation.LogDelete _) _ ->
             handleProcessOperationLog operation server
 
+        Operation.StartFailed (Operation.LogDelete _) ->
+            handleProcessOperationLog operation server
+
 
 handleProcessOperationLog : Operation -> Server -> Server
 handleProcessOperationLog operation server =

@@ -145,6 +145,9 @@ handleProcessOperation operation logs =
         Operation.Finished (Operation.LogDelete logId) _ ->
             updateLog logId (\log -> { log | currentOp = Nothing }) logs
 
+        Operation.StartFailed (Operation.LogDelete logId) ->
+            updateLog logId (\log -> { log | currentOp = Nothing }) logs
+
 
 
 -- Event Handlers
