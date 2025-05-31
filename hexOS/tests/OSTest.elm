@@ -1,5 +1,6 @@
 module OSTest exposing (suite)
 
+import Apps.Input as App exposing (InitialInput(..))
 import Apps.Manifest as App
 import Apps.Types as Apps
 import Dict
@@ -41,14 +42,15 @@ msgPerformActionTests =
                 \_ ->
                     let
                         msg =
-                            PerformAction (Bus.RequestOpenApp App.DemoApp Nothing)
+                            PerformAction (Bus.RequestOpenApp App.DemoApp Nothing EmptyInput)
 
                         ( newModel, effect ) =
                             OS.update TM.state msg TM.os
                     in
                     E.batch
                         [ -- Unless told otherwise, RequestOpenApp gets the approval to OpenApp
-                          E.effectMsgToCmd effect (PerformAction (Bus.OpenApp App.DemoApp Nothing))
+                          E.effectMsgToCmd effect
+                            (PerformAction (Bus.OpenApp App.DemoApp Nothing EmptyInput))
 
                         -- Model remains unchanged
                         , E.equal TM.os newModel
@@ -95,7 +97,7 @@ msgPerformActionTests =
                 \_ ->
                     let
                         msg =
-                            PerformAction (Bus.OpenApp App.DemoApp Nothing)
+                            PerformAction (Bus.OpenApp App.DemoApp Nothing EmptyInput)
 
                         appId =
                             TM.os.wm.nextAppId

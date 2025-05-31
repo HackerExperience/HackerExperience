@@ -2,6 +2,7 @@ module Apps.LogViewer exposing (..)
 
 import API.Game as GameAPI
 import API.Types
+import Apps.Input as App
 import Apps.Manifest as App
 import Effect exposing (Effect)
 import Game
@@ -312,13 +313,13 @@ getWindowConfig _ =
     }
 
 
-willOpen : WM.WindowInfo -> OS.Bus.Action
-willOpen _ =
-    OS.Bus.OpenApp App.LogViewerApp Nothing
+willOpen : WM.WindowInfo -> App.InitialInput -> OS.Bus.Action
+willOpen _ input =
+    OS.Bus.OpenApp App.LogViewerApp Nothing input
 
 
-didOpen : WM.WindowInfo -> ( Model, Effect Msg )
-didOpen { sessionId } =
+didOpen : WM.WindowInfo -> App.InitialInput -> ( Model, Effect Msg )
+didOpen { appId, sessionId } _ =
     let
         -- TODO: Not worrying about this for now.
         nip =
@@ -355,17 +356,24 @@ willFocus appId _ =
 -- TODO: Singleton logic can (and probably should) be delegated to the OS/WM
 
 
-willOpenChild : Model -> App.Manifest -> WM.Window -> WM.WindowInfo -> OS.Bus.Action
-willOpenChild _ child parentWindow _ =
-    OS.Bus.OpenApp child <| Just ( App.DemoApp, parentWindow.appId )
+willOpenChild :
+    Model
+    -> App.Manifest
+    -> WM.Window
+    -> WM.WindowInfo
+    -> App.InitialInput
+    -> OS.Bus.Action
+willOpenChild _ child parentWindow _ input =
+    OS.Bus.OpenApp child (Just ( App.LogViewerApp, parentWindow.appId )) input
 
 
 didOpenChild :
     Model
     -> ( App.Manifest, AppID )
     -> WM.WindowInfo
+    -> App.InitialInput
     -> ( Model, Effect Msg, OS.Bus.Action )
-didOpenChild model _ _ =
+didOpenChild model _ _ _ =
     ( model, Effect.none, OS.Bus.NoOp )
 
 

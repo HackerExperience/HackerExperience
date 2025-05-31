@@ -1,5 +1,6 @@
 module Apps.Demo exposing (..)
 
+import Apps.Input as App
 import Apps.Manifest as App
 import Apps.Popups.ConfirmationDialog as ConfirmationDialog
 import Effect exposing (Effect)
@@ -95,6 +96,7 @@ update _ msg model =
                     OS.Bus.RequestOpenApp
                         App.PopupConfirmationDialog
                         (Just ( App.DemoApp, model.appId ))
+                        App.EmptyInput
                 )
             )
 
@@ -105,6 +107,7 @@ update _ msg model =
                     OS.Bus.RequestOpenApp
                         App.PopupDemoSingleton
                         (Just ( App.DemoApp, model.appId ))
+                        App.EmptyInput
                 )
             )
 
@@ -129,13 +132,13 @@ getWindowConfig _ =
     }
 
 
-willOpen : WM.WindowInfo -> OS.Bus.Action
-willOpen _ =
-    OS.Bus.OpenApp App.DemoApp Nothing
+willOpen : WM.WindowInfo -> App.InitialInput -> OS.Bus.Action
+willOpen _ input =
+    OS.Bus.OpenApp App.DemoApp Nothing input
 
 
-didOpen : WM.WindowInfo -> ( Model, Effect Msg )
-didOpen { appId } =
+didOpen : WM.WindowInfo -> App.InitialInput -> ( Model, Effect Msg )
+didOpen { appId } _ =
     ( { appId = appId, count = 0 }
     , Effect.none
     )
@@ -160,17 +163,24 @@ willFocus appId _ =
 -- TODO: Singleton logic can (and probably should) be delegated to the OS/WM
 
 
-willOpenChild : Model -> App.Manifest -> WM.Window -> WM.WindowInfo -> OS.Bus.Action
-willOpenChild _ child parentWindow _ =
-    OS.Bus.OpenApp child <| Just ( App.DemoApp, parentWindow.appId )
+willOpenChild :
+    Model
+    -> App.Manifest
+    -> WM.Window
+    -> WM.WindowInfo
+    -> App.InitialInput
+    -> OS.Bus.Action
+willOpenChild _ child parentWindow _ input =
+    OS.Bus.OpenApp child (Just ( App.DemoApp, parentWindow.appId )) input
 
 
 didOpenChild :
     Model
     -> ( App.Manifest, AppID )
     -> WM.WindowInfo
+    -> App.InitialInput
     -> ( Model, Effect Msg, OS.Bus.Action )
-didOpenChild model _ _ =
+didOpenChild model _ _ _ =
     ( model, Effect.none, OS.Bus.NoOp )
 
 

@@ -1,6 +1,7 @@
 module TestHelpers.Models exposing (..)
 
 import API.Types
+import Apps.Input as App
 import Apps.Manifest as App
 import Dict
 import Game exposing (Model)
@@ -119,7 +120,7 @@ os =
 osWithApp : OS.Model -> ( OS.Model, AppID )
 osWithApp model =
     model
-        |> OS.update state (OS.PerformAction (Bus.OpenApp App.DemoApp Nothing))
+        |> OS.update state (OS.PerformAction (Bus.OpenApp App.DemoApp Nothing App.EmptyInput))
         |> Tuple.mapSecond (\_ -> model.wm.nextAppId)
 
 

@@ -17,6 +17,7 @@ Apps.Types... something to consider for the future.
 -- Maybe rename to OS.dispatcher? or something like that
 
 import Apps.Demo as Demo
+import Apps.Input as App
 import Apps.LogViewer as LogViewer
 import Apps.Manifest as App
 import Apps.Popups.ConfirmationDialog as ConfirmationDialog
@@ -34,26 +35,26 @@ import WM
 -- app
 
 
-willOpen : App.Manifest -> WM.WindowInfo -> OS.Bus.Action
-willOpen app windowInfo =
+willOpen : App.Manifest -> WM.WindowInfo -> App.InitialInput -> OS.Bus.Action
+willOpen app windowInfo input =
     case app of
         App.InvalidApp ->
             OS.Bus.NoOp
 
         App.LogViewerApp ->
-            LogViewer.willOpen windowInfo
+            LogViewer.willOpen windowInfo input
 
         App.RemoteAccessApp ->
-            RemoteAccess.willOpen windowInfo
+            RemoteAccess.willOpen windowInfo input
 
         App.DemoApp ->
             Demo.willOpen windowInfo
 
         App.PopupConfirmationDialog ->
-            ConfirmationDialog.willOpen windowInfo
+            ConfirmationDialog.willOpen windowInfo input
 
         App.PopupDemoSingleton ->
-            DemoSingleton.willOpen windowInfo
+            DemoSingleton.willOpen windowInfo input
 
 
 willOpenChild :
@@ -61,8 +62,9 @@ willOpenChild :
     -> Apps.Model
     -> WM.Window
     -> WM.WindowInfo
+    -> App.InitialInput
     -> OS.Bus.Action
-willOpenChild child parentModel parentWindow childWindowInfo =
+willOpenChild child parentModel parentWindow childWindowInfo input =
     case parentModel of
         Apps.InvalidModel ->
             OS.Bus.NoOp
@@ -78,13 +80,14 @@ didOpen :
     App.Manifest
     -> AppID
     -> WM.WindowInfo
+    -> App.InitialInput
     -> ( Apps.Model, Effect Apps.Msg )
-didOpen app appId windowInfo =
+didOpen app appId windowInfo input =
     let
         wrapMe appModel appMsg didOpenFn =
             let
                 ( iModel, iCmd ) =
-                    didOpenFn windowInfo
+                    didOpenFn windowInfo input
             in
             ( appModel iModel, Effect.map (appMsg appId) iCmd )
     in
@@ -130,13 +133,14 @@ didOpenChild :
     -> Apps.Model
     -> ( App.Manifest, AppID )
     -> WM.WindowInfo
+    -> App.InitialInput
     -> ( Apps.Model, Effect Apps.Msg, OS.Bus.Action )
-didOpenChild parentId parentModel childInfo windowInfo =
+didOpenChild parentId parentModel childInfo windowInfo input =
     let
         wrapMe toAppModel toAppMsg didOpenChildFn =
             let
                 ( iModel, iCmd, action ) =
-                    didOpenChildFn childInfo windowInfo
+                    didOpenChildFn childInfo windowInfo input
             in
             ( toAppModel iModel, Effect.map (toAppMsg parentId) iCmd, action )
     in

@@ -7,6 +7,7 @@ module HUD.Launcher exposing
     , view
     )
 
+import Apps.Input as App
 import Apps.Manifest as App
 import Browser.Events
 import Effect exposing (Effect)
@@ -84,7 +85,7 @@ update msg model =
 
         LaunchApp app ->
             ( { model | isOpen = False }
-            , Effect.msgToCmd <| ToOS <| OS.Bus.RequestOpenApp app Nothing
+            , Effect.msgToCmd <| ToOS <| OS.Bus.RequestOpenApp app Nothing App.EmptyInput
             )
 
         NoOp ->

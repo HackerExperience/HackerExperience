@@ -1,5 +1,6 @@
 module Apps.Popups.DemoSingleton exposing (..)
 
+import Apps.Input as App
 import Apps.Manifest as App
 import Effect exposing (Effect)
 import OS.AppID exposing (AppID)
@@ -52,13 +53,13 @@ getWindowConfig _ =
     }
 
 
-willOpen : WM.WindowInfo -> OS.Bus.Action
-willOpen window =
-    OS.Bus.OpenApp App.PopupDemoSingleton window.parent
+willOpen : WM.WindowInfo -> App.InitialInput -> OS.Bus.Action
+willOpen window input =
+    OS.Bus.OpenApp App.PopupDemoSingleton window.parent input
 
 
-didOpen : WM.WindowInfo -> ( Model, Effect Msg )
-didOpen _ =
+didOpen : WM.WindowInfo -> App.InitialInput -> ( Model, Effect Msg )
+didOpen _ _ =
     ( {}, Effect.none )
 
 

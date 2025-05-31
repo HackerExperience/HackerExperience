@@ -11,6 +11,7 @@ module OS exposing
     )
 
 import Apps.Demo as Demo
+import Apps.Input as App
 import Apps.LogViewer as LogViewer
 import Apps.Manifest as App
 import Apps.Popups.ConfirmationDialog as ConfirmationDialog
@@ -137,8 +138,8 @@ update state msg model =
         PerformAction OS.Bus.NoOp ->
             ( model, Effect.none )
 
-        PerformAction (OS.Bus.RequestOpenApp app parentInfo) ->
-            performRequestOpen state model app parentInfo
+        PerformAction (OS.Bus.RequestOpenApp app parentInfo input) ->
+            performRequestOpen state model app parentInfo input
 
         PerformAction (OS.Bus.RequestCloseApp appId) ->
             performActionOnApp state model appId performRequestClose
@@ -149,8 +150,8 @@ update state msg model =
         PerformAction (OS.Bus.RequestFocusApp appId) ->
             performActionOnApp state model appId performRequestFocus
 
-        PerformAction (OS.Bus.OpenApp app parentInfo) ->
-            performOpenApp state model app parentInfo
+        PerformAction (OS.Bus.OpenApp app parentInfo input) ->
+            performOpenApp state model app parentInfo input
 
         PerformAction (OS.Bus.CloseApp appId) ->
             performActionOnApp state model appId performCloseApp
@@ -235,8 +236,9 @@ performRequestOpen :
     -> Model
     -> App.Manifest
     -> Maybe WM.ParentInfo
+    -> App.InitialInput
     -> ( Model, Effect Msg )
-performRequestOpen { currentSession } model app parentInfo =
+performRequestOpen { currentSession } model app parentInfo input =
     let
         appId =
             model.wm.nextAppId
@@ -256,13 +258,14 @@ performRequestOpen { currentSession } model app parentInfo =
                             (getAppModel model.appModels parentId)
                             (WM.getWindow model.wm.windows parentId)
                             windowInfo
+                            input
 
                 Nothing ->
                     Nothing
 
         isParentActionBlocking =
             case parentAction of
-                Just (OS.Bus.OpenApp _ _) ->
+                Just (OS.Bus.OpenApp _ _ _) ->
                     False
 
                 Just _ ->
@@ -276,11 +279,11 @@ performRequestOpen { currentSession } model app parentInfo =
                 Maybe.withDefault OS.Bus.NoOp parentAction
 
             else
-                WM.Windowable.willOpen app windowInfo
+                WM.Windowable.willOpen app windowInfo input
 
         finalAction =
             case action of
-                OS.Bus.OpenApp targetApp parentInfo_ ->
+                OS.Bus.OpenApp targetApp parentInfo_ _ ->
                     WM.willOpenApp model.wm targetApp windowConfig parentInfo_ action
 
                 _ ->
@@ -390,8 +393,9 @@ performOpenApp :
     -> Model
     -> App.Manifest
     -> Maybe WM.ParentInfo
+    -> App.InitialInput
     -> ( Model, Effect Msg )
-performOpenApp { currentUniverse, currentSession } model app parentInfo =
+performOpenApp { currentUniverse, currentSession } model app parentInfo input =
     let
         appId =
             model.wm.nextAppId
@@ -404,7 +408,7 @@ performOpenApp { currentUniverse, currentSession } model app parentInfo =
 
         -- TODO: Handle appMsg__
         ( initialAppModel, appMsg__ ) =
-            WM.Windowable.didOpen app appId windowInfo
+            WM.Windowable.didOpen app appId windowInfo input
 
         -- TODO: Handle parentAction__
         ( parentModel, parentCmd, parentAction__ ) =
@@ -417,6 +421,7 @@ performOpenApp { currentUniverse, currentSession } model app parentInfo =
                                 (getAppModel model.appModels parentId)
                                 ( app, appId )
                                 windowInfo
+                                input
                     in
                     ( Just parentModel_, Effect.map AppMsg parentCmd_, parentAction_ )
 
@@ -797,7 +802,7 @@ ctxMenuConfig menu _ =
                 CtxMenu.OSRootMenu ->
                     let
                         msg =
-                            PerformAction (OS.Bus.RequestOpenApp App.DemoApp Nothing)
+                            PerformAction (OS.Bus.RequestOpenApp App.DemoApp Nothing App.EmptyInput)
 
                         entries =
                             [ CtxMenu.SimpleItem
