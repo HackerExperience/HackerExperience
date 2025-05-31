@@ -270,9 +270,9 @@ onProcessCompletedEvent model event =
     updateServerWithAction event.nip (Server.onProcessCompletedEvent event) model
 
 
-onProcessCreatedEvent : Model -> Events.ProcessCreated -> Model
+onProcessCreatedEvent : Model -> Events.ProcessCreated -> ( Model, Action )
 onProcessCreatedEvent model event =
-    updateServer event.nip (Server.onProcessCreatedEvent event) model
+    updateServerWithAction event.nip (Server.onProcessCreatedEvent event) model
 
 
 onTunnelCreatedEvent : Model -> Events.TunnelCreated -> Model

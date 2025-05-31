@@ -240,10 +240,12 @@ updateEvent state event_ =
                 game =
                     getUniverse state universe
 
-                newModel =
+                ( newModel, action ) =
                     Game.onProcessCreatedEvent game event
             in
-            ( replaceUniverse state newModel universe, Effect.none )
+            ( replaceUniverse state newModel universe
+            , Effect.msgToCmd <| PerformAction action
+            )
 
         Event.TunnelCreated event universe ->
             let

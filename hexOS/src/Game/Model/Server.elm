@@ -238,9 +238,13 @@ onProcessCompletedEvent event server =
     ( { server | processes = processes }, action )
 
 
-onProcessCreatedEvent : Events.ProcessCreated -> Server -> Server
+onProcessCreatedEvent : Events.ProcessCreated -> Server -> ( Server, Action )
 onProcessCreatedEvent event server =
-    { server | processes = Process.onProcessCreatedEvent event server.processes }
+    let
+        ( processes, action ) =
+            Process.onProcessCreatedEvent event server.processes
+    in
+    ( { server | processes = processes }, action )
 
 
 onTunnelCreatedEvent : Events.TunnelCreated -> Gateway -> Gateway

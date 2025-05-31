@@ -91,14 +91,9 @@ update game msg model =
                 ]
             )
 
-        OnDeleteLogResponse (Ok { log_id, process }) ->
-            let
-                toGameMsg =
-                    Game.ProcessOperation
-                        model.nip
-                        (Operation.Started (Operation.LogDelete log_id) process.process_id)
-            in
-            ( model, Effect.msgToCmd <| ToOS <| OS.Bus.ToGame toGameMsg )
+        OnDeleteLogResponse (Ok _) ->
+            -- Side-effects are handled by the ProcessCreatedEvent
+            ( model, Effect.none )
 
         OnDeleteLogResponse (Err _) ->
             -- TODO

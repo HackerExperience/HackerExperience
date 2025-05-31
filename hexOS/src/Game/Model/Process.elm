@@ -111,16 +111,8 @@ onProcessCompletedEvent event processes =
         processData =
             ProcessData.parse event
 
-        maybeOperation =
-            case processData of
-                ProcessData.LogDelete { logId } ->
-                    Just <| ProcessOperation.LogDelete logId
-
-                _ ->
-                    Nothing
-
         action =
-            case maybeOperation of
+            case getProcessOperation processData of
                 Just operationType ->
                     Action.ProcessOperation
                         event.nip
@@ -134,10 +126,30 @@ onProcessCompletedEvent event processes =
     )
 
 
-onProcessCreatedEvent : Events.ProcessCreated -> Processes -> Processes
+onProcessCreatedEvent : Events.ProcessCreated -> Processes -> ( Processes, Action )
 onProcessCreatedEvent event processes =
     let
         process =
             parseViewableProcess event
+
+        action =
+            case getProcessOperation process.data of
+                Just operationType ->
+                    Action.ProcessOperation
+                        event.nip
+                        (ProcessOperation.Started operationType event.process_id)
+
+                Nothing ->
+                    Action.ActionNoOp
     in
-    addProcess process processes
+    ( addProcess process processes, action )
+
+
+getProcessOperation : ProcessData -> Maybe ProcessOperation.OperationType
+getProcessOperation data =
+    case data of
+        ProcessData.LogDelete { logId } ->
+            Just <| ProcessOperation.LogDelete logId
+
+        _ ->
+            Nothing
