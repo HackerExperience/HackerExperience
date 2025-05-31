@@ -19,6 +19,7 @@ Apps.Types... something to consider for the future.
 import Apps.Demo as Demo
 import Apps.Input as App
 import Apps.LogViewer as LogViewer
+import Apps.LogViewer.LogEditPopup as LogEditPopup
 import Apps.Manifest as App
 import Apps.Popups.ConfirmationDialog as ConfirmationDialog
 import Apps.Popups.DemoSingleton as DemoSingleton
@@ -48,7 +49,10 @@ willOpen app windowInfo input =
             RemoteAccess.willOpen windowInfo input
 
         App.DemoApp ->
-            Demo.willOpen windowInfo
+            Demo.willOpen windowInfo input
+
+        App.PopupLogEdit ->
+            LogEditPopup.willOpen windowInfo input
 
         App.PopupConfirmationDialog ->
             ConfirmationDialog.willOpen windowInfo input
@@ -70,7 +74,10 @@ willOpenChild child parentModel parentWindow childWindowInfo input =
             OS.Bus.NoOp
 
         Apps.DemoModel model ->
-            Demo.willOpenChild model child parentWindow childWindowInfo
+            Demo.willOpenChild model child parentWindow childWindowInfo input
+
+        Apps.LogViewerModel model ->
+            LogViewer.willOpenChild model child parentWindow childWindowInfo input
 
         _ ->
             OS.Bus.NoOp
@@ -114,6 +121,12 @@ didOpen app appId windowInfo input =
                 Apps.DemoModel
                 Apps.DemoMsg
                 Demo.didOpen
+
+        App.PopupLogEdit ->
+            wrapMe
+                Apps.PopupLogEditModel
+                Apps.PopupLogEditMsg
+                LogEditPopup.didOpen
 
         App.PopupConfirmationDialog ->
             wrapMe
@@ -168,6 +181,9 @@ didOpenChild parentId parentModel childInfo windowInfo input =
 
         -- Default. All patterns below could be a catch-all, but we need to have an
         -- "extractModel" function for the first parameter
+        Apps.PopupLogEditModel model ->
+            ( Apps.PopupLogEditModel model, Effect.none, OS.Bus.NoOp )
+
         Apps.PopupConfirmationDialogModel model ->
             ( Apps.PopupConfirmationDialogModel model, Effect.none, OS.Bus.NoOp )
 
@@ -191,6 +207,9 @@ willClose window appModel =
             Demo.willClose window.appId model window
 
         -- Popups
+        Apps.PopupLogEditModel model ->
+            LogEditPopup.willClose window.appId model window
+
         Apps.PopupConfirmationDialogModel model ->
             ConfirmationDialog.willClose window.appId model window
 
@@ -237,6 +256,9 @@ didCloseChild parentId parentModel childInfo parentWindow =
 
         -- Default. All patterns below could be a catch-all, but we need to have an
         -- "extractModel" function for the first parameter
+        Apps.PopupLogEditModel model ->
+            ( Apps.PopupLogEditModel model, Effect.none, OS.Bus.NoOp )
+
         Apps.PopupConfirmationDialogModel model ->
             ( Apps.PopupConfirmationDialogModel model, Effect.none, OS.Bus.NoOp )
 
@@ -260,6 +282,9 @@ willFocus app appId window =
             Demo.willFocus appId window
 
         -- Popups
+        App.PopupLogEdit ->
+            LogEditPopup.willFocus appId window
+
         App.PopupConfirmationDialog ->
             ConfirmationDialog.willFocus appId window
 
@@ -281,6 +306,9 @@ getWindowConfig windowInfo =
 
         App.DemoApp ->
             Demo.getWindowConfig windowInfo
+
+        App.PopupLogEdit ->
+            LogEditPopup.getWindowConfig windowInfo
 
         App.PopupConfirmationDialog ->
             ConfirmationDialog.getWindowConfig windowInfo

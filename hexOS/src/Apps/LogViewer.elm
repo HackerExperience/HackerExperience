@@ -34,10 +34,12 @@ type Msg
     | DeselectLog
     | OnDeleteLog Log
     | OnDeleteLogResponse LogID API.Types.LogDeleteResult
+    | OnRequestOpenEditPopup Log
 
 
 type alias Model =
-    { nip : NIP
+    { appId : AppID
+    , nip : NIP
     , selectedLog : Maybe LogID
     }
 
@@ -104,6 +106,17 @@ update game msg model =
                         (Operation.StartFailed (Operation.LogDelete logId))
             in
             ( model, Effect.msgToCmd <| ToOS <| OS.Bus.ToGame toGameMsg )
+
+        OnRequestOpenEditPopup log ->
+            let
+                msg_ =
+                    ToOS <|
+                        OS.Bus.RequestOpenApp
+                            App.PopupLogEdit
+                            (Just ( App.LogViewerApp, model.appId ))
+                            (App.PopupLogEditInput log)
+            in
+            ( model, Effect.msgToCmd msg_ )
 
         ToOS _ ->
             -- Handled by OS
@@ -176,11 +189,17 @@ vLogRow log =
                 |> UI.Icon.toUI
 
         editEntry =
-            col [ cl "a-lr-action-entry" ]
+            col
+                [ cl "a-lr-action-entry"
+                , UI.onClick <| OnRequestOpenEditPopup log
+                ]
                 [ editIcon ]
 
         deleteEntry =
-            col [ cl "a-lr-action-entry" ]
+            col
+                [ cl "a-lr-action-entry"
+                , UI.onClick <| OnDeleteLog log
+                ]
                 [ deleteIcon ]
 
         actions =
@@ -330,7 +349,8 @@ didOpen { appId, sessionId } _ =
                 WM.RemoteSessionID nip_ ->
                     nip_
     in
-    ( { nip = nip
+    ( { appId = appId
+      , nip = nip
       , selectedLog = Nothing
       }
     , Effect.none

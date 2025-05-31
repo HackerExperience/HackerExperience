@@ -5,6 +5,7 @@ module Game.Model.Log exposing
     , findLog
     , getLog
     , handleProcessOperation
+    , invalidLog
     , logsToList
     , onLogDeletedEvent
     , parse

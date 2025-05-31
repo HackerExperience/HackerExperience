@@ -13,6 +13,7 @@ module OS exposing
 import Apps.Demo as Demo
 import Apps.Input as App
 import Apps.LogViewer as LogViewer
+import Apps.LogViewer.LogEditPopup as LogEditPopup
 import Apps.Manifest as App
 import Apps.Popups.ConfirmationDialog as ConfirmationDialog
 import Apps.Popups.DemoSingleton as DemoSingleton
@@ -679,6 +680,22 @@ dispatchUpdateApp state model appMsg =
                     ( model, Effect.none )
 
         -- Popups
+        Apps.PopupLogEditMsg appId subMsg ->
+            case getAppModel model.appModels appId of
+                Apps.PopupLogEditModel appModel ->
+                    updateApp
+                        state
+                        model
+                        appId
+                        appModel
+                        subMsg
+                        Apps.PopupLogEditModel
+                        Apps.PopupLogEditMsg
+                        LogEditPopup.update
+
+                _ ->
+                    ( model, Effect.none )
+
         Apps.PopupConfirmationDialogMsg popupId (ConfirmationDialog.ToApp appId app action) ->
             let
                 newAppMsg =
@@ -1014,6 +1031,9 @@ getWindowInnerContent { ctxMenu } appId _ appModel universe =
 
         Apps.DemoModel model ->
             Html.map (Apps.DemoMsg appId) <| Demo.view model
+
+        Apps.PopupLogEditModel model ->
+            Html.map (Apps.PopupLogEditMsg appId) <| LogEditPopup.view model
 
         Apps.PopupConfirmationDialogModel model ->
             Html.map (Apps.PopupConfirmationDialogMsg appId) <| ConfirmationDialog.view model
