@@ -40,6 +40,9 @@
      * the window is moving */
     background-image: radial-gradient(black 1px, transparent 0);
     background-size: 5px 5px;
+
+    // This is a "last resort"; inner content should never expand beyond the window area
+    overflow: hidden;
 }
 
 .os-w-title {
