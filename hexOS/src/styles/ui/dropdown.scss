@@ -1,0 +1,68 @@
+@use "../utils/colors" as *;
+@use "../utils/spacing" as *;
+
+.ui-dropdown {
+    border: 1px solid sec-400();
+    position: relative;
+
+    &:hover {
+        border: 1px solid prim-400();
+
+        .ui-dd-options {
+            border: 1px solid prim-400();
+        }
+    }
+}
+
+.ui-dd-header {
+    padding: s-2() s-3();
+    display: flex;
+    flex: 1;
+    height: 100%;
+    width: 100%;
+    min-width: 150px;
+
+    &:hover {
+        cursor: pointer;
+    }
+}
+
+.ui-dd-header-caret {
+    display: flex;
+    margin-left: auto;
+}
+
+.ui-dd-options {
+    // NOTE: Height is defined by the application
+    position: absolute;
+    margin-top: 40px;
+
+    // -1px to the left, and 2 extra pixels on the width, to match the border
+    left: -1px;
+    width: calc(100% + 2px);
+
+    background-color: sec-700();
+    border: 1px solid sec-400();
+
+    overflow-y: scroll;
+
+    z-index: 999;
+}
+
+.ui-dd-selectable-entry {
+    padding: s-2() s-4();
+
+    &:hover {
+        cursor: pointer;
+        background-color: sec-500();
+    }
+}
+
+.ui-dd-group {
+    padding: s-2() s-3();
+    font-weight: bold;
+}
+
+.ui-dd-option-selected {
+    background-color: sec-600();
+}

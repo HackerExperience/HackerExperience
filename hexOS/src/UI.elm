@@ -63,6 +63,16 @@ cl name =
     HA.class name
 
 
+maybeCl : Maybe String -> Attribute msg
+maybeCl maybeName =
+    case maybeName of
+        Just name ->
+            cl name
+
+        Nothing ->
+            emptyAttr
+
+
 id : String -> Attribute msg
 id name =
     HA.id name
@@ -71,6 +81,16 @@ id name =
 style : String -> String -> Attribute msg
 style property value =
     HA.style property value
+
+
+maybeStyle : String -> Maybe x -> (x -> String) -> Attribute msg
+maybeStyle property maybeValue extractor =
+    case maybeValue of
+        Just v ->
+            style property (extractor v)
+
+        Nothing ->
+            emptyAttr
 
 
 text : String -> Html msg
