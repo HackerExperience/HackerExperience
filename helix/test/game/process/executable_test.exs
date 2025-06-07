@@ -27,8 +27,8 @@ defmodule Game.Process.ExecutableTest do
       assert process.server_id == server.id
       assert process.entity_id == entity.id
       assert process.registry.tgt_log_id == log.id
-      assert process.data.log_type == :server_login
-      assert process.data.log_direction == :self
+      assert process.data.type == :server_login
+      assert process.data.direction == :self
 
       assert event.data.__struct__ == Game.Events.Process.Created
       assert event.data.process == process
