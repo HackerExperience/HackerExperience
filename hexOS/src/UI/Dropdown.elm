@@ -34,7 +34,7 @@ type alias Props msg =
 
 
 type alias Opts =
-    { height : Int
+    { maxHeight : Int
     , width : Maybe Int
     }
 
@@ -109,7 +109,7 @@ update msg model =
 
 defaultOpts : Opts
 defaultOpts =
-    { height = 200
+    { maxHeight = 200
     , width = Nothing
     }
 
@@ -119,9 +119,9 @@ new entries =
     Config { entries = entries } defaultOpts
 
 
-withHeight : Int -> Config msg -> Config msg
-withHeight height (Config props opts) =
-    Config props { opts | height = height }
+withMaxHeight : Int -> Config msg -> Config msg
+withMaxHeight maxHeight (Config props opts) =
+    Config props { opts | maxHeight = maxHeight }
 
 
 withWidth : Int -> Config msg -> Config msg
@@ -130,7 +130,7 @@ withWidth width (Config props opts) =
 
 
 toUI : Model -> Config msg -> UI (Msg msg)
-toUI model (Config { entries } { width, height }) =
+toUI model (Config { entries } { width, maxHeight }) =
     let
         options =
             if model.isOpen then
@@ -143,7 +143,7 @@ toUI model (Config { entries } { width, height }) =
             if model.isOpen then
                 UI.col
                     [ cl "ui-dd-options"
-                    , style "height" <| String.fromInt height ++ "px"
+                    , style "max-height" <| String.fromInt maxHeight ++ "px"
                     ]
                     options
 
