@@ -1,33 +1,270 @@
 module Apps.LogViewer.LogEditPopup exposing (..)
 
+-- TODO: Convert Html to UI
+
 import Apps.Input as App
 import Apps.Manifest as App
 import Effect exposing (Effect)
 import Game
 import Game.Model.Log as Log exposing (Log)
+import Html as H exposing (Html)
 import OS.AppID exposing (AppID)
 import OS.Bus
-import UI exposing (UI, cl, row, text)
+import UI exposing (UI, cl, col, row, text)
 import UI.Button
+import UI.Dropdown
+import UI.Form
 import UI.Icon
+import UI.Model.FormFields as FormFields exposing (TextField)
+import UI.TextInput
 import WM
 
 
 type Msg
     = ToApp AppID App.Manifest OS.Bus.Action
+    | DropdownMsg DropdownID (UI.Dropdown.Msg Msg)
+    | OnTypeSelected LogEditType
+    | OnPerspectiveSelected LogEditPerspective
+    | SetFieldIP String String
+    | ValidateFieldIP String
 
 
 type alias Model =
-    { log : Log }
+    { log : Log
+    , originalLog : Log
+    , previewText : String
+    , hasChanged : Bool
+    , isValid : Bool
+    , selectedType : LogEditType
+    , typeDropdown : UI.Dropdown.Model
+    , selectedPerspective : Maybe LogEditPerspective
+    , perspectiveDropdown : UI.Dropdown.Model
+    , freeFormText : TextField
+    , ip1 : TextField
+    , ip2 : TextField
+    }
+
+
+{-| TODO: Figure out iptextfield
+-}
+type alias IPTextField =
+    TextField
+
+
+type DropdownID
+    = DropdownType
+    | DropdownPerspective
+
+
+type LogEditType
+    = TypeCustom
+    | TypeServerLogin
+    | TypeFileTransfer
+    | TypeConnectionProxied
+
+
+type LogEditPerspective
+    = PerspectiveSelf
+    | PerspectiveGateway
+    | PerspectiveEndpoint
+
+
+type LogEditPerspectiveOptions
+    = NoPerspectiveOptions
+    | PerspectiveOptionsSelfGatewayRemote
+    | PerspectiveOptionsGatewayRemote
 
 
 
--- View
+-- Model
 
 
-view : Model -> UI Msg
-view model =
-    text "oi"
+updatePreview : ( Model, Effect Msg ) -> ( Model, Effect Msg )
+updatePreview ( model, effect ) =
+    ( { model | previewText = generatePreview model }, effect )
+
+
+generatePreview : Model -> String
+generatePreview model =
+    let
+        invalidPerspective =
+            "<INVALID PERSPECTIVE>"
+    in
+    case model.selectedType of
+        TypeServerLogin ->
+            case Maybe.withDefault PerspectiveSelf model.selectedPerspective of
+                PerspectiveSelf ->
+                    "localhost logged in"
+
+                PerspectiveGateway ->
+                    "localhost logged in to [" ++ model.ip1.value ++ "]"
+
+                PerspectiveEndpoint ->
+                    "[" ++ model.ip1.value ++ "] logged in to localhost"
+
+        TypeFileTransfer ->
+            let
+                fileName =
+                    "foo.txt"
+
+                ip =
+                    model.ip1.value
+            in
+            case Maybe.withDefault PerspectiveGateway model.selectedPerspective of
+                PerspectiveGateway ->
+                    "[localhost] downloaded file " ++ fileName ++ " from [" ++ ip ++ "]"
+
+                PerspectiveEndpoint ->
+                    "[" ++ ip ++ "] downloaded file " ++ fileName ++ "from [localhost]"
+
+                _ ->
+                    invalidPerspective
+
+        TypeConnectionProxied ->
+            let
+                ( ip1, ip2 ) =
+                    ( model.ip1.value, model.ip2.value )
+            in
+            "[localhost] proxied connection from [" ++ ip1 ++ "] to [" ++ ip2 ++ "]"
+
+        TypeCustom ->
+            model.freeFormText.value
+
+
+
+-- Model > Perspective
+
+
+defaultPerspectiveForType : LogEditType -> Maybe LogEditPerspective
+defaultPerspectiveForType selectedType =
+    case selectedType of
+        TypeFileTransfer ->
+            Just PerspectiveGateway
+
+        TypeServerLogin ->
+            Just PerspectiveSelf
+
+        TypeConnectionProxied ->
+            Nothing
+
+        TypeCustom ->
+            Nothing
+
+
+perspectiveToString : LogEditPerspective -> String
+perspectiveToString perspective =
+    case perspective of
+        PerspectiveSelf ->
+            "Self"
+
+        PerspectiveGateway ->
+            "Gateway"
+
+        PerspectiveEndpoint ->
+            "Endpoint"
+
+
+isPerspectiveValid : LogEditPerspective -> LogEditType -> Bool
+isPerspectiveValid perspective selectedType =
+    let
+        validIfSelfGatewayEndpoint =
+            case perspective of
+                PerspectiveSelf ->
+                    True
+
+                PerspectiveGateway ->
+                    True
+
+                PerspectiveEndpoint ->
+                    True
+
+        validIfGatewayEndpoint =
+            case perspective of
+                PerspectiveGateway ->
+                    True
+
+                PerspectiveEndpoint ->
+                    True
+
+                _ ->
+                    False
+
+        validIfNoPerspective =
+            False
+    in
+    case selectedType of
+        TypeFileTransfer ->
+            validIfGatewayEndpoint
+
+        TypeConnectionProxied ->
+            False
+
+        TypeServerLogin ->
+            validIfSelfGatewayEndpoint
+
+        TypeCustom ->
+            validIfNoPerspective
+
+
+setPerspectiveOnTypeSelection : Maybe LogEditPerspective -> LogEditType -> Maybe LogEditPerspective
+setPerspectiveOnTypeSelection currentPerspective newSelectedType =
+    case currentPerspective of
+        Nothing ->
+            defaultPerspectiveForType newSelectedType
+
+        Just perspective ->
+            if isPerspectiveValid perspective newSelectedType then
+                currentPerspective
+
+            else
+                defaultPerspectiveForType newSelectedType
+
+
+setPerspectiveDropdown : UI.Dropdown.Model -> Maybe LogEditPerspective -> UI.Dropdown.Model
+setPerspectiveDropdown dropdown maybePerspective =
+    case maybePerspective of
+        Just perspective ->
+            { dropdown | selected = Just <| perspectiveToString perspective }
+
+        Nothing ->
+            dropdown
+
+
+
+-- Model > Fields
+
+
+onFieldIPSet : Model -> String -> String -> Model
+onFieldIPSet model identifier value =
+    let
+        newIp =
+            FormFields.setValue FormFields.text value
+    in
+    case identifier of
+        "ip2" ->
+            { model | ip2 = newIp }
+
+        _ ->
+            { model | ip1 = newIp }
+
+
+onValidateFieldIP : Model -> String -> Model
+onValidateFieldIP model identifier =
+    let
+        validateField =
+            \ipField ->
+                if ipValid ipField.value then
+                    ipField
+
+                else
+                    FormFields.setError ipField "Invalid IP"
+    in
+    case identifier of
+        "ip2" ->
+            { model | ip2 = validateField model.ip2 }
+
+        _ ->
+            { model | ip1 = validateField model.ip1 }
 
 
 
@@ -38,8 +275,299 @@ update : Game.Model -> Msg -> Model -> ( Model, Effect Msg )
 update _ msg model =
     case msg of
         ToApp _ _ _ ->
-            -- Here we can return OS error msg
             ( model, Effect.none )
+
+        OnTypeSelected logEditType ->
+            let
+                updatedPerspective =
+                    setPerspectiveOnTypeSelection model.selectedPerspective logEditType
+
+                updatedPerspectiveDropdown =
+                    setPerspectiveDropdown model.perspectiveDropdown updatedPerspective
+
+                newModel =
+                    { model
+                        | selectedType = logEditType
+                        , selectedPerspective = updatedPerspective
+                        , perspectiveDropdown = updatedPerspectiveDropdown
+                    }
+            in
+            ( newModel, Effect.none )
+                |> updatePreview
+
+        OnPerspectiveSelected perspective ->
+            ( { model | selectedPerspective = Just perspective }, Effect.none )
+                |> updatePreview
+
+        SetFieldIP identifier value ->
+            ( onFieldIPSet model identifier value, Effect.none )
+                |> updatePreview
+
+        ValidateFieldIP identifier ->
+            ( onValidateFieldIP model identifier, Effect.none )
+
+        DropdownMsg _ (UI.Dropdown.OnSelected msg_) ->
+            ( model, Effect.msgToCmd msg_ )
+
+        DropdownMsg ddId ddMsg ->
+            let
+                ddModel =
+                    case ddId of
+                        DropdownType ->
+                            model.typeDropdown
+
+                        DropdownPerspective ->
+                            model.perspectiveDropdown
+
+                updateModel =
+                    \newDdModel ->
+                        case ddId of
+                            DropdownType ->
+                                { model | typeDropdown = newDdModel }
+
+                            DropdownPerspective ->
+                                { model | perspectiveDropdown = newDdModel }
+
+                ( newDd, ddEffect ) =
+                    UI.Dropdown.update ddMsg ddModel
+            in
+            ( updateModel newDd, Effect.map (DropdownMsg ddId) ddEffect )
+
+
+ipValid : String -> Bool
+ipValid _ =
+    -- TODO: Move elsewhere; also used on RemoteAccess
+    False
+
+
+
+-- View
+
+
+view : Model -> UI Msg
+view model =
+    col [ cl "app-logeditpopup" ]
+        [ vEditor model
+        , vActionRow model
+        ]
+
+
+vEditor : Model -> UI Msg
+vEditor model =
+    col [ cl "a-lep-editor" ]
+        [ vPreview model
+        , vPreviewSeparator
+        , vSelector model
+        ]
+
+
+vPreview : Model -> UI Msg
+vPreview model =
+    let
+        inner =
+            H.fieldset
+                []
+                [ H.legend [] [ H.text "Preview" ]
+                , UI.row [ cl "a-lep-e-p-text" ]
+                    [ text model.previewText
+                    ]
+                ]
+    in
+    row [ cl "a-lep-e-preview" ]
+        [ inner ]
+
+
+vPreviewSeparator : UI Msg
+vPreviewSeparator =
+    row [ cl "a-lep-e-preview-separator" ]
+        []
+
+
+vSelector : Model -> UI Msg
+vSelector model =
+    let
+        typeSelector =
+            dropdownEntries
+                |> UI.Dropdown.new
+                |> UI.Dropdown.withMaxHeight 200
+                |> UI.Dropdown.toUI model.typeDropdown
+                |> H.map (DropdownMsg DropdownType)
+    in
+    col [ cl "a-lep-e-selector" ]
+        [ typeSelector
+        , vFieldSelector model
+        ]
+
+
+vFieldSelector : Model -> UI Msg
+vFieldSelector model =
+    let
+        perspective =
+            getLogEditPerspectiveOptions model.selectedType
+
+        typeSpecificFields =
+            renderEditFields model
+    in
+    col [ cl "a-lep-e-fields" ]
+        (vPerspectiveSelector model :: typeSpecificFields)
+
+
+renderEditFields : Model -> List (UI Msg)
+renderEditFields model =
+    let
+        selectedPerspective =
+            Maybe.withDefault PerspectiveSelf model.selectedPerspective
+    in
+    case model.selectedType of
+        TypeServerLogin ->
+            case selectedPerspective of
+                PerspectiveSelf ->
+                    []
+
+                _ ->
+                    [ renderFieldIP model.ip1 "ip" ]
+
+        _ ->
+            [ UI.text "Todo" ]
+
+
+renderFieldIP : IPTextField -> String -> UI Msg
+renderFieldIP ipTextField changeIdentifier =
+    let
+        fieldLabel =
+            UI.Form.newFieldLabel "IP Address"
+                |> UI.Form.fieldLabelToUI
+
+        textInput =
+            UI.TextInput.new "IP" ipTextField
+                |> UI.TextInput.withOnChange (SetFieldIP changeIdentifier)
+                |> UI.TextInput.withOnBlur (ValidateFieldIP changeIdentifier)
+                |> UI.TextInput.toUI
+    in
+    UI.Form.newFieldPair fieldLabel textInput
+        |> UI.Form.fieldPairWithClass "a-lep-e-fields-perspective"
+        |> UI.Form.fieldPairToUI
+
+
+vPerspectiveSelector : Model -> UI Msg
+vPerspectiveSelector model =
+    let
+        perspective =
+            getLogEditPerspectiveOptions model.selectedType
+
+        perspectiveSelector =
+            perspectiveEntries perspective
+                |> UI.Dropdown.new
+                |> UI.Dropdown.withWidth 200
+                |> UI.Dropdown.toUI model.perspectiveDropdown
+                |> H.map (DropdownMsg DropdownPerspective)
+
+        fieldLabel =
+            UI.Form.newFieldLabel "Perspective"
+                |> UI.Form.fieldLabelToUI
+    in
+    case perspective of
+        NoPerspectiveOptions ->
+            UI.emptyEl
+
+        _ ->
+            UI.Form.newFieldPair fieldLabel perspectiveSelector
+                |> UI.Form.fieldPairWithClass "a-lep-e-fields-perspective"
+                |> UI.Form.fieldPairToUI
+
+
+getLogEditPerspectiveOptions : LogEditType -> LogEditPerspectiveOptions
+getLogEditPerspectiveOptions logEditType =
+    case logEditType of
+        TypeCustom ->
+            NoPerspectiveOptions
+
+        TypeServerLogin ->
+            PerspectiveOptionsSelfGatewayRemote
+
+        TypeFileTransfer ->
+            PerspectiveOptionsGatewayRemote
+
+        TypeConnectionProxied ->
+            NoPerspectiveOptions
+
+
+vActionRow : Model -> UI Msg
+vActionRow model =
+    row [ cl "a-lep-actionrow" ]
+        [ text "b" ]
+
+
+
+-- Thoughts: Maybe the "direction" could be translated to "Perspective"
+-- With these values: "Self" (or "Self-inflicted"); "Gateway" and "Endpoint"
+
+
+perspectiveEntries : LogEditPerspectiveOptions -> List (UI.Dropdown.ConfigEntry Msg)
+perspectiveEntries perspectiveOptions =
+    let
+        self =
+            UI.Dropdown.SelectableEntry
+                { label = perspectiveToString PerspectiveSelf
+                , onSelect = Just (OnPerspectiveSelected PerspectiveSelf)
+                , opts = Nothing
+                }
+
+        gateway =
+            UI.Dropdown.SelectableEntry
+                { label = perspectiveToString PerspectiveGateway
+                , onSelect = Just (OnPerspectiveSelected PerspectiveGateway)
+                , opts = Nothing
+                }
+
+        endpoint =
+            UI.Dropdown.SelectableEntry
+                { label = perspectiveToString PerspectiveEndpoint
+                , onSelect = Just (OnPerspectiveSelected PerspectiveEndpoint)
+                , opts = Nothing
+                }
+    in
+    case perspectiveOptions of
+        NoPerspectiveOptions ->
+            []
+
+        PerspectiveOptionsSelfGatewayRemote ->
+            [ self, gateway, endpoint ]
+
+        PerspectiveOptionsGatewayRemote ->
+            [ gateway, endpoint ]
+
+
+dropdownEntries : List (UI.Dropdown.ConfigEntry Msg)
+dropdownEntries =
+    [ UI.Dropdown.GroupEntry { label = "File Operations" }
+    , UI.Dropdown.SelectableEntry
+        { label = "File Transfer"
+        , onSelect = Just (OnTypeSelected <| TypeFileTransfer)
+        , opts = Nothing
+        }
+    , UI.Dropdown.SelectableEntry
+        { label = "File Delete"
+        , onSelect = Nothing
+        , opts = Nothing
+        }
+    , UI.Dropdown.GroupEntry { label = "Misc" }
+    , UI.Dropdown.SelectableEntry
+        { label = "Server Login"
+        , onSelect = Just (OnTypeSelected <| TypeServerLogin)
+        , opts = Nothing
+        }
+    , UI.Dropdown.SelectableEntry
+        { label = "Connection Proxied"
+        , onSelect = Just (OnTypeSelected <| TypeConnectionProxied)
+        , opts = Nothing
+        }
+    , UI.Dropdown.SelectableEntry
+        { label = "Custom Log (Free-form)"
+        , onSelect = Just (OnTypeSelected <| TypeCustom)
+        , opts = Nothing
+        }
+    ]
 
 
 
@@ -49,7 +577,7 @@ update _ msg model =
 getWindowConfig : WM.WindowInfo -> WM.WindowConfig
 getWindowConfig _ =
     { lenX = 500
-    , lenY = 500
+    , lenY = 520
     , title = "Log Edit"
     , childBehavior = Nothing
     , misc = Nothing
@@ -63,7 +591,6 @@ willOpen window input =
 
 didOpen : WM.WindowInfo -> App.InitialInput -> ( Model, Effect Msg )
 didOpen _ input =
-    -- TODO: Receive entire Log as input
     let
         log =
             case input of
@@ -73,7 +600,21 @@ didOpen _ input =
                 _ ->
                     Log.invalidLog
     in
-    ( { log = log }, Effect.none )
+    ( { log = log
+      , originalLog = log
+      , previewText = log.rawText
+      , hasChanged = False
+      , isValid = True
+      , selectedType = TypeCustom
+      , typeDropdown = UI.Dropdown.init (Just "TODO")
+      , perspectiveDropdown = UI.Dropdown.init Nothing
+      , selectedPerspective = Nothing
+      , ip1 = FormFields.text
+      , ip2 = FormFields.text
+      , freeFormText = FormFields.text
+      }
+    , Effect.none
+    )
 
 
 willClose : AppID -> Model -> WM.Window -> OS.Bus.Action

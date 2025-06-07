@@ -1,0 +1,62 @@
+@use "../utils/colors" as *;
+@use "../utils/spacing" as *;
+
+.app-logeditpopup {
+    height: 100%;
+
+    // TODO: Maybe move this to core
+    fieldset {
+        border: 1px solid sec-400();
+        width: 100%;
+        height: 100%;
+        padding: s-3();
+    }
+
+    legend {
+        padding: 0 s-2();
+        font-size: 14px;
+    }
+}
+
+.a-lep-editor {
+    flex: 1;
+}
+
+.a-lep-e-preview {
+    padding: s-3() s-4();
+    max-height: 100px;
+
+    fieldset {
+        background-color: sec-700();
+    }
+}
+
+.a-lep-e-p-text {
+}
+
+.a-lep-e-preview-separator {
+    margin: s-2() 0;
+    border-bottom: 2px dotted sec-400();
+}
+
+.a-lep-e-selector {
+    padding: s-3() s-4();
+    flex: 1;
+}
+
+.a-lep-e-fields {
+    margin-top: s-5();
+    border: 1px solid sec-400();
+    padding: s-3();
+}
+
+.a-lep-e-fields-perspective {
+    padding: s-2() 0;
+}
+
+.a-lep-actionrow {
+    background-color: red;
+
+    height: 70px;
+}
+
