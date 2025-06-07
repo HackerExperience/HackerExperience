@@ -1,0 +1,20 @@
+@use "../utils/colors" as *;
+@use "../utils/spacing" as *;
+
+.ui-field-pair {
+    display: flex;
+    width: 100%;
+
+    > :first-child {
+        display: flex;
+        flex: 1;
+    }
+
+    > :last-child {
+    }
+}
+
+.ui-field-label {
+    display: flex;
+    align-items: center;
+}
