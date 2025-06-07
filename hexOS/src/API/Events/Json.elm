@@ -6,12 +6,14 @@ module API.Events.Json exposing
     , encodeFileTransferFailed, encodeFileTransferred, encodeIdxEndpoint, encodeIdxGateway, encodeIdxLog
     , encodeIdxPlayer, encodeIdxProcess, encodeIdxTunnel, encodeIndexRequested
     , encodeInstallationUninstallFailed, encodeInstallationUninstalled, encodeLogDeleteFailed, encodeLogDeleted
-    , encodeProcessCompleted, encodeProcessCreated, encodeProcessKilled, encodeTunnelCreated
+    , encodeLogEditFailed, encodeLogEdited, encodeProcessCompleted, encodeProcessCreated, encodeProcessKilled
+    , encodeTunnelCreated
     , decodeFileDeleteFailed, decodeFileDeleted, decodeFileInstallFailed, decodeFileInstalled
     , decodeFileTransferFailed, decodeFileTransferred, decodeIdxEndpoint, decodeIdxGateway, decodeIdxLog
     , decodeIdxPlayer, decodeIdxProcess, decodeIdxTunnel, decodeIndexRequested
     , decodeInstallationUninstallFailed, decodeInstallationUninstalled, decodeLogDeleteFailed, decodeLogDeleted
-    , decodeProcessCompleted, decodeProcessCreated, decodeProcessKilled, decodeTunnelCreated
+    , decodeLogEditFailed, decodeLogEdited, decodeProcessCompleted, decodeProcessCreated, decodeProcessKilled
+    , decodeTunnelCreated
     )
 
 {-|
@@ -23,7 +25,8 @@ module API.Events.Json exposing
 @docs encodeFileTransferFailed, encodeFileTransferred, encodeIdxEndpoint, encodeIdxGateway, encodeIdxLog
 @docs encodeIdxPlayer, encodeIdxProcess, encodeIdxTunnel, encodeIndexRequested
 @docs encodeInstallationUninstallFailed, encodeInstallationUninstalled, encodeLogDeleteFailed, encodeLogDeleted
-@docs encodeProcessCompleted, encodeProcessCreated, encodeProcessKilled, encodeTunnelCreated
+@docs encodeLogEditFailed, encodeLogEdited, encodeProcessCompleted, encodeProcessCreated, encodeProcessKilled
+@docs encodeTunnelCreated
 
 
 ## Decoders
@@ -32,7 +35,8 @@ module API.Events.Json exposing
 @docs decodeFileTransferFailed, decodeFileTransferred, decodeIdxEndpoint, decodeIdxGateway, decodeIdxLog
 @docs decodeIdxPlayer, decodeIdxProcess, decodeIdxTunnel, decodeIndexRequested
 @docs decodeInstallationUninstallFailed, decodeInstallationUninstalled, decodeLogDeleteFailed, decodeLogDeleted
-@docs decodeProcessCompleted, decodeProcessCreated, decodeProcessKilled, decodeTunnelCreated
+@docs decodeLogEditFailed, decodeLogEdited, decodeProcessCompleted, decodeProcessCreated, decodeProcessKilled
+@docs decodeTunnelCreated
 
 -}
 
@@ -168,6 +172,50 @@ encodeProcessCompleted rec =
         , ( "nip", Json.Encode.string (NIP.toString rec.nip) )
         , ( "process_id", Json.Encode.string (ProcessID.toValue rec.process_id) )
         , ( "type", Json.Encode.string rec.type_ )
+        ]
+
+
+decodeLogEdited : Json.Decode.Decoder API.Events.Types.LogEdited
+decodeLogEdited =
+    Json.Decode.succeed
+        (\log_id nip process_id ->
+            { log_id = log_id, nip = nip, process_id = process_id }
+        )
+        |> OpenApi.Common.jsonDecodeAndMap
+            (Json.Decode.field "log_id" (Json.Decode.map LogID Json.Decode.string))
+        |> OpenApi.Common.jsonDecodeAndMap
+            (Json.Decode.field "nip" (Json.Decode.map (\nip -> NIP.fromString nip) Json.Decode.string))
+        |> OpenApi.Common.jsonDecodeAndMap
+            (Json.Decode.field
+                "process_id"
+                (Json.Decode.map ProcessID Json.Decode.string)
+            )
+
+
+encodeLogEdited : API.Events.Types.LogEdited -> Json.Encode.Value
+encodeLogEdited rec =
+    Json.Encode.object
+        [ ( "log_id", Json.Encode.string (LogID.toValue rec.log_id) )
+        , ( "nip", Json.Encode.string (NIP.toString rec.nip) )
+        , ( "process_id", Json.Encode.string (ProcessID.toValue rec.process_id) )
+        ]
+
+
+decodeLogEditFailed : Json.Decode.Decoder API.Events.Types.LogEditFailed
+decodeLogEditFailed =
+    Json.Decode.succeed
+        (\process_id reason -> { process_id = process_id, reason = reason })
+        |> OpenApi.Common.jsonDecodeAndMap
+            (Json.Decode.field "process_id" (Json.Decode.map ProcessID Json.Decode.string))
+        |> OpenApi.Common.jsonDecodeAndMap
+            (Json.Decode.field "reason" Json.Decode.string)
+
+
+encodeLogEditFailed : API.Events.Types.LogEditFailed -> Json.Encode.Value
+encodeLogEditFailed rec =
+    Json.Encode.object
+        [ ( "process_id", Json.Encode.string (ProcessID.toValue rec.process_id) )
+        , ( "reason", Json.Encode.string rec.reason )
         ]
 
 

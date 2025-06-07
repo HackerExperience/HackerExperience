@@ -220,6 +220,29 @@ components:
           type: string
         process_id:
           type: string
+    log_edit_failed:
+      type: object
+      required:
+        - process_id
+        - reason
+      properties:
+        reason:
+          type: string
+        process_id:
+          type: string
+    log_edited:
+      type: object
+      required:
+        - process_id
+        - log_id
+        - nip
+      properties:
+        nip:
+          type: string
+        log_id:
+          type: string
+        process_id:
+          type: string
     process_completed:
       type: object
       required:
