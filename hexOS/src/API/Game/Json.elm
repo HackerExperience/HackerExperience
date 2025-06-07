@@ -149,7 +149,25 @@ encodeLogEditOutput rec =
 decodeLogEditInput : Json.Decode.Decoder API.Game.Types.LogEditInput
 decodeLogEditInput =
     Json.Decode.succeed
-        (\tunnel_id -> { tunnel_id = tunnel_id })
+        (\log_data log_direction log_type tunnel_id ->
+            { log_data = log_data
+            , log_direction = log_direction
+            , log_type = log_type
+            , tunnel_id = tunnel_id
+            }
+        )
+        |> OpenApi.Common.jsonDecodeAndMap
+            (Json.Decode.field "log_data" Json.Decode.string)
+        |> OpenApi.Common.jsonDecodeAndMap
+            (Json.Decode.field
+                "log_direction"
+                Json.Decode.string
+            )
+        |> OpenApi.Common.jsonDecodeAndMap
+            (Json.Decode.field
+                "log_type"
+                Json.Decode.string
+            )
         |> OpenApi.Common.jsonDecodeAndMap
             (OpenApi.Common.decodeOptionalField
                 "tunnel_id"
@@ -162,7 +180,10 @@ encodeLogEditInput rec =
     Json.Encode.object
         (List.filterMap
             Basics.identity
-            [ Maybe.map
+            [ Just ( "log_data", Json.Encode.string rec.log_data )
+            , Just ( "log_direction", Json.Encode.string rec.log_direction )
+            , Just ( "log_type", Json.Encode.string rec.log_type )
+            , Maybe.map
                 (\mapUnpack -> ( "tunnel_id", Json.Encode.string (TunnelID.toValue mapUnpack) ))
                 rec.tunnel_id
             ]

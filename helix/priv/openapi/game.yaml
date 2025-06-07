@@ -207,8 +207,17 @@ components:
           type: string
     LogEditInput:
       type: object
-      required: []
+      required:
+        - log_type
+        - log_direction
+        - log_data
       properties:
+        log_data:
+          type: string
+        log_direction:
+          type: string
+        log_type:
+          type: string
         tunnel_id:
           type: string
     LogEditOutput:

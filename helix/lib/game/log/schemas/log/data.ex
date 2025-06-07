@@ -13,6 +13,17 @@ defmodule Game.Log.Data do
     def new(%{nip: %NIP{} = nip}), do: %__MODULE__{nip: nip}
     def dump!(%__MODULE__{nip: nip}), do: %{nip: NIP.to_internal(nip)}
     def load!(%{nip: raw_nip}), do: %__MODULE__{nip: NIP.from_internal(raw_nip)}
+
+    def cast_input!(raw_input) do
+      %__MODULE__{
+        nip: NIP.parse_external!(raw_input["nip"])
+      }
+    end
+
+    def valid?(%__MODULE__{nip: _nip}) do
+      # NIP is validated during parsing
+      true
+    end
   end
 
   defmodule NIPProxy do
@@ -27,6 +38,18 @@ defmodule Game.Log.Data do
 
     def load!(%{from_nip: raw_from, to_nip: raw_to}),
       do: %__MODULE__{from_nip: NIP.from_internal(raw_from), to_nip: NIP.from_internal(raw_to)}
+
+    def cast_input!(raw_input) do
+      %__MODULE__{
+        from_nip: NIP.parse_external!(raw_input["from_nip"]),
+        to_nip: NIP.parse_external!(raw_input["to_nip"])
+      }
+    end
+
+    def valid?(%__MODULE__{from_nip: from_nip, to_nip: to_nip}) do
+      # NIPs are validated during parsing
+      from_nip != to_nip
+    end
   end
 
   defmodule LocalFile do
@@ -41,6 +64,25 @@ defmodule Game.Log.Data do
 
     def load!(entry),
       do: struct(__MODULE__, entry)
+
+    def cast_input!(raw_input) do
+      %__MODULE__{
+        file_name: raw_input["file_name"] || "",
+        file_ext: raw_input["file_ext"] || "",
+        file_version: raw_input["file_version"] || 0
+      }
+    end
+
+    def valid?(%__MODULE__{file_name: file_name, file_ext: file_ext, file_version: file_version}) do
+      with true <- File.Validator.validate_name(file_name),
+           true <- File.Validator.validate_extension(file_ext),
+           true <- File.Validator.validate_version(file_version) do
+        true
+      else
+        _ ->
+          false
+      end
+    end
   end
 
   defmodule RemoteFile do
@@ -61,6 +103,33 @@ defmodule Game.Log.Data do
       entry
       |> Map.put(:nip, NIP.from_internal(entry.nip))
       |> then(&struct(__MODULE__, &1))
+    end
+
+    def cast_input!(raw_input) do
+      %__MODULE__{
+        nip: NIP.parse_external!(raw_input["nip"]),
+        file_name: raw_input["file_name"] || "",
+        file_ext: raw_input["file_ext"] || "",
+        file_version: raw_input["file_version"] || 0
+      }
+    end
+
+    def valid?(%__MODULE__{
+          nip: _nip,
+          file_name: file_name,
+          file_ext: file_ext,
+          file_version: file_version
+        }) do
+      # NIP is validated during parsing
+
+      with true <- File.Validator.validate_name(file_name),
+           true <- File.Validator.validate_extension(file_ext),
+           true <- File.Validator.validate_version(file_version) do
+        true
+      else
+        _ ->
+          false
+      end
     end
   end
 end

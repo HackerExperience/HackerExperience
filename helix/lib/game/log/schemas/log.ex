@@ -84,4 +84,44 @@ defmodule Game.Log do
     # Transform `data` into a regular map since we've validated its struct matches the log type
     %{params | data: struct.dump!(params.data)}
   end
+
+  defmodule Validator do
+    alias Game.Log
+
+    def validate_params(%{type: type, direction: direction, data: data}) do
+      try do
+        data_mod = Log.data_mod({type, direction})
+        data_mod.valid?(data)
+      rescue
+        _ ->
+          false
+      end
+    end
+
+    def cast_params(raw_type, raw_direction, raw_data) do
+      type = cast_type(raw_type)
+      direction = cast_direction(raw_direction)
+      data = cast_data(type, direction, raw_data)
+
+      %{
+        type: type,
+        direction: direction,
+        data: data
+      }
+    end
+
+    def cast_type(v), do: String.to_existing_atom(v)
+    def cast_direction(v), do: String.to_existing_atom(v)
+
+    def cast_data(type, direction, v) do
+      try do
+        data_mod = Log.data_mod({type, direction})
+        data_mod.cast_input!(v)
+      rescue
+        _ ->
+          # Fallback to an empty map; not our job to validate the input
+          %{}
+      end
+    end
+  end
 end

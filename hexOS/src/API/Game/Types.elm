@@ -84,7 +84,11 @@ type alias LogEditOutput =
 
 
 type alias LogEditInput =
-    { tunnel_id : Maybe TunnelID }
+    { log_data : String
+    , log_direction : String
+    , log_type : String
+    , tunnel_id : Maybe TunnelID
+    }
 
 
 type alias LogDeleteOutput =

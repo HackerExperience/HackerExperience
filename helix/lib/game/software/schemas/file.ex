@@ -35,4 +35,21 @@ defmodule Game.File do
   end
 
   def get_server_id(_, _, %{shard_id: raw_server_id}), do: Server.ID.new(raw_server_id)
+
+  defmodule Validator do
+    def validate_name(v) when is_binary(v) do
+      len = String.length(v)
+      len >= 2 and len <= 15
+    end
+
+    def validate_extension(v) when is_binary(v) do
+      # TODO: Allow-list
+      len = String.length(v)
+      len >= 2 and len <= 4
+    end
+
+    def validate_version(v) when is_integer(v) do
+      v > 0
+    end
+  end
 end

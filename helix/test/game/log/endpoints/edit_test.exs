@@ -16,7 +16,11 @@ defmodule Game.Endpoint.Log.EditTest do
 
       DB.commit()
 
-      params = %{}
+      data =
+        %{nip: NIP.to_external(gtw_nip), file_name: "foo", file_ext: "txt", file_version: 10}
+        |> Renatils.JSON.encode!()
+
+      params = valid_raw(type: :file_deleted, direction: :to_ap, data: data)
 
       # Request returns a 200 code with the process ID in it
       assert {:ok, %{status: 200, data: %{process_id: external_process_id}}} =
@@ -38,12 +42,30 @@ defmodule Game.Endpoint.Log.EditTest do
         assert process.type == :log_edit
         assert process.server_id == gateway.id
         assert process.entity_id.id == player.id.id
-        assert process.data.type == :server_login
-        assert process.data.direction == :self
-        assert process.data.data == %{}
+        assert process.data.type == :file_deleted
+        assert process.data.direction == :to_ap
+        assert process.data.data.file_name == "foo"
+        assert process.data.data.file_ext == "txt"
+        assert process.data.data.file_version == 10
+        assert process.data.data.nip == gtw_nip
         assert process.registry.tgt_log_id == log.id
       end)
     end
+  end
+
+  defp valid_raw(opts \\ []) do
+    opts
+    |> valid_params()
+    |> Renatils.Map.stringify_keys()
+  end
+
+  defp valid_params(opts) do
+    # TODO: Make random
+    %{
+      log_type: opts[:type] || :server_login,
+      log_direction: opts[:direction] || :self,
+      log_data: opts[:data] || "{}"
+    }
   end
 
   defp build_path(%NIP{} = nip, %Log{} = log, player_id) do

@@ -17,9 +17,15 @@ defmodule Game.Endpoint.Log.Edit do
         :__openapi_path_parameters => ["nip", "log_id"],
         "nip" => binary(),
         "log_id" => binary(),
-        "tunnel_id" => binary()
+        "tunnel_id" => binary(),
+        "log_type" => binary(),
+        "log_direction" => binary(),
+        # NOTE: `log_data` is a map, but we are receiving it as string so we can parse it manually.
+        # This is an acceptable trade-off for the time being, but in the future we want to improve
+        # the SDK so it can handle this kind of input in a more rigid way.
+        "log_data" => binary()
       }),
-      ["nip", "log_id"]
+      ["nip", "log_id", "log_type", "log_direction", "log_data"]
     )
   end
 
@@ -31,18 +37,36 @@ defmodule Game.Endpoint.Log.Edit do
   def get_params(request, parsed, _session) do
     with {:ok, nip} <- cast_nip(:nip, parsed.nip),
          {:ok, log_id} <- cast_id(:log_id, parsed[:log_id], Log),
-         {:ok, tunnel_id} <- cast_id(:tunnel_id, parsed[:tunnel_id], Tunnel, optional: true) do
+         {:ok, tunnel_id} <- cast_id(:tunnel_id, parsed[:tunnel_id], Tunnel, optional: true),
+         {:ok, log_params} <- cast_and_validate_log_params(parsed) do
       params =
         %{
           nip: nip,
           log_id: log_id,
-          tunnel_id: tunnel_id
+          tunnel_id: tunnel_id,
+          log_params: log_params
         }
 
       {:ok, %{request | params: params}}
     else
       {:error, {_, _} = error} ->
         {:error, %{request | response: {400, format_cast_error(error)}}}
+    end
+  end
+
+  defp cast_and_validate_log_params(%{
+         log_type: raw_type,
+         log_direction: raw_direction,
+         log_data: raw_data
+       }) do
+    # TODO: Elixir 1.18
+    raw_data = Renatils.JSON.decode!(raw_data)
+    params = Log.Validator.cast_params(raw_type, raw_direction, raw_data)
+
+    if Log.Validator.validate_params(params) do
+      {:ok, params}
+    else
+      {:error, {:log_params, :invalid}}
     end
   end
 
@@ -61,18 +85,10 @@ defmodule Game.Endpoint.Log.Edit do
     end
   end
 
-  def handle_request(request, _params, ctx, _session) do
-    # TODO
-    process_params =
-      %{
-        type: :server_login,
-        direction: :self,
-        data: %{}
-      }
-
+  def handle_request(request, params, ctx, _session) do
     meta = %{log: ctx.log, tunnel: ctx.tunnel}
 
-    case Svc.TOP.execute(LogEditProcess, ctx.server.id, ctx.entity.id, process_params, meta) do
+    case Svc.TOP.execute(LogEditProcess, ctx.server.id, ctx.entity.id, params.log_params, meta) do
       {:ok, process} ->
         {:ok, %{request | result: %{process: process}}}
 
