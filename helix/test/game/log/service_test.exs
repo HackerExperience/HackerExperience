@@ -74,6 +74,41 @@ defmodule Game.Services.LogTest do
     end
   end
 
+  describe "create_revision/4" do
+    test "creates a new revision and the corresponding visibility" do
+      %{server: server, entity: entity} = Setup.server()
+
+      log_params = %{type: :server_login, direction: :self, data: %Log.Data.EmptyData{}}
+
+      log = Setup.log!(server.id, visible_by: entity.id)
+      assert log.revision_id.id == 1
+
+      assert {:ok, rev_2} = Svc.Log.create_revision(entity.id, server.id, log.id, log_params)
+      assert {:ok, rev_3} = Svc.Log.create_revision(entity.id, server.id, log.id, log_params)
+
+      assert rev_2.id == log.id
+      assert rev_2.revision_id.id == 2
+      assert rev_2.type == :server_login
+      assert rev_2.direction == :self
+      assert rev_2.data == %Log.Data.EmptyData{}
+
+      assert rev_3.id == log.id
+      assert rev_3.revision_id.id == 3
+
+      log_visibilities = U.get_all_log_visibilities(entity.id)
+      assert visibility_2 = Enum.find(log_visibilities, &(&1.revision_id.id == 2))
+      assert visibility_3 = Enum.find(log_visibilities, &(&1.revision_id.id == 3))
+
+      assert visibility_2.log_id == log.id
+      assert visibility_2.entity_id == entity.id
+      assert visibility_2.server_id == server.id
+
+      assert visibility_3.log_id == log.id
+      assert visibility_3.entity_id == entity.id
+      assert visibility_3.server_id == server.id
+    end
+  end
+
   describe "delete/2" do
     test "deletes a log and all its revisions" do
       %{server: server, entity: entity} = Setup.server()

@@ -22,3 +22,6 @@ SELECT * FROM logs WHERE id = ? ORDER BY revision_id DESC LIMIT 1;
 
 -- :get_last_inserted_id
 SELECT MAX(id) FROM logs LIMIT 1;
+
+-- :get_log_last_revision_id
+SELECT MAX(revision_id) FROM logs WHERE id = ?;

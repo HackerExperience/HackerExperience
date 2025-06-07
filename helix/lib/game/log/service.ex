@@ -76,7 +76,24 @@ defmodule Game.Services.Log do
     end)
   end
 
-  def create_revision() do
+  def create_revision(entity_id, server_id, parent_log_id, log_params) do
+    Core.with_context(:server, server_id, :write, fn ->
+      [last_revision_id] = DB.one({:logs, :get_log_last_revision_id}, [parent_log_id], format: :raw)
+
+      params =
+        log_params
+        |> Map.put(:id, parent_log_id)
+        |> Map.put(:revision_id, last_revision_id + 1)
+
+      with {:ok, log} <- insert_log(server_id, params),
+           {:ok, _log_visibility} <- insert_visibility(entity_id, server_id, log) do
+        {:ok, log}
+      else
+        error ->
+          Logger.error("Unable to create log revision: #{inspect(error)}")
+          error
+      end
+    end)
   end
 
   def delete(%Log{is_deleted: false} = log, %Entity.ID{} = entity_id) do
