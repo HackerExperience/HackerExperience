@@ -554,15 +554,27 @@ encodeIdxPlayer rec =
 decodeIdxLog : Json.Decode.Decoder API.Events.Types.IdxLog
 decodeIdxLog =
     Json.Decode.succeed
-        (\id is_deleted revision_id type_ ->
-            { id = id
+        (\data direction id is_deleted revision_id type_ ->
+            { data = data
+            , direction = direction
+            , id = id
             , is_deleted = is_deleted
             , revision_id = revision_id
             , type_ = type_
             }
         )
         |> OpenApi.Common.jsonDecodeAndMap
-            (Json.Decode.field "id" Json.Decode.string)
+            (Json.Decode.field "data" Json.Decode.string)
+        |> OpenApi.Common.jsonDecodeAndMap
+            (Json.Decode.field
+                "direction"
+                Json.Decode.string
+            )
+        |> OpenApi.Common.jsonDecodeAndMap
+            (Json.Decode.field
+                "id"
+                Json.Decode.string
+            )
         |> OpenApi.Common.jsonDecodeAndMap
             (Json.Decode.field
                 "is_deleted"
@@ -583,7 +595,9 @@ decodeIdxLog =
 encodeIdxLog : API.Events.Types.IdxLog -> Json.Encode.Value
 encodeIdxLog rec =
     Json.Encode.object
-        [ ( "id", Json.Encode.string rec.id )
+        [ ( "data", Json.Encode.string rec.data )
+        , ( "direction", Json.Encode.string rec.direction )
+        , ( "id", Json.Encode.string rec.id )
         , ( "is_deleted", Json.Encode.bool rec.is_deleted )
         , ( "revision_id", Json.Encode.string rec.revision_id )
         , ( "type", Json.Encode.string rec.type_ )

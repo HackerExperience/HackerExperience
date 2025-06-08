@@ -17,6 +17,7 @@ defmodule Game.Log.Data do
     def load!(_), do: %__MODULE__{}
     def cast_input!(%{}), do: new(%{})
     def valid?(_), do: true
+    def render(_), do: %{}
   end
 
   defmodule NIP do
@@ -47,6 +48,10 @@ defmodule Game.Log.Data do
     def valid?(%__MODULE__{nip: _nip}) do
       # NIP is validated during parsing
       true
+    end
+
+    def render(%__MODULE__{nip: nip}) do
+      %{nip: NIP.to_external(nip)}
     end
   end
 
@@ -85,6 +90,10 @@ defmodule Game.Log.Data do
     def valid?(%__MODULE__{from_nip: from_nip, to_nip: to_nip}) do
       # NIPs are validated during parsing
       from_nip != to_nip
+    end
+
+    def render(%__MODULE__{from_nip: from_nip, to_nip: to_nip}) do
+      %{from_nip: NIP.to_external(from_nip), to_nip: NIP.to_external(to_nip)}
     end
   end
 
@@ -132,6 +141,14 @@ defmodule Game.Log.Data do
           false
       end
     end
+
+    def render(%__MODULE__{} = data) do
+      %{
+        file_name: data.file_name,
+        file_ext: data.file_ext,
+        file_version: data.file_version
+      }
+    end
   end
 
   defmodule RemoteFile do
@@ -177,22 +194,26 @@ defmodule Game.Log.Data do
       }
     end
 
-    def valid?(%__MODULE__{
-          nip: _nip,
-          file_name: file_name,
-          file_ext: file_ext,
-          file_version: file_version
-        }) do
+    def valid?(%__MODULE__{} = data) do
       # NIP is validated during parsing
 
-      with true <- File.Validator.validate_name(file_name),
-           true <- File.Validator.validate_extension(file_ext),
-           true <- File.Validator.validate_version(file_version) do
+      with true <- File.Validator.validate_name(data.file_name),
+           true <- File.Validator.validate_extension(data.file_ext),
+           true <- File.Validator.validate_version(data.file_version) do
         true
       else
         _ ->
           false
       end
+    end
+
+    def render(%__MODULE__{} = data) do
+      %{
+        nip: NIP.to_external(data.nip),
+        file_name: data.file_name,
+        file_ext: data.file_ext,
+        file_version: data.file_version
+      }
     end
   end
 end

@@ -5,4 +5,5 @@ defmodule Game.Log.Data.Behaviour do
   @callback load!(map) :: struct
   @callback cast_input!(external_input :: map) :: struct
   @callback valid?(struct) :: boolean
+  @callback render(struct) :: map
 end

@@ -15,6 +15,8 @@ defmodule Game.Index.Log do
            id: ID.external(),
            revision_id: ID.external(),
            type: String.t(),
+           direction: String.t(),
+           data: String.t(),
            is_deleted: boolean()
          }
 
@@ -25,9 +27,11 @@ defmodule Game.Index.Log do
         id: external_id(),
         revision_id: external_id(),
         type: binary(),
+        direction: binary(),
+        data: binary(),
         is_deleted: boolean()
       }),
-      [:id, :revision_id, :type, :is_deleted]
+      [:id, :revision_id, :type, :direction, :data, :is_deleted]
     )
   end
 
@@ -57,10 +61,14 @@ defmodule Game.Index.Log do
   end
 
   defp render_log(%Log{} = log, entity_id) do
+    data_mod = Log.data_mod({log.type, log.direction})
+
     %{
       id: ID.to_external(log.id, entity_id, log.server_id),
       revision_id: ID.to_external(log.revision_id, entity_id, log.server_id, log.id),
       type: "#{log.type}",
+      direction: "#{log.direction}",
+      data: data_mod.render(log.data) |> :json.encode() |> to_string(),
       is_deleted: log.is_deleted
     }
   end

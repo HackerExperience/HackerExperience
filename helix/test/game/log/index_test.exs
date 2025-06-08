@@ -1,6 +1,7 @@
 defmodule Game.Index.LogTest do
   use Test.DBCase, async: true
   alias Game.Index
+  alias Game.Log.Data, as: LogData
 
   setup [:with_game_db]
 
@@ -76,6 +77,27 @@ defmodule Game.Index.LogTest do
 
       # Rendered index conforms to the Norm contract
       assert {:ok, _} = Norm.conform(rendered_index, Norm.coll_of(Index.Log.spec()))
+    end
+
+    test "renders the log data accordingly" do
+      %{server: server, nip: nip, entity: entity} = Setup.server()
+
+      Setup.log!(server.id,
+        type: :server_login,
+        direction: :to_ap,
+        data: %LogData.NIP{nip: nip},
+        visible_by: entity.id
+      )
+
+      rendered_index =
+        entity.id
+        |> Index.Log.index(server.id)
+        |> Index.Log.render_index(entity.id)
+
+      assert [log] = rendered_index
+      assert log.type == "server_login"
+      assert log.direction == "to_ap"
+      assert log.data == "{\"nip\":\"#{NIP.to_external(nip)}\"}"
     end
   end
 end
