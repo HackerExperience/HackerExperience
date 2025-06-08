@@ -13,7 +13,9 @@ module Game.Model.Log exposing
     )
 
 import API.Events.Types as Events
+import Game.Model.LogData as LogData exposing (LogDataEmpty, LogDataNIP)
 import Game.Model.LogID as LogID exposing (LogID, RawLogID)
+import Game.Model.NIP as NIP exposing (NIP)
 import Game.Model.ProcessID exposing (ProcessID)
 import Game.Model.ProcessOperation as Operation exposing (Operation)
 import OrderedDict exposing (OrderedDict)
@@ -38,8 +40,10 @@ type alias Log =
 
 
 type LogType
-    = LocalhostLoggedIn
-    | CustomLog
+    = ServerLoginSelf LogDataEmpty
+    | ServerLoginGateway LogDataNIP
+    | ServerLoginEndpoint LogDataNIP
+    | CustomLog LogDataEmpty
 
 
 type LogOperation
@@ -87,7 +91,7 @@ invalidLog : Log
 invalidLog =
     { id = LogID.fromValue "invalid"
     , revisionId = "revId"
-    , type_ = CustomLog
+    , type_ = CustomLog {}
     , rawText = "Invalid log"
     , isDeleted = False
     , currentOp = Nothing
@@ -107,27 +111,49 @@ parse idxLogs =
 parseLog : Events.IdxLog -> Log
 parseLog log =
     let
-        ( type_, rawText ) =
-            parseLogType log.type_
+        logType =
+            parseLogType log.type_ log.direction log.data
     in
     { id = LogID.fromValue log.id
     , revisionId = log.revision_id
-    , type_ = type_
-    , rawText = rawText
+    , type_ = logType
+    , rawText = generateText logType
     , isDeleted = log.is_deleted
     , currentOp = Nothing
     }
 
 
-parseLogType : String -> ( LogType, String )
-parseLogType strLogType =
-    case strLogType of
-        "localhost_logged_in" ->
-            ( LocalhostLoggedIn, "localhost logged in" )
+parseLogType : String -> String -> String -> LogType
+parseLogType strLogType strDirection rawData =
+    case ( strLogType, strDirection ) of
+        ( "server_login", "self" ) ->
+            ServerLoginSelf {}
+
+        ( "server_login", "to_ap" ) ->
+            ServerLoginGateway <| LogData.parseLogDataNip rawData
+
+        ( "server_login", "from_en" ) ->
+            ServerLoginEndpoint <| LogData.parseLogDataNip rawData
 
         _ ->
             -- ( UnknownLog, "Unknown log" )
-            ( LocalhostLoggedIn, "localhost logged in" )
+            CustomLog {}
+
+
+generateText : LogType -> String
+generateText logType =
+    case logType of
+        ServerLoginSelf _ ->
+            "localhost logged in"
+
+        ServerLoginGateway { nip } ->
+            "localhost logged in to [" ++ NIP.getIPString nip ++ "]"
+
+        ServerLoginEndpoint { nip } ->
+            "[" ++ NIP.getIPString nip ++ "] logged in to localhost"
+
+        CustomLog _ ->
+            "custom"
 
 
 

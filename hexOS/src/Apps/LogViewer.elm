@@ -233,13 +233,13 @@ vLogRow log =
 
         statusBadges =
             case ( log.isDeleted, log.type_ ) of
-                ( True, CustomLog ) ->
+                ( True, CustomLog _ ) ->
                     [ brokenBadgeIcon, deletedBadgeIcon ]
 
                 ( True, _ ) ->
                     [ deletedBadgeIcon ]
 
-                ( False, CustomLog ) ->
+                ( False, CustomLog _ ) ->
                     [ brokenBadgeIcon ]
 
                 ( False, _ ) ->
