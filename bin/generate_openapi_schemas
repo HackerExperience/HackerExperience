@@ -37,6 +37,13 @@ generate_elm_types_for_processes_api() {
         --output-dir $ELM_OUTPUT_DIR
 }
 
+generate_elm_types_for_logs_api() {
+    npx elm-open-api $OPENAPI_PATH/logs.yaml \
+        --module-name API.Logs \
+        --effect-types task \
+        --output-dir $ELM_OUTPUT_DIR
+}
+
 # Always use script dirname as starting point
 cd "$(dirname "$0")"
 
@@ -54,6 +61,9 @@ cd "$(dirname "$0")"
 
 # Generate Elm types for the Processes API
 (cd ../hexOS && generate_elm_types_for_processes_api)
+
+# Generate Elm types for the Logs API
+(cd ../hexOS && generate_elm_types_for_logs_api)
 
 # Format the SDK to use custom Elm types (instead of generic OpenAPI types)
 (cd ../hexOS && ../bin/format_openapi_spec.exs)

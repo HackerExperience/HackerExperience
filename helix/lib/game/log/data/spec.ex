@@ -1,18 +1,18 @@
-defmodule Game.Process.Viewable.Spec do
+defmodule Game.Log.Data.Spec do
   def spec do
     %{
-      type: :processes,
-      title: "Processes API",
+      type: :logs,
+      title: "Logs API",
       version: "1.0.0",
-      endpoints: processes()
+      endpoints: logs()
     }
   end
 
-  defp processes do
+  defp logs do
     # Make sure all Helix modules are loaded
     Helix.Application.wait_until_helix_modules_are_loaded()
 
-    # Iterate over every Elixir.Game module and find the ones who implement the Viewable
+    # Iterate over every Elixir.Game module and find the ones who implement the Game.Log.Data
     # behaviour.
     # This is not particularly efficient but this snippet isn't executed during game runtime.
     :code.all_loaded()
@@ -29,13 +29,7 @@ defmodule Game.Process.Viewable.Spec do
         |> Keyword.get_values(:behaviour)
         |> List.flatten()
 
-      Game.Process.Viewable.Behaviour in mod_behaviours
-    end)
-    |> Enum.map(fn viewable_mod ->
-      viewable_mod
-      |> Module.split()
-      |> List.delete_at(-1)
-      |> Module.concat()
+      Game.Log.Data.Behaviour in mod_behaviours
     end)
   end
 end

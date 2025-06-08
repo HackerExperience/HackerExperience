@@ -5,7 +5,6 @@ defmodule OpenAPI.Elm.Formatter do
 
   @common_file "src/OpenApi/Common.elm"
 
-  # TODO: Add comment stating these files are generated and should not be hand-edited
   @files [
     "src/API/Events/Types.elm",
     "src/API/Events/Json.elm",
@@ -13,7 +12,9 @@ defmodule OpenAPI.Elm.Formatter do
     "src/API/Game/Json.elm",
     "src/API/Game/Api.elm",
     "src/API/Processes/Types.elm",
-    "src/API/Processes/Json.elm"
+    "src/API/Processes/Json.elm",
+    "src/API/Logs/Types.elm",
+    "src/API/Logs/Json.elm"
   ]
 
   @custom_types [
@@ -43,6 +44,8 @@ defmodule OpenAPI.Elm.Formatter do
     replace("nip", "String", "NIP", file)
     replace("source_nip", "String", "NIP", file)
     replace("target_nip", "String", "NIP", file)
+    replace("from_nip", "String", "NIP", file)
+    replace("to_nip", "String", "NIP", file)
     replace("mainframe_nip", "String", "NIP", file)
   end
 

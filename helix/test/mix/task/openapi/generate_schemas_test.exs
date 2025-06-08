@@ -19,7 +19,7 @@ defmodule Mix.Tasks.Openapi.GenerateSchemasTest do
     test "successfully generates json and yaml specs" do
       GenerateSchemas.run(["--target-dir", @tmp_dir])
 
-      # Both JSON and YAML files were created for the GameAPI, LobbyAPI, EventsAPI and ProcessesAPI
+      # JSON and YAML files were created for GameAPI, LobbyAPI, EventsAPI, LogsAPI and ProcessesAPI
       assert [
                "events.json",
                "events.yaml",
@@ -27,6 +27,8 @@ defmodule Mix.Tasks.Openapi.GenerateSchemasTest do
                "game.yaml",
                "lobby.json",
                "lobby.yaml",
+               "logs.json",
+               "logs.yaml",
                "processes.json",
                "processes.yaml"
              ] ==
@@ -36,6 +38,7 @@ defmodule Mix.Tasks.Openapi.GenerateSchemasTest do
       assert_spec("lobby.json", "Lobby API")
       assert_spec("game.json", "Game API")
       assert_spec("events.json", "Events API")
+      assert_spec("logs.json", "Logs API")
       assert_spec("processes.json", "Processes API")
     end
   end
