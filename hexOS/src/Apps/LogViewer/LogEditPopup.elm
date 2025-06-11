@@ -2,12 +2,18 @@ module Apps.LogViewer.LogEditPopup exposing (..)
 
 -- TODO: Convert Html to UI
 
+import API.Game as GameAPI
+import API.Logs.Json as LogsJD
+import API.Types
 import Apps.Input as App
 import Apps.Manifest as App
 import Effect exposing (Effect)
 import Game
 import Game.Model.Log as Log exposing (Log)
+import Game.Model.LogID exposing (LogID)
+import Game.Model.NIP as NIP exposing (NIP)
 import Html as H exposing (Html)
+import Json.Encode as JE
 import OS.AppID exposing (AppID)
 import OS.Bus
 import UI exposing (UI, cl, col, row, text)
@@ -26,15 +32,21 @@ type Msg
     | OnTypeSelected LogEditType
     | OnPerspectiveSelected LogEditPerspective
     | SetFieldIP String String
+    | SetFreeFormField String
     | ValidateFieldIP String
+    | RequestEditLog
+    | EditLog RequestConfig
+    | OnEditLogResponse LogID API.Types.LogEditResult
 
 
 type alias Model =
-    { log : Log
+    { nip : NIP
+    , log : Log
     , originalLog : Log
     , previewText : String
     , hasChanged : Bool
     , isValid : Bool
+    , isEditing : Bool
     , selectedType : LogEditType
     , typeDropdown : UI.Dropdown.Model
     , selectedPerspective : Maybe LogEditPerspective
@@ -73,6 +85,12 @@ type LogEditPerspectiveOptions
     = NoPerspectiveOptions
     | PerspectiveOptionsSelfGatewayRemote
     | PerspectiveOptionsGatewayRemote
+
+
+{-| Type used by the Elm API to represent the log type, perspective and data
+-}
+type alias RequestConfig =
+    ( String, String, String )
 
 
 
@@ -248,6 +266,11 @@ onFieldIPSet model identifier value =
             { model | ip1 = newIp }
 
 
+onFieldFreeFormSet : Model -> String -> Model
+onFieldFreeFormSet model value =
+    { model | freeFormText = FormFields.setValue FormFields.text value }
+
+
 onValidateFieldIP : Model -> String -> Model
 onValidateFieldIP model identifier =
     let
@@ -268,11 +291,89 @@ onValidateFieldIP model identifier =
 
 
 
--- Update
+-- Model > Misc
+
+
+logEditTypeToBackendType : LogEditType -> String
+logEditTypeToBackendType logEditType =
+    case logEditType of
+        TypeCustom ->
+            "custom"
+
+        TypeServerLogin ->
+            "server_login"
+
+        TypeFileTransfer ->
+            -- TODO: This is not "TypeFileTransfer"
+            "file_downloaded"
+
+        TypeConnectionProxied ->
+            "connection_proxied"
+
+
+logEditPerspectiveToBackendType : LogEditPerspective -> String
+logEditPerspectiveToBackendType perspective =
+    case perspective of
+        PerspectiveSelf ->
+            "self"
+
+        PerspectiveGateway ->
+            "to_ap"
+
+        PerspectiveEndpoint ->
+            "from_en"
+
+
+logDataNipToConfig : Model -> String -> String -> Maybe RequestConfig
+logDataNipToConfig model cfgType cfgDirection =
+    if not (FormFields.isTextEmpty model.ip1 || FormFields.hasError model.ip1) then
+        let
+            nip =
+                NIP.new "0" model.ip1.value
+
+            data =
+                LogsJD.encodeLogDataNIP { nip = nip }
+        in
+        Just ( cfgType, cfgDirection, JE.encode 0 data )
+
+    else
+        Nothing
+
+
+getRequestConfig : Model -> Maybe RequestConfig
+getRequestConfig model =
+    let
+        withLogDataEmpty =
+            \( cfgType, cfgDirection ) ->
+                Just ( cfgType, cfgDirection, "" )
+    in
+    case model.selectedType of
+        TypeServerLogin ->
+            case model.selectedPerspective of
+                Just PerspectiveSelf ->
+                    Just ( "server_login", "self", "" )
+
+                Just PerspectiveGateway ->
+                    logDataNipToConfig model "server_login" "to_ap"
+
+                Just PerspectiveEndpoint ->
+                    logDataNipToConfig model "server_login" "from_en"
+
+                _ ->
+                    Nothing
+
+        TypeCustom ->
+            -- TODO: The data is not actually empty
+            ( "custom", "self" )
+                |> withLogDataEmpty
+
+        _ ->
+            -- TODO
+            Nothing
 
 
 update : Game.Model -> Msg -> Model -> ( Model, Effect Msg )
-update _ msg model =
+update game msg model =
     case msg of
         ToApp _ _ _ ->
             ( model, Effect.none )
@@ -303,8 +404,53 @@ update _ msg model =
             ( onFieldIPSet model identifier value, Effect.none )
                 |> updatePreview
 
+        SetFreeFormField value ->
+            ( onFieldFreeFormSet model value, Effect.none )
+                |> updatePreview
+
         ValidateFieldIP identifier ->
             ( onValidateFieldIP model identifier, Effect.none )
+
+        RequestEditLog ->
+            case getRequestConfig model of
+                Just requestConfig ->
+                    ( model, Effect.msgToCmd (EditLog requestConfig) )
+
+                Nothing ->
+                    ( model, Effect.none )
+
+        -- `EditLog` is called either from RequestEditLog directly (when the data is valid) or
+        -- from the Confirmation prompt after the user decided to proceed with a custom log
+        EditLog ( cfgLogType, cfgLogDirection, cfgLogData ) ->
+            let
+                server =
+                    Game.getServer game model.nip
+
+                config =
+                    GameAPI.logEditConfig
+                        game.apiCtx
+                        model.nip
+                        model.log.id
+                        cfgLogType
+                        cfgLogDirection
+                        cfgLogData
+                        server.tunnelId
+
+                -- toGameMsg =
+                --     Game.ProcessOperation
+                --         model.nip
+                --         (Operation.Starting <| Operation.LogDelete log.id)
+            in
+            ( { model | isEditing = True }
+            , Effect.batch
+                [ Effect.logEdit (OnEditLogResponse model.log.id) config
+
+                -- , Effect.msgToCmd <| ToOS <| OS.Bus.ToGame toGameMsg
+                ]
+            )
+
+        OnEditLogResponse _ _ ->
+            ( { model | isEditing = False }, Effect.none )
 
         DropdownMsg _ (UI.Dropdown.OnSelected msg_) ->
             ( model, Effect.msgToCmd msg_ )
@@ -337,7 +483,7 @@ update _ msg model =
 ipValid : String -> Bool
 ipValid _ =
     -- TODO: Move elsewhere; also used on RemoteAccess
-    False
+    True
 
 
 
@@ -427,8 +573,20 @@ renderEditFields model =
                 _ ->
                     [ renderFieldIP model.ip1 "ip" ]
 
+        TypeCustom ->
+            [ renderTextArea model.freeFormText ]
+
         _ ->
-            [ UI.text "Todo" ]
+            [ text "Todoo" ]
+
+
+renderTextArea : TextField -> UI Msg
+renderTextArea textField =
+    -- TODO: Actual textarea
+    UI.TextInput.new "" textField
+        |> UI.TextInput.withOnChange SetFreeFormField
+        -- |> UI.TextInput.withOnBlur (ValidateFieldIP changeIdentifier)
+        |> UI.TextInput.toUI
 
 
 renderFieldIP : IPTextField -> String -> UI Msg
@@ -495,7 +653,23 @@ getLogEditPerspectiveOptions logEditType =
 vActionRow : Model -> UI Msg
 vActionRow model =
     row [ cl "a-lep-actionrow" ]
-        [ text "b" ]
+        [ text "[X]"
+        , vActionButtonArea model
+        ]
+
+
+vActionButtonArea : Model -> UI Msg
+vActionButtonArea model =
+    let
+        -- TODO: Better UX, show spinner etc
+        editButton =
+            UI.Button.new (Just "Edit")
+                |> UI.Button.withClass "a-lep-ar-ba-editbtn"
+                |> UI.Button.withOnClick RequestEditLog
+                |> UI.Button.toUI
+    in
+    row [ cl "a-lep-ar-buttonarea" ]
+        [ editButton ]
 
 
 
@@ -592,19 +766,21 @@ willOpen window input =
 didOpen : WM.WindowInfo -> App.InitialInput -> ( Model, Effect Msg )
 didOpen _ input =
     let
-        log =
+        ( nip, log ) =
             case input of
-                App.PopupLogEditInput logId ->
-                    logId
+                App.PopupLogEditInput nip_ log_ ->
+                    ( nip_, log_ )
 
                 _ ->
-                    Log.invalidLog
+                    ( NIP.invalidNip, Log.invalidLog )
     in
-    ( { log = log
+    ( { nip = nip
+      , log = log
       , originalLog = log
       , previewText = log.rawText
       , hasChanged = False
       , isValid = True
+      , isEditing = False
       , selectedType = TypeCustom
       , typeDropdown = UI.Dropdown.init (Just "TODO")
       , perspectiveDropdown = UI.Dropdown.init Nothing

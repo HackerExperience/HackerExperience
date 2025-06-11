@@ -1,5 +1,7 @@
 module UI.Model.FormFields exposing (..)
 
+import Maybe.Extra as Maybe
+
 
 type alias Field v =
     { value : v, error : Maybe String }
@@ -35,6 +37,11 @@ unsetError field =
     { field | error = Nothing }
 
 
+hasError : Field v -> Bool
+hasError field =
+    Maybe.isJust field.error
+
+
 
 -- Model > TextField
 
@@ -47,3 +54,8 @@ text =
 textWithValue : String -> TextField
 textWithValue value =
     baseField value
+
+
+isTextEmpty : TextField -> Bool
+isTextEmpty textField =
+    textField.value == ""

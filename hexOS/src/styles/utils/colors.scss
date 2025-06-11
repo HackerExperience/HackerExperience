@@ -35,6 +35,7 @@
 @function secondary-400() { @return v.get(secondary-400); }
 @function secondary-500() { @return v.get(secondary-500); }
 @function secondary-600() { @return v.get(secondary-600); }
+@function secondary-650() { @return v.get(secondary-650); }
 @function secondary-700() { @return v.get(secondary-700); }
 @function secondary-800() { @return v.get(secondary-800); }
 @function secondary-900() { @return v.get(secondary-900); }
@@ -45,6 +46,7 @@
 @function sec-400() { @return secondary-400(); }
 @function sec-500() { @return secondary-500(); }
 @function sec-600() { @return secondary-600(); }
+@function sec-650() { @return secondary-650(); }
 @function sec-700() { @return secondary-700(); }
 @function sec-800() { @return secondary-800(); }
 @function sec-900() { @return secondary-900(); }

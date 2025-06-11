@@ -75,6 +75,28 @@ type alias LogDeleteResult =
 
 
 
+-- Game > Log > Edit
+
+
+type alias LogEditInput =
+    { body : GameTypes.LogEditRequest
+    , params : LogEditParams
+    }
+
+
+type alias LogEditParams =
+    { nip : NIP, log_id : LogID }
+
+
+type alias LogEditError =
+    GameTypes.GenericError
+
+
+type alias LogEditResult =
+    Result (Error LogEditError) GameTypes.LogEditOutput
+
+
+
 -- Game > Server > Login
 
 

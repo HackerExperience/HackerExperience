@@ -27,6 +27,7 @@ type Effect msg
 type APIRequestEnum msg
     = LobbyLogin (API.Types.LobbyLoginResult -> msg) (InputConfig API.Types.LobbyLoginInput)
     | LogDelete (API.Types.LogDeleteResult -> msg) (InputConfig API.Types.LogDeleteInput)
+    | LogEdit (API.Types.LogEditResult -> msg) (InputConfig API.Types.LogEditInput)
     | ServerLogin (API.Types.ServerLoginResult -> msg) (InputConfig API.Types.ServerLoginInput)
 
 
@@ -79,6 +80,9 @@ applyApiRequest apiRequest seeds =
         -- Game
         LogDelete msg config ->
             ( seeds, Task.attempt msg (GameAPI.logDeleteTask config) )
+
+        LogEdit msg config ->
+            ( seeds, Task.attempt msg (GameAPI.logEditTask config) )
 
         ServerLogin msg config ->
             ( seeds, Task.attempt msg (GameAPI.serverLoginTask config) )
@@ -143,6 +147,11 @@ logDelete msg config =
     APIRequest (LogDelete msg config)
 
 
+logEdit : (API.Types.LogEditResult -> msg) -> InputConfig API.Types.LogEditInput -> Effect msg
+logEdit msg config =
+    APIRequest (LogEdit msg config)
+
+
 
 -- Server
 
@@ -185,6 +194,9 @@ map toMsg effect =
 
                 LogDelete msg body ->
                     APIRequest (LogDelete (\result -> toMsg (msg result)) body)
+
+                LogEdit msg body ->
+                    APIRequest (LogEdit (\result -> toMsg (msg result)) body)
 
                 -- Lobby
                 LobbyLogin msg body ->

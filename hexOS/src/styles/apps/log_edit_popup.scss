@@ -55,8 +55,21 @@
 }
 
 .a-lep-actionrow {
-    background-color: red;
-
+    border-top: 1px solid sec-400();
+    background-color: secondary-650();
     height: 70px;
+}
+
+.a-lep-ar-buttonarea {
+    // background-color: red;
+    flex: 1;
+    justify-content: flex-end;
+    align-items: center;
+    padding: s-1() s-3();
+}
+
+.a-lep-ar-ba-editbtn {
+    max-width: 80px;
+    height: 40px;
 }
 

@@ -114,7 +114,7 @@ update game msg model =
                         OS.Bus.RequestOpenApp
                             App.PopupLogEdit
                             (Just ( App.LogViewerApp, model.appId ))
-                            (App.PopupLogEditInput log)
+                            (App.PopupLogEditInput model.nip log)
             in
             ( model, Effect.msgToCmd msg_ )
 

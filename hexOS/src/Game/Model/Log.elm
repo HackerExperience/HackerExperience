@@ -136,7 +136,6 @@ parseLogType strLogType strDirection rawData =
             ServerLoginEndpoint <| LogData.parseLogDataNip rawData
 
         _ ->
-            -- ( UnknownLog, "Unknown log" )
             CustomLog {}
 
 
