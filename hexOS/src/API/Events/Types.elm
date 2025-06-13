@@ -11,6 +11,7 @@ module API.Events.Types exposing
     , IdxEndpoint
     , IdxGateway
     , IdxLog
+    , IdxLogRevision
     , IdxPlayer
     , IdxProcess
     , IdxTunnel
@@ -39,7 +40,7 @@ import Game.Model.TunnelID as TunnelID exposing (TunnelID(..))
 ## Aliases
 
 @docs FileDeleteFailed, FileDeleted, FileInstallFailed, FileInstalled, FileTransferFailed, FileTransferred
-@docs IdxEndpoint, IdxGateway, IdxLog, IdxPlayer, IdxProcess, IdxTunnel, IndexRequested
+@docs IdxEndpoint, IdxGateway, IdxLog, IdxLogRevision, IdxPlayer, IdxProcess, IdxTunnel, IndexRequested
 @docs InstallationUninstallFailed, InstallationUninstalled, LogDeleteFailed, LogDeleted, LogEditFailed
 @docs LogEdited, ProcessCompleted, ProcessCreated, ProcessKilled, TunnelCreated
 
@@ -136,13 +137,15 @@ type alias IdxPlayer =
     }
 
 
+type alias IdxLogRevision =
+    { data : String, direction : String, revision_id : Int, type_ : String }
+
+
 type alias IdxLog =
-    { data : String
-    , direction : String
-    , id : String
+    { id : String
     , is_deleted : Bool
-    , revision_id : String
-    , type_ : String
+    , revision_count : Int
+    , revisions : List IdxLogRevision
     }
 
 

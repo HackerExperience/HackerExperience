@@ -4,13 +4,13 @@
 module API.Events.Json exposing
     ( encodeFileDeleteFailed, encodeFileDeleted, encodeFileInstallFailed, encodeFileInstalled
     , encodeFileTransferFailed, encodeFileTransferred, encodeIdxEndpoint, encodeIdxGateway, encodeIdxLog
-    , encodeIdxPlayer, encodeIdxProcess, encodeIdxTunnel, encodeIndexRequested
+    , encodeIdxLogRevision, encodeIdxPlayer, encodeIdxProcess, encodeIdxTunnel, encodeIndexRequested
     , encodeInstallationUninstallFailed, encodeInstallationUninstalled, encodeLogDeleteFailed, encodeLogDeleted
     , encodeLogEditFailed, encodeLogEdited, encodeProcessCompleted, encodeProcessCreated, encodeProcessKilled
     , encodeTunnelCreated
     , decodeFileDeleteFailed, decodeFileDeleted, decodeFileInstallFailed, decodeFileInstalled
     , decodeFileTransferFailed, decodeFileTransferred, decodeIdxEndpoint, decodeIdxGateway, decodeIdxLog
-    , decodeIdxPlayer, decodeIdxProcess, decodeIdxTunnel, decodeIndexRequested
+    , decodeIdxLogRevision, decodeIdxPlayer, decodeIdxProcess, decodeIdxTunnel, decodeIndexRequested
     , decodeInstallationUninstallFailed, decodeInstallationUninstalled, decodeLogDeleteFailed, decodeLogDeleted
     , decodeLogEditFailed, decodeLogEdited, decodeProcessCompleted, decodeProcessCreated, decodeProcessKilled
     , decodeTunnelCreated
@@ -23,7 +23,7 @@ module API.Events.Json exposing
 
 @docs encodeFileDeleteFailed, encodeFileDeleted, encodeFileInstallFailed, encodeFileInstalled
 @docs encodeFileTransferFailed, encodeFileTransferred, encodeIdxEndpoint, encodeIdxGateway, encodeIdxLog
-@docs encodeIdxPlayer, encodeIdxProcess, encodeIdxTunnel, encodeIndexRequested
+@docs encodeIdxLogRevision, encodeIdxPlayer, encodeIdxProcess, encodeIdxTunnel, encodeIndexRequested
 @docs encodeInstallationUninstallFailed, encodeInstallationUninstalled, encodeLogDeleteFailed, encodeLogDeleted
 @docs encodeLogEditFailed, encodeLogEdited, encodeProcessCompleted, encodeProcessCreated, encodeProcessKilled
 @docs encodeTunnelCreated
@@ -33,7 +33,7 @@ module API.Events.Json exposing
 
 @docs decodeFileDeleteFailed, decodeFileDeleted, decodeFileInstallFailed, decodeFileInstalled
 @docs decodeFileTransferFailed, decodeFileTransferred, decodeIdxEndpoint, decodeIdxGateway, decodeIdxLog
-@docs decodeIdxPlayer, decodeIdxProcess, decodeIdxTunnel, decodeIndexRequested
+@docs decodeIdxLogRevision, decodeIdxPlayer, decodeIdxProcess, decodeIdxTunnel, decodeIndexRequested
 @docs decodeInstallationUninstallFailed, decodeInstallationUninstalled, decodeLogDeleteFailed, decodeLogDeleted
 @docs decodeLogEditFailed, decodeLogEdited, decodeProcessCompleted, decodeProcessCreated, decodeProcessKilled
 @docs decodeTunnelCreated
@@ -551,14 +551,12 @@ encodeIdxPlayer rec =
         ]
 
 
-decodeIdxLog : Json.Decode.Decoder API.Events.Types.IdxLog
-decodeIdxLog =
+decodeIdxLogRevision : Json.Decode.Decoder API.Events.Types.IdxLogRevision
+decodeIdxLogRevision =
     Json.Decode.succeed
-        (\data direction id is_deleted revision_id type_ ->
+        (\data direction revision_id type_ ->
             { data = data
             , direction = direction
-            , id = id
-            , is_deleted = is_deleted
             , revision_id = revision_id
             , type_ = type_
             }
@@ -572,18 +570,8 @@ decodeIdxLog =
             )
         |> OpenApi.Common.jsonDecodeAndMap
             (Json.Decode.field
-                "id"
-                Json.Decode.string
-            )
-        |> OpenApi.Common.jsonDecodeAndMap
-            (Json.Decode.field
-                "is_deleted"
-                Json.Decode.bool
-            )
-        |> OpenApi.Common.jsonDecodeAndMap
-            (Json.Decode.field
                 "revision_id"
-                Json.Decode.string
+                Json.Decode.int
             )
         |> OpenApi.Common.jsonDecodeAndMap
             (Json.Decode.field
@@ -592,15 +580,54 @@ decodeIdxLog =
             )
 
 
-encodeIdxLog : API.Events.Types.IdxLog -> Json.Encode.Value
-encodeIdxLog rec =
+encodeIdxLogRevision : API.Events.Types.IdxLogRevision -> Json.Encode.Value
+encodeIdxLogRevision rec =
     Json.Encode.object
         [ ( "data", Json.Encode.string rec.data )
         , ( "direction", Json.Encode.string rec.direction )
-        , ( "id", Json.Encode.string rec.id )
-        , ( "is_deleted", Json.Encode.bool rec.is_deleted )
-        , ( "revision_id", Json.Encode.string rec.revision_id )
+        , ( "revision_id", Json.Encode.int rec.revision_id )
         , ( "type", Json.Encode.string rec.type_ )
+        ]
+
+
+decodeIdxLog : Json.Decode.Decoder API.Events.Types.IdxLog
+decodeIdxLog =
+    Json.Decode.succeed
+        (\id is_deleted revision_count revisions ->
+            { id = id
+            , is_deleted = is_deleted
+            , revision_count = revision_count
+            , revisions = revisions
+            }
+        )
+        |> OpenApi.Common.jsonDecodeAndMap
+            (Json.Decode.field "id" Json.Decode.string)
+        |> OpenApi.Common.jsonDecodeAndMap
+            (Json.Decode.field
+                "is_deleted"
+                Json.Decode.bool
+            )
+        |> OpenApi.Common.jsonDecodeAndMap
+            (Json.Decode.field
+                "revision_count"
+                Json.Decode.int
+            )
+        |> OpenApi.Common.jsonDecodeAndMap
+            (Json.Decode.field
+                "revisions"
+                (Json.Decode.list
+                    decodeIdxLogRevision
+                )
+            )
+
+
+encodeIdxLog : API.Events.Types.IdxLog -> Json.Encode.Value
+encodeIdxLog rec =
+    Json.Encode.object
+        [ ( "id", Json.Encode.string rec.id )
+        , ( "is_deleted", Json.Encode.bool rec.is_deleted )
+        , ( "revision_count", Json.Encode.int rec.revision_count )
+        , ( "revisions", Json.Encode.list encodeIdxLogRevision rec.revisions )
         ]
 
 

@@ -21,36 +21,44 @@ defmodule Game.Index.LogTest do
       _other_log_2 = Setup.log!(other_server.id, id: 2)
 
       # `entity` can see both logs, but won't see log from other entity. Order is correct
-      assert [gtw_log_2, gtw_log_1] == Index.Log.index(entity.id, gateway.id)
+      assert [{2, [{gtw_log_2, 1}]}, {1, [{gtw_log_1, 1}]}] ==
+               Index.Log.index(entity.id, gateway.id)
 
       # `other_entity` can only see her log
-      assert [gtw_log_3] == Index.Log.index(other_entity.id, gateway.id)
+      assert [{3, [{gtw_log_3, 1}]}] == Index.Log.index(other_entity.id, gateway.id)
 
       # `entity` cannot see any logs in `other_server`
       assert [] == Index.Log.index(entity.id, other_server.id)
 
       # `other_entity` can see her only log in her gateway
-      assert [other_log_1] == Index.Log.index(other_entity.id, other_server.id)
+      assert [{1, [{other_log_1, 1}]}] == Index.Log.index(other_entity.id, other_server.id)
     end
 
     test "handles scenario where player has access to multiple revisions from the same log" do
       %{server: gateway, entity: entity} = Setup.server()
 
-      rev_1 = Setup.log!(gateway.id, visible_by: entity.id)
-      rev_2 = Setup.log!(gateway.id, id: rev_1.id, revision_id: 2, visible_by: entity.id)
+      # Log 1 has two revisions (1 and 2), both of which are visible by `entity`
+      log_1 = Setup.log!(gateway.id, id: 1, revision_id: 1, visible_by: entity.id)
+      log_1_rev_2 = Setup.log!(gateway.id, id: log_1.id, revision_id: 2, visible_by: entity.id)
 
-      # These are two revisions of the same log
-      assert rev_1.id == rev_2.id
-      assert rev_1.revision_id.id == 1
-      assert rev_2.revision_id.id == 2
+      # Log 2 has five revisions (1-5), but `entity` only has visibility on revisions 3 and 4
+      log_2 = Setup.log!(gateway.id, id: 2, revision_id: 1)
+      _log_2_rev_2 = Setup.log!(gateway.id, id: log_2.id, revision_id: 2)
+      log_2_rev_3 = Setup.log!(gateway.id, id: log_2.id, revision_id: 3, visible_by: entity.id)
+      log_2_rev_4 = Setup.log!(gateway.id, id: log_2.id, revision_id: 4, visible_by: entity.id)
+      _log_2_rev_5 = Setup.log!(gateway.id, id: log_2.id, revision_id: 5)
 
-      # The index only returned `rev_2`
-      assert [rev_2] == Index.Log.index(entity.id, gateway.id)
+      # Log 2 comes first because it is older than log 1
+      assert [{log_2_raw_id, log_2_entries}, {log_1_raw_id, log_1_entries}] =
+               Index.Log.index(entity.id, gateway.id)
 
-      # NOTE/TODO: In the future, I will certainly want to send every revision a player has access
-      # to as part of the bootstrap, so that the Client can render the "revision history". For now,
-      # I'm ignoring this, but I might need to change the index structure (or underlying query) to
-      # handle this scenario.
+      # We got back revisions 4 and 3 from log 2, which correspond to personal revisions 2 and 1
+      assert log_2_raw_id == log_2.id.id
+      assert [{log_2_rev_4, 2}, {log_2_rev_3, 1}] == log_2_entries
+
+      # We got back revisions 2 and 1 from log 1, which correspond to personal revisions 2 and 1
+      assert log_1_raw_id == log_1.id.id
+      assert [{log_1_rev_2, 2}, {log_1, 1}] == log_1_entries
     end
   end
 
@@ -68,14 +76,63 @@ defmodule Game.Index.LogTest do
 
       # Rendered index contains log information we need
       assert [log_2, log_1] = rendered_index
+
       assert log_1.id |> U.from_eid(entity.id) == gtw_log_1.id
       assert log_2.id |> U.from_eid(entity.id) == gtw_log_2.id
-      assert log_1.revision_id |> U.from_eid(entity.id) == gtw_log_1.revision_id
-      assert log_2.revision_id |> U.from_eid(entity.id) == gtw_log_2.revision_id
-      assert log_1.type == "#{gtw_log_1.type}"
-      assert log_2.type == "#{gtw_log_1.type}"
+
+      assert log_1.revision_count == 1
+      assert log_2.revision_count == 1
+
+      assert [log_1_revision] = log_1.revisions
+      assert [log_2_revision] = log_2.revisions
+
+      assert log_1_revision.type == "#{gtw_log_1.type}"
+      assert log_2_revision.type == "#{gtw_log_2.type}"
 
       # Rendered index conforms to the Norm contract
+      assert {:ok, _} = Norm.conform(rendered_index, Norm.coll_of(Index.Log.spec()))
+    end
+
+    test "handles scenario where player has access to multiple revisions from the same log" do
+      %{server: gateway, entity: entity} = Setup.server()
+
+      # Log 1 has two revisions (1 and 2), both of which are visible by `entity`
+      log_1 = Setup.log!(gateway.id, id: 1, revision_id: 1, visible_by: entity.id)
+      _log_1_rev_2 = Setup.log!(gateway.id, id: log_1.id, revision_id: 2, visible_by: entity.id)
+
+      # Log 2 has five revisions (1-5), but `entity` only has visibility on revisions 3 and 4
+      log_2 = Setup.log!(gateway.id, id: 2, revision_id: 1)
+      _log_2_rev_2 = Setup.log!(gateway.id, id: log_2.id, revision_id: 2)
+      _log_2_rev_3 = Setup.log!(gateway.id, id: log_2.id, revision_id: 3, visible_by: entity.id)
+      _log_2_rev_4 = Setup.log!(gateway.id, id: log_2.id, revision_id: 4, visible_by: entity.id)
+      _log_2_rev_5 = Setup.log!(gateway.id, id: log_2.id, revision_id: 5)
+
+      rendered_index =
+        entity.id
+        |> Index.Log.index(gateway.id)
+        |> Index.Log.render_index(entity.id)
+
+      assert [rendered_log_2, rendered_log_1] = rendered_index
+
+      assert log_2.id == rendered_log_2.id |> U.from_eid(entity.id)
+      refute rendered_log_2.is_deleted
+      assert rendered_log_2.revision_count == 2
+
+      # Both revisions for Log 2 were returned with the personal revision counter
+      assert [rendered_log_2_personal_rev_2, rendered_log_2_personal_rev_1] =
+               rendered_log_2.revisions
+
+      assert rendered_log_2_personal_rev_2.revision_id == 2
+      assert rendered_log_2_personal_rev_1.revision_id == 1
+
+      # Same thing for Log 1: it was returned with the personal revisions scoped to the entity
+      assert [rendered_log_1_personal_rev_2, rendered_log_1_personal_rev_1] =
+               rendered_log_1.revisions
+
+      assert rendered_log_1_personal_rev_2.revision_id == 2
+      assert rendered_log_1_personal_rev_1.revision_id == 1
+
+      # Rendered index conforms to the Norm spec
       assert {:ok, _} = Norm.conform(rendered_index, Norm.coll_of(Index.Log.spec()))
     end
 
@@ -94,10 +151,10 @@ defmodule Game.Index.LogTest do
         |> Index.Log.index(server.id)
         |> Index.Log.render_index(entity.id)
 
-      assert [log] = rendered_index
-      assert log.type == "server_login"
-      assert log.direction == "to_ap"
-      assert log.data == "{\"nip\":\"#{NIP.to_external(nip)}\"}"
+      assert [%{revisions: [revision]}] = rendered_index
+      assert revision.type == "server_login"
+      assert revision.direction == "to_ap"
+      assert revision.data == "{\"nip\":\"#{NIP.to_external(nip)}\"}"
     end
   end
 end
