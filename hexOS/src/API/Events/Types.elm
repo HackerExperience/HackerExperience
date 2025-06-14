@@ -138,7 +138,12 @@ type alias IdxPlayer =
 
 
 type alias IdxLogRevision =
-    { data : String, direction : String, revision_id : Int, type_ : String }
+    { data : String
+    , direction : String
+    , revision_id : Int
+    , source : String
+    , type_ : String
+    }
 
 
 type alias IdxLog =
@@ -146,6 +151,7 @@ type alias IdxLog =
     , is_deleted : Bool
     , revision_count : Int
     , revisions : List IdxLogRevision
+    , sort_strategy : String
     }
 
 

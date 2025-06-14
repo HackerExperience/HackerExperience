@@ -554,10 +554,11 @@ encodeIdxPlayer rec =
 decodeIdxLogRevision : Json.Decode.Decoder API.Events.Types.IdxLogRevision
 decodeIdxLogRevision =
     Json.Decode.succeed
-        (\data direction revision_id type_ ->
+        (\data direction revision_id source type_ ->
             { data = data
             , direction = direction
             , revision_id = revision_id
+            , source = source
             , type_ = type_
             }
         )
@@ -575,6 +576,11 @@ decodeIdxLogRevision =
             )
         |> OpenApi.Common.jsonDecodeAndMap
             (Json.Decode.field
+                "source"
+                Json.Decode.string
+            )
+        |> OpenApi.Common.jsonDecodeAndMap
+            (Json.Decode.field
                 "type"
                 Json.Decode.string
             )
@@ -586,6 +592,7 @@ encodeIdxLogRevision rec =
         [ ( "data", Json.Encode.string rec.data )
         , ( "direction", Json.Encode.string rec.direction )
         , ( "revision_id", Json.Encode.int rec.revision_id )
+        , ( "source", Json.Encode.string rec.source )
         , ( "type", Json.Encode.string rec.type_ )
         ]
 
@@ -593,11 +600,12 @@ encodeIdxLogRevision rec =
 decodeIdxLog : Json.Decode.Decoder API.Events.Types.IdxLog
 decodeIdxLog =
     Json.Decode.succeed
-        (\id is_deleted revision_count revisions ->
+        (\id is_deleted revision_count revisions sort_strategy ->
             { id = id
             , is_deleted = is_deleted
             , revision_count = revision_count
             , revisions = revisions
+            , sort_strategy = sort_strategy
             }
         )
         |> OpenApi.Common.jsonDecodeAndMap
@@ -619,6 +627,11 @@ decodeIdxLog =
                     decodeIdxLogRevision
                 )
             )
+        |> OpenApi.Common.jsonDecodeAndMap
+            (Json.Decode.field
+                "sort_strategy"
+                Json.Decode.string
+            )
 
 
 encodeIdxLog : API.Events.Types.IdxLog -> Json.Encode.Value
@@ -628,6 +641,7 @@ encodeIdxLog rec =
         , ( "is_deleted", Json.Encode.bool rec.is_deleted )
         , ( "revision_count", Json.Encode.int rec.revision_count )
         , ( "revisions", Json.Encode.list encodeIdxLogRevision rec.revisions )
+        , ( "sort_strategy", Json.Encode.string rec.sort_strategy )
         ]
 
 

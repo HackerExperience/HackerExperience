@@ -35,6 +35,7 @@ idxLog =
     , is_deleted = False
     , revision_count = 1
     , revisions = [ idxLogRevision ]
+    , sort_strategy = "newest_first"
     }
 
 
@@ -44,6 +45,7 @@ idxLogRevision =
     , type_ = "server_login"
     , direction = "self"
     , data = "{}"
+    , source = "self"
     }
 
 

@@ -38,6 +38,7 @@ type alias Log =
     , revisionCount : Int
     , selectedRevisionId : Int
     , isDeleted : Bool
+    , sortStrategy : SortRevisionStrategy
     , currentOp : Maybe LogOperation
     }
 
@@ -47,6 +48,11 @@ type alias LogRevision =
     , type_ : LogType
     , rawText : String
     }
+
+
+type SortRevisionStrategy
+    = NewestRevisionFirst
+    | OldestRevisionFirst
 
 
 type LogType
@@ -104,6 +110,7 @@ invalidLog =
     , revisionCount = 0
     , selectedRevisionId = 0
     , isDeleted = False
+    , sortStrategy = NewestRevisionFirst
     , currentOp = Nothing
     }
 
@@ -128,11 +135,7 @@ and simply use `getSelectedRevision` instead.
 -}
 getNewestRevision : Log -> LogRevision
 getNewestRevision log =
-    let
-        maxRevId =
-            Maybe.withDefault 1 <| List.maximum (Dict.keys log.revisions)
-    in
-    getRevision maxRevId log
+    getRevision (getMaxRevisionId log.revisions) log
 
 
 invalidRevision : LogRevision
@@ -158,13 +161,23 @@ parseLog log =
     let
         revisions =
             parseLogRevisions log.revisions
+
+        sortStrategy =
+            parseSortStrategy log.sort_strategy
+
+        selectedRevisionId =
+            case sortStrategy of
+                NewestRevisionFirst ->
+                    getMaxRevisionId revisions
+
+                OldestRevisionFirst ->
+                    getMinRevisionId revisions
     in
     { id = LogID.fromValue log.id
     , revisions = revisions
     , revisionCount = Dict.size revisions
-
-    -- TODO
-    , selectedRevisionId = 1
+    , sortStrategy = sortStrategy
+    , selectedRevisionId = selectedRevisionId
     , isDeleted = log.is_deleted
     , currentOp = Nothing
     }
@@ -204,6 +217,26 @@ parseLogType strLogType strDirection rawData =
 
         _ ->
             CustomLog {}
+
+
+parseSortStrategy : String -> SortRevisionStrategy
+parseSortStrategy rawSortStrategy =
+    case rawSortStrategy of
+        "recover" ->
+            OldestRevisionFirst
+
+        _ ->
+            NewestRevisionFirst
+
+
+getMinRevisionId : Dict Int LogRevision -> Int
+getMinRevisionId revisions =
+    Maybe.withDefault 1 <| List.minimum (Dict.keys revisions)
+
+
+getMaxRevisionId : Dict Int LogRevision -> Int
+getMaxRevisionId revisions =
+    Maybe.withDefault 1 <| List.maximum (Dict.keys revisions)
 
 
 generateText : LogType -> String

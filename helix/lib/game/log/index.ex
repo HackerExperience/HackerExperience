@@ -18,7 +18,8 @@ defmodule Game.Index.Log do
            id: ID.external(),
            revisions: [rendered_revision],
            revision_count: integer(),
-           is_deleted: boolean()
+           is_deleted: boolean(),
+           sort_strategy: String.t()
          }
 
   @typep rendered_revision :: %{
@@ -36,9 +37,10 @@ defmodule Game.Index.Log do
         id: external_id(),
         revisions: coll_of(revision_spec()),
         revision_count: integer(),
-        is_deleted: boolean()
+        is_deleted: boolean(),
+        sort_strategy: binary()
       }),
-      [:id, :revisions, :revision_count, :is_deleted]
+      [:id, :revisions, :revision_count, :is_deleted, :sort_strategy]
     )
   end
 
@@ -109,7 +111,8 @@ defmodule Game.Index.Log do
       id: ID.to_external(parent_log.id, entity_id, parent_log.server_id),
       revisions: Enum.map(revisions, &render_revision/1),
       revision_count: length(revisions),
-      is_deleted: parent_log.is_deleted
+      is_deleted: parent_log.is_deleted,
+      sort_strategy: "#{get_sort_strategy(revisions)}"
     }
   end
 
@@ -124,4 +127,7 @@ defmodule Game.Index.Log do
       source: "#{visibility_source}"
     }
   end
+
+  # TODO: Use `:oldest_first` when there is a visibility from a recovered log
+  defp get_sort_strategy(_), do: :newest_first
 end

@@ -132,6 +132,9 @@ defmodule Game.Index.LogTest do
       assert rendered_log_1_personal_rev_2.revision_id == 2
       assert rendered_log_1_personal_rev_1.revision_id == 1
 
+      assert rendered_log_1.sort_strategy == "newest_first"
+      assert rendered_log_2.sort_strategy == "newest_first"
+
       # Rendered index conforms to the Norm spec
       assert {:ok, _} = Norm.conform(rendered_index, Norm.coll_of(Index.Log.spec()))
     end
