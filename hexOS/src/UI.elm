@@ -63,8 +63,8 @@ cl name =
     HA.class name
 
 
-maybeCl : Maybe String -> Attribute msg
-maybeCl maybeName =
+clMaybe : Maybe String -> Attribute msg
+clMaybe maybeName =
     case maybeName of
         Just name ->
             cl name
@@ -92,8 +92,8 @@ style property value =
     HA.style property value
 
 
-maybeStyle : String -> Maybe x -> (x -> String) -> Attribute msg
-maybeStyle property maybeValue extractor =
+styleMaybe : String -> Maybe x -> (x -> String) -> Attribute msg
+styleMaybe property maybeValue extractor =
     case maybeValue of
         Just v ->
             style property (extractor v)

@@ -21,7 +21,7 @@ import Effect exposing (Effect)
 import Html as H
 import Html.Attributes as HA
 import Html.Events as HE
-import UI exposing (UI, cl, style, text)
+import UI exposing (UI, cl, style, styleMaybe, text)
 import UI.Icon
 
 
@@ -166,7 +166,7 @@ toUI model (Config { entries } { width, maxHeight }) =
         header =
             UI.row
                 [ cl "ui-dd-header"
-                , UI.maybeStyle "width" width (\w -> String.fromInt w ++ "px")
+                , styleMaybe "width" width (\w -> String.fromInt w ++ "px")
                 , UI.onClick ToggleOpen
                 ]
                 [ H.text selectionText

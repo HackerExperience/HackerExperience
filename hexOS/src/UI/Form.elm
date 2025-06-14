@@ -2,7 +2,7 @@ module UI.Form exposing (..)
 
 import Html as H
 import Html.Attributes as HA
-import UI exposing (UI, cl)
+import UI exposing (UI, cl, clMaybe)
 import UI.Icon exposing (Icon)
 
 
@@ -76,6 +76,6 @@ fieldPairToUI : FieldPairConfig msg -> UI msg
 fieldPairToUI (FieldPairConfig { left, right } { customClass }) =
     UI.row
         [ cl "ui-field-pair"
-        , UI.maybeCl customClass
+        , clMaybe customClass
         ]
         [ left, right ]
