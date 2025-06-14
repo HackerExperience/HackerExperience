@@ -4,6 +4,8 @@ module Game.Model.Log exposing
     , Logs
     , findLog
     , getLog
+    , getNewestRevision
+    , getSelectedRevision
     , handleProcessOperation
     , invalidLog
     , logsToList
@@ -13,6 +15,7 @@ module Game.Model.Log exposing
     )
 
 import API.Events.Types as Events
+import Dict exposing (Dict)
 import Game.Model.LogData as LogData exposing (LogDataEmpty, LogDataNIP)
 import Game.Model.LogID as LogID exposing (LogID, RawLogID)
 import Game.Model.NIP as NIP exposing (NIP)
@@ -31,11 +34,18 @@ type alias Logs =
 
 type alias Log =
     { id : LogID
-    , revisionId : String
-    , type_ : LogType
-    , rawText : String
+    , revisions : Dict Int LogRevision
+    , revisionCount : Int
+    , selectedRevisionId : Int
     , isDeleted : Bool
     , currentOp : Maybe LogOperation
+    }
+
+
+type alias LogRevision =
+    { revisionId : Int
+    , type_ : LogType
+    , rawText : String
     }
 
 
@@ -90,11 +100,46 @@ updateLog logId updater logs =
 invalidLog : Log
 invalidLog =
     { id = LogID.fromValue "invalid"
-    , revisionId = "revId"
-    , type_ = CustomLog {}
-    , rawText = "Invalid log"
+    , revisions = Dict.empty
+    , revisionCount = 0
+    , selectedRevisionId = 0
     , isDeleted = False
     , currentOp = Nothing
+    }
+
+
+
+-- Model > Revisions
+
+
+getRevision : Int -> Log -> LogRevision
+getRevision revId log =
+    Maybe.withDefault invalidRevision <| Dict.get revId log.revisions
+
+
+getSelectedRevision : Log -> LogRevision
+getSelectedRevision log =
+    getRevision log.selectedRevisionId log
+
+
+{-| NOTE: Currently, this is only used at LogEditPopup and not too important UX-wise. So if the
+implementation gets too tricky (which I think it will in the future), feel free to get rid of it
+and simply use `getSelectedRevision` instead.
+-}
+getNewestRevision : Log -> LogRevision
+getNewestRevision log =
+    let
+        maxRevId =
+            Maybe.withDefault 1 <| List.maximum (Dict.keys log.revisions)
+    in
+    getRevision maxRevId log
+
+
+invalidRevision : LogRevision
+invalidRevision =
+    { revisionId = 1
+    , type_ = CustomLog {}
+    , rawText = "Invalid revision"
     }
 
 
@@ -111,16 +156,38 @@ parse idxLogs =
 parseLog : Events.IdxLog -> Log
 parseLog log =
     let
-        logType =
-            parseLogType log.type_ log.direction log.data
+        revisions =
+            parseLogRevisions log.revisions
     in
     { id = LogID.fromValue log.id
-    , revisionId = log.revision_id
-    , type_ = logType
-    , rawText = generateText logType
+    , revisions = revisions
+    , revisionCount = Dict.size revisions
+
+    -- TODO
+    , selectedRevisionId = 1
     , isDeleted = log.is_deleted
     , currentOp = Nothing
     }
+
+
+parseLogRevisions : List Events.IdxLogRevision -> Dict Int LogRevision
+parseLogRevisions revisions =
+    List.foldl parseLogRevision Dict.empty revisions
+
+
+parseLogRevision : Events.IdxLogRevision -> Dict Int LogRevision -> Dict Int LogRevision
+parseLogRevision idxRevision acc =
+    let
+        revType =
+            parseLogType idxRevision.type_ idxRevision.direction idxRevision.data
+
+        revision =
+            { revisionId = idxRevision.revision_id
+            , type_ = revType
+            , rawText = generateText revType
+            }
+    in
+    Dict.insert revision.revisionId revision acc
 
 
 parseLogType : String -> String -> String -> LogType

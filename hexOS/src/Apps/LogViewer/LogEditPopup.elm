@@ -773,11 +773,14 @@ didOpen _ input =
 
                 _ ->
                     ( NIP.invalidNip, Log.invalidLog )
+
+        revision =
+            Log.getNewestRevision log
     in
     ( { nip = nip
       , log = log
       , originalLog = log
-      , previewText = log.rawText
+      , previewText = revision.rawText
       , hasChanged = False
       , isValid = True
       , isEditing = False

@@ -54,6 +54,8 @@ ignoreSdkFiles =
         , "src/API/Game/Json.elm"
         , "src/API/Events/Types.elm"
         , "src/API/Events/Json.elm"
+        , "src/API/Logs/Types.elm"
+        , "src/API/Logs/Json.elm"
         , "src/API/Processes/Types.elm"
         , "src/API/Processes/Json.elm"
         ]

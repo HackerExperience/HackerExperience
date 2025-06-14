@@ -39,6 +39,10 @@ simulateEffect effect =
                     -- TODO
                     SimulatedEffect.Cmd.none
 
+                LogEdit _ _ ->
+                    -- TODO
+                    SimulatedEffect.Cmd.none
+
                 ServerLogin _ _ ->
                     -- TODO
                     SimulatedEffect.Cmd.none

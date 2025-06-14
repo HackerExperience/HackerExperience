@@ -33,8 +33,17 @@ idxLog : Events.IdxLog
 idxLog =
     { id = "abc"
     , is_deleted = False
-    , revision_id = "a"
-    , type_ = "localhost_logged_in"
+    , revision_count = 1
+    , revisions = [ idxLogRevision ]
+    }
+
+
+idxLogRevision : Events.IdxLogRevision
+idxLogRevision =
+    { revision_id = 1
+    , type_ = "server_login"
+    , direction = "self"
+    , data = "{}"
     }
 
 

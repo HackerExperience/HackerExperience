@@ -7,7 +7,7 @@ import Apps.Manifest as App
 import Effect exposing (Effect)
 import Game
 import Game.Bus as Game
-import Game.Model.Log exposing (Log, LogType(..))
+import Game.Model.Log as Log exposing (Log, LogType(..))
 import Game.Model.LogID exposing (LogID)
 import Game.Model.NIP exposing (NIP)
 import Game.Model.ProcessOperation as Operation exposing (Operation)
@@ -210,9 +210,12 @@ vLogRow log =
             else
                 UI.emptyEl
 
+        revision =
+            Log.getSelectedRevision log
+
         logText =
             row [ cl "a-log-row-text", UI.centerItems ]
-                [ text log.rawText ]
+                [ text revision.rawText ]
 
         -- TODO: Move to dedicate function
         -- TODO: UI.Spinner?
@@ -232,7 +235,7 @@ vLogRow log =
                 |> UI.Icon.toUI
 
         statusBadges =
-            case ( log.isDeleted, log.type_ ) of
+            case ( log.isDeleted, revision.type_ ) of
                 ( True, CustomLog _ ) ->
                     [ brokenBadgeIcon, deletedBadgeIcon ]
 
