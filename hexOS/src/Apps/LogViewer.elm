@@ -4,11 +4,12 @@ import API.Game as GameAPI
 import API.Types
 import Apps.Input as App
 import Apps.Manifest as App
+import Dict exposing (Dict)
 import Effect exposing (Effect)
 import Game
 import Game.Bus as Game
 import Game.Model.Log as Log exposing (Log, LogType(..))
-import Game.Model.LogID exposing (LogID)
+import Game.Model.LogID as LogID exposing (LogID, RawLogID)
 import Game.Model.NIP exposing (NIP)
 import Game.Model.ProcessOperation as Operation exposing (Operation)
 import Game.Model.Server as Server
@@ -18,7 +19,7 @@ import OS.AppID exposing (AppID)
 import OS.Bus
 import OS.CtxMenu as CtxMenu
 import OS.CtxMenu.Menus as CtxMenu
-import UI exposing (UI, cl, col, div, row, text)
+import UI exposing (UI, cl, clIf, col, div, row, text)
 import UI.Icon
 import WM
 
@@ -33,11 +34,14 @@ type Msg
     | OnDeleteLog Log
     | OnDeleteLogResponse LogID API.Types.LogDeleteResult
     | OnRequestOpenEditPopup Log
+    | OnSelectNextRevision Log (Maybe Int)
+    | OnSelectPreviousRevision Log (Maybe Int)
 
 
 type alias Model =
     { appId : AppID
     , nip : NIP
+    , customSelectionMap : Dict RawLogID Int
     }
 
 
@@ -65,6 +69,53 @@ filterLogs model game =
 update : Game.Model -> Msg -> Model -> ( Model, Effect Msg )
 update game msg model =
     case msg of
+        OnSelectNextRevision log customSelection ->
+            let
+                currentRevisionId =
+                    case customSelection of
+                        Just id ->
+                            id
+
+                        Nothing ->
+                            log.selectedRevisionId
+
+                maxRevisionId =
+                    Log.getMaxRevisionId log.revisions
+
+                nextRevisionId =
+                    if maxRevisionId == currentRevisionId then
+                        currentRevisionId
+
+                    else
+                        currentRevisionId + 1
+
+                newCustomSelectionMap =
+                    Dict.insert (LogID.toString log.id) nextRevisionId model.customSelectionMap
+            in
+            ( { model | customSelectionMap = newCustomSelectionMap }, Effect.none )
+
+        OnSelectPreviousRevision log customSelection ->
+            let
+                currentRevisionId =
+                    case customSelection of
+                        Just id ->
+                            id
+
+                        Nothing ->
+                            log.selectedRevisionId
+
+                nextRevisionId =
+                    if currentRevisionId > 1 then
+                        currentRevisionId - 1
+
+                    else
+                        1
+
+                newCustomSelectionMap =
+                    Dict.insert (LogID.toString log.id) nextRevisionId model.customSelectionMap
+            in
+            ( { model | customSelectionMap = newCustomSelectionMap }, Effect.none )
+
         OnDeleteLog log ->
             let
                 server =
@@ -154,11 +205,11 @@ vLogList model game =
         logs =
             filterLogs model game
     in
-    List.map (\log -> vLogRow log) logs
+    List.map (\log -> vLogRow model log) logs
 
 
-vLogRow : Log -> UI Msg
-vLogRow log =
+vLogRow : Model -> Log -> UI Msg
+vLogRow model log =
     let
         time =
             "26/01 19:29:18"
@@ -201,8 +252,43 @@ vLogRow log =
             else
                 UI.emptyEl
 
+        customSelection =
+            Dict.get (LogID.toString log.id) model.customSelectionMap
+
+        ( minRevisionId, maxRevisionId ) =
+            ( 1, Log.getMaxRevisionId log.revisions )
+
         revision =
-            Log.getSelectedRevision log
+            Log.getSelectedRevision log customSelection
+
+        revUpIcon =
+            row
+                [ cl "a-lr-rs-arrow a-lr-rs-up"
+                , clIf (revision.revisionId == maxRevisionId) "a-lr-rs-limit"
+                , UI.onClick <| OnSelectNextRevision log customSelection
+                ]
+                []
+
+        revDownIcon =
+            row
+                [ cl "a-lr-rs-arrow a-lr-rs-down"
+                , clIf (revision.revisionId == minRevisionId) "a-lr-rs-limit"
+                , UI.onClick <| OnSelectPreviousRevision log customSelection
+                ]
+                []
+
+        revisionSelector =
+            if log.revisionCount > 1 then
+                row [ cl "a-log-row-revselector" ]
+                    [ text <| String.fromInt revision.revisionId
+                    , col [ cl "a-lr-rs-selector" ]
+                        [ revUpIcon
+                        , revDownIcon
+                        ]
+                    ]
+
+            else
+                UI.emptyEl
 
         logText =
             row [ cl "a-log-row-text", UI.centerItems ]
@@ -268,6 +354,7 @@ vLogRow log =
         , separator
         , badges
         , logText
+        , revisionSelector
         , actions
         ]
 
@@ -344,6 +431,7 @@ didOpen { appId, sessionId } _ =
     in
     ( { appId = appId
       , nip = nip
+      , customSelectionMap = Dict.empty
       }
     , Effect.none
     )

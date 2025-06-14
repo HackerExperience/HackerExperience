@@ -16,7 +16,7 @@
 }
 
 .a-log-row {
-    min-height: 44px;
+    height: 44px;
     padding: 5px 0px 5px 10px;
     padding: 5px 10px;
     border-bottom: 1px solid prim-500();
@@ -30,6 +30,10 @@
 
     &:hover .a-log-row-date {
         color: white;
+    }
+
+    &:hover .a-lr-rs-selector {
+        display: flex;
     }
 }
 
@@ -96,6 +100,55 @@
 .a-log-row-internal-separator {
     margin-left: 7px;
     border-left: 1px solid sec-600();
+}
+
+.a-log-row-revselector {
+    align-items: center;
+
+    border: 1px solid sec-400();
+    padding: 0 4px;
+
+    .ui-span {
+        padding: 0 s-1();
+    }
+}
+
+.a-lr-rs-selector {
+    margin-left: s-2();
+    display: none;
+}
+
+// NOTE: This is likely a temporary implementation for the arrows
+.a-lr-rs-arrow {
+    border: solid white;
+    border-width: 0 3px 3px 0;
+    display: inline-block;
+    padding: 3px;
+}
+
+.a-lr-rs-up {
+    transform: rotate(-135deg);
+
+    &:hover {
+        cursor: pointer;
+    }
+}
+
+.a-lr-rs-down {
+    transform: rotate(45deg);
+
+    &:hover {
+        cursor: pointer;
+    }
+}
+
+.a-lr-rs-limit {
+    border: solid grey;
+    border-width: 0 3px 3px 0;
+
+    &:hover {
+        cursor: default;
+    }
 }
 
 .a-log-row-actions {

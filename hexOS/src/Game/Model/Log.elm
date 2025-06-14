@@ -4,6 +4,7 @@ module Game.Model.Log exposing
     , Logs
     , findLog
     , getLog
+    , getMaxRevisionId
     , getNewestRevision
     , getSelectedRevision
     , handleProcessOperation
@@ -124,9 +125,14 @@ getRevision revId log =
     Maybe.withDefault invalidRevision <| Dict.get revId log.revisions
 
 
-getSelectedRevision : Log -> LogRevision
-getSelectedRevision log =
-    getRevision log.selectedRevisionId log
+getSelectedRevision : Log -> Maybe Int -> LogRevision
+getSelectedRevision log maybeSelectionOverride =
+    case maybeSelectionOverride of
+        Just customId ->
+            getRevision customId log
+
+        Nothing ->
+            getRevision log.selectedRevisionId log
 
 
 {-| NOTE: Currently, this is only used at LogEditPopup and not too important UX-wise. So if the

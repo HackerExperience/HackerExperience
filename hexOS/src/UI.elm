@@ -73,6 +73,15 @@ maybeCl maybeName =
             emptyAttr
 
 
+clIf : Bool -> String -> Attribute msg
+clIf condition name =
+    if condition then
+        cl name
+
+    else
+        emptyAttr
+
+
 id : String -> Attribute msg
 id name =
     HA.id name
