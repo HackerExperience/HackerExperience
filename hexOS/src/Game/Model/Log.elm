@@ -11,6 +11,7 @@ module Game.Model.Log exposing
     , invalidLog
     , logsToList
     , onLogDeletedEvent
+    , onLogEditedEvent
     , parse
     , parseLog
     )
@@ -288,3 +289,31 @@ handleProcessOperation operation logs =
 onLogDeletedEvent : Events.LogDeleted -> Logs -> Logs
 onLogDeletedEvent event logs =
     updateLog event.log_id (\log -> { log | isDeleted = True }) logs
+
+
+onLogEditedEvent : Events.LogEdited -> Logs -> Logs
+onLogEditedEvent event logs =
+    let
+        updateFn =
+            \log ->
+                let
+                    revisionId =
+                        log.revisionCount + 1
+
+                    revType =
+                        parseLogType event.type_ event.direction event.data
+
+                    revision =
+                        { revisionId = revisionId
+                        , type_ = revType
+                        , rawText = generateText revType
+                        }
+                in
+                { log
+                    | revisions = Dict.insert revisionId revision log.revisions
+                    , revisionCount = revisionId
+                    , selectedRevisionId = revisionId
+                    , sortStrategy = NewestRevisionFirst
+                }
+    in
+    updateLog event.log_id updateFn logs

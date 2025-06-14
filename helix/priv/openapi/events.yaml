@@ -257,21 +257,30 @@ components:
     log_edited:
       type: object
       required:
-        - nip
         - process_id
         - log_id
+        - nip
+        - direction
+        - type
+        - data
       properties:
+        data:
+          type: string
+        type:
+          type: string
+        direction:
+          type: string
+        nip:
+          type: string
         log_id:
           type: string
         process_id:
           type: string
-        nip:
-          type: string
     process_completed:
       type: object
       required:
-        - nip
         - process_id
+        - nip
         - type
         - data
       properties:

@@ -67,7 +67,13 @@ type alias ProcessCompleted =
 
 
 type alias LogEdited =
-    { log_id : LogID, nip : NIP, process_id : ProcessID }
+    { data : String
+    , direction : String
+    , log_id : LogID
+    , nip : NIP
+    , process_id : ProcessID
+    , type_ : String
+    }
 
 
 type alias LogEditFailed =

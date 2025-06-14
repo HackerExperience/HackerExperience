@@ -132,6 +132,9 @@ defmodule Game.Process.Log.EditTest do
       assert log_edited_sse.data.nip == nip |> NIP.to_external()
       assert log_edited_sse.data.process_id |> U.from_eid(player.id) == process.id
       assert log_edited_sse.data.log_id |> U.from_eid(player.id) == log_rev_2.id
+      assert log_edited_sse.data.type == "custom"
+      assert log_edited_sse.data.direction == "self"
+      assert log_edited_sse.data.data == "{}"
     end
   end
 end

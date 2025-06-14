@@ -178,26 +178,53 @@ encodeProcessCompleted rec =
 decodeLogEdited : Json.Decode.Decoder API.Events.Types.LogEdited
 decodeLogEdited =
     Json.Decode.succeed
-        (\log_id nip process_id ->
-            { log_id = log_id, nip = nip, process_id = process_id }
+        (\data direction log_id nip process_id type_ ->
+            { data = data
+            , direction = direction
+            , log_id = log_id
+            , nip = nip
+            , process_id = process_id
+            , type_ = type_
+            }
         )
         |> OpenApi.Common.jsonDecodeAndMap
-            (Json.Decode.field "log_id" (Json.Decode.map LogID Json.Decode.string))
+            (Json.Decode.field "data" Json.Decode.string)
         |> OpenApi.Common.jsonDecodeAndMap
-            (Json.Decode.field "nip" (Json.Decode.map (\nip -> NIP.fromString nip) Json.Decode.string))
+            (Json.Decode.field
+                "direction"
+                Json.Decode.string
+            )
+        |> OpenApi.Common.jsonDecodeAndMap
+            (Json.Decode.field
+                "log_id"
+                (Json.Decode.map LogID Json.Decode.string)
+            )
+        |> OpenApi.Common.jsonDecodeAndMap
+            (Json.Decode.field
+                "nip"
+                (Json.Decode.map (\nip -> NIP.fromString nip) Json.Decode.string)
+            )
         |> OpenApi.Common.jsonDecodeAndMap
             (Json.Decode.field
                 "process_id"
                 (Json.Decode.map ProcessID Json.Decode.string)
+            )
+        |> OpenApi.Common.jsonDecodeAndMap
+            (Json.Decode.field
+                "type"
+                Json.Decode.string
             )
 
 
 encodeLogEdited : API.Events.Types.LogEdited -> Json.Encode.Value
 encodeLogEdited rec =
     Json.Encode.object
-        [ ( "log_id", Json.Encode.string (LogID.toValue rec.log_id) )
+        [ ( "data", Json.Encode.string rec.data )
+        , ( "direction", Json.Encode.string rec.direction )
+        , ( "log_id", Json.Encode.string (LogID.toValue rec.log_id) )
         , ( "nip", Json.Encode.string (NIP.toString rec.nip) )
         , ( "process_id", Json.Encode.string (ProcessID.toValue rec.process_id) )
+        , ( "type", Json.Encode.string rec.type_ )
         ]
 
 

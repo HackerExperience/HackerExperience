@@ -223,6 +223,16 @@ updateEvent state event_ =
             in
             ( replaceUniverse state newModel universe, Effect.none )
 
+        Event.LogEdited event universe ->
+            let
+                game =
+                    getUniverse state universe
+
+                newModel =
+                    Game.onLogEditedEvent game event
+            in
+            ( replaceUniverse state newModel universe, Effect.none )
+
         Event.ProcessCompleted event universe ->
             let
                 game =

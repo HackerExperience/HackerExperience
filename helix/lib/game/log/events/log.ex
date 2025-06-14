@@ -161,15 +161,19 @@ defmodule Game.Events.Log do
           schema(%{
             nip: nip(),
             log_id: external_id(),
-            process_id: external_id()
+            process_id: external_id(),
+            type: binary(),
+            direction: binary(),
+            data: binary()
           }),
-          [:nip, :log_id, :process_id]
+          [:nip, :log_id, :process_id, :type, :direction, :data]
         )
       end
 
       def generate_payload(%{data: %{process: process, log: log}}) do
         entity_id = process.entity_id
         server_id = process.server_id
+        data_mod = Log.data_mod({log.type, log.direction})
 
         %{nip: nip} = Svc.NetworkConnection.fetch!(by_server_id: server_id)
 
@@ -177,7 +181,10 @@ defmodule Game.Events.Log do
           %{
             nip: NIP.to_external(nip),
             log_id: log.id |> ID.to_external(entity_id, server_id),
-            process_id: process.id |> ID.to_external(entity_id, server_id)
+            process_id: process.id |> ID.to_external(entity_id, server_id),
+            type: "#{log.type}",
+            direction: "#{log.direction}",
+            data: data_mod.render(log.data) |> :json.encode() |> to_string()
           }
 
         {:ok, payload}

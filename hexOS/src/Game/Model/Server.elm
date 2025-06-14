@@ -9,6 +9,7 @@ module Game.Model.Server exposing
     , invalidServer
     , listLogs
     , onLogDeletedEvent
+    , onLogEditedEvent
     , onProcessCompletedEvent
     , onProcessCreatedEvent
     , onTunnelCreatedEvent
@@ -230,6 +231,11 @@ handleProcessOperationLog operation server =
 onLogDeletedEvent : Events.LogDeleted -> Server -> Server
 onLogDeletedEvent event server =
     { server | logs = Log.onLogDeletedEvent event server.logs }
+
+
+onLogEditedEvent : Events.LogEdited -> Server -> Server
+onLogEditedEvent event server =
+    { server | logs = Log.onLogEditedEvent event server.logs }
 
 
 onProcessCompletedEvent : Events.ProcessCompleted -> Server -> ( Server, Action )

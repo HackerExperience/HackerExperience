@@ -11,6 +11,7 @@ module Game exposing
     , handleProcessOperation
     , init
     , onLogDeletedEvent
+    , onLogEditedEvent
     , onProcessCompletedEvent
     , onProcessCreatedEvent
     , onTunnelCreatedEvent
@@ -266,6 +267,11 @@ getAllTunnels model =
 onLogDeletedEvent : Model -> Events.LogDeleted -> Model
 onLogDeletedEvent model event =
     updateServer event.nip (Server.onLogDeletedEvent event) model
+
+
+onLogEditedEvent : Model -> Events.LogEdited -> Model
+onLogEditedEvent model event =
+    updateServer event.nip (Server.onLogEditedEvent event) model
 
 
 onProcessCompletedEvent : Model -> Events.ProcessCompleted -> ( Model, Action )
