@@ -30,8 +30,6 @@ import WM
 type Msg
     = ToOS OS.Bus.Action
     | ToCtxMenu CtxMenu.Msg
-    | SelectLog LogID
-    | DeselectLog
     | OnDeleteLog Log
     | OnDeleteLogResponse LogID API.Types.LogDeleteResult
     | OnRequestOpenEditPopup Log
@@ -40,7 +38,6 @@ type Msg
 type alias Model =
     { appId : AppID
     , nip : NIP
-    , selectedLog : Maybe LogID
     }
 
 
@@ -68,12 +65,6 @@ filterLogs model game =
 update : Game.Model -> Msg -> Model -> ( Model, Effect Msg )
 update game msg model =
     case msg of
-        SelectLog logId ->
-            ( { model | selectedLog = Just logId }, Effect.none )
-
-        DeselectLog ->
-            ( { model | selectedLog = Nothing }, Effect.none )
-
         OnDeleteLog log ->
             let
                 server =
@@ -271,7 +262,6 @@ vLogRow log =
 
           else
             UI.emptyAttr
-        , HE.onClick <| SelectLog log.id
         , HA.map ToCtxMenu (CtxMenu.event <| CtxMenu.LogViewer <| CtxMenu.LVEntryMenu log)
         ]
         [ dateTime
@@ -354,7 +344,6 @@ didOpen { appId, sessionId } _ =
     in
     ( { appId = appId
       , nip = nip
-      , selectedLog = Nothing
       }
     , Effect.none
     )
