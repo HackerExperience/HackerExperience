@@ -70,7 +70,8 @@ defmodule Test.Setup.Log do
     %{
       server_id: Kw.get(opts, :server_id, Random.int()),
       log_id: Kw.get(opts, :log_id, Random.int()),
-      revision_id: Kw.get(opts, :revision_id, 1)
+      revision_id: Kw.get(opts, :revision_id, 1),
+      source: Kw.get(opts, :source, :self)
     }
   end
 end

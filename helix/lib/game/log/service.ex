@@ -66,7 +66,7 @@ defmodule Game.Services.Log do
         |> Map.put(:revision_id, 1)
 
       with {:ok, log} <- insert_log(server_id, params),
-           {:ok, _log_visibility} <- insert_visibility(entity_id, server_id, log) do
+           {:ok, _log_visibility} <- insert_visibility(entity_id, server_id, log, :self) do
         {:ok, log}
       else
         error ->
@@ -86,7 +86,7 @@ defmodule Game.Services.Log do
         |> Map.put(:revision_id, last_revision_id + 1)
 
       with {:ok, log} <- insert_log(server_id, params),
-           {:ok, _log_visibility} <- insert_visibility(entity_id, server_id, log) do
+           {:ok, _log_visibility} <- insert_visibility(entity_id, server_id, log, :edit) do
         {:ok, log}
       else
         error ->
@@ -112,12 +112,13 @@ defmodule Game.Services.Log do
     end)
   end
 
-  defp insert_visibility(entity_id, server_id, %Log{} = log) do
+  defp insert_visibility(entity_id, server_id, %Log{} = log, source) do
     Core.with_context(:player, entity_id, :write, fn ->
       %{
         server_id: server_id,
         log_id: log.id,
-        revision_id: log.revision_id
+        revision_id: log.revision_id,
+        source: source
       }
       |> LogVisibility.new()
       |> DB.insert()

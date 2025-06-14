@@ -25,7 +25,8 @@ defmodule Game.Index.Log do
            revision_id: integer(),
            type: String.t(),
            direction: String.t(),
-           data: String.t()
+           data: String.t(),
+           source: String.t()
          }
 
   def spec do
@@ -48,9 +49,10 @@ defmodule Game.Index.Log do
         revision_id: integer(),
         type: binary(),
         direction: binary(),
-        data: binary()
+        data: binary(),
+        source: binary()
       }),
-      [:revision_id, :type, :direction, :data]
+      [:revision_id, :type, :direction, :data, :source]
     )
   end
 
@@ -67,12 +69,12 @@ defmodule Game.Index.Log do
 
     # Group visible logs based on their revisions
     visible_logs =
-      Enum.reduce(visible_logs, {%{}, 1, nil}, fn [log_id, real_revision_id],
+      Enum.reduce(visible_logs, {%{}, 1, nil}, fn [log_id, real_revision_id, source],
                                                   {acc, personal_revision_counter, prev_log_id} ->
         # Increment the rev counter if this log is the same as the previous one; reset otherwise
         personal_revision_counter = (log_id == prev_log_id && personal_revision_counter + 1) || 1
 
-        entry = {log_id, personal_revision_counter, real_revision_id}
+        entry = {log_id, personal_revision_counter, real_revision_id, source}
         new_acc = Map.put(acc, log_id, [entry | Map.get(acc, log_id, [])])
         {new_acc, personal_revision_counter, log_id}
       end)
@@ -83,9 +85,9 @@ defmodule Game.Index.Log do
     Core.with_context(:server, server_id, :read, fn ->
       Enum.map(visible_logs, fn {log_group_id, revisions_ids} ->
         revisions =
-          Enum.map(revisions_ids, fn {log_id, personal_revision_id, revision_id} ->
+          Enum.map(revisions_ids, fn {log_id, personal_revision_id, revision_id, source} ->
             log = Svc.Log.fetch(server_id, by_id_and_revision_id: {log_id, revision_id})
-            {log, personal_revision_id}
+            {log, personal_revision_id, source}
           end)
 
         {log_group_id, revisions}
@@ -101,7 +103,7 @@ defmodule Game.Index.Log do
 
   defp render_log({_, revisions}, entity_id) do
     # For the purposes of "parent" log, it doesn't matter which log we pick
-    {parent_log, _} = List.first(revisions)
+    {parent_log, _, _} = List.first(revisions)
 
     %{
       id: ID.to_external(parent_log.id, entity_id, parent_log.server_id),
@@ -111,14 +113,15 @@ defmodule Game.Index.Log do
     }
   end
 
-  defp render_revision({%Log{} = log, personal_revision_id}) do
+  defp render_revision({%Log{} = log, personal_revision_id, visibility_source}) do
     data_mod = Log.data_mod({log.type, log.direction})
 
     %{
       revision_id: personal_revision_id,
       type: "#{log.type}",
       direction: "#{log.direction}",
-      data: data_mod.render(log.data) |> :json.encode() |> to_string()
+      data: data_mod.render(log.data) |> :json.encode() |> to_string(),
+      source: "#{visibility_source}"
     }
   end
 end

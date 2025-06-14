@@ -4,9 +4,9 @@
 
 -- :__insert
 INSERT INTO log_visibilities
-  (server_id, log_id, revision_id, inserted_at)
+  (server_id, log_id, revision_id, source, inserted_at)
 VALUES
-  (?, ?, ?, ?)
+  (?, ?, ?, ?, ?)
 RETURNING *;
 
 --------------------------------------------------------------------------------
@@ -15,7 +15,7 @@ RETURNING *;
 
 
 -- :by_server_ordered
-SELECT log_id, revision_id
+SELECT log_id, revision_id, source
 FROM log_visibilities
 WHERE server_id = ?
 ORDER BY log_id DESC, revision_id ASC

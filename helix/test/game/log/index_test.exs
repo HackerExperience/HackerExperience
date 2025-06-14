@@ -21,17 +21,17 @@ defmodule Game.Index.LogTest do
       _other_log_2 = Setup.log!(other_server.id, id: 2)
 
       # `entity` can see both logs, but won't see log from other entity. Order is correct
-      assert [{2, [{gtw_log_2, 1}]}, {1, [{gtw_log_1, 1}]}] ==
+      assert [{2, [{gtw_log_2, 1, "self"}]}, {1, [{gtw_log_1, 1, "self"}]}] ==
                Index.Log.index(entity.id, gateway.id)
 
       # `other_entity` can only see her log
-      assert [{3, [{gtw_log_3, 1}]}] == Index.Log.index(other_entity.id, gateway.id)
+      assert [{3, [{gtw_log_3, 1, "self"}]}] == Index.Log.index(other_entity.id, gateway.id)
 
       # `entity` cannot see any logs in `other_server`
       assert [] == Index.Log.index(entity.id, other_server.id)
 
       # `other_entity` can see her only log in her gateway
-      assert [{1, [{other_log_1, 1}]}] == Index.Log.index(other_entity.id, other_server.id)
+      assert [{1, [{other_log_1, 1, "self"}]}] == Index.Log.index(other_entity.id, other_server.id)
     end
 
     test "handles scenario where player has access to multiple revisions from the same log" do
@@ -54,11 +54,11 @@ defmodule Game.Index.LogTest do
 
       # We got back revisions 4 and 3 from log 2, which correspond to personal revisions 2 and 1
       assert log_2_raw_id == log_2.id.id
-      assert [{log_2_rev_4, 2}, {log_2_rev_3, 1}] == log_2_entries
+      assert [{log_2_rev_4, 2, "self"}, {log_2_rev_3, 1, "self"}] == log_2_entries
 
       # We got back revisions 2 and 1 from log 1, which correspond to personal revisions 2 and 1
       assert log_1_raw_id == log_1.id.id
-      assert [{log_1_rev_2, 2}, {log_1, 1}] == log_1_entries
+      assert [{log_1_rev_2, 2, "self"}, {log_1, 1, "self"}] == log_1_entries
     end
   end
 

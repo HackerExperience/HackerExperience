@@ -71,6 +71,7 @@ defmodule Game.Services.LogTest do
       assert visibility_1.entity_id == entity.id
       assert visibility_1.server_id == server.id
       assert visibility_1.revision_id.id == 1
+      assert visibility_1.source == :self
     end
   end
 
@@ -102,10 +103,12 @@ defmodule Game.Services.LogTest do
       assert visibility_2.log_id == log.id
       assert visibility_2.entity_id == entity.id
       assert visibility_2.server_id == server.id
+      assert visibility_2.source == :edit
 
       assert visibility_3.log_id == log.id
       assert visibility_3.entity_id == entity.id
       assert visibility_3.server_id == server.id
+      assert visibility_3.source == :edit
     end
   end
 
