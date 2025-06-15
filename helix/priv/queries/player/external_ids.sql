@@ -2,9 +2,6 @@
 ----------------------------------- SELECTS ------------------------------------
 --------------------------------------------------------------------------------
 
--- :__fetch
-SELECT * FROM external_ids WHERE external_id = ?;
-
 -- :by_internal_id_nodomain
 SELECT * FROM external_ids WHERE object_id = ? AND object_type = ? LIMIT 1;
 

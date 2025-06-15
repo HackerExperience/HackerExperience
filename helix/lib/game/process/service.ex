@@ -40,7 +40,8 @@ defmodule Game.Services.Process do
   """
   def list(%Server.ID{} = server_id, filter_params, opts \\ []) do
     filters = [
-      query: &query/1
+      query: &query/1,
+      by_entity: {:all, {:processes, :by_entity}}
     ]
 
     Core.with_context(:server, server_id, :read, fn ->
@@ -82,7 +83,8 @@ defmodule Game.Services.Process do
     filters = [
       query: &registry_query/1,
       by_src_file_id: {:all, {:processes_registry, :by_src_file_id}},
-      by_tgt_file_id: {:all, {:processes_registry, :by_tgt_file_id}}
+      by_tgt_file_id: {:all, {:processes_registry, :by_tgt_file_id}},
+      by_tgt_log_id: {:all, {:processes_registry, :by_tgt_log_id}}
     ]
 
     Core.Fetch.query(filter_params, opts, filters)
@@ -183,9 +185,7 @@ defmodule Game.Services.Process do
     end)
 
     Core.with_context(:universe, :write, fn ->
-      # This is TODO. FeebDB needs to support delete based on query (like Repo.delete_all)
-      process_registry = fetch_registry!(by_process: process)
-      DB.delete!({:processes_registry, :delete}, process_registry, [process.server_id, process.id])
+      DB.delete_all!({:processes_registry, :delete}, [process.server_id, process.id])
     end)
 
     event =
@@ -226,13 +226,13 @@ defmodule Game.Services.Process do
   end
 
   defp query(:all),
-    do: DB.all({:processes, :__all}, [])
+    do: DB.all(Process)
 
   defp registry_query(:servers_with_processes),
-    do: DB.all({:processes_registry, :servers_with_processes}, [], format: :type)
+    do: DB.all({:processes_registry, :servers_with_processes}, [], format: :map)
 
   defp registry_query(:all),
-    do: DB.all({:processes_registry, :__all}, [])
+    do: DB.all(ProcessRegistry, [])
 
   defp query_registry_by_process(%Process{id: process_id, server_id: server_id}),
     do: DB.one({:processes_registry, :fetch}, [server_id, process_id])

@@ -41,8 +41,7 @@ defmodule Helix.MixProject do
   defp elixirc_paths(:test), do: ["lib", "test/support"]
   defp elixirc_paths(_), do: ["lib"]
 
-  defp extra_applications(:dev), do: [:observer, :wx, :eex]
-  defp extra_applications(:test), do: [:observer, :wx]
+  defp extra_applications(env) when env in [:dev, :test], do: [:observer, :wx]
   defp extra_applications(_), do: []
 
   # Specifies your project dependencies.

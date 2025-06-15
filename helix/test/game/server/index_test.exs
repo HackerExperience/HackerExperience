@@ -22,6 +22,7 @@ defmodule Game.Index.ServerTest do
       # Keys have the expected values
       assert index.nip == endp_nip
       assert index.logs == []
+      assert index.processes == []
     end
   end
 

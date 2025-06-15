@@ -7,7 +7,8 @@ type Manifest
     | RemoteAccessApp
     | DemoApp
       -- Popups
-    | PopupConfirmationDialog
+    | PopupLogEdit
+    | PopupConfirmationPrompt
     | PopupDemoSingleton
 
 
@@ -26,7 +27,10 @@ getName app =
         InvalidApp ->
             "Invalid App"
 
-        PopupConfirmationDialog ->
+        PopupLogEdit ->
+            "Log Edit"
+
+        PopupConfirmationPrompt ->
             "Popup"
 
         PopupDemoSingleton ->

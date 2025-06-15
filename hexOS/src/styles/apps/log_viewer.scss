@@ -16,9 +16,25 @@
 }
 
 .a-log-row {
-    min-height: 50px;
-    padding: 5px 15px;
+    height: 44px;
+    padding: 5px 0px 5px 10px;
+    padding: 5px 10px;
     border-bottom: 1px solid prim-500();
+
+    color: white;
+    position: relative;
+
+    &:hover .a-log-row-actions {
+        display: flex;
+    }
+
+    &:hover .a-log-row-date {
+        color: white;
+    }
+
+    &:hover .a-lr-rs-selector {
+        display: flex;
+    }
 }
 
 .a-log-row:nth-child(odd) {
@@ -31,17 +47,44 @@
 
 .a-log-row:hover {
     background-color: sec-700();
-    cursor: pointer;
 }
 
 .a-log-row-date {
     min-width: 80px;
-    color: white;
     font-size: 12px;
+
+    display: flex;
+    align-items: center;
+
+    color: gray;
 }
 
-.a-log-row-date-microseconds {
-    color: white;
+.a-log-row-badges {
+    align-items: center;
+    justify-content: center;
+    margin: auto 0 auto 7px;
+
+    .ui-icon {
+        font-size: 16px;
+    }
+
+    // TODO: Move to a UI.Spinner component
+    .a-lr-badge-spinner {
+        color: grey;
+        animation: spin 2s linear infinite;
+    }
+
+    .a-lr-badge-broken {
+        color: yellow;
+    }
+
+    .a-lr-badge-deleted {
+        color: red;
+    }
+
+    .a-lr-badge-broken + .a-lr-badge-deleted {
+        margin-left: 7px;
+    }
 }
 
 .a-log-row-text {
@@ -51,36 +94,119 @@
     text-overflow: ellipsis;
     white-space: nowrap;
     margin: auto 0 auto 7px;
+    flex: 1;
 }
 
 .a-log-row-internal-separator {
     margin-left: 7px;
-    border-left: 1px solid var(--c-1-darker);
+    border-left: 1px solid sec-600();
 }
 
-.a-log-row-vertical-separator {
-    width: 90%;
-    margin: 10px auto 10px auto;
-    border-top: 1px solid var(--c-1-darker);
+.a-log-row-revselector {
+    align-items: center;
+
+    border: 1px solid sec-400();
+    padding: 0 4px;
+
+    .ui-span {
+        padding: 0 s-1();
+    }
 }
 
-.a-log-srow {
-    padding: 5px 15px;
-    border-bottom: 1px solid var(--c-1);
-    background: var(--c-1-darkest-a75);
+.a-lr-rs-selector {
+    margin-left: s-2();
+    display: none;
 }
 
-.a-log-srow:hover {
-    background: var(--c-1-darkest-a85);
-    cursor: pointer;
+// NOTE: This is likely a temporary implementation for the arrows
+.a-lr-rs-arrow {
+    border: solid white;
+    border-width: 0 3px 3px 0;
+    display: inline-block;
+    padding: 3px;
 }
 
-.a-log-srow-body {
-    min-height: 50px;
-    padding: 5px 0;
+.a-lr-rs-up {
+    transform: rotate(-135deg);
+
+    &:hover {
+        cursor: pointer;
+    }
 }
 
-.a-log-srow-actions {
-    color: var(--c-1-dark);
-    min-height: 50px;
+.a-lr-rs-down {
+    transform: rotate(45deg);
+
+    &:hover {
+        cursor: pointer;
+    }
+}
+
+.a-lr-rs-limit {
+    border: solid grey;
+    border-width: 0 3px 3px 0;
+
+    &:hover {
+        cursor: default;
+    }
+}
+
+.a-log-row-actions {
+    right: 0;
+    margin-right: -5px;
+    padding-left: 5px;
+    top: 0px;
+    height: 100%;
+    display: none;
+
+    justify-content: center;
+    align-items: center;
+    align-self: center;
+}
+
+.a-lr-action-entry {
+    height: 100%;
+    width: 30px;
+
+    .ui-icon {
+        font-size: 18px;
+        padding: 0px 4px;
+        height: 100%;
+
+        display: flex;
+        justify-content: flex-start;
+        align-items: center;
+    }
+
+    &:hover .ui-icon {
+        cursor: pointer;
+        text-shadow: 0 0 2px #fff, 0 0 0px #fff, 0 0 0px #fff;
+    }
+}
+
+.a-lr-action-entry + .a-lr-action-entry {
+    margin-left: 0px;
+}
+
+.a-log-row-deleted {
+    // We need !important because the :nth-child rules also set the background
+    background: repeating-linear-gradient(
+        -45deg,
+        rgba(255, 0, 0, 0.2),
+        rgba(255, 0, 0, 0.2) 5px,
+        transparent 5px,
+        transparent 10px
+    ) !important;
+
+    .a-log-row-text {
+        opacity: 0.4;
+        text-decoration: line-through;
+    }
+
+    &:hover {
+        .a-log-row-text {
+            opacity: 1;
+            text-decoration: none;
+        }
+    }
 }

@@ -1,13 +1,18 @@
 module StateTest exposing (suite)
 
+import Event exposing (Event)
 import Game.Bus exposing (Action(..))
+import Game.Model.LogID as LogID
 import Game.Model.NIP as NIP
 import Game.Msg exposing (Msg(..))
 import Game.Universe as Universe exposing (Universe(..))
 import State
 import TestHelpers.Expect as E
 import TestHelpers.Game as TG
+import TestHelpers.Mocks.Events as Mocks
 import TestHelpers.Models as TM
+import TestHelpers.Models.Log as TMLog
+import TestHelpers.Models.Server as TMServer
 import TestHelpers.Random as TR
 import TestHelpers.Test exposing (Test, describe, test)
 import WM
@@ -22,7 +27,9 @@ suite =
 msgTests : Test
 msgTests =
     describe "Msg"
-        [ msgPerformActionTests ]
+        [ msgPerformActionTests
+        , msgOnEventReceivedTests
+        ]
 
 
 msgPerformActionTests : Test
@@ -35,7 +42,7 @@ msgPerformActionTests =
                         -- We are initially at SP
                         initialState =
                             TM.state
-                                |> TM.stateWithUniverse Singleplayer
+                                |> TM.withUniverse Singleplayer
 
                         otherNip =
                             NIP.fromString "0@1.1.1.1"
@@ -65,6 +72,68 @@ msgPerformActionTests =
                         , E.equal newState.sp.activeGateway initialState.sp.activeGateway
 
                         -- No effects
+                        , E.effectNone effect
+                        ]
+            ]
+        ]
+
+
+msgOnEventReceivedTests : Test
+msgOnEventReceivedTests =
+    describe "OnEventReceived"
+        [ describe "Event.LogDeleted"
+            [ test "flags the log as deleted" <|
+                \_ ->
+                    let
+                        idxLog =
+                            Mocks.idxLog
+
+                        log =
+                            TMLog.fromIndex idxLog
+
+                        server =
+                            TMServer.new
+                                |> TMServer.withLogs [ log ]
+
+                        gateway =
+                            TMServer.gatewayFromServer server
+
+                        game =
+                            TM.game
+                                |> TM.withServer server
+                                |> TM.withGateway gateway
+
+                        -- Initial state with a single log
+                        initialState =
+                            TM.state
+                                |> TM.withGame game
+
+                        logId =
+                            LogID.fromValue idxLog.id
+
+                        -- We'll simulate this log being deleted
+                        logDeletedEv =
+                            Mocks.logDeleted
+                                |> Mocks.withLog_id logId
+
+                        event =
+                            Event.LogDeleted logDeletedEv initialState.currentUniverse
+
+                        ( newState, effect ) =
+                            State.update (OnEventReceived event) initialState
+
+                        newLog =
+                            newState
+                                |> TM.getGame
+                                |> TM.getServer server.nip
+                                |> .logs
+                                |> TMLog.getLog logId
+                    in
+                    E.batch
+                        [ -- Initially, the log was not deleted
+                          E.false log.isDeleted
+                        , -- Now it is marked as deleted
+                          E.true newLog.isDeleted
                         , E.effectNone effect
                         ]
             ]

@@ -2,6 +2,7 @@ module Apps.RemoteAccess exposing (..)
 
 import API.Game as GameAPI
 import API.Types
+import Apps.Input as App
 import Apps.Manifest as App
 import Effect exposing (Effect)
 import Game
@@ -149,13 +150,13 @@ getWindowConfig _ =
     }
 
 
-willOpen : WM.WindowInfo -> OS.Bus.Action
-willOpen _ =
-    OS.Bus.OpenApp App.RemoteAccessApp Nothing
+willOpen : WM.WindowInfo -> App.InitialInput -> OS.Bus.Action
+willOpen _ input =
+    OS.Bus.OpenApp App.RemoteAccessApp Nothing input
 
 
-didOpen : WM.WindowInfo -> ( Model, Effect Msg )
-didOpen _ =
+didOpen : WM.WindowInfo -> App.InitialInput -> ( Model, Effect Msg )
+didOpen _ _ =
     ( { ip = FormFields.text
       , password = FormFields.text
       }
@@ -177,8 +178,14 @@ willFocus appId _ =
 -- Children
 
 
-willOpenChild : Model -> App.Manifest -> WM.Window -> WM.WindowInfo -> OS.Bus.Action
-willOpenChild _ _ _ _ =
+willOpenChild :
+    Model
+    -> App.Manifest
+    -> WM.Window
+    -> WM.WindowInfo
+    -> App.InitialInput
+    -> OS.Bus.Action
+willOpenChild _ _ _ _ _ =
     OS.Bus.NoOp
 
 
@@ -186,8 +193,9 @@ didOpenChild :
     Model
     -> ( App.Manifest, AppID )
     -> WM.WindowInfo
+    -> App.InitialInput
     -> ( Model, Effect Msg, OS.Bus.Action )
-didOpenChild model _ _ =
+didOpenChild model _ _ _ =
     ( model, Effect.none, OS.Bus.NoOp )
 
 

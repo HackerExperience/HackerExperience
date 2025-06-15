@@ -24,6 +24,7 @@ type alias Props =
 type alias Opts msg =
     { spin : Bool
     , onClick : Maybe msg
+    , class : Maybe String
     }
 
 
@@ -31,6 +32,7 @@ defaultOpts : Opts msg
 defaultOpts =
     { spin = False
     , onClick = Nothing
+    , class = Nothing
     }
 
 
@@ -49,6 +51,11 @@ withOnClick msg (Icon props opts) =
     Icon props { opts | onClick = Just msg }
 
 
+withClass : String -> Icon msg -> Icon msg
+withClass class (Icon props opts) =
+    Icon props { opts | class = Just class }
+
+
 toUI : Icon msg -> UI msg
 toUI icon =
     case getProvider icon of
@@ -64,9 +71,10 @@ toUI icon =
 
 
 toUIMSOutline : Icon msg -> UI msg
-toUIMSOutline (Icon { glyph } { onClick }) =
+toUIMSOutline (Icon { glyph } { class, onClick }) =
     H.span
         [ cl "ui-icon material-symbols-outlined"
+        , maybeAddCustomClass class
         , maybeAddClickHandler onClick
         ]
         [ H.text glyph ]
@@ -86,6 +94,16 @@ maybeAddClickHandler onClick =
     case onClick of
         Just msg ->
             HE.onClick msg
+
+        Nothing ->
+            UI.emptyAttr
+
+
+maybeAddCustomClass : Maybe String -> UI.Attribute msg
+maybeAddCustomClass class =
+    case class of
+        Just class_ ->
+            cl class_
 
         Nothing ->
             UI.emptyAttr

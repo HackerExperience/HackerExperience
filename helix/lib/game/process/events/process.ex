@@ -35,6 +35,32 @@ defmodule Game.Events.Process do
       }
       |> Event.new()
     end
+
+    defmodule Publishable do
+      use Core.Event.Publishable.Definition
+      alias Game.Process.Viewable
+
+      def spec do
+        Viewable.spec(:nip)
+      end
+
+      def generate_payload(%{data: %{process: process}}) do
+        %{nip: nip} = Svc.NetworkConnection.fetch!(by_server_id: process.server_id)
+
+        payload =
+          process
+          |> Viewable.render(process.entity_id)
+          |> Map.merge(%{nip: NIP.to_external(nip)})
+
+        {:ok, payload}
+      end
+
+      @doc """
+      Only the Process owner receives this event.
+      """
+      def whom_to_publish(%{data: %{process: %{entity_id: entity_id}}}),
+        do: %{player: entity_id}
+    end
   end
 
   defmodule Completed do
@@ -76,17 +102,22 @@ defmodule Game.Events.Process do
 
     defmodule Publishable do
       use Core.Event.Publishable.Definition
+      alias Game.Process.Viewable
 
-      # TODO: server NIP should be included here
       def spec do
-        selection(
-          schema(%{process_id: external_id()}),
-          [:process_id]
-        )
+        Viewable.spec(:nip)
       end
 
-      def generate_payload(%{data: %{process: process}}),
-        do: {:ok, %{process_id: process.id |> ID.to_external(process.entity_id, process.server_id)}}
+      def generate_payload(%{data: %{process: process}}) do
+        %{nip: nip} = Svc.NetworkConnection.fetch!(by_server_id: process.server_id)
+
+        payload =
+          process
+          |> Viewable.render(process.entity_id)
+          |> Map.merge(%{nip: NIP.to_external(nip)})
+
+        {:ok, payload}
+      end
 
       @doc """
       Only the Process owner receives this event.

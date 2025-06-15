@@ -48,11 +48,16 @@ ignoreSdkFiles : Rule -> Rule
 ignoreSdkFiles =
     Rule.ignoreErrorsForFiles
         [ "src/API/Lobby/Api.elm"
+        , "src/API/Lobby/Json.elm"
         , "src/API/Game/Api.elm"
         , "src/API/Game/Types.elm"
         , "src/API/Game/Json.elm"
         , "src/API/Events/Types.elm"
         , "src/API/Events/Json.elm"
+        , "src/API/Logs/Types.elm"
+        , "src/API/Logs/Json.elm"
+        , "src/API/Processes/Types.elm"
+        , "src/API/Processes/Json.elm"
         ]
 
 
@@ -94,12 +99,13 @@ config =
             [ "src/UI.elm"
             , "src/Utils.elm"
             , "src/Effect.elm"
+            , "src/Game.elm"
             , "src/DevTools/ReviewBypass.elm"
             ]
         -- Below ignored files are WIP and should eventually be fixed (either used or removed)
         |> Rule.ignoreErrorsForFiles [ "src/Common/Assets.elm" ]
     , NoUnused.Parameters.rule
-        |> Rule.ignoreErrorsForDirectories [ "src/API/Lobby", "src/API/Game" ]
+        |> ignoreSdkFiles
     , NoUnused.Patterns.rule
         |> Rule.ignoreErrorsForDirectories [ "src/OpenApi" ]
         -- WIP files; remove when no longer WIP
@@ -128,6 +134,7 @@ config =
         |> Rule.ignoreErrorsForFiles
             [ "src/Game/Model/LogID.elm"
             , "src/Game/Model/TunnelID.elm"
+            , "src/Game/Model/ProcessID.elm"
             , "src/Game/Model/NIP.elm"
             ]
         -- Below files are wrong and should eventually be fixed
@@ -170,7 +177,7 @@ rulesThatAreRecommendedButIIgnoredThem =
             [ "src/Game.elm"
             , "src/Main.elm"
             , "src/Apps/Popups/DemoSingleton.elm"
-            , "src/Apps/Popups/ConfirmationDialog.elm"
+            , "src/Apps/Popups/ConfirmationPrompt.elm"
             , "src/UI/Button.elm"
             , "src/API/Types.elm"
             ]

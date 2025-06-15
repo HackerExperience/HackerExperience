@@ -73,6 +73,28 @@ components:
             properties:
               data:
                 $ref: '#/components/schemas/InstallationUninstallOutput'
+    LogDeleteOkResponse:
+      description: TODO description
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - data
+            properties:
+              data:
+                $ref: '#/components/schemas/LogDeleteOutput'
+    LogEditOkResponse:
+      description: TODO description
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - data
+            properties:
+              data:
+                $ref: '#/components/schemas/LogEditOutput'
     PlayerSyncOkResponse:
       description: TODO description
       content:
@@ -95,49 +117,6 @@ components:
             properties:
               data:
                 $ref: '#/components/schemas/ServerLoginOutput'
-  requestBodies:
-    FileDeleteRequest:
-      description: TODO description
-      required: true
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/FileDeleteInput'
-    FileInstallRequest:
-      description: TODO description
-      required: true
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/FileInstallInput'
-    FileTransferRequest:
-      description: TODO description
-      required: true
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/FileTransferInput'
-    InstallationUninstallRequest:
-      description: TODO description
-      required: true
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/InstallationUninstallInput'
-    PlayerSyncRequest:
-      description: TODO description
-      required: true
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/PlayerSyncInput'
-    ServerLoginRequest:
-      description: TODO description
-      required: true
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/ServerLoginInput'
   schemas:
     FileDeleteInput:
       type: object
@@ -189,11 +168,59 @@ components:
           type: string
         details:
           type: string
+    IdxProcess:
+      type: object
+      required:
+        - process_id
+        - type
+        - data
+      properties:
+        data:
+          type: string
+        type:
+          type: string
+        process_id:
+          type: string
     InstallationUninstallInput:
       type: object
       required: []
       properties: {}
     InstallationUninstallOutput:
+      type: object
+      required: []
+      properties: {}
+    LogDeleteInput:
+      type: object
+      required: []
+      properties:
+        tunnel_id:
+          type: string
+    LogDeleteOutput:
+      type: object
+      required:
+        - log_id
+        - process
+      properties:
+        process:
+          $ref: '#/components/schemas/IdxProcess'
+        log_id:
+          type: string
+    LogEditInput:
+      type: object
+      required:
+        - log_type
+        - log_direction
+        - log_data
+      properties:
+        log_data:
+          type: string
+        log_direction:
+          type: string
+        log_type:
+          type: string
+        tunnel_id:
+          type: string
+    LogEditOutput:
       type: object
       required: []
       properties: {}
@@ -217,6 +244,63 @@ components:
       type: object
       required: []
       properties: {}
+  requestBodies:
+    FileDeleteRequest:
+      description: TODO description
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/FileDeleteInput'
+    FileInstallRequest:
+      description: TODO description
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/FileInstallInput'
+    FileTransferRequest:
+      description: TODO description
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/FileTransferInput'
+    InstallationUninstallRequest:
+      description: TODO description
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/InstallationUninstallInput'
+    LogDeleteRequest:
+      description: TODO description
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/LogDeleteInput'
+    LogEditRequest:
+      description: TODO description
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/LogEditInput'
+    PlayerSyncRequest:
+      description: TODO description
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/PlayerSyncInput'
+    ServerLoginRequest:
+      description: TODO description
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ServerLoginInput'
   securitySchemes:
     AuthorizationToken:
       in: header
@@ -327,6 +411,52 @@ paths:
       operationId: InstallationUninstall
       requestBody:
         $ref: '#/components/requestBodies/InstallationUninstallRequest'
+  /v1/server/{nip}/log/{log_id}/delete:
+    post:
+      parameters:
+        - in: path
+          name: nip
+          description: ''
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: log_id
+          description: ''
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          $ref: '#/components/responses/LogDeleteOkResponse'
+      security:
+        - AuthorizationToken: []
+      operationId: LogDelete
+      requestBody:
+        $ref: '#/components/requestBodies/LogDeleteRequest'
+  /v1/server/{nip}/log/{log_id}/edit:
+    post:
+      parameters:
+        - in: path
+          name: nip
+          description: ''
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: log_id
+          description: ''
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          $ref: '#/components/responses/LogEditOkResponse'
+      security:
+        - AuthorizationToken: []
+      operationId: LogEdit
+      requestBody:
+        $ref: '#/components/requestBodies/LogEditRequest'
   /v1/server/{nip}/login/{target_nip}:
     post:
       parameters:

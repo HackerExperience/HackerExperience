@@ -38,4 +38,14 @@ defmodule Test.Process.NoopCPU do
 
   defmodule Executable do
   end
+
+  defmodule Viewable do
+    use Game.Process.Viewable.Definition
+
+    def spec do
+      selection(schema(%{}), [])
+    end
+
+    def render_data(_, _, _), do: %{}
+  end
 end

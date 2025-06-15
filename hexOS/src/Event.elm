@@ -9,13 +9,12 @@ import Game.Universe as Universe exposing (Universe)
 import Json.Decode as JD
 
 
-{-| TODO: Think about the event "scope". Most events happen within the scope of a Server.
-Sometimes, the scope is the Account. Or maybe the Clan. In any case, having the scope and the
-corresponding identifier (NIP in the case of remote server) will make the frontend life
-significantly easier
--}
 type Event
     = IndexRequested Events.IndexRequested Universe
+    | LogDeleted Events.LogDeleted Universe
+    | LogEdited Events.LogEdited Universe
+    | ProcessCompleted Events.ProcessCompleted Universe
+    | ProcessCreated Events.ProcessCreated Universe
     | TunnelCreated Events.TunnelCreated Universe
 
 
@@ -57,6 +56,22 @@ dataDecoder universe eventName =
                 "index_requested" ->
                     JD.map (\x -> IndexRequested x universe)
                         Events.decodeIndexRequested
+
+                "log_deleted" ->
+                    JD.map (\x -> LogDeleted x universe)
+                        Events.decodeLogDeleted
+
+                "log_edited" ->
+                    JD.map (\x -> LogEdited x universe)
+                        Events.decodeLogEdited
+
+                "process_completed" ->
+                    JD.map (\x -> ProcessCompleted x universe)
+                        Events.decodeProcessCompleted
+
+                "process_created" ->
+                    JD.map (\x -> ProcessCreated x universe)
+                        Events.decodeProcessCreated
 
                 "tunnel_created" ->
                     JD.map (\x -> TunnelCreated x universe)

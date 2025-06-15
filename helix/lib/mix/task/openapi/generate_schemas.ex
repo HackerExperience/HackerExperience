@@ -33,6 +33,8 @@ defmodule Mix.Tasks.Openapi.GenerateSchemas do
     generate_openapi_spec_file(:lobby, target_dir)
     generate_openapi_spec_file(:game, target_dir)
     generate_openapi_spec_file(:events, target_dir)
+    generate_openapi_spec_file(:processes, target_dir)
+    generate_openapi_spec_file(:logs, target_dir)
   end
 
   defp setup_env(target_dir) do
@@ -58,6 +60,18 @@ defmodule Mix.Tasks.Openapi.GenerateSchemas do
     Core.Event.Publishable.Spec.spec()
     |> SpecGenerator.generate()
     |> write_spec(:events, target_dir)
+  end
+
+  defp generate_openapi_spec_file(:processes, target_dir) do
+    Game.Process.Viewable.Spec.spec()
+    |> SpecGenerator.generate()
+    |> write_spec(:processes, target_dir)
+  end
+
+  defp generate_openapi_spec_file(:logs, target_dir) do
+    Game.Log.Data.Spec.spec()
+    |> SpecGenerator.generate()
+    |> write_spec(:logs, target_dir)
   end
 
   defp write_spec(spec, name, target_dir) do

@@ -15,7 +15,8 @@ defmodule Game.Process.Signalable.Definition do
         # TODO: I think the default for many of these signals should be :delete. It's safer and more
         # common, and the process that would like to change this behaviour can always customize it.
         {:on_sig_src_file_deleted, quote(do: :noop)},
-        {:on_sig_tgt_file_deleted, quote(do: :noop)}
+        {:on_sig_tgt_file_deleted, quote(do: :noop)},
+        {:on_sig_tgt_log_deleted, quote(do: :delete)}
       ]
 
     valid_handler_names = Enum.map(signal_handlers, &elem(&1, 0))

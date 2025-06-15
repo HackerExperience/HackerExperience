@@ -2,8 +2,8 @@
 
 
 module API.Game.Api exposing
-    ( fileDeleteTask, fileInstallTask, fileTransferTask, installationUninstallTask, playerSyncTask
-    , serverLoginTask
+    ( fileDeleteTask, fileInstallTask, fileTransferTask, installationUninstallTask, logDeleteTask, logEditTask
+    , playerSyncTask, serverLoginTask
     )
 
 {-|
@@ -11,15 +11,17 @@ module API.Game.Api exposing
 
 ## Operations
 
-@docs fileDeleteTask, fileInstallTask, fileTransferTask, installationUninstallTask, playerSyncTask
-@docs serverLoginTask
+@docs fileDeleteTask, fileInstallTask, fileTransferTask, installationUninstallTask, logDeleteTask, logEditTask
+@docs playerSyncTask, serverLoginTask
 
 -}
 
 import API.Game.Json
 import API.Game.Types
 import Dict
+import Game.Model.LogID as LogID exposing (LogID(..))
 import Game.Model.NIP as NIP exposing (NIP(..))
+import Game.Model.ProcessID as ProcessID exposing (ProcessID(..))
 import Game.Model.TunnelID as TunnelID exposing (TunnelID(..))
 import Http
 import Json.Decode
@@ -180,6 +182,71 @@ installationUninstallTask config =
         , body =
             Http.jsonBody
                 (API.Game.Json.encodeInstallationUninstallRequest config.body)
+        , timeout = Nothing
+        }
+
+
+logDeleteTask :
+    { server : String
+    , authorization : { authorization : String }
+    , body : API.Game.Types.LogDeleteRequest
+    , params : { nip : NIP, log_id : LogID }
+    }
+    -> Task.Task (OpenApi.Common.Error e String) API.Game.Types.LogDeleteOkResponse
+logDeleteTask config =
+    Http.task
+        { url =
+            Url.Builder.crossOrigin
+                config.server
+                [ "v1"
+                , "server"
+                , NIP.toString config.params.nip
+                , "log"
+                , LogID.toString config.params.log_id
+                , "delete"
+                ]
+                []
+        , method = "POST"
+        , headers =
+            [ Http.header "Authorization" config.authorization.authorization ]
+        , resolver =
+            OpenApi.Common.jsonResolverCustom
+                (Dict.fromList [])
+                API.Game.Json.decodeLogDeleteOkResponse
+        , body =
+            Http.jsonBody (API.Game.Json.encodeLogDeleteRequest config.body)
+        , timeout = Nothing
+        }
+
+
+logEditTask :
+    { server : String
+    , authorization : { authorization : String }
+    , body : API.Game.Types.LogEditRequest
+    , params : { nip : NIP, log_id : LogID }
+    }
+    -> Task.Task (OpenApi.Common.Error e String) API.Game.Types.LogEditOkResponse
+logEditTask config =
+    Http.task
+        { url =
+            Url.Builder.crossOrigin
+                config.server
+                [ "v1"
+                , "server"
+                , NIP.toString config.params.nip
+                , "log"
+                , LogID.toString config.params.log_id
+                , "edit"
+                ]
+                []
+        , method = "POST"
+        , headers =
+            [ Http.header "Authorization" config.authorization.authorization ]
+        , resolver =
+            OpenApi.Common.jsonResolverCustom
+                (Dict.fromList [])
+                API.Game.Json.decodeLogEditOkResponse
+        , body = Http.jsonBody (API.Game.Json.encodeLogEditRequest config.body)
         , timeout = Nothing
         }
 

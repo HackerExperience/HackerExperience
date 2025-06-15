@@ -17,9 +17,11 @@ Apps.Types... something to consider for the future.
 -- Maybe rename to OS.dispatcher? or something like that
 
 import Apps.Demo as Demo
+import Apps.Input as App
 import Apps.LogViewer as LogViewer
+import Apps.LogViewer.LogEditPopup as LogEditPopup
 import Apps.Manifest as App
-import Apps.Popups.ConfirmationDialog as ConfirmationDialog
+import Apps.Popups.ConfirmationPrompt as ConfirmationPrompt
 import Apps.Popups.DemoSingleton as DemoSingleton
 import Apps.RemoteAccess as RemoteAccess
 import Apps.Types as Apps
@@ -34,26 +36,29 @@ import WM
 -- app
 
 
-willOpen : App.Manifest -> WM.WindowInfo -> OS.Bus.Action
-willOpen app windowInfo =
+willOpen : App.Manifest -> WM.WindowInfo -> App.InitialInput -> OS.Bus.Action
+willOpen app windowInfo input =
     case app of
         App.InvalidApp ->
             OS.Bus.NoOp
 
         App.LogViewerApp ->
-            LogViewer.willOpen windowInfo
+            LogViewer.willOpen windowInfo input
 
         App.RemoteAccessApp ->
-            RemoteAccess.willOpen windowInfo
+            RemoteAccess.willOpen windowInfo input
 
         App.DemoApp ->
-            Demo.willOpen windowInfo
+            Demo.willOpen windowInfo input
 
-        App.PopupConfirmationDialog ->
-            ConfirmationDialog.willOpen windowInfo
+        App.PopupLogEdit ->
+            LogEditPopup.willOpen windowInfo input
+
+        App.PopupConfirmationPrompt ->
+            ConfirmationPrompt.willOpen windowInfo input
 
         App.PopupDemoSingleton ->
-            DemoSingleton.willOpen windowInfo
+            DemoSingleton.willOpen windowInfo input
 
 
 willOpenChild :
@@ -61,14 +66,21 @@ willOpenChild :
     -> Apps.Model
     -> WM.Window
     -> WM.WindowInfo
+    -> App.InitialInput
     -> OS.Bus.Action
-willOpenChild child parentModel parentWindow childWindowInfo =
+willOpenChild child parentModel parentWindow childWindowInfo input =
     case parentModel of
         Apps.InvalidModel ->
             OS.Bus.NoOp
 
         Apps.DemoModel model ->
-            Demo.willOpenChild model child parentWindow childWindowInfo
+            Demo.willOpenChild model child parentWindow childWindowInfo input
+
+        Apps.LogViewerModel model ->
+            LogViewer.willOpenChild model child parentWindow childWindowInfo input
+
+        Apps.PopupLogEditModel model ->
+            LogEditPopup.willOpenChild model child parentWindow childWindowInfo input
 
         _ ->
             OS.Bus.NoOp
@@ -78,13 +90,14 @@ didOpen :
     App.Manifest
     -> AppID
     -> WM.WindowInfo
+    -> App.InitialInput
     -> ( Apps.Model, Effect Apps.Msg )
-didOpen app appId windowInfo =
+didOpen app appId windowInfo input =
     let
         wrapMe appModel appMsg didOpenFn =
             let
                 ( iModel, iCmd ) =
-                    didOpenFn windowInfo
+                    didOpenFn windowInfo input
             in
             ( appModel iModel, Effect.map (appMsg appId) iCmd )
     in
@@ -112,11 +125,17 @@ didOpen app appId windowInfo =
                 Apps.DemoMsg
                 Demo.didOpen
 
-        App.PopupConfirmationDialog ->
+        App.PopupLogEdit ->
             wrapMe
-                Apps.PopupConfirmationDialogModel
-                Apps.PopupConfirmationDialogMsg
-                ConfirmationDialog.didOpen
+                Apps.PopupLogEditModel
+                Apps.PopupLogEditMsg
+                LogEditPopup.didOpen
+
+        App.PopupConfirmationPrompt ->
+            wrapMe
+                Apps.PopupConfirmationPromptModel
+                Apps.PopupConfirmationPromptMsg
+                ConfirmationPrompt.didOpen
 
         App.PopupDemoSingleton ->
             wrapMe
@@ -130,13 +149,14 @@ didOpenChild :
     -> Apps.Model
     -> ( App.Manifest, AppID )
     -> WM.WindowInfo
+    -> App.InitialInput
     -> ( Apps.Model, Effect Apps.Msg, OS.Bus.Action )
-didOpenChild parentId parentModel childInfo windowInfo =
+didOpenChild parentId parentModel childInfo windowInfo input =
     let
         wrapMe toAppModel toAppMsg didOpenChildFn =
             let
                 ( iModel, iCmd, action ) =
-                    didOpenChildFn childInfo windowInfo
+                    didOpenChildFn childInfo windowInfo input
             in
             ( toAppModel iModel, Effect.map (toAppMsg parentId) iCmd, action )
     in
@@ -164,8 +184,11 @@ didOpenChild parentId parentModel childInfo windowInfo =
 
         -- Default. All patterns below could be a catch-all, but we need to have an
         -- "extractModel" function for the first parameter
-        Apps.PopupConfirmationDialogModel model ->
-            ( Apps.PopupConfirmationDialogModel model, Effect.none, OS.Bus.NoOp )
+        Apps.PopupLogEditModel model ->
+            ( Apps.PopupLogEditModel model, Effect.none, OS.Bus.NoOp )
+
+        Apps.PopupConfirmationPromptModel model ->
+            ( Apps.PopupConfirmationPromptModel model, Effect.none, OS.Bus.NoOp )
 
         Apps.PopupDemoSingletonModel model ->
             ( Apps.PopupDemoSingletonModel model, Effect.none, OS.Bus.NoOp )
@@ -187,8 +210,11 @@ willClose window appModel =
             Demo.willClose window.appId model window
 
         -- Popups
-        Apps.PopupConfirmationDialogModel model ->
-            ConfirmationDialog.willClose window.appId model window
+        Apps.PopupLogEditModel model ->
+            LogEditPopup.willClose window.appId model window
+
+        Apps.PopupConfirmationPromptModel model ->
+            ConfirmationPrompt.willClose window.appId model window
 
         Apps.PopupDemoSingletonModel model ->
             DemoSingleton.willClose window.appId model window
@@ -233,8 +259,11 @@ didCloseChild parentId parentModel childInfo parentWindow =
 
         -- Default. All patterns below could be a catch-all, but we need to have an
         -- "extractModel" function for the first parameter
-        Apps.PopupConfirmationDialogModel model ->
-            ( Apps.PopupConfirmationDialogModel model, Effect.none, OS.Bus.NoOp )
+        Apps.PopupLogEditModel model ->
+            ( Apps.PopupLogEditModel model, Effect.none, OS.Bus.NoOp )
+
+        Apps.PopupConfirmationPromptModel model ->
+            ( Apps.PopupConfirmationPromptModel model, Effect.none, OS.Bus.NoOp )
 
         Apps.PopupDemoSingletonModel model ->
             ( Apps.PopupDemoSingletonModel model, Effect.none, OS.Bus.NoOp )
@@ -256,8 +285,11 @@ willFocus app appId window =
             Demo.willFocus appId window
 
         -- Popups
-        App.PopupConfirmationDialog ->
-            ConfirmationDialog.willFocus appId window
+        App.PopupLogEdit ->
+            LogEditPopup.willFocus appId window
+
+        App.PopupConfirmationPrompt ->
+            ConfirmationPrompt.willFocus appId window
 
         App.PopupDemoSingleton ->
             DemoSingleton.willFocus appId window
@@ -278,8 +310,11 @@ getWindowConfig windowInfo =
         App.DemoApp ->
             Demo.getWindowConfig windowInfo
 
-        App.PopupConfirmationDialog ->
-            ConfirmationDialog.getWindowConfig windowInfo
+        App.PopupLogEdit ->
+            LogEditPopup.getWindowConfig windowInfo
+
+        App.PopupConfirmationPrompt ->
+            ConfirmationPrompt.getWindowConfig windowInfo
 
         App.PopupDemoSingleton ->
             DemoSingleton.getWindowConfig windowInfo

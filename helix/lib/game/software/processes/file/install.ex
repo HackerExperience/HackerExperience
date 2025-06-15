@@ -83,4 +83,19 @@ defmodule Game.Process.File.Install do
     def source_file(_server_id, _entity_id, _params, %{file: %File{} = file}, _),
       do: file
   end
+
+  defmodule Viewable do
+    use Game.Process.Viewable.Definition
+
+    def spec do
+      selection(
+        schema(%{}),
+        []
+      )
+    end
+
+    def render_data(_, _, _) do
+      %{}
+    end
+  end
 end

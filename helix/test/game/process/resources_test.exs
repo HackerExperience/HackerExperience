@@ -44,4 +44,32 @@ defmodule Game.Process.ResourcesTest do
       assert_decimal_eq(per_share.ram, 5)
     end
   end
+
+  describe "overflow?/1" do
+    test "returns expected value based on usage, availability and error threshold" do
+      [
+        {-1, true},
+        {-0.1, true},
+        {-0.0001, false},
+        {0, false},
+        {1, false}
+      ]
+      |> Enum.each(fn {cpu, expected_result} ->
+        resources = %{cpu: cpu} |> Resources.from_map()
+
+        case expected_result do
+          true ->
+            assert {true, [:cpu]} == Resources.overflow?(resources)
+
+          false ->
+            refute Resources.overflow?(resources)
+        end
+      end)
+    end
+
+    test "returns a list of all overflowed resources" do
+      resources = Resources.from_map(%{cpu: -1, ram: -500, ulk: 0, dlk: 500})
+      assert {true, [:ram, :cpu]} = Resources.overflow?(resources)
+    end
+  end
 end

@@ -5,7 +5,9 @@ module Apps.Types exposing (..)
 
 import Apps.Demo as Demo
 import Apps.LogViewer as LogViewer
-import Apps.Popups.ConfirmationDialog as ConfirmationDialog
+import Apps.LogViewer.LogEditPopup as LogEditPopup
+import Apps.Popups.ConfirmationPrompt as ConfirmationPrompt
+import Apps.Popups.ConfirmationPrompt.Types as ConfirmationPrompt
 import Apps.Popups.DemoSingleton as DemoSingleton
 import Apps.RemoteAccess as RemoteAccess
 import OS.AppID exposing (AppID)
@@ -17,7 +19,8 @@ type Msg
     | RemoteAccessMsg AppID RemoteAccess.Msg
     | DemoMsg AppID Demo.Msg
       -- Popups
-    | PopupConfirmationDialogMsg AppID ConfirmationDialog.Msg
+    | PopupLogEditMsg AppID LogEditPopup.Msg
+    | PopupConfirmationPromptMsg AppID ConfirmationPrompt.Msg
     | PopupDemoSingletonMsg AppID DemoSingleton.Msg
 
 
@@ -27,5 +30,6 @@ type Model
     | RemoteAccessModel RemoteAccess.Model
     | DemoModel Demo.Model
       -- Popups
-    | PopupConfirmationDialogModel ConfirmationDialog.Model
+    | PopupLogEditModel LogEditPopup.Model
+    | PopupConfirmationPromptModel ConfirmationPrompt.Model
     | PopupDemoSingletonModel DemoSingleton.Model

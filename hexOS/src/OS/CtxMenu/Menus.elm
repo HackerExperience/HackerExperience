@@ -1,5 +1,7 @@
 module OS.CtxMenu.Menus exposing (..)
 
+import Game.Model.Log exposing (Log)
+
 
 type OSMenu
     = OSRootMenu
@@ -7,7 +9,7 @@ type OSMenu
 
 type LogViewerMenu
     = LVRootMenu
-    | LVEntryMenu
+    | LVEntryMenu Log
 
 
 type Menu

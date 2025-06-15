@@ -11,6 +11,7 @@
     "format": "elm-format src tests --validate",
     "test": "./tests/setup.sh && elm-test-rs --watch",
     "test:ci": "./tests/setup.sh && elm-test-rs",
+    "test:debug": "elm-test --watch",
     "elm-review": "./review/run_dev.sh",
     "elm-review:ci": "./review/run_ci.sh",
     "elm-review:suppress": "elm-review suppress",

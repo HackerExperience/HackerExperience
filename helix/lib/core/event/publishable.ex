@@ -17,6 +17,10 @@ defmodule Core.Event.Publishable do
 
     event_name = apply(ev_mod, :get_name, [])
     whom_to_publish = apply(publishable_mod, :whom_to_publish, [ev])
+
+    # TODO: `generate_payload` must be executed once _per_ outgoing entity
+    # This is also why it makes sense to have either "static" or "dynamic" payload (unless all
+    # payloads are dynamic). Or maybe it does, if *part* of the payload is static (e.g. nip)
     data = apply(publishable_mod, :generate_payload, [ev])
 
     # TODO: Enforce `raw_data` adheres to the contract

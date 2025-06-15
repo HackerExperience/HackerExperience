@@ -1,11 +1,19 @@
 module Game exposing
     ( Model
     , buildApiContext
+    , findEndpointServer
+    , findGatewayServer
     , getActiveEndpointNip
     , getActiveGateway
     , getGateway
     , getGateways
+    , getServer
+    , handleProcessOperation
     , init
+    , onLogDeletedEvent
+    , onLogEditedEvent
+    , onProcessCompletedEvent
+    , onProcessCreatedEvent
     , onTunnelCreatedEvent
     , switchActiveEndpoint
     , switchActiveGateway
@@ -15,11 +23,13 @@ import API.Events.Types as Events
 import API.Types
 import API.Utils
 import Dict exposing (Dict)
-import Dict.Extra as Dict
+import Game.Bus as Action exposing (Action)
 import Game.Model.NIP as NIP exposing (NIP, RawNIP)
-import Game.Model.Server as Server exposing (Endpoint, Gateway)
+import Game.Model.ProcessOperation as Operation exposing (Operation)
+import Game.Model.Server as Server exposing (Endpoint, Gateway, Server, ServerType(..))
 import Game.Model.Tunnel as Tunnel exposing (Tunnels)
 import Game.Universe exposing (Universe(..))
+import Maybe.Extra as Maybe
 
 
 type alias Model =
@@ -28,6 +38,7 @@ type alias Model =
     , activeGateway : NIP
     , gateways : Dict RawNIP Gateway
     , endpoints : Dict RawNIP Endpoint
+    , servers : Dict RawNIP Server
     , apiCtx : API.Types.InputContext
     }
 
@@ -38,19 +49,112 @@ type alias Model =
 
 init : API.Types.InputToken -> Universe -> Events.IndexRequested -> Model
 init token universe index =
+    let
+        gateways =
+            Server.parseGateways index.player.gateways
+    in
     { universe = universe
     , mainframeNip = index.player.mainframe_nip
     , activeGateway = index.player.mainframe_nip
-    , gateways = Server.parseGateways index.player.gateways
+    , gateways = gateways
     , endpoints = Server.parseEndpoints index.player.endpoints
+    , servers = Server.parseServers gateways index.player.gateways index.player.endpoints
     , apiCtx = buildApiContext token universe
     }
 
 
+
+-- Model > Server
+
+
+{-| Returns the Server, assuming it must exist.
+-}
+getServer : Model -> NIP -> Server
+getServer model nip =
+    findServer model nip
+        |> Maybe.withDefault Server.invalidServer
+
+
+{-| Returns the Server, if it exists.
+-}
+findServer : Model -> NIP -> Maybe Server
+findServer model nip =
+    Dict.get (NIP.toString nip) model.servers
+
+
+{-| Returns the Server, if it exists and if it's a Gateway.
+-}
+findGatewayServer : Model -> NIP -> Maybe Server
+findGatewayServer model nip =
+    findServer model nip
+        |> Maybe.filter (\server -> server.type_ == ServerGateway)
+
+
+{-| Returns the Server, if it exists and if it's a Endpoint.
+-}
+findEndpointServer : Model -> NIP -> Maybe Server
+findEndpointServer model nip =
+    findServer model nip
+        |> Maybe.filter (\server -> server.type_ == ServerEndpoint)
+
+
+{-| Updates the Server, if it exists. Perform a no-op if it doesn't.
+-}
+updateServer : NIP -> (Server -> Server) -> Model -> Model
+updateServer nip updater model =
+    let
+        newServers =
+            Dict.update
+                (NIP.toString nip)
+                (Maybe.map (\server -> updater server))
+                model.servers
+    in
+    { model | servers = newServers }
+
+
+updateServerWithAction : NIP -> (Server -> ( Server, Action )) -> Model -> ( Model, Action )
+updateServerWithAction nip updater model =
+    case findServer model nip of
+        Just server ->
+            doUpdateServerWithAction nip updater server model
+
+        Nothing ->
+            ( model, Action.ActionNoOp )
+
+
+doUpdateServerWithAction :
+    NIP
+    -> (Server -> ( Server, Action ))
+    -> Server
+    -> Model
+    -> ( Model, Action )
+doUpdateServerWithAction nip updater server model =
+    let
+        ( newServer, action ) =
+            updater server
+
+        newServers =
+            Dict.update
+                (NIP.toString nip)
+                (Maybe.map (\_ -> newServer))
+                model.servers
+    in
+    ( { model | servers = newServers }, action )
+
+
+
+-- Model > Gateway
+
+
 getGateway : Model -> NIP -> Gateway
 getGateway model nip =
-    Dict.get (NIP.toString nip) model.gateways
+    findGateway model nip
         |> Maybe.withDefault Server.invalidGateway
+
+
+findGateway : Model -> NIP -> Maybe Gateway
+findGateway model nip =
+    Dict.get (NIP.toString nip) model.gateways
 
 
 getGateways : Model -> List Gateway
@@ -101,12 +205,12 @@ switchActiveEndpoint newActiveEndpointNip model =
             getAllTunnels model
 
         tunnel =
-            Tunnel.findTunnelWithTargetNip tunnels newActiveEndpointNip
+            Tunnel.findTunnelByTargetNip tunnels newActiveEndpointNip
 
         gateway =
             case tunnel of
                 Just { sourceNip } ->
-                    findGatewayByNip model sourceNip
+                    getGateway model sourceNip
 
                 Nothing ->
                     Server.invalidGateway
@@ -117,22 +221,33 @@ switchActiveEndpoint newActiveEndpointNip model =
 
 
 
--- Model > Gateways
+-- Model > Processes
 
 
-maybeFindGatewayByNip : Model -> NIP -> Maybe Gateway
-maybeFindGatewayByNip model nip =
-    Dict.find (\_ gtw -> gtw.nip == nip) model.gateways
-        |> Maybe.map Tuple.second
+handleProcessOperation : Model -> NIP -> Operation -> Model
+handleProcessOperation model nip operation =
+    case operation of
+        Operation.Starting _ ->
+            defaultProcessStartingHandler model nip operation
+
+        Operation.Started _ _ ->
+            defaultProcessStartedHandler model nip operation
+
+        Operation.Finished _ _ ->
+            defaultProcessStartedHandler model nip operation
+
+        Operation.StartFailed _ ->
+            defaultProcessStartedHandler model nip operation
 
 
-{-| Returns the gateway with the corresponding NIP. This function assumes that the NIP will always
-exist. If there is a possibility it won't, use the `maybeFindGatewayByNip` variant.
--}
-findGatewayByNip : Model -> NIP -> Gateway
-findGatewayByNip model nip =
-    maybeFindGatewayByNip model nip
-        |> Maybe.withDefault Server.invalidGateway
+defaultProcessStartingHandler : Model -> NIP -> Operation -> Model
+defaultProcessStartingHandler model nip operation =
+    updateServer nip (Server.handleProcessOperation operation) model
+
+
+defaultProcessStartedHandler : Model -> NIP -> Operation -> Model
+defaultProcessStartedHandler model nip operation =
+    updateServer nip (Server.handleProcessOperation operation) model
 
 
 
@@ -149,11 +264,31 @@ getAllTunnels model =
 -- Event handlers
 
 
+onLogDeletedEvent : Model -> Events.LogDeleted -> Model
+onLogDeletedEvent model event =
+    updateServer event.nip (Server.onLogDeletedEvent event) model
+
+
+onLogEditedEvent : Model -> Events.LogEdited -> Model
+onLogEditedEvent model event =
+    updateServer event.nip (Server.onLogEditedEvent event) model
+
+
+onProcessCompletedEvent : Model -> Events.ProcessCompleted -> ( Model, Action )
+onProcessCompletedEvent model event =
+    updateServerWithAction event.nip (Server.onProcessCompletedEvent event) model
+
+
+onProcessCreatedEvent : Model -> Events.ProcessCreated -> ( Model, Action )
+onProcessCreatedEvent model event =
+    updateServerWithAction event.nip (Server.onProcessCreatedEvent event) model
+
+
 onTunnelCreatedEvent : Model -> Events.TunnelCreated -> Model
 onTunnelCreatedEvent model event =
     let
         gateway =
-            maybeFindGatewayByNip model event.source_nip
+            findGateway model event.source_nip
 
         updateGatewayFn =
             \model_ ->

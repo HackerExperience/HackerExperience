@@ -1,17 +1,26 @@
 module Apps.LogViewer exposing (..)
 
+import API.Game as GameAPI
+import API.Types
+import Apps.Input as App
 import Apps.Manifest as App
+import Dict exposing (Dict)
 import Effect exposing (Effect)
 import Game
-import Game.Model.Log exposing (Log)
-import Game.Model.LogID exposing (LogID)
+import Game.Bus as Game
+import Game.Model.Log as Log exposing (Log, LogType(..))
+import Game.Model.LogID as LogID exposing (LogID, RawLogID)
+import Game.Model.NIP exposing (NIP)
+import Game.Model.ProcessOperation as Operation
+import Game.Model.Server as Server
 import Html.Attributes as HA
-import Html.Events as HE
+import Maybe.Extra as Maybe
 import OS.AppID exposing (AppID)
 import OS.Bus
 import OS.CtxMenu as CtxMenu
 import OS.CtxMenu.Menus as CtxMenu
-import UI exposing (UI, cl, col, div, row, text)
+import UI exposing (UI, cl, clIf, col, div, row, text)
+import UI.Icon
 import WM
 
 
@@ -22,12 +31,17 @@ import WM
 type Msg
     = ToOS OS.Bus.Action
     | ToCtxMenu CtxMenu.Msg
-    | SelectLog LogID
-    | DeselectLog
+    | OnDeleteLog Log
+    | OnDeleteLogResponse LogID API.Types.LogDeleteResult
+    | OnRequestOpenEditPopup Log
+    | OnSelectNextRevision Log (Maybe Int)
+    | OnSelectPreviousRevision Log (Maybe Int)
 
 
 type alias Model =
-    { selectedLog : Maybe LogID
+    { appId : AppID
+    , nip : NIP
+    , customSelectionMap : Dict RawLogID Int
     }
 
 
@@ -36,15 +50,13 @@ type alias Model =
 
 
 filterLogs : Model -> Game.Model -> List Log
-filterLogs _ _ =
-    -- TODO: Figure out a way to handle ServerID (for gateways) and NIPs (for endpoints)
+filterLogs model game =
     -- TODO: Currently this is not doing any filtering other than grabbing all logs in the server
-    -- let
-    --     server =
-    --         Game.getGateway game model.serverId
-    -- in
-    -- Server.listLogs server
-    []
+    let
+        server =
+            Game.getServer game model.nip
+    in
+    Server.listLogs server
 
 
 
@@ -52,13 +64,98 @@ filterLogs _ _ =
 
 
 update : Game.Model -> Msg -> Model -> ( Model, Effect Msg )
-update _ msg model =
+update game msg model =
     case msg of
-        SelectLog logId ->
-            ( { model | selectedLog = Just logId }, Effect.none )
+        OnSelectNextRevision log customSelection ->
+            let
+                currentRevisionId =
+                    case customSelection of
+                        Just id ->
+                            id
 
-        DeselectLog ->
-            ( { model | selectedLog = Nothing }, Effect.none )
+                        Nothing ->
+                            log.selectedRevisionId
+
+                maxRevisionId =
+                    Log.getMaxRevisionId log.revisions
+
+                nextRevisionId =
+                    if maxRevisionId == currentRevisionId then
+                        currentRevisionId
+
+                    else
+                        currentRevisionId + 1
+
+                newCustomSelectionMap =
+                    Dict.insert (LogID.toString log.id) nextRevisionId model.customSelectionMap
+            in
+            ( { model | customSelectionMap = newCustomSelectionMap }, Effect.none )
+
+        OnSelectPreviousRevision log customSelection ->
+            let
+                currentRevisionId =
+                    case customSelection of
+                        Just id ->
+                            id
+
+                        Nothing ->
+                            log.selectedRevisionId
+
+                nextRevisionId =
+                    if currentRevisionId > 1 then
+                        currentRevisionId - 1
+
+                    else
+                        1
+
+                newCustomSelectionMap =
+                    Dict.insert (LogID.toString log.id) nextRevisionId model.customSelectionMap
+            in
+            ( { model | customSelectionMap = newCustomSelectionMap }, Effect.none )
+
+        OnDeleteLog log ->
+            let
+                server =
+                    Game.getServer game model.nip
+
+                config =
+                    GameAPI.logDeleteConfig game.apiCtx model.nip log.id server.tunnelId
+
+                toGameMsg =
+                    Game.ProcessOperation
+                        model.nip
+                        (Operation.Starting <| Operation.LogDelete log.id)
+            in
+            ( model
+            , Effect.batch
+                [ Effect.logDelete (OnDeleteLogResponse log.id) config
+                , Effect.msgToCmd <| ToOS <| OS.Bus.ToGame toGameMsg
+                ]
+            )
+
+        OnDeleteLogResponse _ (Ok _) ->
+            -- Side-effects are handled by the ProcessCreatedEvent
+            ( model, Effect.none )
+
+        OnDeleteLogResponse logId (Err _) ->
+            let
+                toGameMsg =
+                    Game.ProcessOperation
+                        model.nip
+                        (Operation.StartFailed (Operation.LogDelete logId))
+            in
+            ( model, Effect.msgToCmd <| ToOS <| OS.Bus.ToGame toGameMsg )
+
+        OnRequestOpenEditPopup log ->
+            let
+                msg_ =
+                    ToOS <|
+                        OS.Bus.RequestOpenApp
+                            App.PopupLogEdit
+                            (Just ( App.LogViewerApp, model.appId ))
+                            (App.PopupLogEditInput model.nip log)
+            in
+            ( model, Effect.msgToCmd msg_ )
 
         ToOS _ ->
             -- Handled by OS
@@ -86,6 +183,18 @@ view model game ctxMenu =
         ]
 
 
+{-| Things we may want in a header
+
+Quick filters:
+
+  - Filters log in which my (gateway, exit node) IP addresses show up
+
+Highlights (PS: not in header but rather as part of each log entry):
+
+  - Red if my IP is present (either gateway or exit node)
+  - Gray if low important noisy one (e.g. bounces without relevant IP addresses)
+
+-}
 vHeader : UI Msg
 vHeader =
     row [ cl "a-log-header", UI.centerItems ] [ text "Header" ]
@@ -104,102 +213,160 @@ vLogList model game =
     let
         logs =
             filterLogs model game
-
-        logFn =
-            \log ->
-                case model.selectedLog of
-                    Just selectedId ->
-                        if selectedId == log.id then
-                            vSelectedLogRow log
-
-                        else
-                            vLogRow log
-
-                    Nothing ->
-                        vLogRow log
     in
-    List.map logFn logs
+    List.map (\log -> vLogRow model log) logs
 
 
-vLogRow : Log -> UI Msg
-vLogRow log =
+vLogRow : Model -> Log -> UI Msg
+vLogRow model log =
     let
-        date =
-            "26/01/2019"
-
+        -- NOTE: This function would benefit from getting split into smaller functions, but I don't
+        -- think now is the best time to do that. Refactor it once the UI matures a bit.
         time =
-            "19:29:18"
+            "26/01 19:29:18"
 
-        vLogRowDateTime =
-            col [ cl "a-log-row-date", UI.centerItems ]
-                [ row [ UI.centerItems, UI.heightFill ] [ text date ]
-                , row [ UI.centerItems, UI.heightFill ] [ text time ]
+        dateTime =
+            row [ cl "a-log-row-date" ]
+                [ text time
                 ]
 
-        vLogRowSeparator =
+        separator =
             div [ cl "a-log-row-internal-separator" ] []
 
-        vLogRowText =
-            row [ cl "a-log-row-text", UI.centerItems ] [ text log.rawText ]
+        editIcon =
+            UI.Icon.msOutline "edit" Nothing
+                |> UI.Icon.toUI
+
+        deleteIcon =
+            UI.Icon.msOutline "delete" Nothing
+                |> UI.Icon.toUI
+
+        editEntry =
+            col
+                [ cl "a-lr-action-entry"
+                , UI.onClick <| OnRequestOpenEditPopup log
+                ]
+                [ editIcon ]
+
+        deleteEntry =
+            col
+                [ cl "a-lr-action-entry"
+                , UI.onClick <| OnDeleteLog log
+                ]
+                [ deleteIcon ]
+
+        actions =
+            if not log.isDeleted && Maybe.isNothing log.currentOp then
+                row [ cl "a-log-row-actions" ]
+                    [ editEntry, deleteEntry ]
+
+            else
+                UI.emptyEl
+
+        customSelection =
+            Dict.get (LogID.toString log.id) model.customSelectionMap
+
+        ( minRevisionId, maxRevisionId ) =
+            ( 1, Log.getMaxRevisionId log.revisions )
+
+        revision =
+            Log.getSelectedRevision log customSelection
+
+        revUpIcon =
+            row
+                [ cl "a-lr-rs-arrow a-lr-rs-up"
+                , clIf (revision.revisionId == maxRevisionId) "a-lr-rs-limit"
+                , UI.onClick <| OnSelectNextRevision log customSelection
+                ]
+                []
+
+        revDownIcon =
+            row
+                [ cl "a-lr-rs-arrow a-lr-rs-down"
+                , clIf (revision.revisionId == minRevisionId) "a-lr-rs-limit"
+                , UI.onClick <| OnSelectPreviousRevision log customSelection
+                ]
+                []
+
+        revisionSelector =
+            if log.revisionCount > 1 then
+                row [ cl "a-log-row-revselector" ]
+                    [ text <| String.fromInt revision.revisionId
+                    , col [ cl "a-lr-rs-selector" ]
+                        [ revUpIcon
+                        , revDownIcon
+                        ]
+                    ]
+
+            else
+                UI.emptyEl
+
+        logText =
+            row [ cl "a-log-row-text", UI.centerItems ]
+                [ text revision.rawText ]
+
+        -- TODO: Move to dedicate function
+        -- TODO: UI.Spinner?
+        spinnerIcon =
+            UI.Icon.msOutline "progress_activity" Nothing
+                |> UI.Icon.withClass "a-lr-badge-spinner"
+                |> UI.Icon.toUI
+
+        brokenBadgeIcon =
+            UI.Icon.msOutline "warning" Nothing
+                |> UI.Icon.withClass "a-lr-badge-broken"
+                |> UI.Icon.toUI
+
+        deletedBadgeIcon =
+            UI.Icon.msOutline "cancel" Nothing
+                |> UI.Icon.withClass "a-lr-badge-deleted"
+                |> UI.Icon.toUI
+
+        statusBadges =
+            case ( log.isDeleted, revision.type_ ) of
+                ( True, CustomLog _ ) ->
+                    [ brokenBadgeIcon, deletedBadgeIcon ]
+
+                ( True, _ ) ->
+                    [ deletedBadgeIcon ]
+
+                ( False, CustomLog _ ) ->
+                    [ brokenBadgeIcon ]
+
+                ( False, _ ) ->
+                    []
+
+        allBadges =
+            case log.currentOp of
+                Nothing ->
+                    statusBadges
+
+                Just _ ->
+                    spinnerIcon :: statusBadges
+
+        badges =
+            if not <| List.isEmpty allBadges then
+                row [ cl "a-log-row-badges" ]
+                    allBadges
+
+            else
+                UI.emptyEl
     in
     row
         [ cl "a-log-row"
-        , HE.onClick <| SelectLog log.id
+        , if log.isDeleted then
+            cl "a-log-row-deleted"
+
+          else
+            UI.emptyAttr
+        , HA.map ToCtxMenu (CtxMenu.event <| CtxMenu.LogViewer <| CtxMenu.LVEntryMenu log)
         ]
-        [ vLogRowDateTime
-        , vLogRowSeparator
-        , vLogRowText
-        ]
-
-
-vSelectedLogRow : Log -> UI Msg
-vSelectedLogRow log =
-    let
-        date =
-            "26/01/2019"
-
-        time =
-            "19:29:18"
-
-        microseconds =
-            ".123"
-
-        vLogRowDateTime =
-            col [ cl "a-log-row-date", UI.centerItems ]
-                [ row [ UI.centerItems, UI.heightFill ] [ text date ]
-                , row [ UI.centerItems, UI.heightFill ]
-                    [ text time
-                    , div [ cl "a-log-row-date-microseconds" ] [ text microseconds ]
-                    ]
-                ]
-
-        vLogRowInternalSeparator =
-            div [ cl "a-log-row-internal-separator" ] []
-
-        vLogRowText =
-            row [ cl "a-log-row-text", UI.centerItems ] [ text log.rawText ]
-
-        vLogRowHorizontalSeparator =
-            div [ cl "a-log-row-vertical-separator" ] []
-
-        vLogContentRow =
-            row [ cl "a-log-srow-body" ]
-                [ vLogRowDateTime
-                , vLogRowInternalSeparator
-                , vLogRowText
-                ]
-
-        vLogActionsRow =
-            row [ cl "a-log-srow-actions", UI.centerXY ]
-                [ text "Actions icons here" ]
-    in
-    col
-        [ cl "a-log-srow"
-        , HE.onClick DeselectLog
-        ]
-        [ vLogContentRow
-        , vLogRowHorizontalSeparator
-        , vLogActionsRow
+        [ dateTime
+        , separator
+        , badges
+        , logText
+        , revisionSelector
+        , actions
         ]
 
 
@@ -213,16 +380,33 @@ ctxMenuConfig menu _ =
         CtxMenu.LogViewer submenu ->
             case submenu of
                 CtxMenu.LVRootMenu ->
-                    Just
-                        { entries = [ CtxMenu.SimpleItem { label = "Log 1", enabled = True, onClick = Nothing } ]
-                        , mapper = ToCtxMenu
-                        }
-
-                _ ->
                     Nothing
+
+                CtxMenu.LVEntryMenu log ->
+                    ctxMenuConfigEntry log
 
         _ ->
             Nothing
+
+
+ctxMenuConfigEntry : Log -> Maybe (CtxMenu.Config Msg)
+ctxMenuConfigEntry log =
+    Just
+        { entries = ctxMenuLogEntries log
+        , mapper = ToCtxMenu
+        }
+
+
+ctxMenuLogEntries : Log -> List (CtxMenu.ConfigEntry Msg)
+ctxMenuLogEntries log =
+    if not log.isDeleted then
+        [ CtxMenu.SimpleItem { label = "Edit", enabled = True, onClick = Nothing }
+        , CtxMenu.SimpleItem { label = "Delete", enabled = True, onClick = Just <| OnDeleteLog log }
+        ]
+
+    else
+        -- Note: Not sure that's the actual mechanic
+        [ CtxMenu.SimpleItem { label = "Recover", enabled = False, onClick = Nothing } ]
 
 
 
@@ -239,14 +423,26 @@ getWindowConfig _ =
     }
 
 
-willOpen : WM.WindowInfo -> OS.Bus.Action
-willOpen _ =
-    OS.Bus.OpenApp App.LogViewerApp Nothing
+willOpen : WM.WindowInfo -> App.InitialInput -> OS.Bus.Action
+willOpen _ input =
+    OS.Bus.OpenApp App.LogViewerApp Nothing input
 
 
-didOpen : WM.WindowInfo -> ( Model, Effect Msg )
-didOpen _ =
-    ( { selectedLog = Nothing
+didOpen : WM.WindowInfo -> App.InitialInput -> ( Model, Effect Msg )
+didOpen { appId, sessionId } _ =
+    let
+        -- TODO: Not worrying about this for now.
+        nip =
+            case sessionId of
+                WM.LocalSessionID nip_ ->
+                    nip_
+
+                WM.RemoteSessionID nip_ ->
+                    nip_
+    in
+    ( { appId = appId
+      , nip = nip
+      , customSelectionMap = Dict.empty
       }
     , Effect.none
     )
@@ -271,17 +467,24 @@ willFocus appId _ =
 -- TODO: Singleton logic can (and probably should) be delegated to the OS/WM
 
 
-willOpenChild : Model -> App.Manifest -> WM.Window -> WM.WindowInfo -> OS.Bus.Action
-willOpenChild _ child parentWindow _ =
-    OS.Bus.OpenApp child <| Just ( App.DemoApp, parentWindow.appId )
+willOpenChild :
+    Model
+    -> App.Manifest
+    -> WM.Window
+    -> WM.WindowInfo
+    -> App.InitialInput
+    -> OS.Bus.Action
+willOpenChild _ child parentWindow _ input =
+    OS.Bus.OpenApp child (Just ( App.LogViewerApp, parentWindow.appId )) input
 
 
 didOpenChild :
     Model
     -> ( App.Manifest, AppID )
     -> WM.WindowInfo
+    -> App.InitialInput
     -> ( Model, Effect Msg, OS.Bus.Action )
-didOpenChild model _ _ =
+didOpenChild model _ _ _ =
     ( model, Effect.none, OS.Bus.NoOp )
 
 

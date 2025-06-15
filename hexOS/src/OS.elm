@@ -11,9 +11,12 @@ module OS exposing
     )
 
 import Apps.Demo as Demo
+import Apps.Input as App
 import Apps.LogViewer as LogViewer
+import Apps.LogViewer.LogEditPopup as LogEditPopup
 import Apps.Manifest as App
-import Apps.Popups.ConfirmationDialog as ConfirmationDialog
+import Apps.Popups.ConfirmationPrompt as ConfirmationPrompt
+import Apps.Popups.ConfirmationPrompt.Types as ConfirmationPrompt
 import Apps.Popups.DemoSingleton as DemoSingleton
 import Apps.RemoteAccess as RemoteAccess
 import Apps.Types as Apps
@@ -137,8 +140,8 @@ update state msg model =
         PerformAction OS.Bus.NoOp ->
             ( model, Effect.none )
 
-        PerformAction (OS.Bus.RequestOpenApp app parentInfo) ->
-            performRequestOpen state model app parentInfo
+        PerformAction (OS.Bus.RequestOpenApp app parentInfo input) ->
+            performRequestOpen state model app parentInfo input
 
         PerformAction (OS.Bus.RequestCloseApp appId) ->
             performActionOnApp state model appId performRequestClose
@@ -149,8 +152,8 @@ update state msg model =
         PerformAction (OS.Bus.RequestFocusApp appId) ->
             performActionOnApp state model appId performRequestFocus
 
-        PerformAction (OS.Bus.OpenApp app parentInfo) ->
-            performOpenApp state model app parentInfo
+        PerformAction (OS.Bus.OpenApp app parentInfo input) ->
+            performOpenApp state model app parentInfo input
 
         PerformAction (OS.Bus.CloseApp appId) ->
             performActionOnApp state model appId performCloseApp
@@ -235,8 +238,9 @@ performRequestOpen :
     -> Model
     -> App.Manifest
     -> Maybe WM.ParentInfo
+    -> App.InitialInput
     -> ( Model, Effect Msg )
-performRequestOpen { currentSession } model app parentInfo =
+performRequestOpen { currentSession } model app parentInfo input =
     let
         appId =
             model.wm.nextAppId
@@ -256,13 +260,14 @@ performRequestOpen { currentSession } model app parentInfo =
                             (getAppModel model.appModels parentId)
                             (WM.getWindow model.wm.windows parentId)
                             windowInfo
+                            input
 
                 Nothing ->
                     Nothing
 
         isParentActionBlocking =
             case parentAction of
-                Just (OS.Bus.OpenApp _ _) ->
+                Just (OS.Bus.OpenApp _ _ _) ->
                     False
 
                 Just _ ->
@@ -276,11 +281,11 @@ performRequestOpen { currentSession } model app parentInfo =
                 Maybe.withDefault OS.Bus.NoOp parentAction
 
             else
-                WM.Windowable.willOpen app windowInfo
+                WM.Windowable.willOpen app windowInfo input
 
         finalAction =
             case action of
-                OS.Bus.OpenApp targetApp parentInfo_ ->
+                OS.Bus.OpenApp targetApp parentInfo_ _ ->
                     WM.willOpenApp model.wm targetApp windowConfig parentInfo_ action
 
                 _ ->
@@ -390,8 +395,9 @@ performOpenApp :
     -> Model
     -> App.Manifest
     -> Maybe WM.ParentInfo
+    -> App.InitialInput
     -> ( Model, Effect Msg )
-performOpenApp { currentUniverse, currentSession } model app parentInfo =
+performOpenApp { currentUniverse, currentSession } model app parentInfo input =
     let
         appId =
             model.wm.nextAppId
@@ -404,7 +410,7 @@ performOpenApp { currentUniverse, currentSession } model app parentInfo =
 
         -- TODO: Handle appMsg__
         ( initialAppModel, appMsg__ ) =
-            WM.Windowable.didOpen app appId windowInfo
+            WM.Windowable.didOpen app appId windowInfo input
 
         -- TODO: Handle parentAction__
         ( parentModel, parentCmd, parentAction__ ) =
@@ -417,6 +423,7 @@ performOpenApp { currentUniverse, currentSession } model app parentInfo =
                                 (getAppModel model.appModels parentId)
                                 ( app, appId )
                                 windowInfo
+                                input
                     in
                     ( Just parentModel_, Effect.map AppMsg parentCmd_, parentAction_ )
 
@@ -674,23 +681,54 @@ dispatchUpdateApp state model appMsg =
                     ( model, Effect.none )
 
         -- Popups
-        Apps.PopupConfirmationDialogMsg popupId (ConfirmationDialog.ToApp appId app action) ->
-            let
-                newAppMsg =
-                    case app of
-                        App.DemoApp ->
-                            AppMsg
-                                (Apps.DemoMsg
-                                    appId
-                                 <|
-                                    Demo.FromConfirmationDialog popupId action
-                                )
+        Apps.PopupLogEditMsg _ (LogEditPopup.ToOS busAction) ->
+            ( model, Effect.msgToCmd (PerformAction busAction) )
 
-                        _ ->
-                            -- OS error window re. unhandled app type
-                            PerformAction OS.Bus.NoOp
+        Apps.PopupLogEditMsg appId subMsg ->
+            case getAppModel model.appModels appId of
+                Apps.PopupLogEditModel appModel ->
+                    updateApp
+                        state
+                        model
+                        appId
+                        appModel
+                        subMsg
+                        Apps.PopupLogEditModel
+                        Apps.PopupLogEditMsg
+                        LogEditPopup.update
+
+                _ ->
+                    ( model, Effect.none )
+
+        Apps.PopupConfirmationPromptMsg popupId (ConfirmationPrompt.ToParent action) ->
+            let
+                window =
+                    WM.getWindow model.wm.windows popupId
+
+                osMsg =
+                    case window.parent of
+                        Just ( app, appId ) ->
+                            case app of
+                                App.PopupLogEdit ->
+                                    AppMsg <|
+                                        Apps.PopupLogEditMsg appId <|
+                                            LogEditPopup.FromConfirmationPrompt action
+
+                                _ ->
+                                    NoOp
+
+                        Nothing ->
+                            NoOp
+
+                closePopupMsg =
+                    PerformAction <| OS.Bus.CloseApp popupId
             in
-            ( model, Effect.msgToCmd newAppMsg )
+            ( model
+            , Effect.batch
+                [ Effect.msgToCmd osMsg
+                , Effect.msgToCmd closePopupMsg
+                ]
+            )
 
         Apps.PopupDemoSingletonMsg _ (DemoSingleton.ToApp _ _ _) ->
             let
@@ -797,7 +835,7 @@ ctxMenuConfig menu _ =
                 CtxMenu.OSRootMenu ->
                     let
                         msg =
-                            PerformAction (OS.Bus.RequestOpenApp App.DemoApp Nothing)
+                            PerformAction (OS.Bus.RequestOpenApp App.DemoApp Nothing App.EmptyInput)
 
                         entries =
                             [ CtxMenu.SimpleItem
@@ -1010,8 +1048,11 @@ getWindowInnerContent { ctxMenu } appId _ appModel universe =
         Apps.DemoModel model ->
             Html.map (Apps.DemoMsg appId) <| Demo.view model
 
-        Apps.PopupConfirmationDialogModel model ->
-            Html.map (Apps.PopupConfirmationDialogMsg appId) <| ConfirmationDialog.view model
+        Apps.PopupLogEditModel model ->
+            Html.map (Apps.PopupLogEditMsg appId) <| LogEditPopup.view model
+
+        Apps.PopupConfirmationPromptModel model ->
+            Html.map (Apps.PopupConfirmationPromptMsg appId) <| ConfirmationPrompt.view model
 
         Apps.PopupDemoSingletonModel model ->
             Html.map (Apps.PopupDemoSingletonMsg appId) (DemoSingleton.view model)

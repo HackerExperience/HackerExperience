@@ -34,8 +34,8 @@ defmodule Game.Endpoint.File.InstallTest do
       jwt = U.jwt_token(uid: player.external_id)
 
       %{nip: nip} = Setup.server_full(entity_id: player.id)
-      # The file exists, but in a different server
-      file = Setup.file!(Setup.server!().id)
+      # The file exists and is visible by the player, but in a different server
+      file = Setup.file!(Setup.server!().id, visible_by: player.id)
       DB.commit()
 
       assert {:error, %{status: 400, error: %{msg: reason}}} =

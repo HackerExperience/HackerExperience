@@ -1,8 +1,12 @@
 module TestHelpers.Models exposing (..)
 
 import API.Types
+import Apps.Input as App
 import Apps.Manifest as App
-import Game
+import Dict
+import Game exposing (Model)
+import Game.Model.NIP as NIP exposing (NIP)
+import Game.Model.Server exposing (Endpoint, Gateway, Server)
 import Game.Universe as Universe exposing (Universe(..))
 import HUD.ConnectionInfo as CI
 import OS
@@ -14,7 +18,7 @@ import WM
 
 
 
--- Game
+-- State
 
 
 state : State
@@ -33,12 +37,77 @@ state =
         |> Tuple.first
 
 
-stateWithUniverse : Universe -> State -> State
-stateWithUniverse universe state_ =
+withUniverse : Universe -> State -> State
+withUniverse universe state_ =
     { state_ | currentUniverse = universe }
 
 
+withGame : Model -> State -> State
+withGame game_ state_ =
+    case state_.currentUniverse of
+        Singleplayer ->
+            withSpGame game_ state_
 
+        Multiplayer ->
+            withMpGame game_ state_
+
+
+withSpGame : Model -> State -> State
+withSpGame spGame state_ =
+    { state_ | sp = spGame }
+
+
+withMpGame : Model -> State -> State
+withMpGame mpGame state_ =
+    { state_ | mp = mpGame }
+
+
+getGame : State -> Model
+getGame state_ =
+    case state_.currentUniverse of
+        Singleplayer ->
+            getSpGame state_
+
+        Multiplayer ->
+            getMpGame state_
+
+
+getSpGame : State -> Model
+getSpGame state_ =
+    state_.sp
+
+
+getMpGame : State -> Model
+getMpGame state_ =
+    state_.mp
+
+
+
+-- Game
+
+
+game : Model
+game =
+    Game.init (API.Types.InputToken "t0k3n") Singleplayer Mocks.indexRequested
+
+
+withServer : Server -> Model -> Model
+withServer server game_ =
+    { game_ | servers = Dict.insert (NIP.toString server.nip) server game_.servers }
+
+
+withGateway : Gateway -> Model -> Model
+withGateway gateway game_ =
+    { game_ | gateways = Dict.insert (NIP.toString gateway.nip) gateway game_.gateways }
+
+
+getServer : NIP -> Model -> Server
+getServer nip game_ =
+    Game.getServer game_ nip
+
+
+
+-- gameWith
 -- OS
 
 
@@ -51,7 +120,7 @@ os =
 osWithApp : OS.Model -> ( OS.Model, AppID )
 osWithApp model =
     model
-        |> OS.update state (OS.PerformAction (Bus.OpenApp App.DemoApp Nothing))
+        |> OS.update state (OS.PerformAction (Bus.OpenApp App.DemoApp Nothing App.EmptyInput))
         |> Tuple.mapSecond (\_ -> model.wm.nextAppId)
 
 

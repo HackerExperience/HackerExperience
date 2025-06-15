@@ -1,7 +1,7 @@
 module Game.Model.Tunnel exposing
     ( Tunnel
     , Tunnels
-    , findTunnelWithTargetNip
+    , findTunnelByTargetNip
     , fromTunnelCreatedEvent
     , parse
     )
@@ -60,6 +60,6 @@ parseTunnel idxTunnel =
 -- Model > Query
 
 
-findTunnelWithTargetNip : Tunnels -> NIP -> Maybe Tunnel
-findTunnelWithTargetNip tunnels targetNip =
+findTunnelByTargetNip : Tunnels -> NIP -> Maybe Tunnel
+findTunnelByTargetNip tunnels targetNip =
     List.find (\t -> t.targetNip == targetNip) tunnels

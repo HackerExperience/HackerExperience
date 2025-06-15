@@ -1,0 +1,36 @@
+@use "../utils/colors" as *;
+@use "../utils/spacing" as *;
+
+.popup-confirmationprompt {
+    height: 100%;
+}
+
+.p-cop-body {
+    flex: 1;
+    padding: s-3();
+}
+
+.p-cop-actionrow {
+    border-top: 1px solid sec-400();
+    height: 70px;
+    background-color: secondary-650();
+    padding: s-3();
+
+    align-items: center;
+}
+
+.p-cop-ar-left-area {
+    flex: 1;
+
+    .ui-button {
+        background-color: red;
+    }
+}
+
+.p-cop-ar-btn {
+    // The label may be "Ok" or "Please go on", so dynamic width is important. This is also why
+    // padding is important: so the button area goes beyond the text.
+    min-width: 50px;
+    padding: 0 s-3();
+    height: 40px;
+}

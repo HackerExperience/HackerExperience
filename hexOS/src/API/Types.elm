@@ -2,6 +2,7 @@ module API.Types exposing (..)
 
 import API.Game.Types as GameTypes
 import API.Lobby.Types as LobbyTypes
+import Game.Model.LogID exposing (LogID)
 import Game.Model.NIP exposing (NIP)
 
 
@@ -52,7 +53,51 @@ type alias AuthorizationHeader =
 
 
 -- Game
--- Game > ServerLogin
+-- Game > Log > Delete
+
+
+type alias LogDeleteInput =
+    { body : GameTypes.LogDeleteRequest
+    , params : LogDeleteParams
+    }
+
+
+type alias LogDeleteParams =
+    { nip : NIP, log_id : LogID }
+
+
+type alias LogDeleteError =
+    GameTypes.GenericError
+
+
+type alias LogDeleteResult =
+    Result (Error LogDeleteError) GameTypes.LogDeleteOutput
+
+
+
+-- Game > Log > Edit
+
+
+type alias LogEditInput =
+    { body : GameTypes.LogEditRequest
+    , params : LogEditParams
+    }
+
+
+type alias LogEditParams =
+    { nip : NIP, log_id : LogID }
+
+
+type alias LogEditError =
+    GameTypes.GenericError
+
+
+type alias LogEditResult =
+    Result (Error LogEditError) GameTypes.LogEditOutput
+
+
+
+-- Game > Server > Login
 
 
 type alias ServerLoginInput =

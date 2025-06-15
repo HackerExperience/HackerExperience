@@ -26,6 +26,8 @@ type Effect msg
 
 type APIRequestEnum msg
     = LobbyLogin (API.Types.LobbyLoginResult -> msg) (InputConfig API.Types.LobbyLoginInput)
+    | LogDelete (API.Types.LogDeleteResult -> msg) (InputConfig API.Types.LogDeleteInput)
+    | LogEdit (API.Types.LogEditResult -> msg) (InputConfig API.Types.LogEditInput)
     | ServerLogin (API.Types.ServerLoginResult -> msg) (InputConfig API.Types.ServerLoginInput)
 
 
@@ -76,6 +78,12 @@ applyApiRequest : APIRequestEnum msg -> Seeds -> ( Seeds, Cmd msg )
 applyApiRequest apiRequest seeds =
     case apiRequest of
         -- Game
+        LogDelete msg config ->
+            ( seeds, Task.attempt msg (GameAPI.logDeleteTask config) )
+
+        LogEdit msg config ->
+            ( seeds, Task.attempt msg (GameAPI.logEditTask config) )
+
         ServerLogin msg config ->
             ( seeds, Task.attempt msg (GameAPI.serverLoginTask config) )
 
@@ -130,17 +138,36 @@ domFocus domId msg =
 
 
 
--- Effects > API Requests
+-- Effects > API Requests > Game
+-- Log
 
 
-lobbyLogin : (API.Types.LobbyLoginResult -> msg) -> InputConfig API.Types.LobbyLoginInput -> Effect msg
-lobbyLogin msg config =
-    APIRequest (LobbyLogin msg config)
+logDelete : (API.Types.LogDeleteResult -> msg) -> InputConfig API.Types.LogDeleteInput -> Effect msg
+logDelete msg config =
+    APIRequest (LogDelete msg config)
+
+
+logEdit : (API.Types.LogEditResult -> msg) -> InputConfig API.Types.LogEditInput -> Effect msg
+logEdit msg config =
+    APIRequest (LogEdit msg config)
+
+
+
+-- Server
 
 
 serverLogin : (API.Types.ServerLoginResult -> msg) -> InputConfig API.Types.ServerLoginInput -> Effect msg
 serverLogin msg config =
     APIRequest (ServerLogin msg config)
+
+
+
+-- Effects > API Requests > Lobby
+
+
+lobbyLogin : (API.Types.LobbyLoginResult -> msg) -> InputConfig API.Types.LobbyLoginInput -> Effect msg
+lobbyLogin msg config =
+    APIRequest (LobbyLogin msg config)
 
 
 
@@ -164,6 +191,12 @@ map toMsg effect =
                 -- Game
                 ServerLogin msg body ->
                     APIRequest (ServerLogin (\result -> toMsg (msg result)) body)
+
+                LogDelete msg body ->
+                    APIRequest (LogDelete (\result -> toMsg (msg result)) body)
+
+                LogEdit msg body ->
+                    APIRequest (LogEdit (\result -> toMsg (msg result)) body)
 
                 -- Lobby
                 LobbyLogin msg body ->

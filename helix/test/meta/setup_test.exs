@@ -89,8 +89,7 @@ defmodule Test.SetupTest do
     end
 
     test "respects the `entity`/`entity_id` opt" do
-      # Flaky counter: 2 (unique constraint failed: meta.id) when creating `server_1`
-      entity = Setup.entity_lite!()
+      entity = Setup.entity!()
       server_1 = Setup.server!(entity: entity)
       server_2 = Setup.server!(entity_id: entity.id)
       assert server_1.entity_id == entity.id

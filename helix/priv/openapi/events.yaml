@@ -9,45 +9,82 @@ components:
     IdxEndpoint:
       type: object
       required:
-        - logs
         - nip
+        - logs
+        - processes
       properties:
-        nip:
-          type: string
+        processes:
+          type: array
+          items:
+            $ref: '#/components/schemas/IdxProcess'
         logs:
           type: array
           items:
             $ref: '#/components/schemas/IdxLog'
+        nip:
+          type: string
     IdxGateway:
       type: object
       required:
-        - logs
         - tunnels
         - nip
+        - logs
+        - processes
       properties:
+        processes:
+          type: array
+          items:
+            $ref: '#/components/schemas/IdxProcess'
+        logs:
+          type: array
+          items:
+            $ref: '#/components/schemas/IdxLog'
         nip:
           type: string
         tunnels:
           type: array
           items:
             $ref: '#/components/schemas/IdxTunnel'
-        logs:
-          type: array
-          items:
-            $ref: '#/components/schemas/IdxLog'
     IdxLog:
       type: object
       required:
-        - revision_id
-        - type
+        - sort_strategy
+        - is_deleted
+        - revision_count
+        - revisions
         - id
       properties:
         id:
           type: string
+        revisions:
+          type: array
+          items:
+            $ref: '#/components/schemas/IdxLogRevision'
+        revision_count:
+          type: integer
+        is_deleted:
+          type: boolean
+        sort_strategy:
+          type: string
+    IdxLogRevision:
+      type: object
+      required:
+        - revision_id
+        - direction
+        - source
+        - type
+        - data
+      properties:
+        data:
+          type: string
         type:
           type: string
-        revision_id:
+        source:
           type: string
+        direction:
+          type: string
+        revision_id:
+          type: integer
     IdxPlayer:
       type: object
       required:
@@ -64,6 +101,19 @@ components:
           items:
             $ref: '#/components/schemas/IdxGateway'
         mainframe_nip:
+          type: string
+    IdxProcess:
+      type: object
+      required:
+        - process_id
+        - type
+        - data
+      properties:
+        data:
+          type: string
+        type:
+          type: string
+        process_id:
           type: string
     IdxTunnel:
       type: object
@@ -91,12 +141,12 @@ components:
     file_deleted:
       type: object
       required:
-        - file_id
         - process_id
+        - file_id
       properties:
-        process_id:
-          type: string
         file_id:
+          type: string
+        process_id:
           type: string
     file_install_failed:
       type: object
@@ -112,15 +162,15 @@ components:
       type: object
       required:
         - memory_usage
-        - installation_id
         - process_id
+        - installation_id
         - file_name
       properties:
         file_name:
           type: string
-        process_id:
-          type: string
         installation_id:
+          type: string
+        process_id:
           type: string
         memory_usage:
           type: integer
@@ -137,12 +187,12 @@ components:
     file_transferred:
       type: object
       required:
-        - file_id
         - process_id
+        - file_id
       properties:
-        process_id:
-          type: string
         file_id:
+          type: string
+        process_id:
           type: string
     index_requested:
       type: object
@@ -164,19 +214,99 @@ components:
     installation_uninstalled:
       type: object
       required:
-        - installation_id
         - process_id
+        - installation_id
       properties:
+        installation_id:
+          type: string
         process_id:
           type: string
-        installation_id:
+    log_delete_failed:
+      type: object
+      required:
+        - process_id
+        - reason
+      properties:
+        reason:
+          type: string
+        process_id:
+          type: string
+    log_deleted:
+      type: object
+      required:
+        - nip
+        - process_id
+        - log_id
+      properties:
+        log_id:
+          type: string
+        process_id:
+          type: string
+        nip:
+          type: string
+    log_edit_failed:
+      type: object
+      required:
+        - process_id
+        - reason
+      properties:
+        reason:
+          type: string
+        process_id:
+          type: string
+    log_edited:
+      type: object
+      required:
+        - process_id
+        - log_id
+        - nip
+        - direction
+        - type
+        - data
+      properties:
+        data:
+          type: string
+        type:
+          type: string
+        direction:
+          type: string
+        nip:
+          type: string
+        log_id:
+          type: string
+        process_id:
           type: string
     process_completed:
       type: object
       required:
         - process_id
+        - nip
+        - type
+        - data
       properties:
+        data:
+          type: string
+        type:
+          type: string
         process_id:
+          type: string
+        nip:
+          type: string
+    process_created:
+      type: object
+      required:
+        - nip
+        - process_id
+        - type
+        - data
+      properties:
+        data:
+          type: string
+        type:
+          type: string
+        process_id:
+          type: string
+        nip:
           type: string
     process_killed:
       type: object

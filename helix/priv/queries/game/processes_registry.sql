@@ -2,12 +2,6 @@
 ----------------------------------- SELECTS ------------------------------------
 --------------------------------------------------------------------------------
 
--- :__fetch
-SELECT * FROM processes_registry WHERE server_id = ? AND process_id = ?;
-
--- :__all
-SELECT * FROM processes_registry;
-
 -- :servers_with_processes
 SELECT server_id FROM processes_registry GROUP BY server_id;
 
@@ -16,6 +10,9 @@ SELECT * FROM processes_registry WHERE src_file_id = ?;
 
 -- :by_tgt_file_id
 SELECT * FROM processes_registry WHERE tgt_file_id = ?;
+
+-- :by_tgt_log_id
+SELECT * FROM processes_registry WHERE tgt_log_id = ?;
 
 -- :by_src_installation_id
 SELECT * FROM processes_registry WHERE src_installation_id = ?;

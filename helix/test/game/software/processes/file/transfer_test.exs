@@ -78,7 +78,7 @@ defmodule Game.Process.File.TransferTest do
       %{process: process, spec: %{tunnel: tunnel}} = Setup.process(gateway.id, type: :file_transfer)
 
       # Moments prior to the completion, the Tunnel was closed!
-      # TODO: Move this to a util
+      # TODO: Move this to a util (grep for duplicates)
       tunnel
       |> Game.Tunnel.update(%{status: :closed})
       |> DB.update!()

@@ -1,0 +1,78 @@
+@use "../utils/colors" as *;
+@use "../utils/spacing" as *;
+
+.app-logeditpopup {
+    height: 100%;
+
+    // TODO: Maybe move this to core
+    fieldset {
+        border: 1px solid sec-400();
+        width: 100%;
+        height: 100%;
+        padding: s-3();
+    }
+
+    legend {
+        padding: 0 s-2();
+        font-size: 14px;
+    }
+}
+
+.a-lep-editor {
+    flex: 1;
+}
+
+.a-lep-e-preview {
+    padding: s-3() s-4();
+    height: 125px;
+
+    fieldset {
+        background-color: sec-700();
+    }
+}
+
+.a-lep-e-p-text {
+    height: 100%;
+    align-items: center;
+    overflow: scroll;
+}
+
+.a-lep-e-preview-separator {
+    margin: s-2() 0;
+    border-bottom: 2px dotted sec-400();
+}
+
+.a-lep-e-selector {
+    padding: s-3() s-4();
+    flex: 1;
+}
+
+.a-lep-e-fields {
+    margin-top: s-5();
+    border: 1px solid sec-400();
+    padding: s-3();
+}
+
+.a-lep-e-fields-perspective {
+    padding: s-2() 0;
+}
+
+.a-lep-actionrow {
+    border-top: 1px solid sec-400();
+    background-color: secondary-650();
+    height: 70px;
+}
+
+.a-lep-ar-buttonarea {
+    // background-color: red;
+    flex: 1;
+    justify-content: flex-end;
+    align-items: center;
+    padding: s-1() s-3();
+}
+
+.a-lep-ar-ba-editbtn {
+    max-width: 80px;
+    height: 40px;
+}
+

@@ -12,7 +12,8 @@ defmodule Core.Event.Publishable.Definition do
       use Norm
       import Core.Spec
 
-      alias Core.ID
+      alias Core.{ID, NIP}
+      alias Game.Services, as: Svc
 
       @before_compile unquote(__MODULE__)
     end

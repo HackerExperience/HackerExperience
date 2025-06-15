@@ -60,7 +60,7 @@ defmodule Test.Utils.SSEListener do
       {:event, %{name: ^name} = event} ->
         event
     after
-      1000 -> raise "SSE event #{name} never arrived"
+      2000 -> raise "SSE event #{name} never arrived"
     end
   end
 

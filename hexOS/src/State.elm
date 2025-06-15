@@ -196,6 +196,16 @@ updateAction state action =
             in
             ( { state | currentSession = newSessionId }, Effect.none )
 
+        ProcessOperation nip operation ->
+            let
+                game =
+                    getActiveUniverse state
+
+                newModel =
+                    Game.handleProcessOperation game nip operation
+            in
+            ( replaceActiveUniverse state newModel, Effect.none )
+
         ActionNoOp ->
             ( state, Effect.none )
 
@@ -203,6 +213,50 @@ updateAction state action =
 updateEvent : State -> Event -> ( State, Effect Msg )
 updateEvent state event_ =
     case event_ of
+        Event.LogDeleted event universe ->
+            let
+                game =
+                    getUniverse state universe
+
+                newModel =
+                    Game.onLogDeletedEvent game event
+            in
+            ( replaceUniverse state newModel universe, Effect.none )
+
+        Event.LogEdited event universe ->
+            let
+                game =
+                    getUniverse state universe
+
+                newModel =
+                    Game.onLogEditedEvent game event
+            in
+            ( replaceUniverse state newModel universe, Effect.none )
+
+        Event.ProcessCompleted event universe ->
+            let
+                game =
+                    getUniverse state universe
+
+                ( newModel, action ) =
+                    Game.onProcessCompletedEvent game event
+            in
+            ( replaceUniverse state newModel universe
+            , Effect.msgToCmd <| PerformAction action
+            )
+
+        Event.ProcessCreated event universe ->
+            let
+                game =
+                    getUniverse state universe
+
+                ( newModel, action ) =
+                    Game.onProcessCreatedEvent game event
+            in
+            ( replaceUniverse state newModel universe
+            , Effect.msgToCmd <| PerformAction action
+            )
+
         Event.TunnelCreated event universe ->
             let
                 game =

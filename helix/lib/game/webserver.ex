@@ -8,6 +8,7 @@ defmodule Game.Webserver do
     [
       {"/v1/player/sync", %{handler: E.Player.Sync, method: :post, sse: true}},
       {"/v1/server/:nip/login/:target_nip", %{handler: E.Server.Login, method: :post}},
+      {"/v1/server/:nip/log/:log_id/delete", %{handler: E.Log.Delete, method: :post}},
       {"/v1/server/:nip/log/:log_id/edit", %{handler: E.Log.Edit, method: :post}},
       {"/v1/server/:nip/file/:file_id/delete", %{handler: E.File.Delete, method: :post}},
       {"/v1/server/:nip/file/:file_id/install", %{handler: E.File.Install, method: :post}},
