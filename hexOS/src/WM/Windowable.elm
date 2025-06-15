@@ -21,7 +21,7 @@ import Apps.Input as App
 import Apps.LogViewer as LogViewer
 import Apps.LogViewer.LogEditPopup as LogEditPopup
 import Apps.Manifest as App
-import Apps.Popups.ConfirmationDialog as ConfirmationDialog
+import Apps.Popups.ConfirmationPrompt as ConfirmationPrompt
 import Apps.Popups.DemoSingleton as DemoSingleton
 import Apps.RemoteAccess as RemoteAccess
 import Apps.Types as Apps
@@ -54,8 +54,8 @@ willOpen app windowInfo input =
         App.PopupLogEdit ->
             LogEditPopup.willOpen windowInfo input
 
-        App.PopupConfirmationDialog ->
-            ConfirmationDialog.willOpen windowInfo input
+        App.PopupConfirmationPrompt ->
+            ConfirmationPrompt.willOpen windowInfo input
 
         App.PopupDemoSingleton ->
             DemoSingleton.willOpen windowInfo input
@@ -131,11 +131,11 @@ didOpen app appId windowInfo input =
                 Apps.PopupLogEditMsg
                 LogEditPopup.didOpen
 
-        App.PopupConfirmationDialog ->
+        App.PopupConfirmationPrompt ->
             wrapMe
-                Apps.PopupConfirmationDialogModel
-                Apps.PopupConfirmationDialogMsg
-                ConfirmationDialog.didOpen
+                Apps.PopupConfirmationPromptModel
+                Apps.PopupConfirmationPromptMsg
+                ConfirmationPrompt.didOpen
 
         App.PopupDemoSingleton ->
             wrapMe
@@ -187,8 +187,8 @@ didOpenChild parentId parentModel childInfo windowInfo input =
         Apps.PopupLogEditModel model ->
             ( Apps.PopupLogEditModel model, Effect.none, OS.Bus.NoOp )
 
-        Apps.PopupConfirmationDialogModel model ->
-            ( Apps.PopupConfirmationDialogModel model, Effect.none, OS.Bus.NoOp )
+        Apps.PopupConfirmationPromptModel model ->
+            ( Apps.PopupConfirmationPromptModel model, Effect.none, OS.Bus.NoOp )
 
         Apps.PopupDemoSingletonModel model ->
             ( Apps.PopupDemoSingletonModel model, Effect.none, OS.Bus.NoOp )
@@ -213,8 +213,8 @@ willClose window appModel =
         Apps.PopupLogEditModel model ->
             LogEditPopup.willClose window.appId model window
 
-        Apps.PopupConfirmationDialogModel model ->
-            ConfirmationDialog.willClose window.appId model window
+        Apps.PopupConfirmationPromptModel model ->
+            ConfirmationPrompt.willClose window.appId model window
 
         Apps.PopupDemoSingletonModel model ->
             DemoSingleton.willClose window.appId model window
@@ -262,8 +262,8 @@ didCloseChild parentId parentModel childInfo parentWindow =
         Apps.PopupLogEditModel model ->
             ( Apps.PopupLogEditModel model, Effect.none, OS.Bus.NoOp )
 
-        Apps.PopupConfirmationDialogModel model ->
-            ( Apps.PopupConfirmationDialogModel model, Effect.none, OS.Bus.NoOp )
+        Apps.PopupConfirmationPromptModel model ->
+            ( Apps.PopupConfirmationPromptModel model, Effect.none, OS.Bus.NoOp )
 
         Apps.PopupDemoSingletonModel model ->
             ( Apps.PopupDemoSingletonModel model, Effect.none, OS.Bus.NoOp )
@@ -288,8 +288,8 @@ willFocus app appId window =
         App.PopupLogEdit ->
             LogEditPopup.willFocus appId window
 
-        App.PopupConfirmationDialog ->
-            ConfirmationDialog.willFocus appId window
+        App.PopupConfirmationPrompt ->
+            ConfirmationPrompt.willFocus appId window
 
         App.PopupDemoSingleton ->
             DemoSingleton.willFocus appId window
@@ -313,8 +313,8 @@ getWindowConfig windowInfo =
         App.PopupLogEdit ->
             LogEditPopup.getWindowConfig windowInfo
 
-        App.PopupConfirmationDialog ->
-            ConfirmationDialog.getWindowConfig windowInfo
+        App.PopupConfirmationPrompt ->
+            ConfirmationPrompt.getWindowConfig windowInfo
 
         App.PopupDemoSingleton ->
             DemoSingleton.getWindowConfig windowInfo

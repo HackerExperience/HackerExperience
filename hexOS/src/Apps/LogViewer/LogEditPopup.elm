@@ -7,7 +7,7 @@ import API.Logs.Json as LogsJD
 import API.Types
 import Apps.Input as App
 import Apps.Manifest as App
-import Apps.Popups.ConfirmationPrompt.Types as ConfirmationDialog
+import Apps.Popups.ConfirmationPrompt.Types as ConfirmationPrompt
 import Effect exposing (Effect)
 import Game
 import Game.Bus as Game
@@ -40,7 +40,7 @@ type Msg
     | RequestEditLog
     | EditLog RequestConfig
     | OnEditLogResponse LogID API.Types.LogEditResult
-    | FromConfirmationPrompt ConfirmationDialog.Action
+    | FromConfirmationPrompt ConfirmationPrompt.Action
 
 
 type alias Model =
@@ -423,9 +423,9 @@ update game msg model =
                         msg_ =
                             ToOS <|
                                 OS.Bus.RequestOpenApp
-                                    App.PopupConfirmationDialog
+                                    App.PopupConfirmationPrompt
                                     (Just ( App.PopupLogEdit, model.appId ))
-                                    (App.PopupConfirmationDialogInput <| invalidLogPrompt model)
+                                    (App.PopupConfirmationPromptInput <| invalidLogPrompt model)
                     in
                     ( model, Effect.msgToCmd msg_ )
 
@@ -491,14 +491,14 @@ update game msg model =
 
         FromConfirmationPrompt action ->
             case action of
-                ConfirmationDialog.Confirm ->
+                ConfirmationPrompt.Confirm ->
                     let
                         requestConfig =
                             ( "custom", "self", "" )
                     in
                     ( model, Effect.msgToCmd (EditLog requestConfig) )
 
-                ConfirmationDialog.Cancel ->
+                ConfirmationPrompt.Cancel ->
                     ( model, Effect.none )
 
         ToOS _ ->
@@ -770,7 +770,7 @@ dropdownEntries =
     ]
 
 
-invalidLogPrompt : Model -> ( UI ConfirmationDialog.Msg, ConfirmationDialog.ActionOption )
+invalidLogPrompt : Model -> ( UI ConfirmationPrompt.Msg, ConfirmationPrompt.ActionOption )
 invalidLogPrompt model =
     let
         body =
@@ -781,7 +781,7 @@ invalidLogPrompt model =
                 ]
 
         action =
-            ConfirmationDialog.ActionConfirmCancel "Cancel" "Proceed"
+            ConfirmationPrompt.ActionConfirmCancel "Cancel" "Proceed"
     in
     ( body, action )
 

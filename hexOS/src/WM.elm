@@ -359,7 +359,7 @@ createWindowInfo sessionId app appId parentInfo =
 isPopupBlocking : App.Manifest -> Bool
 isPopupBlocking popup =
     case popup of
-        App.PopupConfirmationDialog ->
+        App.PopupConfirmationPrompt ->
             True
 
         _ ->

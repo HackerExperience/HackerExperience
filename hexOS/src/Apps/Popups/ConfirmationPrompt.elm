@@ -1,4 +1,4 @@
-module Apps.Popups.ConfirmationDialog exposing (..)
+module Apps.Popups.ConfirmationPrompt exposing (..)
 
 import Apps.Input as App
 import Apps.Manifest as App
@@ -88,7 +88,7 @@ getWindowConfig : WM.WindowInfo -> WM.WindowConfig
 getWindowConfig _ =
     { lenX = 400
     , lenY = 400
-    , title = "Confirmation Dialog"
+    , title = "Confirmation Prompt"
     , childBehavior = Nothing
     , misc =
         Just
@@ -99,7 +99,7 @@ getWindowConfig _ =
 
 willOpen : WM.WindowInfo -> App.InitialInput -> OS.Bus.Action
 willOpen window input =
-    OS.Bus.OpenApp App.PopupConfirmationDialog window.parent input
+    OS.Bus.OpenApp App.PopupConfirmationPrompt window.parent input
 
 
 didOpen : WM.WindowInfo -> App.InitialInput -> ( Model, Effect Msg )
@@ -107,7 +107,7 @@ didOpen _ input =
     let
         ( body, actionOption ) =
             case input of
-                App.PopupConfirmationDialogInput ( body_, actionOption_ ) ->
+                App.PopupConfirmationPromptInput ( body_, actionOption_ ) ->
                     ( body_, actionOption_ )
 
                 _ ->

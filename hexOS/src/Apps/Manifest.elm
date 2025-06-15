@@ -8,7 +8,7 @@ type Manifest
     | DemoApp
       -- Popups
     | PopupLogEdit
-    | PopupConfirmationDialog
+    | PopupConfirmationPrompt
     | PopupDemoSingleton
 
 
@@ -30,7 +30,7 @@ getName app =
         PopupLogEdit ->
             "Log Edit"
 
-        PopupConfirmationDialog ->
+        PopupConfirmationPrompt ->
             "Popup"
 
         PopupDemoSingleton ->

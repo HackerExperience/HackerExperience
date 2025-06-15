@@ -177,7 +177,7 @@ rulesThatAreRecommendedButIIgnoredThem =
             [ "src/Game.elm"
             , "src/Main.elm"
             , "src/Apps/Popups/DemoSingleton.elm"
-            , "src/Apps/Popups/ConfirmationDialog.elm"
+            , "src/Apps/Popups/ConfirmationPrompt.elm"
             , "src/UI/Button.elm"
             , "src/API/Types.elm"
             ]

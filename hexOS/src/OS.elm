@@ -15,8 +15,8 @@ import Apps.Input as App
 import Apps.LogViewer as LogViewer
 import Apps.LogViewer.LogEditPopup as LogEditPopup
 import Apps.Manifest as App
-import Apps.Popups.ConfirmationDialog as ConfirmationDialog
-import Apps.Popups.ConfirmationPrompt.Types as ConfirmationDialog
+import Apps.Popups.ConfirmationPrompt as ConfirmationPrompt
+import Apps.Popups.ConfirmationPrompt.Types as ConfirmationPrompt
 import Apps.Popups.DemoSingleton as DemoSingleton
 import Apps.RemoteAccess as RemoteAccess
 import Apps.Types as Apps
@@ -700,7 +700,7 @@ dispatchUpdateApp state model appMsg =
                 _ ->
                     ( model, Effect.none )
 
-        Apps.PopupConfirmationDialogMsg popupId (ConfirmationDialog.ToParent action) ->
+        Apps.PopupConfirmationPromptMsg popupId (ConfirmationPrompt.ToParent action) ->
             let
                 window =
                     WM.getWindow model.wm.windows popupId
@@ -1051,8 +1051,8 @@ getWindowInnerContent { ctxMenu } appId _ appModel universe =
         Apps.PopupLogEditModel model ->
             Html.map (Apps.PopupLogEditMsg appId) <| LogEditPopup.view model
 
-        Apps.PopupConfirmationDialogModel model ->
-            Html.map (Apps.PopupConfirmationDialogMsg appId) <| ConfirmationDialog.view model
+        Apps.PopupConfirmationPromptModel model ->
+            Html.map (Apps.PopupConfirmationPromptMsg appId) <| ConfirmationPrompt.view model
 
         Apps.PopupDemoSingletonModel model ->
             Html.map (Apps.PopupDemoSingletonMsg appId) (DemoSingleton.view model)
