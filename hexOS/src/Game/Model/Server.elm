@@ -25,7 +25,8 @@ import Dict exposing (Dict)
 import Game.Bus exposing (Action)
 import Game.Model.Log as Log exposing (Log, Logs)
 import Game.Model.NIP as NIP exposing (NIP, RawNIP)
-import Game.Model.Process as Process exposing (Processes)
+import Game.Model.Process as Process exposing (Process, Processes)
+import Game.Model.ProcessData as ProcessData
 import Game.Model.ProcessOperation as Operation exposing (Operation)
 import Game.Model.Tunnel as Tunnel exposing (Tunnels)
 import Game.Model.TunnelID exposing (TunnelID)
@@ -74,6 +75,7 @@ buildServer serverType nip tunnelId idxLogs idxProcesses =
     , logs = Log.parse idxLogs
     , processes = Process.parse idxProcesses
     }
+        |> applyProcessOperations
 
 
 parseServers :
@@ -119,6 +121,36 @@ buildEndpointServers allTunnels idxEndpoints =
     List.foldl (\endp acc -> ( NIP.toString endp.nip, buildEndpointServer endp ) :: acc)
         []
         idxEndpoints
+
+
+{-| For each ongoing/active process, make sure the underlying object is aware that it is being
+processed. This ensures the post-login UI ("cold") matches the reactive in-game UI ("hot").
+-}
+applyProcessOperations : Server -> Server
+applyProcessOperations server =
+    List.foldl applyProcessOperation server (Process.toList server.processes)
+
+
+applyProcessOperation : Process -> Server -> Server
+applyProcessOperation process server =
+    let
+        maybeOperationType =
+            case process.data of
+                ProcessData.LogDelete { logId } ->
+                    Just <| Operation.LogDelete logId
+
+                ProcessData.LogEdit { logId } ->
+                    Just <| Operation.LogEdit logId
+
+                _ ->
+                    Nothing
+    in
+    case maybeOperationType of
+        Just operationType ->
+            handleProcessOperation (Operation.Started operationType process.id) server
+
+        Nothing ->
+            server
 
 
 invalidServer : Server

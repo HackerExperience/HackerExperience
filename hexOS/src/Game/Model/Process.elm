@@ -1,8 +1,10 @@
 module Game.Model.Process exposing
-    ( Processes
+    ( Process
+    , Processes
     , onProcessCompletedEvent
     , onProcessCreatedEvent
     , parse
+    , toList
     )
 
 import API.Events.Types as Events
@@ -33,6 +35,12 @@ type alias Process =
 -- findProcess : ProcessID -> Processes -> Maybe Process
 -- findProcess processId processes =
 --     OrderedDict.get (ProcessID.toString processId) processes
+
+
+toList : Processes -> List Process
+toList processes =
+    OrderedDict.toList processes
+        |> List.map (\( _, process ) -> process)
 
 
 addProcess : Process -> Processes -> Processes
