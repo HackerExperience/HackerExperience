@@ -101,12 +101,11 @@ defmodule Game.Process.Log.EditTest do
       log_rev_1 = Setup.log!(server.id, visible_by: entity.id)
       log_rev_2 = Setup.log!(server.id, id: log_rev_1.id, revision_id: 2, visible_by: entity.id)
 
-      # TODO: `custom` is not "emptydata"
       params =
         %{
           type: :custom,
           direction: :self,
-          data: %LogData.EmptyData{}
+          data: %LogData.Text{text: "This is my custom log"}
         }
 
       process =
@@ -134,7 +133,7 @@ defmodule Game.Process.Log.EditTest do
       assert log_edited_sse.data.log_id |> U.from_eid(player.id) == log_rev_2.id
       assert log_edited_sse.data.type == "custom"
       assert log_edited_sse.data.direction == "self"
-      assert log_edited_sse.data.data == "{}"
+      assert log_edited_sse.data.data == "{\"text\":\"This is my custom log\"}"
     end
   end
 end

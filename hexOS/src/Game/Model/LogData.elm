@@ -1,13 +1,23 @@
 module Game.Model.LogData exposing
     ( LogDataEmpty
     , LogDataNIP
+    , LogDataText
     , parseLogDataNip
+    , parseLogDataText
     )
 
 import API.Logs.Json as LogsJD
 import API.Logs.Types as LogsJD
 import Game.Model.NIP as NIP exposing (NIP)
 import Json.Decode as JD
+
+
+type alias LogDataEmpty =
+    {}
+
+
+type alias LogDataText =
+    { text : String }
 
 
 type alias LogDataNIP =
@@ -35,12 +45,22 @@ type alias LogDataRemoteFile =
     }
 
 
-type alias LogDataEmpty =
-    {}
-
-
 
 -- Parsers
+
+
+parseLogDataText : String -> LogDataText
+parseLogDataText raw =
+    let
+        result =
+            JD.decodeString LogsJD.decodeLogDataText raw
+    in
+    case result of
+        Ok data ->
+            mapLogDataText data
+
+        Err error ->
+            invalidLogDataText
 
 
 parseLogDataNip : String -> LogDataNIP
@@ -103,6 +123,11 @@ parseLogDataRemoteFile raw =
 -- Mappers
 
 
+mapLogDataText : LogsJD.LogDataText -> LogDataText
+mapLogDataText data =
+    data
+
+
 mapLogDataNip : LogsJD.LogDataNIP -> LogDataNIP
 mapLogDataNip data =
     data
@@ -134,6 +159,11 @@ mapLogDataRemoteFile data =
 
 
 -- Misc
+
+
+invalidLogDataText : LogDataText
+invalidLogDataText =
+    { text = "Invalid LogData text" }
 
 
 invalidLogDataNip : LogDataNIP

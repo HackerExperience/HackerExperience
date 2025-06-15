@@ -68,7 +68,7 @@ defmodule Game.Log do
   def hydrate_data(data, %{type: type, direction: direction}, _),
     do: data_mod({type, direction}).load!(data)
 
-  def data_mod({:custom, :self}), do: LogData.EmptyData
+  def data_mod({:custom, :self}), do: LogData.Text
   def data_mod({:file_deleted, :self}), do: LogData.LocalFile
   def data_mod({:file_deleted, dir}) when dir in [:to_ap, :from_en], do: LogData.RemoteFile
   def data_mod({:file_downloaded, dir}) when dir in [:to_ap, :from_en], do: LogData.RemoteFile

@@ -20,6 +20,28 @@ defmodule Game.Log.Data do
     def render(_), do: %{}
   end
 
+  defmodule Text do
+    use Game.Log.Data.Definition
+    defstruct [:text]
+
+    def spec do
+      selection(
+        schema(%{
+          __openapi_name: "LogDataText",
+          text: binary()
+        }),
+        [:text]
+      )
+    end
+
+    def new(%{text: text}), do: %__MODULE__{text: text}
+    def dump!(%__MODULE__{text: text}), do: %{text: text}
+    def load!(%{text: text}), do: %__MODULE__{text: text}
+    def cast_input!(raw_input), do: %__MODULE__{text: raw_input["text"]}
+    def valid?(%__MODULE__{text: _text}), do: true
+    def render(%__MODULE__{text: text}), do: %{text: text}
+  end
+
   defmodule NIP do
     use Game.Log.Data.Definition
     alias Core.NIP

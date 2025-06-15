@@ -3,9 +3,9 @@
 
 module API.Logs.Json exposing
     ( encodeLogDataEmpty, encodeLogDataLocalFile, encodeLogDataNIP, encodeLogDataNIPProxy
-    , encodeLogDataRemoteFile
+    , encodeLogDataRemoteFile, encodeLogDataText
     , decodeLogDataEmpty, decodeLogDataLocalFile, decodeLogDataNIP, decodeLogDataNIPProxy
-    , decodeLogDataRemoteFile
+    , decodeLogDataRemoteFile, decodeLogDataText
     )
 
 {-|
@@ -14,13 +14,13 @@ module API.Logs.Json exposing
 ## Encoders
 
 @docs encodeLogDataEmpty, encodeLogDataLocalFile, encodeLogDataNIP, encodeLogDataNIPProxy
-@docs encodeLogDataRemoteFile
+@docs encodeLogDataRemoteFile, encodeLogDataText
 
 
 ## Decoders
 
 @docs decodeLogDataEmpty, decodeLogDataLocalFile, decodeLogDataNIP, decodeLogDataNIPProxy
-@docs decodeLogDataRemoteFile
+@docs decodeLogDataRemoteFile, decodeLogDataText
 
 -}
 
@@ -32,6 +32,22 @@ import Game.Model.TunnelID as TunnelID exposing (TunnelID(..))
 import Json.Decode
 import Json.Encode
 import OpenApi.Common
+
+
+decodeLogDataText : Json.Decode.Decoder API.Logs.Types.LogDataText
+decodeLogDataText =
+    Json.Decode.succeed
+        (\text -> { text = text })
+        |> OpenApi.Common.jsonDecodeAndMap
+            (Json.Decode.field
+                "text"
+                Json.Decode.string
+            )
+
+
+encodeLogDataText : API.Logs.Types.LogDataText -> Json.Encode.Value
+encodeLogDataText rec =
+    Json.Encode.object [ ( "text", Json.Encode.string rec.text ) ]
 
 
 decodeLogDataRemoteFile : Json.Decode.Decoder API.Logs.Types.LogDataRemoteFile

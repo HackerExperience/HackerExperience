@@ -18,7 +18,7 @@ module Game.Model.Log exposing
 
 import API.Events.Types as Events
 import Dict exposing (Dict)
-import Game.Model.LogData as LogData exposing (LogDataEmpty, LogDataNIP)
+import Game.Model.LogData as LogData exposing (LogDataEmpty, LogDataNIP, LogDataText)
 import Game.Model.LogID as LogID exposing (LogID, RawLogID)
 import Game.Model.NIP as NIP exposing (NIP)
 import Game.Model.ProcessID exposing (ProcessID)
@@ -61,7 +61,7 @@ type LogType
     = ServerLoginSelf LogDataEmpty
     | ServerLoginGateway LogDataNIP
     | ServerLoginEndpoint LogDataNIP
-    | CustomLog LogDataEmpty
+    | CustomLog LogDataText
 
 
 type LogOperation
@@ -150,7 +150,7 @@ getNewestRevision log =
 invalidRevision : LogRevision
 invalidRevision =
     { revisionId = 1
-    , type_ = CustomLog {}
+    , type_ = CustomLog { text = "Invalid revision" }
     , rawText = "Invalid revision"
     }
 
@@ -224,8 +224,11 @@ parseLogType strLogType strDirection rawData =
         ( "server_login", "from_en" ) ->
             ServerLoginEndpoint <| LogData.parseLogDataNip rawData
 
+        ( "custom", "self" ) ->
+            CustomLog <| LogData.parseLogDataText rawData
+
         _ ->
-            CustomLog {}
+            CustomLog { text = "Unknown log: " ++ strLogType ++ ":" ++ strDirection }
 
 
 parseSortStrategy : String -> SortRevisionStrategy
@@ -260,8 +263,8 @@ generateText logType =
         ServerLoginEndpoint { nip } ->
             "[" ++ NIP.getIPString nip ++ "] logged in to localhost"
 
-        CustomLog _ ->
-            "custom"
+        CustomLog { text } ->
+            text
 
 
 

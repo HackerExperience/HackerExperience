@@ -329,6 +329,19 @@ logEditPerspectiveToBackendType perspective =
             "from_en"
 
 
+logDataTextToConfig : Model -> String -> String -> Maybe RequestConfig
+logDataTextToConfig model cfgType cfgDirection =
+    if not (FormFields.isTextEmpty model.freeFormText) then
+        let
+            logData =
+                LogsJD.encodeLogDataText { text = model.freeFormText.value }
+        in
+        Just ( cfgType, cfgDirection, JE.encode 0 logData )
+
+    else
+        Nothing
+
+
 logDataNipToConfig : Model -> String -> String -> Maybe RequestConfig
 logDataNipToConfig model cfgType cfgDirection =
     if not (FormFields.isTextEmpty model.ip1 || FormFields.hasError model.ip1) then
@@ -336,10 +349,10 @@ logDataNipToConfig model cfgType cfgDirection =
             nip =
                 NIP.new "0" model.ip1.value
 
-            data =
+            logData =
                 LogsJD.encodeLogDataNIP { nip = nip }
         in
-        Just ( cfgType, cfgDirection, JE.encode 0 data )
+        Just ( cfgType, cfgDirection, JE.encode 0 logData )
 
     else
         Nothing
@@ -368,9 +381,7 @@ getRequestConfig model =
                     Nothing
 
         TypeCustom ->
-            -- TODO: The data is not actually empty
-            ( "custom", "self" )
-                |> withLogDataEmpty
+            logDataTextToConfig model "custom" "self"
 
         _ ->
             -- TODO
@@ -430,7 +441,7 @@ update game msg model =
                     ( model, Effect.msgToCmd msg_ )
 
         -- `EditLog` is called either from RequestEditLog directly (when the data is valid) or
-        -- from the Confirmation prompt after the user decided to proceed with a custom log
+        -- from the ConfirmationPrompt after the user decided to proceed with a custom log
         EditLog ( cfgLogType, cfgLogDirection, cfgLogData ) ->
             let
                 server =
@@ -493,8 +504,11 @@ update game msg model =
             case action of
                 ConfirmationPrompt.Confirm ->
                     let
+                        logData =
+                            LogsJD.encodeLogDataText { text = model.previewText }
+
                         requestConfig =
-                            ( "custom", "self", "" )
+                            ( "custom", "self", JE.encode 0 logData )
                     in
                     ( model, Effect.msgToCmd (EditLog requestConfig) )
 
