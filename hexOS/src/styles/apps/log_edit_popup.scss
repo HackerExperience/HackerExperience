@@ -24,7 +24,7 @@
 
 .a-lep-e-preview {
     padding: s-3() s-4();
-    max-height: 100px;
+    height: 125px;
 
     fieldset {
         background-color: sec-700();
@@ -32,6 +32,9 @@
 }
 
 .a-lep-e-p-text {
+    height: 100%;
+    align-items: center;
+    overflow: scroll;
 }
 
 .a-lep-e-preview-separator {
