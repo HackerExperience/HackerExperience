@@ -7,6 +7,7 @@ import Apps.Demo as Demo
 import Apps.LogViewer as LogViewer
 import Apps.LogViewer.LogEditPopup as LogEditPopup
 import Apps.Popups.ConfirmationDialog as ConfirmationDialog
+import Apps.Popups.ConfirmationPrompt.Types as ConfirmationDialog
 import Apps.Popups.DemoSingleton as DemoSingleton
 import Apps.RemoteAccess as RemoteAccess
 import OS.AppID exposing (AppID)

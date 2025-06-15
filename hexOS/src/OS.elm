@@ -16,6 +16,7 @@ import Apps.LogViewer as LogViewer
 import Apps.LogViewer.LogEditPopup as LogEditPopup
 import Apps.Manifest as App
 import Apps.Popups.ConfirmationDialog as ConfirmationDialog
+import Apps.Popups.ConfirmationPrompt.Types as ConfirmationDialog
 import Apps.Popups.DemoSingleton as DemoSingleton
 import Apps.RemoteAccess as RemoteAccess
 import Apps.Types as Apps
@@ -699,23 +700,35 @@ dispatchUpdateApp state model appMsg =
                 _ ->
                     ( model, Effect.none )
 
-        Apps.PopupConfirmationDialogMsg popupId (ConfirmationDialog.ToApp appId app action) ->
+        Apps.PopupConfirmationDialogMsg popupId (ConfirmationDialog.ToParent action) ->
             let
-                newAppMsg =
-                    case app of
-                        App.DemoApp ->
-                            AppMsg
-                                (Apps.DemoMsg
-                                    appId
-                                 <|
-                                    Demo.FromConfirmationDialog popupId action
-                                )
+                window =
+                    WM.getWindow model.wm.windows popupId
 
-                        _ ->
-                            -- OS error window re. unhandled app type
-                            PerformAction OS.Bus.NoOp
+                osMsg =
+                    case window.parent of
+                        Just ( app, appId ) ->
+                            case app of
+                                App.PopupLogEdit ->
+                                    AppMsg <|
+                                        Apps.PopupLogEditMsg appId <|
+                                            LogEditPopup.FromConfirmationPrompt action
+
+                                _ ->
+                                    NoOp
+
+                        Nothing ->
+                            NoOp
+
+                closePopupMsg =
+                    PerformAction <| OS.Bus.CloseApp popupId
             in
-            ( model, Effect.msgToCmd newAppMsg )
+            ( model
+            , Effect.batch
+                [ Effect.msgToCmd osMsg
+                , Effect.msgToCmd closePopupMsg
+                ]
+            )
 
         Apps.PopupDemoSingletonMsg _ (DemoSingleton.ToApp _ _ _) ->
             let

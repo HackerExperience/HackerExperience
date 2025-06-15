@@ -7,6 +7,7 @@ import API.Logs.Json as LogsJD
 import API.Types
 import Apps.Input as App
 import Apps.Manifest as App
+import Apps.Popups.ConfirmationPrompt.Types as ConfirmationDialog
 import Effect exposing (Effect)
 import Game
 import Game.Bus as Game
@@ -29,8 +30,7 @@ import WM
 
 
 type Msg
-    = ToApp AppID App.Manifest OS.Bus.Action
-    | ToOS OS.Bus.Action
+    = ToOS OS.Bus.Action
     | DropdownMsg DropdownID (UI.Dropdown.Msg Msg)
     | OnTypeSelected LogEditType
     | OnPerspectiveSelected LogEditPerspective
@@ -40,10 +40,12 @@ type Msg
     | RequestEditLog
     | EditLog RequestConfig
     | OnEditLogResponse LogID API.Types.LogEditResult
+    | FromConfirmationPrompt ConfirmationDialog.Action
 
 
 type alias Model =
-    { nip : NIP
+    { appId : AppID
+    , nip : NIP
     , log : Log
     , originalLog : Log
     , previewText : String
@@ -417,7 +419,15 @@ update game msg model =
                     ( model, Effect.msgToCmd (EditLog requestConfig) )
 
                 Nothing ->
-                    ( model, Effect.none )
+                    let
+                        msg_ =
+                            ToOS <|
+                                OS.Bus.RequestOpenApp
+                                    App.PopupConfirmationDialog
+                                    (Just ( App.PopupLogEdit, model.appId ))
+                                    (App.PopupConfirmationDialogInput <| invalidLogPrompt model)
+                    in
+                    ( model, Effect.msgToCmd msg_ )
 
         -- `EditLog` is called either from RequestEditLog directly (when the data is valid) or
         -- from the Confirmation prompt after the user decided to proceed with a custom log
@@ -445,6 +455,7 @@ update game msg model =
             , Effect.batch
                 [ Effect.logEdit (OnEditLogResponse model.log.id) config
                 , Effect.msgToCmd <| ToOS <| OS.Bus.ToGame toGameMsg
+                , Effect.msgToCmd <| ToOS <| OS.Bus.CloseApp model.appId
                 ]
             )
 
@@ -478,11 +489,19 @@ update game msg model =
             in
             ( updateModel newDd, Effect.map (DropdownMsg ddId) ddEffect )
 
-        ToOS _ ->
-            -- Handled by OS
-            ( model, Effect.none )
+        FromConfirmationPrompt action ->
+            case action of
+                ConfirmationDialog.Confirm ->
+                    let
+                        requestConfig =
+                            ( "custom", "self", "" )
+                    in
+                    ( model, Effect.msgToCmd (EditLog requestConfig) )
 
-        ToApp _ _ _ ->
+                ConfirmationDialog.Cancel ->
+                    ( model, Effect.none )
+
+        ToOS _ ->
             -- Handled by OS
             ( model, Effect.none )
 
@@ -751,6 +770,22 @@ dropdownEntries =
     ]
 
 
+invalidLogPrompt : Model -> ( UI ConfirmationDialog.Msg, ConfirmationDialog.ActionOption )
+invalidLogPrompt model =
+    let
+        body =
+            col [ cl "a-lep-invalid-log" ]
+                [ UI.text "The log you are trying to edit has an invalid structure or contains invalid fields:"
+                , UI.text model.previewText
+                , UI.text "It will be displayed as a Custom Log. Would you like to proceed?"
+                ]
+
+        action =
+            ConfirmationDialog.ActionConfirmCancel "Cancel" "Proceed"
+    in
+    ( body, action )
+
+
 
 -- OS.Dispatcher callbacks
 
@@ -771,7 +806,7 @@ willOpen window input =
 
 
 didOpen : WM.WindowInfo -> App.InitialInput -> ( Model, Effect Msg )
-didOpen _ input =
+didOpen { appId } input =
     let
         ( nip, log ) =
             case input of
@@ -784,7 +819,8 @@ didOpen _ input =
         revision =
             Log.getNewestRevision log
     in
-    ( { nip = nip
+    ( { appId = appId
+      , nip = nip
       , log = log
       , originalLog = log
       , previewText = revision.rawText
@@ -811,3 +847,39 @@ willClose appId _ _ =
 willFocus : AppID -> WM.Window -> OS.Bus.Action
 willFocus appId _ =
     OS.Bus.FocusApp appId
+
+
+
+-- Children
+-- TODO: Singleton logic can (and probably should) be delegated to the OS/WM
+
+
+willOpenChild :
+    Model
+    -> App.Manifest
+    -> WM.Window
+    -> WM.WindowInfo
+    -> App.InitialInput
+    -> OS.Bus.Action
+willOpenChild _ child parentWindow _ input =
+    OS.Bus.OpenApp child (Just ( App.PopupLogEdit, parentWindow.appId )) input
+
+
+didOpenChild :
+    Model
+    -> ( App.Manifest, AppID )
+    -> WM.WindowInfo
+    -> App.InitialInput
+    -> ( Model, Effect Msg, OS.Bus.Action )
+didOpenChild model _ _ _ =
+    ( model, Effect.none, OS.Bus.NoOp )
+
+
+didCloseChild :
+    Model
+    -> ( App.Manifest, AppID )
+    -> WM.Window
+    -> ( Model, Effect Msg, OS.Bus.Action )
+didCloseChild model _ _ =
+    -- TODO: Make defaults for these
+    ( model, Effect.none, OS.Bus.NoOp )

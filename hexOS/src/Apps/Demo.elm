@@ -2,7 +2,7 @@ module Apps.Demo exposing (..)
 
 import Apps.Input as App
 import Apps.Manifest as App
-import Apps.Popups.ConfirmationDialog as ConfirmationDialog
+import Apps.Popups.ConfirmationPrompt.Types as ConfirmationDialog
 import Effect exposing (Effect)
 import Game
 import OS.AppID exposing (AppID)
@@ -19,7 +19,6 @@ type Msg
     | OpenBlockingPopup
     | OpenSingletonPopup
     | ToOS OS.Bus.Action
-    | FromConfirmationDialog AppID ConfirmationDialog.Action
 
 
 type alias Model =
@@ -112,9 +111,6 @@ update _ msg model =
             )
 
         ToOS _ ->
-            ( model, Effect.none )
-
-        FromConfirmationDialog _ _ ->
             ( model, Effect.none )
 
 

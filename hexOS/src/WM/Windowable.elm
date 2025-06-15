@@ -79,6 +79,9 @@ willOpenChild child parentModel parentWindow childWindowInfo input =
         Apps.LogViewerModel model ->
             LogViewer.willOpenChild model child parentWindow childWindowInfo input
 
+        Apps.PopupLogEditModel model ->
+            LogEditPopup.willOpenChild model child parentWindow childWindowInfo input
+
         _ ->
             OS.Bus.NoOp
 
