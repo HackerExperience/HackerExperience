@@ -1,7 +1,7 @@
 defmodule Game.Index.Process do
   alias Core.ID
   alias Game.Services, as: Svc
-  alias Game.{Process}
+  alias Game.{Entity, Process, Server}
 
   @type index ::
           [map]

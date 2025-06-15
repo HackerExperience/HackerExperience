@@ -30,10 +30,10 @@ defmodule Game.Services.LogTest do
       rows = Svc.Log.list_visibility(entity.id, visible_on_server: server.id)
 
       # Only the two visibilities in `server.id` were found
-      assert [visibility_1.log_id.id, visibility_1.revision_id.id] ==
+      assert [visibility_1.log_id.id, visibility_1.revision_id.id, "self"] ==
                Enum.find(rows, &(Enum.at(&1, 0) == visibility_1.log_id.id))
 
-      assert [visibility_2.log_id.id, visibility_2.revision_id.id] ==
+      assert [visibility_2.log_id.id, visibility_2.revision_id.id, "self"] ==
                Enum.find(rows, &(Enum.at(&1, 0) == visibility_2.log_id.id))
     end
   end
