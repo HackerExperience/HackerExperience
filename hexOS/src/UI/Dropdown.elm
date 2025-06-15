@@ -19,9 +19,7 @@ TODOs:
 
 import Effect exposing (Effect)
 import Html as H
-import Html.Attributes as HA
-import Html.Events as HE
-import UI exposing (UI, cl, style, styleMaybe, text)
+import UI exposing (UI, cl, style, styleMaybe)
 import UI.Icon
 
 

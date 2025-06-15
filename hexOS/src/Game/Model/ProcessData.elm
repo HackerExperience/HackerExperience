@@ -3,7 +3,6 @@ module Game.Model.ProcessData exposing
     , parse
     )
 
-import API.Events.Types as Events
 import API.Processes.Json as ProcessJD
 import API.Processes.Types as ProcessJD
 import Game.Model.LogID exposing (LogID)
@@ -88,11 +87,7 @@ wrapResult result builder dataType =
         Ok foo ->
             builder foo
 
-        Err errorMessage ->
-            let
-                _ =
-                    Debug.log "Error parsing process: " errorMessage
-            in
+        Err _ ->
             invalidData dataType
 
 

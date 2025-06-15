@@ -2,7 +2,6 @@ module Apps.Demo exposing (..)
 
 import Apps.Input as App
 import Apps.Manifest as App
-import Apps.Popups.ConfirmationPrompt.Types as ConfirmationPrompt
 import Effect exposing (Effect)
 import Game
 import OS.AppID exposing (AppID)

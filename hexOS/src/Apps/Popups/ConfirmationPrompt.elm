@@ -44,7 +44,7 @@ view model =
 
 vBody : Model -> UI Msg
 vBody model =
-    UI.row [ cl "p-cop-body" ]
+    row [ cl "p-cop-body" ]
         [ model.body ]
 
 
@@ -55,7 +55,7 @@ vActionRow model =
             vActionRowConfirmCancel cancelLabel confirmLabel
 
         ActionConfirmOnly _ ->
-            UI.text "todo"
+            text "todo"
 
 
 vActionRowConfirmCancel : String -> String -> UI Msg

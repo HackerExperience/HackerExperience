@@ -20,7 +20,7 @@ import API.Events.Types as Events
 import Dict exposing (Dict)
 import Game.Model.LogData as LogData exposing (LogDataEmpty, LogDataNIP, LogDataText)
 import Game.Model.LogID as LogID exposing (LogID, RawLogID)
-import Game.Model.NIP as NIP exposing (NIP)
+import Game.Model.NIP as NIP
 import Game.Model.ProcessID exposing (ProcessID)
 import Game.Model.ProcessOperation as Operation exposing (Operation)
 import OrderedDict exposing (OrderedDict)

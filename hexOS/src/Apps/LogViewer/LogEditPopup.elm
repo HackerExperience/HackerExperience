@@ -1,6 +1,6 @@
 module Apps.LogViewer.LogEditPopup exposing (..)
 
--- TODO: Convert Html to UI
+-- TODO: Convert Html (H) to UI
 
 import API.Game as GameAPI
 import API.Logs.Json as LogsJD
@@ -14,8 +14,8 @@ import Game.Bus as Game
 import Game.Model.Log as Log exposing (Log)
 import Game.Model.LogID exposing (LogID)
 import Game.Model.NIP as NIP exposing (NIP)
-import Game.Model.ProcessOperation as Operation exposing (Operation)
-import Html as H exposing (Html)
+import Game.Model.ProcessOperation as Operation
+import Html as H
 import Json.Encode as JE
 import OS.AppID exposing (AppID)
 import OS.Bus
@@ -23,7 +23,6 @@ import UI exposing (UI, cl, col, row, text)
 import UI.Button
 import UI.Dropdown
 import UI.Form
-import UI.Icon
 import UI.Model.FormFields as FormFields exposing (TextField)
 import UI.TextInput
 import WM
@@ -329,6 +328,11 @@ logEditPerspectiveToBackendType perspective =
             "from_en"
 
 
+logDataEmptyToConfig : Model -> String -> String -> Maybe RequestConfig
+logDataEmptyToConfig _ cfgType cfgDirection =
+    Just ( cfgType, cfgDirection, "" )
+
+
 logDataTextToConfig : Model -> String -> String -> Maybe RequestConfig
 logDataTextToConfig model cfgType cfgDirection =
     if not (FormFields.isTextEmpty model.freeFormText) then
@@ -360,16 +364,11 @@ logDataNipToConfig model cfgType cfgDirection =
 
 getRequestConfig : Model -> Maybe RequestConfig
 getRequestConfig model =
-    let
-        withLogDataEmpty =
-            \( cfgType, cfgDirection ) ->
-                Just ( cfgType, cfgDirection, "" )
-    in
     case model.selectedType of
         TypeServerLogin ->
             case model.selectedPerspective of
                 Just PerspectiveSelf ->
-                    Just ( "server_login", "self", "" )
+                    logDataEmptyToConfig model "server_login" "self"
 
                 Just PerspectiveGateway ->
                     logDataNipToConfig model "server_login" "to_ap"
@@ -554,7 +553,7 @@ vPreview model =
             H.fieldset
                 []
                 [ H.legend [] [ H.text "Preview" ]
-                , UI.row [ cl "a-lep-e-p-text" ]
+                , row [ cl "a-lep-e-p-text" ]
                     [ text model.previewText
                     ]
                 ]
@@ -588,9 +587,6 @@ vSelector model =
 vFieldSelector : Model -> UI Msg
 vFieldSelector model =
     let
-        perspective =
-            getLogEditPerspectiveOptions model.selectedType
-
         typeSpecificFields =
             renderEditFields model
     in
@@ -625,7 +621,6 @@ renderTextArea textField =
     -- TODO: Actual textarea
     UI.TextInput.new "" textField
         |> UI.TextInput.withOnChange SetFreeFormField
-        -- |> UI.TextInput.withOnBlur (ValidateFieldIP changeIdentifier)
         |> UI.TextInput.toUI
 
 
@@ -699,7 +694,7 @@ vActionRow model =
 
 
 vActionButtonArea : Model -> UI Msg
-vActionButtonArea model =
+vActionButtonArea _ =
     let
         -- TODO: Better UX, show spinner etc
         editButton =
@@ -752,23 +747,23 @@ typeDropdownEntries =
     [ UI.Dropdown.GroupEntry { label = "File Operations" }
     , UI.Dropdown.SelectableEntry
         { label = getTypeDropdownLabel TypeFileTransfer
-        , onSelect = Just (OnTypeSelected <| TypeFileTransfer)
+        , onSelect = Just (OnTypeSelected TypeFileTransfer)
         , opts = Nothing
         }
     , UI.Dropdown.GroupEntry { label = "Misc" }
     , UI.Dropdown.SelectableEntry
         { label = getTypeDropdownLabel TypeServerLogin
-        , onSelect = Just (OnTypeSelected <| TypeServerLogin)
+        , onSelect = Just (OnTypeSelected TypeServerLogin)
         , opts = Nothing
         }
     , UI.Dropdown.SelectableEntry
         { label = getTypeDropdownLabel TypeConnectionProxied
-        , onSelect = Just (OnTypeSelected <| TypeConnectionProxied)
+        , onSelect = Just (OnTypeSelected TypeConnectionProxied)
         , opts = Nothing
         }
     , UI.Dropdown.SelectableEntry
         { label = getTypeDropdownLabel TypeCustom
-        , onSelect = Just (OnTypeSelected <| TypeCustom)
+        , onSelect = Just (OnTypeSelected TypeCustom)
         , opts = Nothing
         }
     ]
@@ -795,9 +790,9 @@ invalidLogPrompt model =
     let
         body =
             col [ cl "a-lep-invalid-log" ]
-                [ UI.text "The log you are trying to edit has an invalid structure or contains invalid fields:"
-                , UI.text model.previewText
-                , UI.text "It will be displayed as a Custom Log. Would you like to proceed?"
+                [ text "The log you are trying to edit has an invalid structure or contains invalid fields:"
+                , text model.previewText
+                , text "It will be displayed as a Custom Log. Would you like to proceed?"
                 ]
 
         action =

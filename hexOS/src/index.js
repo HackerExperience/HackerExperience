@@ -1,4 +1,5 @@
 import "./styles/themes/midnight/_index.scss";
+// import "./styles/themes/terminal/_index.scss";
 import "./styles/_index.scss";
 import { Elm } from "./Main.elm";
 

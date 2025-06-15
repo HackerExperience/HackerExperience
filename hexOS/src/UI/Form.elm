@@ -1,9 +1,7 @@
 module UI.Form exposing (..)
 
 import Html as H
-import Html.Attributes as HA
 import UI exposing (UI, cl, clMaybe)
-import UI.Icon exposing (Icon)
 
 
 type FieldLabelConfig msg

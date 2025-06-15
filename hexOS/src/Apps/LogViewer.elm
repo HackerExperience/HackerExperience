@@ -11,10 +11,9 @@ import Game.Bus as Game
 import Game.Model.Log as Log exposing (Log, LogType(..))
 import Game.Model.LogID as LogID exposing (LogID, RawLogID)
 import Game.Model.NIP exposing (NIP)
-import Game.Model.ProcessOperation as Operation exposing (Operation)
+import Game.Model.ProcessOperation as Operation
 import Game.Model.Server as Server
 import Html.Attributes as HA
-import Html.Events as HE
 import Maybe.Extra as Maybe
 import OS.AppID exposing (AppID)
 import OS.Bus
@@ -56,11 +55,8 @@ filterLogs model game =
     let
         server =
             Game.getServer game model.nip
-
-        logs =
-            Server.listLogs server
     in
-    logs
+    Server.listLogs server
 
 
 
@@ -187,6 +183,18 @@ view model game ctxMenu =
         ]
 
 
+{-| Things we may want in a header
+
+Quick filters:
+
+  - Filters log in which my (gateway, exit node) IP addresses show up
+
+Highlights (PS: not in header but rather as part of each log entry):
+
+  - Red if my IP is present (either gateway or exit node)
+  - Gray if low important noisy one (e.g. bounces without relevant IP addresses)
+
+-}
 vHeader : UI Msg
 vHeader =
     row [ cl "a-log-header", UI.centerItems ] [ text "Header" ]
@@ -212,6 +220,8 @@ vLogList model game =
 vLogRow : Model -> Log -> UI Msg
 vLogRow model log =
     let
+        -- NOTE: This function would benefit from getting split into smaller functions, but I don't
+        -- think now is the best time to do that. Refactor it once the UI matures a bit.
         time =
             "26/01 19:29:18"
 
