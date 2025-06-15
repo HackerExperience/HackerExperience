@@ -15,6 +15,7 @@ import Game.Model.ProcessOperation as Operation exposing (Operation)
 import Game.Model.Server as Server
 import Html.Attributes as HA
 import Html.Events as HE
+import Maybe.Extra as Maybe
 import OS.AppID exposing (AppID)
 import OS.Bus
 import OS.CtxMenu as CtxMenu
@@ -245,7 +246,7 @@ vLogRow model log =
                 [ deleteIcon ]
 
         actions =
-            if not log.isDeleted then
+            if not log.isDeleted && Maybe.isNothing log.currentOp then
                 row [ cl "a-log-row-actions" ]
                     [ editEntry, deleteEntry ]
 
