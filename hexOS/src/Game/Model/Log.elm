@@ -66,7 +66,9 @@ type LogType
 
 type LogOperation
     = OpStartingLogDelete
+    | OpStartingLogEdit
     | OpDeletingLog ProcessID
+    | OpEditingLog ProcessID
 
 
 
@@ -272,13 +274,25 @@ handleProcessOperation operation logs =
         Operation.Starting (Operation.LogDelete logId) ->
             updateLog logId (\log -> { log | currentOp = Just OpStartingLogDelete }) logs
 
+        Operation.Starting (Operation.LogEdit logId) ->
+            updateLog logId (\log -> { log | currentOp = Just OpStartingLogEdit }) logs
+
         Operation.Started (Operation.LogDelete logId) processId ->
             updateLog logId (\log -> { log | currentOp = Just <| OpDeletingLog processId }) logs
+
+        Operation.Started (Operation.LogEdit logId) processId ->
+            updateLog logId (\log -> { log | currentOp = Just <| OpEditingLog processId }) logs
 
         Operation.Finished (Operation.LogDelete logId) _ ->
             updateLog logId (\log -> { log | currentOp = Nothing }) logs
 
+        Operation.Finished (Operation.LogEdit logId) _ ->
+            updateLog logId (\log -> { log | currentOp = Nothing }) logs
+
         Operation.StartFailed (Operation.LogDelete logId) ->
+            updateLog logId (\log -> { log | currentOp = Nothing }) logs
+
+        Operation.StartFailed (Operation.LogEdit logId) ->
             updateLog logId (\log -> { log | currentOp = Nothing }) logs
 
 

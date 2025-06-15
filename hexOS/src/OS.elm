@@ -680,6 +680,9 @@ dispatchUpdateApp state model appMsg =
                     ( model, Effect.none )
 
         -- Popups
+        Apps.PopupLogEditMsg _ (LogEditPopup.ToOS busAction) ->
+            ( model, Effect.msgToCmd (PerformAction busAction) )
+
         Apps.PopupLogEditMsg appId subMsg ->
             case getAppModel model.appModels appId of
                 Apps.PopupLogEditModel appModel ->

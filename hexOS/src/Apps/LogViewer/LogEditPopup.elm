@@ -9,9 +9,11 @@ import Apps.Input as App
 import Apps.Manifest as App
 import Effect exposing (Effect)
 import Game
+import Game.Bus as Game
 import Game.Model.Log as Log exposing (Log)
 import Game.Model.LogID exposing (LogID)
 import Game.Model.NIP as NIP exposing (NIP)
+import Game.Model.ProcessOperation as Operation exposing (Operation)
 import Html as H exposing (Html)
 import Json.Encode as JE
 import OS.AppID exposing (AppID)
@@ -28,6 +30,7 @@ import WM
 
 type Msg
     = ToApp AppID App.Manifest OS.Bus.Action
+    | ToOS OS.Bus.Action
     | DropdownMsg DropdownID (UI.Dropdown.Msg Msg)
     | OnTypeSelected LogEditType
     | OnPerspectiveSelected LogEditPerspective
@@ -375,9 +378,6 @@ getRequestConfig model =
 update : Game.Model -> Msg -> Model -> ( Model, Effect Msg )
 update game msg model =
     case msg of
-        ToApp _ _ _ ->
-            ( model, Effect.none )
-
         OnTypeSelected logEditType ->
             let
                 updatedPerspective =
@@ -436,16 +436,15 @@ update game msg model =
                         cfgLogData
                         server.tunnelId
 
-                -- toGameMsg =
-                --     Game.ProcessOperation
-                --         model.nip
-                --         (Operation.Starting <| Operation.LogDelete log.id)
+                toGameMsg =
+                    Game.ProcessOperation
+                        model.nip
+                        (Operation.Starting <| Operation.LogEdit model.log.id)
             in
             ( { model | isEditing = True }
             , Effect.batch
                 [ Effect.logEdit (OnEditLogResponse model.log.id) config
-
-                -- , Effect.msgToCmd <| ToOS <| OS.Bus.ToGame toGameMsg
+                , Effect.msgToCmd <| ToOS <| OS.Bus.ToGame toGameMsg
                 ]
             )
 
@@ -478,6 +477,14 @@ update game msg model =
                     UI.Dropdown.update ddMsg ddModel
             in
             ( updateModel newDd, Effect.map (DropdownMsg ddId) ddEffect )
+
+        ToOS _ ->
+            -- Handled by OS
+            ( model, Effect.none )
+
+        ToApp _ _ _ ->
+            -- Handled by OS
+            ( model, Effect.none )
 
 
 ipValid : String -> Bool

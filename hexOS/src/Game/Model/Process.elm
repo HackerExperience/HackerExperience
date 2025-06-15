@@ -151,5 +151,8 @@ getProcessOperation data =
         ProcessData.LogDelete { logId } ->
             Just <| ProcessOperation.LogDelete logId
 
+        ProcessData.LogEdit { logId } ->
+            Just <| ProcessOperation.LogEdit logId
+
         _ ->
             Nothing

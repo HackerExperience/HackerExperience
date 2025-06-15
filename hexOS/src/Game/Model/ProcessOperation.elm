@@ -11,6 +11,7 @@ import Game.Model.ProcessID exposing (ProcessID)
 -}
 type OperationType
     = LogDelete LogID
+    | LogEdit LogID
 
 
 

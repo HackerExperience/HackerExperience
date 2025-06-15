@@ -209,13 +209,25 @@ handleProcessOperation operation server =
         Operation.Starting (Operation.LogDelete _) ->
             handleProcessOperationLog operation server
 
+        Operation.Starting (Operation.LogEdit _) ->
+            handleProcessOperationLog operation server
+
         Operation.Started (Operation.LogDelete _) _ ->
+            handleProcessOperationLog operation server
+
+        Operation.Started (Operation.LogEdit _) _ ->
             handleProcessOperationLog operation server
 
         Operation.Finished (Operation.LogDelete _) _ ->
             handleProcessOperationLog operation server
 
+        Operation.Finished (Operation.LogEdit _) _ ->
+            handleProcessOperationLog operation server
+
         Operation.StartFailed (Operation.LogDelete _) ->
+            handleProcessOperationLog operation server
+
+        Operation.StartFailed (Operation.LogEdit _) ->
             handleProcessOperationLog operation server
 
 
