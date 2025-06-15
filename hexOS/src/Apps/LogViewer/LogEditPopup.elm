@@ -573,7 +573,7 @@ vSelector : Model -> UI Msg
 vSelector model =
     let
         typeSelector =
-            dropdownEntries
+            typeDropdownEntries
                 |> UI.Dropdown.new
                 |> UI.Dropdown.withMaxHeight 200
                 |> UI.Dropdown.toUI model.typeDropdown
@@ -654,7 +654,7 @@ vPerspectiveSelector model =
             getLogEditPerspectiveOptions model.selectedType
 
         perspectiveSelector =
-            perspectiveEntries perspective
+            perspectiveDropdownEntries perspective
                 |> UI.Dropdown.new
                 |> UI.Dropdown.withWidth 200
                 |> UI.Dropdown.toUI model.perspectiveDropdown
@@ -712,13 +712,8 @@ vActionButtonArea model =
         [ editButton ]
 
 
-
--- Thoughts: Maybe the "direction" could be translated to "Perspective"
--- With these values: "Self" (or "Self-inflicted"); "Gateway" and "Endpoint"
-
-
-perspectiveEntries : LogEditPerspectiveOptions -> List (UI.Dropdown.ConfigEntry Msg)
-perspectiveEntries perspectiveOptions =
+perspectiveDropdownEntries : LogEditPerspectiveOptions -> List (UI.Dropdown.ConfigEntry Msg)
+perspectiveDropdownEntries perspectiveOptions =
     let
         self =
             UI.Dropdown.SelectableEntry
@@ -752,36 +747,47 @@ perspectiveEntries perspectiveOptions =
             [ gateway, endpoint ]
 
 
-dropdownEntries : List (UI.Dropdown.ConfigEntry Msg)
-dropdownEntries =
+typeDropdownEntries : List (UI.Dropdown.ConfigEntry Msg)
+typeDropdownEntries =
     [ UI.Dropdown.GroupEntry { label = "File Operations" }
     , UI.Dropdown.SelectableEntry
-        { label = "File Transfer"
+        { label = getTypeDropdownLabel TypeFileTransfer
         , onSelect = Just (OnTypeSelected <| TypeFileTransfer)
-        , opts = Nothing
-        }
-    , UI.Dropdown.SelectableEntry
-        { label = "File Delete"
-        , onSelect = Nothing
         , opts = Nothing
         }
     , UI.Dropdown.GroupEntry { label = "Misc" }
     , UI.Dropdown.SelectableEntry
-        { label = "Server Login"
+        { label = getTypeDropdownLabel TypeServerLogin
         , onSelect = Just (OnTypeSelected <| TypeServerLogin)
         , opts = Nothing
         }
     , UI.Dropdown.SelectableEntry
-        { label = "Connection Proxied"
+        { label = getTypeDropdownLabel TypeConnectionProxied
         , onSelect = Just (OnTypeSelected <| TypeConnectionProxied)
         , opts = Nothing
         }
     , UI.Dropdown.SelectableEntry
-        { label = "Custom Log (Free-form)"
+        { label = getTypeDropdownLabel TypeCustom
         , onSelect = Just (OnTypeSelected <| TypeCustom)
         , opts = Nothing
         }
     ]
+
+
+getTypeDropdownLabel : LogEditType -> String
+getTypeDropdownLabel logEditType =
+    case logEditType of
+        TypeCustom ->
+            "Custom Log (Free-form)"
+
+        TypeServerLogin ->
+            "Server Login"
+
+        TypeFileTransfer ->
+            "File Transfer"
+
+        TypeConnectionProxied ->
+            "Connection Proxied"
 
 
 invalidLogPrompt : Model -> ( UI ConfirmationPrompt.Msg, ConfirmationPrompt.ActionOption )
@@ -832,6 +838,9 @@ didOpen { appId } input =
 
         revision =
             Log.getNewestRevision log
+
+        ( selectedType, selectedPerspective, { ip1, ip2, freeFormText } ) =
+            inferInitialDataFromRevision revision.type_
     in
     ( { appId = appId
       , nip = nip
@@ -841,16 +850,48 @@ didOpen { appId } input =
       , hasChanged = False
       , isValid = True
       , isEditing = False
-      , selectedType = TypeCustom
-      , typeDropdown = UI.Dropdown.init (Just "TODO")
-      , perspectiveDropdown = UI.Dropdown.init Nothing
-      , selectedPerspective = Nothing
-      , ip1 = FormFields.text
-      , ip2 = FormFields.text
-      , freeFormText = FormFields.text
+      , selectedType = selectedType
+      , typeDropdown = UI.Dropdown.init (Just <| getTypeDropdownLabel selectedType)
+      , perspectiveDropdown = UI.Dropdown.init (Maybe.map perspectiveToString selectedPerspective)
+      , selectedPerspective = selectedPerspective
+      , ip1 = FormFields.textWithValue ip1
+      , ip2 = FormFields.textWithValue ip2
+      , freeFormText = FormFields.textWithValue freeFormText
       }
     , Effect.none
     )
+
+
+inferInitialDataFromRevision :
+    Log.LogType
+    ->
+        ( LogEditType
+        , Maybe LogEditPerspective
+        , { ip1 : String
+          , ip2 : String
+          , freeFormText : String
+          }
+        )
+inferInitialDataFromRevision type_ =
+    let
+        data =
+            { ip1 = ""
+            , ip2 = ""
+            , freeFormText = ""
+            }
+    in
+    case type_ of
+        Log.ServerLoginSelf _ ->
+            ( TypeServerLogin, Just PerspectiveSelf, data )
+
+        Log.ServerLoginGateway { nip } ->
+            ( TypeServerLogin, Just PerspectiveGateway, { data | ip1 = NIP.getIPString nip } )
+
+        Log.ServerLoginEndpoint { nip } ->
+            ( TypeServerLogin, Just PerspectiveEndpoint, { data | ip1 = NIP.getIPString nip } )
+
+        Log.CustomLog { text } ->
+            ( TypeCustom, Nothing, { data | freeFormText = text } )
 
 
 willClose : AppID -> Model -> WM.Window -> OS.Bus.Action
