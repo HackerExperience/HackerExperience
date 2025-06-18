@@ -329,6 +329,8 @@ components:
       properties:
         access:
           type: string
+          enum:
+            - ssh
         index:
           $ref: '#/components/schemas/IdxEndpoint'
         tunnel_id:
