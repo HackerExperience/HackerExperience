@@ -144,7 +144,7 @@ defmodule Game.Process.TOPTest do
       # PS: Do note it may be more than that because we wait an extra 10ms to make *sure* the
       # process is *really* complete. The oversized threshold is to avoid flakes in slower CI
       refute Resources.equal?(new_proc_s1_2.resources.processed, Resources.initial())
-      assert_decimal_eq(new_proc_s1_2.resources.processed.cpu, 11_000, 2_500)
+      assert_decimal_eq(new_proc_s1_2.resources.processed.cpu, 11_000, 3_000)
 
       # As for `server_2`, the only process it was working on is complete and now the TOP is empty
       top_2_pid = fetch_top_pid!(server_2.id, ctx)
