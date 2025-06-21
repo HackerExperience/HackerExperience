@@ -44,9 +44,6 @@ defmodule Game.Process.Viewable do
 
   defp serialize_data(data) when is_map(data) do
     # TODO: Enforce `data` matches the spec
-
-    data
-    |> :json.encode()
-    |> to_string()
+    JSON.encode!(data)
   end
 end

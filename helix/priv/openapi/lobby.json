@@ -198,7 +198,7 @@
     }
   },
   "info": {
-    "description": "nil",
+    "description": "Lobby API",
     "title": "Lobby API",
     "version": "1.0.0"
   },

@@ -34,8 +34,7 @@ defmodule Core.Event.Publishable do
             name: event_name,
             universe: Process.get(:helix_universe)
           }
-          |> :json.encode()
-          |> to_string()
+          |> JSON.encode!()
       end
 
     pids_to_publish = get_pids_to_publish(whom_to_publish)

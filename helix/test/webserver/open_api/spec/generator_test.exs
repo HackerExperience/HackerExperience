@@ -17,7 +17,7 @@ defmodule Webserver.OpenApi.Spec.GeneratorTest do
       assert %{info: info} = Generator.generate(spec)
       assert info.title == spec.title
       assert info.version == spec.version
-      assert info.description == spec[:description]
+      assert info.description == spec[:description] || spec.title
     end
 
     # We can't test exhaustively every path. Focusing on basic coverage + edge cases

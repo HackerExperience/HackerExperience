@@ -184,7 +184,7 @@ defmodule Game.Events.Log do
             process_id: process.id |> ID.to_external(entity_id, server_id),
             type: "#{log.type}",
             direction: "#{log.direction}",
-            data: data_mod.render(log.data) |> :json.encode() |> to_string()
+            data: data_mod.render(log.data) |> JSON.encode!()
           }
 
         {:ok, payload}

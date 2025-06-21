@@ -7,7 +7,7 @@ defmodule Test.HTTPClient do
   def post(endpoint_or_url, body \\ %{}, opts \\ [])
 
   def post(partial_url, body, opts) do
-    [body: body |> :json.encode() |> to_string(), method: :post]
+    [body: JSON.encode!(body), method: :post]
     |> do_process_request(partial_url, opts)
   end
 
@@ -85,15 +85,26 @@ defmodule Test.HTTPClient do
     |> wrap_response(404)
   end
 
-  defp parse_response({_, %Req.Response{status: status, body: raw_body}}) when is_map(raw_body) do
-    body = Renatils.Map.atomify_keys(raw_body)
+  defp parse_response({_, %Req.Response{status: status, body: raw_body}}) do
+    {body, data, error} =
+      cond do
+        is_map(raw_body) ->
+          body = Renatils.Map.atomify_keys(raw_body)
+          {body, body[:data], body[:error]}
+
+        status >= 200 and status < 300 ->
+          {raw_body, raw_body, nil}
+
+        true ->
+          {raw_body, nil, raw_body}
+      end
 
     %{
       status: status,
       raw_body: raw_body,
       body: body,
-      data: body[:data],
-      error: body[:error]
+      data: data,
+      error: error
     }
     |> wrap_response(status)
   end

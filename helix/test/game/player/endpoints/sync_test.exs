@@ -94,7 +94,7 @@ defmodule Game.Endpoint.Player.SyncTest do
             sse_payload
             |> String.slice(6..-1//1)
             |> String.replace("\n\n", "")
-            |> :json.decode()
+            |> JSON.decode!()
             |> Renatils.Map.atomify_keys()
 
           assert event.name == "index_requested"
@@ -110,14 +110,15 @@ defmodule Game.Endpoint.Player.SyncTest do
     http_client_base_url = Process.get(:test_http_client_base_url)
     x_request_id = Random.uuid()
 
-    spawn(fn ->
-      # Inherit process environment needed by test utils
-      Process.put(:test_http_client_base_url, http_client_base_url)
+    sse_request_pid =
+      spawn(fn ->
+        # Inherit process environment needed by test utils
+        Process.put(:test_http_client_base_url, http_client_base_url)
 
-      # We need to run the request in another thread because, since it's an SSE request,
-      # it will block indefinitely.
-      make_sse_request_sync(jwt, shard_id, x_request_id)
-    end)
+        # We need to run the request in another thread because, since it's an SSE request,
+        # it will block indefinitely.
+        make_sse_request_sync(jwt, shard_id, x_request_id)
+      end)
 
     # This is a hack for the async nature of SSE requests. A successful SSE request will block
     # indefinitely. For these tests, we want the test to proceed once we know the SSE connection has
@@ -125,6 +126,11 @@ defmodule Game.Endpoint.Player.SyncTest do
     # request are emitted and fully processed, which is what `wait_events!` ensures! As a result,
     # once `wait_events!/1` returns, we know the SSE process is ready and we can proceed testing.
     wait_events!(x_request_id: x_request_id)
+
+    # We've received the event, so we can kill the process we just spawned. If we don't kill it, it
+    # will remain open indefinitely, and eventually hit the (very aggressive) FeebDB timeout, since
+    # the connection would remain open for a long while.
+    Process.exit(sse_request_pid, :kill)
   end
 
   defp make_sse_request_sync(jwt, shard_id, x_request_id \\ nil) do

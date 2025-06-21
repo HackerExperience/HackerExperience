@@ -59,8 +59,7 @@ defmodule Game.Endpoint.Log.Edit do
          log_direction: raw_direction,
          log_data: raw_data
        }) do
-    # TODO: Elixir 1.18
-    raw_data = Renatils.JSON.decode!(raw_data)
+    raw_data = JSON.decode!(raw_data)
     params = Log.Validator.cast_params(raw_type, raw_direction, raw_data)
 
     if Log.Validator.validate_params(params) do
