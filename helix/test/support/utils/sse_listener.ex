@@ -93,7 +93,7 @@ defmodule Test.Utils.SSEListener do
     |> Enum.map(fn single_raw_payload ->
       single_raw_payload
       |> String.slice(6..-1//1)
-      |> :json.decode()
+      |> JSON.decode!()
       |> Renatils.Map.atomify_keys()
     end)
   end

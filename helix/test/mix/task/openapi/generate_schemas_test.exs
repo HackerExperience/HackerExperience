@@ -37,7 +37,7 @@ defmodule Mix.Tasks.Openapi.GenerateSchemasTest do
       @tmp_dir
       |> Path.join(path)
       |> File.read!()
-      |> :json.decode()
+      |> JSON.decode!()
 
     assert Map.has_key?(spec, "components")
     assert Map.has_key?(spec, "info")

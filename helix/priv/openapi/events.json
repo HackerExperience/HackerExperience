@@ -494,7 +494,7 @@
     "securitySchemes": {}
   },
   "info": {
-    "description": "nil",
+    "description": "Events API",
     "title": "Events API",
     "version": "1.0.0"
   },

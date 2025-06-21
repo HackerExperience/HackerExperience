@@ -18,7 +18,7 @@ defmodule Game.Endpoint.Log.EditTest do
 
       data =
         %{nip: NIP.to_external(gtw_nip), file_name: "foo", file_ext: "txt", file_version: 10}
-        |> Renatils.JSON.encode!()
+        |> JSON.encode!()
 
       params = valid_raw(type: :file_deleted, direction: :to_ap, data: data)
 

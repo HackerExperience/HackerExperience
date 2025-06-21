@@ -1,8 +1,6 @@
 defmodule Helix.MixProject do
   use Mix.Project
 
-  @env Mix.env()
-
   def project do
     [
       app: :helix,
@@ -33,7 +31,7 @@ defmodule Helix.MixProject do
   def application do
     [
       mod: {Helix.Application, []},
-      extra_applications: extra_applications(@env) ++ [:logger, :runtime_tools]
+      extra_applications: extra_applications(Mix.env()) ++ [:logger, :runtime_tools]
     ]
   end
 
