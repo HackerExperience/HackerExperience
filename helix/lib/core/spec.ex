@@ -7,6 +7,11 @@ defmodule Core.Spec do
     Norm.conform(input, spec)
   end
 
+  def validate_spec!(input, spec) do
+    {:ok, v} = validate_spec(input, spec)
+    v
+  end
+
   def external_id, do: spec(is_binary())
   def nip, do: spec(is_binary())
   def binary, do: spec(is_binary())
@@ -36,6 +41,8 @@ defmodule Core.Spec do
 
   defp replace_spec_enums(%Norm.Core.Collection{spec: inner_spec} = collection),
     do: Map.put(collection, :spec, replace_spec_enums(inner_spec))
+
+  defp replace_spec_enums(v), do: v
 
   defp get_enum_type([v | _]) when is_binary(v), do: :string
   defp get_enum_type([v | _]) when is_atom(v), do: :string
