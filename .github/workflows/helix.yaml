@@ -85,12 +85,19 @@ jobs:
         run: mix feeb_db.list_schemas && git diff --exit-code --no-ext-diff
 
       - name: Test app
-        run: mix coveralls.github
+        run: mix coveralls.github 2>&1 | tee test_output.log && exit ${PIPESTATUS[0]}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Check for transitive compilation dependencies
         run: mix xref graph --label compile-connected --fail-above 0
+
+      - name: Ensure clean test output
+        run: |
+          if grep -Ei "warning|error" test_output.log; then
+            echo "Found warning or error: ${cat test_output.log}"
+            exit 1
+          fi
 
       # NOTE: I'm unsure about `Uncache Helix`. I'll leave it uncommented (cached) for a while and
       # see whether it causes any problems. For a more robust CI, we may want a separate
