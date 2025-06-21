@@ -46,9 +46,6 @@ defmodule Game.Process.File.Transfer do
             registry: %{src_file_id: file_id, src_tunnel_id: tunnel_id}
           } = process
         ) do
-      # TODO: This should be done at a higher level (automatically for all Processable)
-      Core.Event.Relay.set(process)
-
       target_server_id = FileTransferProcess.get_target_id(transfer_type, gateway_id, endpoint_id)
       Core.begin_context(:server, target_server_id, :write)
 

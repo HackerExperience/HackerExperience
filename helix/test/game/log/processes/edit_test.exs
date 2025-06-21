@@ -1,7 +1,6 @@
 defmodule Game.Process.Log.EditTest do
   use Test.DBCase, async: true
 
-  alias Game.Process.Log.Edit, as: LogEditProcess
   alias Game.Log.Data, as: LogData
 
   setup [:with_game_db]
@@ -31,7 +30,7 @@ defmodule Game.Process.Log.EditTest do
       DB.commit()
 
       # Simulate Process being completed
-      assert {:ok, event} = LogEditProcess.Processable.on_complete(process)
+      assert {:ok, event} = U.processable_on_complete(process)
 
       Core.begin_context(:server, server.id, :read)
 
@@ -79,9 +78,7 @@ defmodule Game.Process.Log.EditTest do
       process = Setup.process!(server.id, entity_id: entity.id, type: :log_edit, spec: [log: log])
       DB.commit()
 
-      assert {{:error, event}, error_log} =
-               with_log(fn -> LogEditProcess.Processable.on_complete(process) end)
-
+      assert {{:error, event}, error_log} = with_log(fn -> U.processable_on_complete(process) end)
       assert error_log =~ "Unable to edit log: log_not_found"
 
       # A LogDeleteFailedEvent was returned
