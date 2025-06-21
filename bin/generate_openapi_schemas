@@ -8,7 +8,7 @@ ELM_OUTPUT_DIR="src/"
 generate_elm_types_for_lobby_api() {
     # NOTE: The empty server argument is on purpose, so the generated Elm
     # functions functions accept a `server` string as an argument.
-    npx elm-open-api $OPENAPI_PATH/lobby.yaml \
+    npx elm-open-api $OPENAPI_PATH/lobby.json \
         --module-name API.Lobby \
         --output-dir $ELM_OUTPUT_DIR \
         --effect-types task \
@@ -16,7 +16,7 @@ generate_elm_types_for_lobby_api() {
 }
 
 generate_elm_types_for_game_api() {
-    npx elm-open-api $OPENAPI_PATH/game.yaml \
+    npx elm-open-api $OPENAPI_PATH/game.json \
         --module-name API.Game \
         --output-dir $ELM_OUTPUT_DIR \
         --effect-types task \
@@ -24,21 +24,21 @@ generate_elm_types_for_game_api() {
 }
 
 generate_elm_types_for_events_api() {
-    npx elm-open-api $OPENAPI_PATH/events.yaml \
+    npx elm-open-api $OPENAPI_PATH/events.json \
         --module-name API.Events \
         --effect-types task \
         --output-dir $ELM_OUTPUT_DIR
 }
 
 generate_elm_types_for_processes_api() {
-    npx elm-open-api $OPENAPI_PATH/processes.yaml \
+    npx elm-open-api $OPENAPI_PATH/processes.json \
         --module-name API.Processes \
         --effect-types task \
         --output-dir $ELM_OUTPUT_DIR
 }
 
 generate_elm_types_for_logs_api() {
-    npx elm-open-api $OPENAPI_PATH/logs.yaml \
+    npx elm-open-api $OPENAPI_PATH/logs.json \
         --module-name API.Logs \
         --effect-types task \
         --output-dir $ELM_OUTPUT_DIR

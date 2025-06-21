@@ -77,19 +77,6 @@ defmodule Mix.Tasks.Openapi.GenerateSchemas do
   defp write_spec(spec, name, target_dir) do
     path = Path.join(target_dir, "#{name}.json")
     File.write!(path, :json.encode(spec))
-    generate_yaml_version(path)
-  end
-
-  defp generate_yaml_version(json_path) do
-    with {_, 1} <- System.cmd("which", ["yq"]),
-         do: raise("You need `yq` installed in your system")
-
-    yaml_path = String.replace(json_path, ".json", ".yaml")
-
-    case System.shell("cat #{json_path} | yq -y > #{yaml_path}") do
-      {_, 0} -> :ok
-      {error, _} -> {:error, error}
-    end
   end
 
   defp get_target_dir(args),
