@@ -57,7 +57,7 @@ fileDeleteTask :
     { server : String
     , authorization : { authorization : String }
     , body : API.Game.Types.FileDeleteRequest
-    , params : { nip : NIP, file_id : String }
+    , params : { file_id : String, nip : NIP }
     }
     -> Task.Task (OpenApi.Common.Error e String) API.Game.Types.FileDeleteOkResponse
 fileDeleteTask config =
@@ -90,7 +90,7 @@ fileInstallTask :
     { server : String
     , authorization : { authorization : String }
     , body : API.Game.Types.FileInstallRequest
-    , params : { nip : NIP, file_id : String }
+    , params : { file_id : String, nip : NIP }
     }
     -> Task.Task (OpenApi.Common.Error e String) API.Game.Types.FileInstallOkResponse
 fileInstallTask config =
@@ -123,7 +123,7 @@ fileTransferTask :
     { server : String
     , authorization : { authorization : String }
     , body : API.Game.Types.FileTransferRequest
-    , params : { nip : NIP, file_id : String }
+    , params : { file_id : String, nip : NIP }
     }
     -> Task.Task (OpenApi.Common.Error e String) API.Game.Types.FileTransferOkResponse
 fileTransferTask config =
@@ -156,7 +156,7 @@ installationUninstallTask :
     { server : String
     , authorization : { authorization : String }
     , body : API.Game.Types.InstallationUninstallRequest
-    , params : { nip : NIP, installation_id : String }
+    , params : { installation_id : String, nip : NIP }
     }
     -> Task.Task (OpenApi.Common.Error e String) API.Game.Types.InstallationUninstallOkResponse
 installationUninstallTask config =
@@ -190,7 +190,7 @@ logDeleteTask :
     { server : String
     , authorization : { authorization : String }
     , body : API.Game.Types.LogDeleteRequest
-    , params : { nip : NIP, log_id : LogID }
+    , params : { log_id : LogID, nip : NIP }
     }
     -> Task.Task (OpenApi.Common.Error e String) API.Game.Types.LogDeleteOkResponse
 logDeleteTask config =
@@ -223,7 +223,7 @@ logEditTask :
     { server : String
     , authorization : { authorization : String }
     , body : API.Game.Types.LogEditRequest
-    , params : { nip : NIP, log_id : LogID }
+    , params : { log_id : LogID, nip : NIP }
     }
     -> Task.Task (OpenApi.Common.Error e String) API.Game.Types.LogEditOkResponse
 logEditTask config =

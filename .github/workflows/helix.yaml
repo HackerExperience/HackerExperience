@@ -71,7 +71,7 @@ jobs:
       - name: Install OS dependencies
         uses: awalsh128/cache-apt-pkgs-action@v1
         with:
-          packages: yq
+          packages: jq
           version: 1.0
 
       - name: Compile app

@@ -1,1 +1,249 @@
-{"info":{"version":"1.0.0","description":"nil","title":"Lobby API"},"components":{"responses":{"GenericBadRequestResponse":{"description":"TODO","content":{"application/json":{"schema":{"type":"object","required":["error"],"properties":{"error":{"$ref":"#/components/schemas/GenericBadRequest"}}}}}},"GenericErrorResponse":{"description":"TODO","content":{"application/json":{"schema":{"type":"object","required":["error"],"properties":{"error":{"$ref":"#/components/schemas/GenericError"}}}}}},"GenericUnauthorizedResponse":{"description":"TODO","content":{}},"UserLoginOkResponse":{"description":"TODO description","content":{"application/json":{"schema":{"type":"object","required":["data"],"properties":{"data":{"$ref":"#/components/schemas/UserLoginOutput"}}}}}},"UserRegisterOkResponse":{"description":"TODO description","content":{"application/json":{"schema":{"type":"object","required":["data"],"properties":{"data":{"$ref":"#/components/schemas/UserRegisterOutput"}}}}}}},"schemas":{"GenericBadRequest":{"type":"object","required":["msg"],"properties":{"msg":{"type":"string"},"details":{"type":"string"}}},"GenericError":{"type":"object","required":["msg"],"properties":{"msg":{"type":"string"},"details":{"type":"string"}}},"UserLoginInput":{"type":"object","required":["password","email"],"properties":{"email":{"type":"string"},"password":{"type":"string"}}},"UserLoginOutput":{"type":"object","required":["token"],"properties":{"token":{"type":"string"}}},"UserRegisterInput":{"type":"object","required":["username","password","email"],"properties":{"email":{"type":"string"},"password":{"type":"string"},"username":{"type":"string"}}},"UserRegisterOutput":{"type":"object","required":["id"],"properties":{"id":{"type":"string"}}}},"requestBodies":{"UserLoginRequest":{"description":"TODO description","required":true,"content":{"application/json":{"schema":{"$ref":"#/components/schemas/UserLoginInput"}}}},"UserRegisterRequest":{"description":"TODO description","required":true,"content":{"application/json":{"schema":{"$ref":"#/components/schemas/UserRegisterInput"}}}}},"securitySchemes":{"AuthorizationToken":{"in":"header","name":"Authorization","type":"apiKey","description":""}}},"openapi":"3.1.0","paths":{"/v1/user/login":{"post":{"responses":{"200":{"$ref":"#/components/responses/UserLoginOkResponse"},"400":{"$ref":"#/components/responses/GenericBadRequestResponse"},"401":{"$ref":"#/components/responses/GenericUnauthorizedResponse"},"422":{"$ref":"#/components/responses/GenericErrorResponse"}},"operationId":"UserLogin","requestBody":{"$ref":"#/components/requestBodies/UserLoginRequest"}}},"/v1/user/register":{"post":{"responses":{"200":{"$ref":"#/components/responses/UserRegisterOkResponse"},"400":{"$ref":"#/components/responses/GenericBadRequestResponse"},"422":{"$ref":"#/components/responses/GenericErrorResponse"}},"operationId":"UserRegister","requestBody":{"$ref":"#/components/requestBodies/UserRegisterRequest"}}}}}
+{
+  "components": {
+    "requestBodies": {
+      "UserLoginRequest": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/UserLoginInput"
+            }
+          }
+        },
+        "description": "TODO description",
+        "required": true
+      },
+      "UserRegisterRequest": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/UserRegisterInput"
+            }
+          }
+        },
+        "description": "TODO description",
+        "required": true
+      }
+    },
+    "responses": {
+      "GenericBadRequestResponse": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "properties": {
+                "error": {
+                  "$ref": "#/components/schemas/GenericBadRequest"
+                }
+              },
+              "required": [
+                "error"
+              ],
+              "type": "object"
+            }
+          }
+        },
+        "description": "TODO"
+      },
+      "GenericErrorResponse": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "properties": {
+                "error": {
+                  "$ref": "#/components/schemas/GenericError"
+                }
+              },
+              "required": [
+                "error"
+              ],
+              "type": "object"
+            }
+          }
+        },
+        "description": "TODO"
+      },
+      "GenericUnauthorizedResponse": {
+        "content": {},
+        "description": "TODO"
+      },
+      "UserLoginOkResponse": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "properties": {
+                "data": {
+                  "$ref": "#/components/schemas/UserLoginOutput"
+                }
+              },
+              "required": [
+                "data"
+              ],
+              "type": "object"
+            }
+          }
+        },
+        "description": "TODO description"
+      },
+      "UserRegisterOkResponse": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "properties": {
+                "data": {
+                  "$ref": "#/components/schemas/UserRegisterOutput"
+                }
+              },
+              "required": [
+                "data"
+              ],
+              "type": "object"
+            }
+          }
+        },
+        "description": "TODO description"
+      }
+    },
+    "schemas": {
+      "GenericBadRequest": {
+        "properties": {
+          "details": {
+            "type": "string"
+          },
+          "msg": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "msg"
+        ],
+        "type": "object"
+      },
+      "GenericError": {
+        "properties": {
+          "details": {
+            "type": "string"
+          },
+          "msg": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "msg"
+        ],
+        "type": "object"
+      },
+      "UserLoginInput": {
+        "properties": {
+          "email": {
+            "type": "string"
+          },
+          "password": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "email",
+          "password"
+        ],
+        "type": "object"
+      },
+      "UserLoginOutput": {
+        "properties": {
+          "token": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "token"
+        ],
+        "type": "object"
+      },
+      "UserRegisterInput": {
+        "properties": {
+          "email": {
+            "type": "string"
+          },
+          "password": {
+            "type": "string"
+          },
+          "username": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "email",
+          "password",
+          "username"
+        ],
+        "type": "object"
+      },
+      "UserRegisterOutput": {
+        "properties": {
+          "id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id"
+        ],
+        "type": "object"
+      }
+    },
+    "securitySchemes": {
+      "AuthorizationToken": {
+        "description": "",
+        "in": "header",
+        "name": "Authorization",
+        "type": "apiKey"
+      }
+    }
+  },
+  "info": {
+    "description": "nil",
+    "title": "Lobby API",
+    "version": "1.0.0"
+  },
+  "openapi": "3.1.0",
+  "paths": {
+    "/v1/user/login": {
+      "post": {
+        "operationId": "UserLogin",
+        "requestBody": {
+          "$ref": "#/components/requestBodies/UserLoginRequest"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/UserLoginOkResponse"
+          },
+          "400": {
+            "$ref": "#/components/responses/GenericBadRequestResponse"
+          },
+          "401": {
+            "$ref": "#/components/responses/GenericUnauthorizedResponse"
+          },
+          "422": {
+            "$ref": "#/components/responses/GenericErrorResponse"
+          }
+        }
+      }
+    },
+    "/v1/user/register": {
+      "post": {
+        "operationId": "UserRegister",
+        "requestBody": {
+          "$ref": "#/components/requestBodies/UserRegisterRequest"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/UserRegisterOkResponse"
+          },
+          "400": {
+            "$ref": "#/components/responses/GenericBadRequestResponse"
+          },
+          "422": {
+            "$ref": "#/components/responses/GenericErrorResponse"
+          }
+        }
+      }
+    }
+  }
+}

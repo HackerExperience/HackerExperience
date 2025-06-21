@@ -1,1 +1,65 @@
-{"info":{"version":"1.0.0","description":"nil","title":"Processes API"},"components":{"responses":{},"schemas":{"file_delete":{"type":"object","required":[],"properties":{}},"file_install":{"type":"object","required":[],"properties":{}},"file_transfer":{"type":"object","required":[],"properties":{}},"installation_uninstall":{"type":"object","required":[],"properties":{}},"log_delete":{"type":"object","required":["log_id"],"properties":{"log_id":{"type":"string"}}},"log_edit":{"type":"object","required":["log_id"],"properties":{"log_id":{"type":"string"}}}},"requestBodies":{},"securitySchemes":{"AuthorizationToken":{"in":"header","name":"Authorization","type":"apiKey","description":""}}},"openapi":"3.1.0","paths":{}}
+{
+  "components": {
+    "requestBodies": {},
+    "responses": {},
+    "schemas": {
+      "file_delete": {
+        "properties": {},
+        "required": [],
+        "type": "object"
+      },
+      "file_install": {
+        "properties": {},
+        "required": [],
+        "type": "object"
+      },
+      "file_transfer": {
+        "properties": {},
+        "required": [],
+        "type": "object"
+      },
+      "installation_uninstall": {
+        "properties": {},
+        "required": [],
+        "type": "object"
+      },
+      "log_delete": {
+        "properties": {
+          "log_id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "log_id"
+        ],
+        "type": "object"
+      },
+      "log_edit": {
+        "properties": {
+          "log_id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "log_id"
+        ],
+        "type": "object"
+      }
+    },
+    "securitySchemes": {
+      "AuthorizationToken": {
+        "description": "",
+        "in": "header",
+        "name": "Authorization",
+        "type": "apiKey"
+      }
+    }
+  },
+  "info": {
+    "description": "nil",
+    "title": "Processes API",
+    "version": "1.0.0"
+  },
+  "openapi": "3.1.0",
+  "paths": {}
+}

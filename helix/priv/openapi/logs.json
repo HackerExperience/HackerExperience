@@ -1,1 +1,107 @@
-{"info":{"version":"1.0.0","description":"nil","title":"Logs API"},"components":{"responses":{},"schemas":{"LogDataEmpty":{"type":"object","required":[],"properties":{}},"LogDataLocalFile":{"type":"object","required":["file_version","file_ext","file_name"],"properties":{"file_name":{"type":"string"},"file_ext":{"type":"string"},"file_version":{"type":"integer"}}},"LogDataNIP":{"type":"object","required":["nip"],"properties":{"nip":{"type":"string"}}},"LogDataNIPProxy":{"type":"object","required":["to_nip","from_nip"],"properties":{"from_nip":{"type":"string"},"to_nip":{"type":"string"}}},"LogDataRemoteFile":{"type":"object","required":["file_version","file_ext","nip","file_name"],"properties":{"file_name":{"type":"string"},"nip":{"type":"string"},"file_ext":{"type":"string"},"file_version":{"type":"integer"}}},"LogDataText":{"type":"object","required":["text"],"properties":{"text":{"type":"string"}}}},"requestBodies":{},"securitySchemes":{"AuthorizationToken":{"in":"header","name":"Authorization","type":"apiKey","description":""}}},"openapi":"3.1.0","paths":{}}
+{
+  "components": {
+    "requestBodies": {},
+    "responses": {},
+    "schemas": {
+      "LogDataEmpty": {
+        "properties": {},
+        "required": [],
+        "type": "object"
+      },
+      "LogDataLocalFile": {
+        "properties": {
+          "file_ext": {
+            "type": "string"
+          },
+          "file_name": {
+            "type": "string"
+          },
+          "file_version": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "file_ext",
+          "file_name",
+          "file_version"
+        ],
+        "type": "object"
+      },
+      "LogDataNIP": {
+        "properties": {
+          "nip": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "nip"
+        ],
+        "type": "object"
+      },
+      "LogDataNIPProxy": {
+        "properties": {
+          "from_nip": {
+            "type": "string"
+          },
+          "to_nip": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "from_nip",
+          "to_nip"
+        ],
+        "type": "object"
+      },
+      "LogDataRemoteFile": {
+        "properties": {
+          "file_ext": {
+            "type": "string"
+          },
+          "file_name": {
+            "type": "string"
+          },
+          "file_version": {
+            "type": "integer"
+          },
+          "nip": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "file_ext",
+          "file_name",
+          "file_version",
+          "nip"
+        ],
+        "type": "object"
+      },
+      "LogDataText": {
+        "properties": {
+          "text": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "text"
+        ],
+        "type": "object"
+      }
+    },
+    "securitySchemes": {
+      "AuthorizationToken": {
+        "description": "",
+        "in": "header",
+        "name": "Authorization",
+        "type": "apiKey"
+      }
+    }
+  },
+  "info": {
+    "description": "nil",
+    "title": "Logs API",
+    "version": "1.0.0"
+  },
+  "openapi": "3.1.0",
+  "paths": {}
+}
