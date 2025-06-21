@@ -53,7 +53,7 @@ defmodule Game.Endpoint.Log.EditTest do
     end
   end
 
-  defp valid_raw(opts \\ []) do
+  defp valid_raw(opts) do
     opts
     |> valid_params()
     |> Renatils.Map.stringify_keys()
