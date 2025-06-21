@@ -38,6 +38,10 @@ defmodule Game.Index.ServerTest do
         |> Index.Server.endpoint_index(endpoint.id, endp_nip)
         |> Index.Server.render_endpoint_index(entity.id)
 
+      # End the transaction early (before the end of the test) because some times this test takes
+      # too long to complete and goes beyond the default `feebdb_repo_timeout` of 1s.
+      DB.commit()
+
       # Rendered index has a client-friendly format
       assert rendered_index.nip == NIP.to_external(endp_nip)
 
