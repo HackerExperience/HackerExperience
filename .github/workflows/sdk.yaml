@@ -1,0 +1,75 @@
+name: OpenAPI SDK
+on: [push]
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+
+    env:
+      IS_CI: true
+
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v4
+
+      - name: Cache node_modules
+        id: node_modules_cache
+        uses: actions/cache@v4
+        with:
+          path: hexOS/node_modules
+          key: hexos-node_modules-${{ hashFiles('hexOS/package-lock.json') }}
+
+      - name: Cache ~/.elm
+        uses: actions/cache@v4
+        with:
+          path: ~/.elm
+          key: hexos-elm-${{ hashFiles('hexOS/elm.json', 'hexOS/review/elm.json') }}
+
+      - name: Setup backend environment
+        uses: erlef/setup-beam@v1
+        with:
+          version-file: helix/.tool-versions
+          version-type: strict
+
+      - name: Restore deps cache
+        uses: actions/cache@v4
+        id: mix_cache
+        with:
+          path: |
+            helix/deps
+            helix/_build
+            helix/priv/native
+          key: dev-${{ runner.os }}-mix-${{ hashFiles('helix/mix.lock') }}-${{ hashFiles('helix/native/**/Cargo.lock') }}
+
+      - name: Install Elixir Dependencies
+        # if: steps.mix_cache.outputs.cache-hit != 'true'
+        run: |
+          mix local.rebar --force
+          mix local.hex --force
+          mix deps.get
+          mix deps.compile
+        working-directory: ./helix
+
+      # This is the equivalent of `apt-get install <packages>` but with built-in cache. Note it may
+      # not work well with packages that have pre/post installation scripts
+      - name: Install OS dependencies
+        uses: awalsh128/cache-apt-pkgs-action@v1
+        with:
+          packages: jq
+          version: 1.0
+
+      - name: Add elm-format to $PATH
+        run: echo "PATH=$(pwd)/hexOS/node_modules/.bin:$PATH" >> $GITHUB_ENV
+
+      - name: Validate OpenAPI specs are up-to-date
+        run: |
+          rm -rf helix/priv/openapi/
+          cd helix && mix openapi.generate_schemas
+          git diff --exit-code --no-ext-diff
+
+      - name: Validate Elm SDK is up-to-date
+        run: |
+          rm -rf helix/priv/openapi/
+          ./bin/generate_openapi_schemas
+          git diff --exit-code --no-ext-diff
+

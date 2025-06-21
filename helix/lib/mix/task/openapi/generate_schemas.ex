@@ -76,17 +76,18 @@ defmodule Mix.Tasks.Openapi.GenerateSchemas do
 
   defp write_spec(spec, name, target_dir) do
     path = Path.join(target_dir, "#{name}.json")
-    File.write!(path, :json.encode(spec))
-    generate_yaml_version(path)
+    File.write!("#{path}.tmp", :json.encode(spec))
+    sort_json_file!(path)
   end
 
-  defp generate_yaml_version(json_path) do
-    with {_, 1} <- System.cmd("which", ["yq"]),
-         do: raise("You need `yq` installed in your system")
+  defp sort_json_file!(path) do
+    with {_, 1} <- System.cmd("which", ["jq"]),
+         do: raise("You need `jq` installed in your system")
 
-    yaml_path = String.replace(json_path, ".json", ".yaml")
+    # Sort the JSON object. We have to walk over it because arrays are not sorted by default
+    jq_cmd = "jq -S 'walk(if type == \"array\" then sort else . end)'"
 
-    case System.shell("cat #{json_path} | yq -y > #{yaml_path}") do
+    case System.shell("cat #{path}.tmp | #{jq_cmd} > #{path} && rm #{path}.tmp") do
       {_, 0} -> :ok
       {error, _} -> {:error, error}
     end

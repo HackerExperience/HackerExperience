@@ -5,7 +5,7 @@ defmodule Webserver.Endpoint do
   alias Webserver.Conveyor
 
   def validate_input(request, endpoint, raw_params) do
-    case Norm.conform(raw_params, endpoint.input_spec()) do
+    case validate_spec(raw_params, endpoint.input_spec()) do
       {:ok, parsed_params} ->
         {:ok, %{request | parsed_params: Renatils.Map.safe_atomify_keys(parsed_params)}}
 
@@ -40,7 +40,7 @@ defmodule Webserver.Endpoint do
 
   defp enforce_output_spec!(endpoint, code, %{data: response}) when code >= 200 and code < 300 do
     # For successful responses we expect the endpoint to explicitly implement the `output_spec`.
-    Norm.conform!(response, endpoint.output_spec(code))
+    validate_spec!(response, endpoint.output_spec(code))
   end
 
   defp enforce_output_spec!(endpoint, error_code, %{error: error}) do
@@ -54,7 +54,7 @@ defmodule Webserver.Endpoint do
           output_spec_for_error(error_code)
       end
 
-    Norm.conform!(error, error_spec)
+    validate_spec!(error, error_spec)
   end
 
   defp parse_response({code, {a, b}}) when code >= 400,

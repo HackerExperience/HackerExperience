@@ -22,9 +22,6 @@ defmodule Game.Process.Log.Delete do
     alias Game.Events.Log.DeleteFailed, as: LogDeleteFailedEvent
 
     def on_complete(%{registry: %{tgt_log_id: %Log.ID{} = log_id}} = process) do
-      # TODO: This should be done at a higher level (automatically for all Processable)
-      Core.Event.Relay.set(process)
-
       Core.begin_context(:server, process.server_id, :write)
 
       with {true, %{entity: entity, target: server}} <- Henforcers.Server.has_access?(process),

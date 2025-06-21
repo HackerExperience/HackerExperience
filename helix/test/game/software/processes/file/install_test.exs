@@ -3,8 +3,6 @@ defmodule Game.Process.File.InstallTest do
 
   alias Game.{Installation}
 
-  alias Game.Process.File.Install, as: FileInstallProcess
-
   setup [:with_game_db]
 
   describe "Processable.on_complete/1" do
@@ -21,7 +19,7 @@ defmodule Game.Process.File.InstallTest do
       end)
 
       # Simulate Process being completed
-      assert {:ok, event} = FileInstallProcess.Processable.on_complete(process)
+      assert {:ok, event} = U.processable_on_complete(process)
 
       # After the process has completed, we now do have an Installation for this particular File
       Core.begin_context(:server, server.id, :read)
@@ -46,17 +44,16 @@ defmodule Game.Process.File.InstallTest do
       %{process: process} = Setup.process(server.id, type: :file_install, spec: [file: file])
       DB.commit()
 
-      assert {{:error, event}, log} =
-               with_log(fn -> FileInstallProcess.Processable.on_complete(process) end)
+      assert {{:error, event}, error_log} = with_log(fn -> U.processable_on_complete(process) end)
+      assert error_log =~ "Unable to install file: file_not_found"
 
       assert event.name == :file_install_failed
       assert event.data.process == process
       assert event.data.reason == "file_not_found"
-      assert log =~ "Unable to install file: file_not_found"
 
       # If we suddenly start having Visibility into the File, then we can complete the process
       Setup.file_visibility!(server.entity_id, server_id: server.id, file_id: file.id)
-      assert {:ok, _} = FileInstallProcess.Processable.on_complete(process)
+      assert {:ok, _} = U.processable_on_complete(process)
     end
 
     @tag :capture_log
@@ -73,7 +70,7 @@ defmodule Game.Process.File.InstallTest do
       assert process.server_id == other_server.id
       refute other_server.entity_id == entity.id
 
-      assert {:error, event} = FileInstallProcess.Processable.on_complete(process)
+      assert {:error, event} = U.processable_on_complete(process)
 
       assert event.name == :file_install_failed
       assert event.data.reason == "server_not_belongs"

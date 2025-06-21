@@ -1,8 +1,6 @@
 defmodule Game.Process.Log.DeleteTest do
   use Test.DBCase, async: true
 
-  alias Game.Process.Log.Delete, as: LogDeleteProcess
-
   setup [:with_game_db]
 
   describe "Processable.on_complete/1" do
@@ -18,7 +16,7 @@ defmodule Game.Process.Log.DeleteTest do
       DB.commit()
 
       # Simulate Process being completed
-      assert {:ok, event} = LogDeleteProcess.Processable.on_complete(process)
+      assert {:ok, event} = U.processable_on_complete(process)
 
       Core.begin_context(:server, server.id, :read)
 
@@ -64,7 +62,7 @@ defmodule Game.Process.Log.DeleteTest do
       DB.commit()
 
       # Simulate Process being completed
-      assert {:ok, event} = LogDeleteProcess.Processable.on_complete(process)
+      assert {:ok, event} = U.processable_on_complete(process)
 
       assert event.name == :log_deleted
       assert event.data.log.id == log.id
@@ -91,9 +89,7 @@ defmodule Game.Process.Log.DeleteTest do
 
       DB.commit()
 
-      assert {{:error, event}, error_log} =
-               with_log(fn -> LogDeleteProcess.Processable.on_complete(process) end)
-
+      assert {{:error, event}, error_log} = with_log(fn -> U.processable_on_complete(process) end)
       assert error_log =~ "Unable to delete log: log_already_deleted"
 
       # A LogDeleteFailedEvent was returned
@@ -108,9 +104,7 @@ defmodule Game.Process.Log.DeleteTest do
       process = Setup.process!(server.id, entity_id: entity.id, type: :log_delete, spec: [log: log])
       DB.commit()
 
-      assert {{:error, event}, error_log} =
-               with_log(fn -> LogDeleteProcess.Processable.on_complete(process) end)
-
+      assert {{:error, event}, error_log} = with_log(fn -> U.processable_on_complete(process) end)
       assert error_log =~ "Unable to delete log: log_not_found"
 
       # A LogDeleteFailedEvent was returned
@@ -146,8 +140,7 @@ defmodule Game.Process.Log.DeleteTest do
       DB.commit()
 
       # Simulate Process being completed
-      assert {{:error, event}, error_log} =
-               with_log(fn -> LogDeleteProcess.Processable.on_complete(process) end)
+      assert {{:error, event}, error_log} = with_log(fn -> U.processable_on_complete(process) end)
 
       assert event.name == :log_delete_failed
       assert event.data.reason == "tunnel_not_found"
@@ -171,8 +164,7 @@ defmodule Game.Process.Log.DeleteTest do
       DB.commit()
 
       # Simulate Process being completed
-      assert {{:error, event}, error_log} =
-               with_log(fn -> LogDeleteProcess.Processable.on_complete(process) end)
+      assert {{:error, event}, error_log} = with_log(fn -> U.processable_on_complete(process) end)
 
       assert event.name == :log_delete_failed
       assert event.data.reason == "server_not_belongs"

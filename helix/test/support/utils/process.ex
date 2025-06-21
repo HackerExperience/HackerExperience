@@ -3,6 +3,7 @@ defmodule Test.Utils.Process do
 
   alias Game.Process.TOP
   alias Game.{Process, Server, Tunnel}
+  alias Game.Process.Processable
 
   def get_all_process_registries do
     Core.with_context(:universe, :read, fn ->
@@ -41,6 +42,9 @@ defmodule Test.Utils.Process do
     # TOP will complete the process accordingly.
     TOP.on_boot({universe, shard_id})
   end
+
+  def processable_on_complete(%Process{} = process),
+    do: Processable.on_complete(process)
 
   def start_top(%Server.ID{} = server_id, opts \\ []) do
     {:ok, pid} = TOP.Registry.fetch_or_create(server_id)

@@ -39,8 +39,7 @@ defmodule Game.Events.Network.TunnelCreated do
           tunnel_id: external_id(),
           source_nip: binary(),
           target_nip: binary(),
-          # TODO: Is Enum supported? oneOf?
-          access: binary(),
+          access: enum(Tunnel.access_types()),
           index: Index.Server.endpoint_spec()
         }),
         [:tunnel_id, :source_nip, :target_nip, :access, :index]

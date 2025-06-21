@@ -23,6 +23,8 @@ defmodule Game.Tunnel do
 
   @derived_fields [:id]
 
+  def access_types, do: @access_types
+
   # TODO: Should I have an API to create multiple at once?
   def new(params) do
     params

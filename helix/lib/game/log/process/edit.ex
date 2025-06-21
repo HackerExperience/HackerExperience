@@ -30,9 +30,6 @@ defmodule Game.Process.Log.Edit do
     alias Game.Events.Log.EditFailed, as: LogEditFailedEvent
 
     def on_complete(%{registry: %{tgt_log_id: %Log.ID{} = parent_log_id}} = process) do
-      # TODO: This should be done at a higher level (automatically for all Processable)
-      Core.Event.Relay.set(process)
-
       Core.begin_context(:server, process.server_id, :write)
 
       log_params = Map.from_struct(process.data)

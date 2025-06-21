@@ -275,7 +275,11 @@ defmodule Webserver.OpenApi.Spec.Generator do
               }
 
             scalar_type ->
-              %{type: scalar_type}
+              if Map.has_key?(definition, :enum) do
+                %{type: scalar_type, enum: definition.enum}
+              else
+                %{type: scalar_type}
+              end
           end
 
         Map.put(acc, entry, property)
@@ -307,6 +311,7 @@ defmodule Webserver.OpenApi.Spec.Generator do
     |> Enum.reject(fn {name, _} -> name == :__openapi_name end)
     |> Enum.reduce({%{}, acc}, fn {name, spec}, {iacc, acc} ->
       type = get_openapi_type_from_spec(spec, root_name, acc)
+      xargs = get_openapi_metadata_from_spec(spec)
 
       child_schemas =
         case type do
@@ -322,7 +327,10 @@ defmodule Webserver.OpenApi.Spec.Generator do
             acc
         end
 
-      entry = %{type: type, required: name in required}
+      entry =
+        %{type: type, required: name in required}
+        |> Map.merge(xargs)
+
       {Map.put(iacc, name, entry), child_schemas}
     end)
   end
@@ -347,6 +355,14 @@ defmodule Webserver.OpenApi.Spec.Generator do
 
   defp get_openapi_type_from_spec(%Norm.Core.Spec{predicate: predicate}, _name, _acc),
     do: type_from_predicate(predicate)
+
+  defp get_openapi_type_from_spec({:enum, type, _values}, _name, _acc),
+    do: type
+
+  defp get_openapi_metadata_from_spec({:enum, _, values}),
+    do: %{enum: values}
+
+  defp get_openapi_metadata_from_spec(%_{}), do: %{}
 
   defp type_from_predicate("is_binary()"), do: :string
   defp type_from_predicate("is_boolean()"), do: :boolean

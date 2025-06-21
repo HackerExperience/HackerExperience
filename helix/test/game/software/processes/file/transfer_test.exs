@@ -1,8 +1,6 @@
 defmodule Game.Process.File.TransferTest do
   use Test.DBCase, async: true
 
-  alias Game.Process.File.Transfer, as: FileTransferProcess
-
   setup [:with_game_db]
 
   describe "Processable.on_complete/1" do
@@ -23,7 +21,7 @@ defmodule Game.Process.File.TransferTest do
       assert [] == U.get_all_files(gateway.id)
 
       # Simulate Process being completed
-      assert {:ok, event} = FileTransferProcess.Processable.on_complete(process)
+      assert {:ok, event} = U.processable_on_complete(process)
 
       # Now there is a new file in the Gateway!
       assert [new_file] = U.get_all_files(gateway.id)
@@ -56,7 +54,7 @@ defmodule Game.Process.File.TransferTest do
       assert [] == U.get_all_files(endpoint.id)
 
       # Simulate Process being completed
-      assert {:ok, event} = FileTransferProcess.Processable.on_complete(process)
+      assert {:ok, event} = U.processable_on_complete(process)
 
       # Now there is a new file in the Endpoint!
       assert [new_file] = U.get_all_files(endpoint.id)
@@ -86,12 +84,11 @@ defmodule Game.Process.File.TransferTest do
       DB.commit()
 
       # Simulate Process being completed
-      assert {{:error, event}, log} =
-               with_log(fn -> FileTransferProcess.Processable.on_complete(process) end)
+      assert {{:error, event}, error_log} = with_log(fn -> U.processable_on_complete(process) end)
+      assert error_log =~ "Unable to transfer file: tunnel_not_found"
 
       assert event.name == :file_transfer_failed
       assert event.data.reason == "tunnel_not_found"
-      assert log =~ "Unable to transfer file: tunnel_not_found"
     end
 
     test "fails if player does not have visibility over file" do
@@ -114,12 +111,11 @@ defmodule Game.Process.File.TransferTest do
       DB.commit()
 
       # Simulate Process being completed
-      assert {{:error, event}, log} =
-               with_log(fn -> FileTransferProcess.Processable.on_complete(process) end)
+      assert {{:error, event}, error_log} = with_log(fn -> U.processable_on_complete(process) end)
+      assert error_log =~ "Unable to transfer file: file_not_found"
 
       assert event.name == :file_transfer_failed
       assert event.data.reason == "file_not_found"
-      assert log =~ "Unable to transfer file: file_not_found"
     end
 
     test "fails if file no longer exists" do
@@ -136,12 +132,11 @@ defmodule Game.Process.File.TransferTest do
 
       DB.commit()
 
-      assert {{:error, event}, log} =
-               with_log(fn -> FileTransferProcess.Processable.on_complete(process) end)
+      assert {{:error, event}, error_log} = with_log(fn -> U.processable_on_complete(process) end)
+      assert error_log =~ "Unable to transfer file: file_not_found"
 
       assert event.name == :file_transfer_failed
       assert event.data.reason == "file_not_found"
-      assert log =~ "Unable to transfer file: file_not_found"
     end
   end
 

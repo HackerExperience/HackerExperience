@@ -3,8 +3,6 @@ defmodule Game.Process.File.DeleteTest do
 
   alias Game.{File}
 
-  alias Game.Process.File.Delete, as: FileDeleteProcess
-
   setup [:with_game_db]
 
   describe "Processable.on_complete/1" do
@@ -21,7 +19,7 @@ defmodule Game.Process.File.DeleteTest do
       end)
 
       # Simulate Process being completed
-      assert {:ok, event} = FileDeleteProcess.Processable.on_complete(process)
+      assert {:ok, event} = U.processable_on_complete(process)
 
       # After the process has completed, the File is gone
       Core.with_context(:server, server.id, :read, fn ->
@@ -41,18 +39,16 @@ defmodule Game.Process.File.DeleteTest do
       %{process: process} = Setup.process(server.id, type: :file_delete, spec: [file: file])
       DB.commit()
 
-      assert {{:error, event}, log} =
-               with_log(fn -> FileDeleteProcess.Processable.on_complete(process) end)
+      assert {{:error, event}, error_log} = with_log(fn -> U.processable_on_complete(process) end)
+      assert error_log =~ "Unable to delete file: file_not_found"
 
       assert event.name == :file_delete_failed
       assert event.data.process == process
       assert event.data.reason == "file_not_found"
 
-      assert log =~ "Unable to delete file: file_not_found"
-
       # If we suddenly start having Visibility into the File, then we can complete the process
       Setup.file_visibility!(server.entity_id, server_id: server.id, file_id: file.id)
-      assert {:ok, _} = FileDeleteProcess.Processable.on_complete(process)
+      assert {:ok, _} = U.processable_on_complete(process)
     end
 
     test "fails if Player attempts to delete File in another Server without access" do
@@ -68,14 +64,12 @@ defmodule Game.Process.File.DeleteTest do
 
       DB.commit()
 
-      assert {{:error, event}, log} =
-               with_log(fn -> FileDeleteProcess.Processable.on_complete(process) end)
+      assert {{:error, event}, error_log} = with_log(fn -> U.processable_on_complete(process) end)
+      assert error_log =~ "Unable to delete file: server_not_belongs"
 
       assert event.name == :file_delete_failed
       assert event.data.process == process
       assert event.data.reason == "server_not_belongs"
-
-      assert log =~ "Unable to delete file: server_not_belongs"
 
       # If we create a Tunnel between both servers, then we can complete the process
       tunnel =
@@ -86,7 +80,7 @@ defmodule Game.Process.File.DeleteTest do
       assert {:ok, _} =
                process
                |> U.Process.add_tunnel_to_process(tunnel.id)
-               |> FileDeleteProcess.Processable.on_complete()
+               |> U.processable_on_complete()
     end
   end
 
