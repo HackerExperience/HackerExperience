@@ -27,7 +27,7 @@ defmodule Webserver.Belt.ReadBody do
       true ->
         try do
           {:ok, raw_body, new_cowboy_request} = read_request_body(cowboy_request)
-          raw_params = if raw_body == "", do: %{}, else: :json.decode(raw_body)
+          raw_params = if raw_body == "", do: %{}, else: JSON.decode!(raw_body)
           %{request | raw_params: raw_params, cowboy_request: new_cowboy_request}
         rescue
           # Invalid JSON

@@ -123,7 +123,7 @@ defmodule Game.Index.Log do
       revision_id: personal_revision_id,
       type: "#{log.type}",
       direction: "#{log.direction}",
-      data: data_mod.render(log.data) |> :json.encode() |> to_string(),
+      data: data_mod.render(log.data) |> JSON.encode!(),
       source: "#{visibility_source}"
     }
   end

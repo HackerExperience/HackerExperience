@@ -95,7 +95,7 @@ jobs:
       - name: Ensure clean test output
         run: |
           if grep -Ei "warning|error" test_output.log; then
-            echo "Found warning or error: ${cat test_output.log}"
+            echo "Found warning or error: $(cat test_output.log)"
             exit 1
           fi
 

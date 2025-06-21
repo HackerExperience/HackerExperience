@@ -76,7 +76,7 @@ defmodule Mix.Tasks.Openapi.GenerateSchemas do
 
   defp write_spec(spec, name, target_dir) do
     path = Path.join(target_dir, "#{name}.json")
-    File.write!("#{path}.tmp", :json.encode(spec))
+    File.write!("#{path}.tmp", JSON.encode!(spec))
     sort_json_file!(path)
   end
 

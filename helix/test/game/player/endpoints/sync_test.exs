@@ -94,7 +94,7 @@ defmodule Game.Endpoint.Player.SyncTest do
             sse_payload
             |> String.slice(6..-1//1)
             |> String.replace("\n\n", "")
-            |> :json.decode()
+            |> JSON.decode!()
             |> Renatils.Map.atomify_keys()
 
           assert event.name == "index_requested"

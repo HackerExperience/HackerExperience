@@ -29,7 +29,7 @@ defmodule Webserver.Belt.SendResponse do
   end
 
   defp push_conveyor_response(cowboy_request, conveyor) do
-    body = :json.encode(conveyor.response_message)
+    body = JSON.encode!(conveyor.response_message)
     :cowboy_req.reply(conveyor.response_status, %{}, body, cowboy_request)
   end
 
