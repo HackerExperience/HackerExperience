@@ -88,6 +88,17 @@
         },
         "description": "TODO description",
         "required": true
+      },
+      "SoftwareManifestRequest": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/SoftwareManifestInput"
+            }
+          }
+        },
+        "description": "TODO description",
+        "required": true
       }
     },
     "responses": {
@@ -264,6 +275,24 @@
               "properties": {
                 "data": {
                   "$ref": "#/components/schemas/ServerLoginOutput"
+                }
+              },
+              "required": [
+                "data"
+              ],
+              "type": "object"
+            }
+          }
+        },
+        "description": "TODO description"
+      },
+      "SoftwareManifestOkResponse": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "properties": {
+                "data": {
+                  "$ref": "#/components/schemas/SoftwareManifestOutput"
                 }
               },
               "required": [
@@ -455,6 +484,44 @@
       "ServerLoginOutput": {
         "properties": {},
         "required": [],
+        "type": "object"
+      },
+      "SoftwareManifest": {
+        "properties": {
+          "extension": {
+            "type": "string"
+          },
+          "type": {
+            "enum": [
+              "cracker",
+              "log_editor"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "extension",
+          "type"
+        ],
+        "type": "object"
+      },
+      "SoftwareManifestInput": {
+        "properties": {},
+        "required": [],
+        "type": "object"
+      },
+      "SoftwareManifestOutput": {
+        "properties": {
+          "manifest": {
+            "items": {
+              "$ref": "#/components/schemas/SoftwareManifest"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "manifest"
+        ],
         "type": "object"
       }
     },
@@ -754,6 +821,19 @@
             "AuthorizationToken": []
           }
         ]
+      }
+    },
+    "/v1/software/manifest": {
+      "get": {
+        "operationId": "SoftwareManifest",
+        "requestBody": {
+          "$ref": "#/components/requestBodies/SoftwareManifestRequest"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/SoftwareManifestOkResponse"
+          }
+        }
       }
     }
   }

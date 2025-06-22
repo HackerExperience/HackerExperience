@@ -40,6 +40,11 @@ module API.Game.Types exposing
     , ServerLoginOkResponse
     , ServerLoginOutput
     , ServerLoginRequest
+    , SoftwareManifest
+    , SoftwareManifestInput
+    , SoftwareManifestOkResponse
+    , SoftwareManifestOutput
+    , SoftwareManifestRequest
     )
 
 import Game.Model.LogID as LogID exposing (LogID(..))
@@ -60,9 +65,22 @@ import Game.Model.TunnelID as TunnelID exposing (TunnelID(..))
 @docs InstallationUninstallOkResponse, InstallationUninstallOutput, InstallationUninstallRequest, LogDeleteInput
 @docs LogDeleteOkResponse, LogDeleteOutput, LogDeleteRequest, LogEditInput, LogEditOkResponse, LogEditOutput
 @docs LogEditRequest, PlayerSyncInput, PlayerSyncOkResponse, PlayerSyncOutput, PlayerSyncRequest
-@docs ServerLoginInput, ServerLoginOkResponse, ServerLoginOutput, ServerLoginRequest
+@docs ServerLoginInput, ServerLoginOkResponse, ServerLoginOutput, ServerLoginRequest, SoftwareManifest
+@docs SoftwareManifestInput, SoftwareManifestOkResponse, SoftwareManifestOutput, SoftwareManifestRequest
 
 -}
+type alias SoftwareManifestOutput =
+    { manifest : List SoftwareManifest }
+
+
+type alias SoftwareManifestInput =
+    {}
+
+
+type alias SoftwareManifest =
+    { extension : String, type_ : String }
+
+
 type alias ServerLoginOutput =
     {}
 
@@ -143,6 +161,10 @@ type alias FileDeleteInput =
     { tunnel_id : Maybe TunnelID }
 
 
+type alias SoftwareManifestOkResponse =
+    { data : SoftwareManifestOutput }
+
+
 type alias ServerLoginOkResponse =
     { data : ServerLoginOutput }
 
@@ -185,6 +207,10 @@ type alias FileInstallOkResponse =
 
 type alias FileDeleteOkResponse =
     { data : FileDeleteOutput }
+
+
+type alias SoftwareManifestRequest =
+    SoftwareManifestInput
 
 
 type alias ServerLoginRequest =

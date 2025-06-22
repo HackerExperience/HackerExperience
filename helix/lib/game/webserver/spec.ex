@@ -51,6 +51,11 @@ defmodule Game.Webserver.Spec do
       {Endpoint.Log.Edit, :post} => %{
         path: "/v1/server/{nip}/log/{log_id}/edit",
         responses: [200]
+      },
+      {Endpoint.Software.Manifest, :get} => %{
+        path: "/v1/software/manifest",
+        responses: [200],
+        public?: true
       }
     }
   end

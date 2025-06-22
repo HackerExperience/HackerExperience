@@ -1,6 +1,6 @@
 defmodule Game.File do
   use Core.Schema
-  alias Game.Server
+  alias Game.{Server, Software}
 
   # TODO
   @type t :: term()
@@ -10,9 +10,7 @@ defmodule Game.File do
   @context :server
   @table :files
 
-  @file_types [
-    :log_editor
-  ]
+  @file_types Software.types(:all)
 
   @schema [
     {:id, ID.Definition.ref(:file_id)},

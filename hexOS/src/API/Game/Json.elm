@@ -12,7 +12,8 @@ module API.Game.Json exposing
     , encodeLogDeleteRequest, encodeLogEditInput, encodeLogEditOkResponse, encodeLogEditOutput
     , encodeLogEditRequest, encodePlayerSyncInput, encodePlayerSyncOkResponse, encodePlayerSyncOutput
     , encodePlayerSyncRequest, encodeServerLoginInput, encodeServerLoginOkResponse, encodeServerLoginOutput
-    , encodeServerLoginRequest
+    , encodeServerLoginRequest, encodeSoftwareManifest, encodeSoftwareManifestInput
+    , encodeSoftwareManifestOkResponse, encodeSoftwareManifestOutput, encodeSoftwareManifestRequest
     , decodeFileDeleteInput, decodeFileDeleteOkResponse, decodeFileDeleteOutput, decodeFileDeleteRequest
     , decodeFileInstallInput, decodeFileInstallOkResponse, decodeFileInstallOutput, decodeFileInstallRequest
     , decodeFileTransferInput, decodeFileTransferOkResponse, decodeFileTransferOutput, decodeFileTransferRequest
@@ -23,7 +24,8 @@ module API.Game.Json exposing
     , decodeLogDeleteRequest, decodeLogEditInput, decodeLogEditOkResponse, decodeLogEditOutput
     , decodeLogEditRequest, decodePlayerSyncInput, decodePlayerSyncOkResponse, decodePlayerSyncOutput
     , decodePlayerSyncRequest, decodeServerLoginInput, decodeServerLoginOkResponse, decodeServerLoginOutput
-    , decodeServerLoginRequest
+    , decodeServerLoginRequest, decodeSoftwareManifest, decodeSoftwareManifestInput
+    , decodeSoftwareManifestOkResponse, decodeSoftwareManifestOutput, decodeSoftwareManifestRequest
     )
 
 {-|
@@ -41,7 +43,8 @@ module API.Game.Json exposing
 @docs encodeLogDeleteRequest, encodeLogEditInput, encodeLogEditOkResponse, encodeLogEditOutput
 @docs encodeLogEditRequest, encodePlayerSyncInput, encodePlayerSyncOkResponse, encodePlayerSyncOutput
 @docs encodePlayerSyncRequest, encodeServerLoginInput, encodeServerLoginOkResponse, encodeServerLoginOutput
-@docs encodeServerLoginRequest
+@docs encodeServerLoginRequest, encodeSoftwareManifest, encodeSoftwareManifestInput
+@docs encodeSoftwareManifestOkResponse, encodeSoftwareManifestOutput, encodeSoftwareManifestRequest
 
 
 ## Decoders
@@ -56,7 +59,8 @@ module API.Game.Json exposing
 @docs decodeLogDeleteRequest, decodeLogEditInput, decodeLogEditOkResponse, decodeLogEditOutput
 @docs decodeLogEditRequest, decodePlayerSyncInput, decodePlayerSyncOkResponse, decodePlayerSyncOutput
 @docs decodePlayerSyncRequest, decodeServerLoginInput, decodeServerLoginOkResponse, decodeServerLoginOutput
-@docs decodeServerLoginRequest
+@docs decodeServerLoginRequest, decodeSoftwareManifest, decodeSoftwareManifestInput
+@docs decodeSoftwareManifestOkResponse, decodeSoftwareManifestOutput, decodeSoftwareManifestRequest
 
 -}
 
@@ -68,6 +72,51 @@ import Game.Model.TunnelID as TunnelID exposing (TunnelID(..))
 import Json.Decode
 import Json.Encode
 import OpenApi.Common
+
+
+decodeSoftwareManifestOutput : Json.Decode.Decoder API.Game.Types.SoftwareManifestOutput
+decodeSoftwareManifestOutput =
+    Json.Decode.succeed
+        (\manifest -> { manifest = manifest })
+        |> OpenApi.Common.jsonDecodeAndMap
+            (Json.Decode.field
+                "manifest"
+                (Json.Decode.list decodeSoftwareManifest)
+            )
+
+
+encodeSoftwareManifestOutput : API.Game.Types.SoftwareManifestOutput -> Json.Encode.Value
+encodeSoftwareManifestOutput rec =
+    Json.Encode.object
+        [ ( "manifest", Json.Encode.list encodeSoftwareManifest rec.manifest ) ]
+
+
+decodeSoftwareManifestInput : Json.Decode.Decoder API.Game.Types.SoftwareManifestInput
+decodeSoftwareManifestInput =
+    Json.Decode.succeed {}
+
+
+encodeSoftwareManifestInput : API.Game.Types.SoftwareManifestInput -> Json.Encode.Value
+encodeSoftwareManifestInput rec =
+    Json.Encode.object []
+
+
+decodeSoftwareManifest : Json.Decode.Decoder API.Game.Types.SoftwareManifest
+decodeSoftwareManifest =
+    Json.Decode.succeed
+        (\extension type_ -> { extension = extension, type_ = type_ })
+        |> OpenApi.Common.jsonDecodeAndMap
+            (Json.Decode.field "extension" Json.Decode.string)
+        |> OpenApi.Common.jsonDecodeAndMap
+            (Json.Decode.field "type" Json.Decode.string)
+
+
+encodeSoftwareManifest : API.Game.Types.SoftwareManifest -> Json.Encode.Value
+encodeSoftwareManifest rec =
+    Json.Encode.object
+        [ ( "extension", Json.Encode.string rec.extension )
+        , ( "type", Json.Encode.string rec.type_ )
+        ]
 
 
 decodeServerLoginOutput : Json.Decode.Decoder API.Game.Types.ServerLoginOutput
@@ -418,6 +467,22 @@ encodeFileDeleteInput rec =
         )
 
 
+decodeSoftwareManifestOkResponse : Json.Decode.Decoder API.Game.Types.SoftwareManifestOkResponse
+decodeSoftwareManifestOkResponse =
+    Json.Decode.succeed
+        (\data -> { data = data })
+        |> OpenApi.Common.jsonDecodeAndMap
+            (Json.Decode.field
+                "data"
+                decodeSoftwareManifestOutput
+            )
+
+
+encodeSoftwareManifestOkResponse : API.Game.Types.SoftwareManifestOkResponse -> Json.Encode.Value
+encodeSoftwareManifestOkResponse rec =
+    Json.Encode.object [ ( "data", encodeSoftwareManifestOutput rec.data ) ]
+
+
 decodeServerLoginOkResponse : Json.Decode.Decoder API.Game.Types.ServerLoginOkResponse
 decodeServerLoginOkResponse =
     Json.Decode.succeed
@@ -587,6 +652,16 @@ decodeFileDeleteOkResponse =
 encodeFileDeleteOkResponse : API.Game.Types.FileDeleteOkResponse -> Json.Encode.Value
 encodeFileDeleteOkResponse rec =
     Json.Encode.object [ ( "data", encodeFileDeleteOutput rec.data ) ]
+
+
+decodeSoftwareManifestRequest : Json.Decode.Decoder API.Game.Types.SoftwareManifestRequest
+decodeSoftwareManifestRequest =
+    decodeSoftwareManifestInput
+
+
+encodeSoftwareManifestRequest : API.Game.Types.SoftwareManifestRequest -> Json.Encode.Value
+encodeSoftwareManifestRequest =
+    encodeSoftwareManifestInput
 
 
 decodeServerLoginRequest : Json.Decode.Decoder API.Game.Types.ServerLoginRequest
