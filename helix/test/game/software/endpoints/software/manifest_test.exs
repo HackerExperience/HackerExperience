@@ -1,8 +1,7 @@
 defmodule Game.Endpoint.Software.ManifestTest do
   use Test.WebCase, async: true
-  alias Game.{Software}
 
-  setup [:with_game_webserver, :with_game_db]
+  setup [:with_game_db, :with_game_webserver]
 
   describe "Software.Manifest request" do
     test "returns the manifest (unauthenticated)" do
@@ -14,11 +13,7 @@ defmodule Game.Endpoint.Software.ManifestTest do
       assert cracker["extension"] == "crc"
     end
 
-    test "returns the manifest (authenticated)", %{shard_id: shard_id} do
-      # TODO: `player` (and `jwt`?) should automagically show up when `with_game_webserver`
-      player = Setup.player!()
-      jwt = U.jwt_token(uid: player.external_id)
-
+    test "returns the manifest (authenticated)", %{shard_id: shard_id, jwt: jwt} do
       assert {:ok, %{status: 200, data: %{manifest: _}}} =
                get(build_path(), %{}, shard_id: shard_id, token: jwt)
     end
