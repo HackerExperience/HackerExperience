@@ -39,11 +39,11 @@ defmodule Game.Services.ConnectionTest do
     end
 
     test "creates a connection inside the tunnel (with bounce)" do
-      %{nip: gtw_nip} = Setup.server_full()
-      %{nip: ap_nip} = Setup.server_full()
-      %{nip: mid_nip} = Setup.server_full()
-      %{nip: en_nip} = Setup.server_full()
-      %{nip: endp_nip} = Setup.server_full()
+      %{nip: gtw_nip} = Setup.server()
+      %{nip: ap_nip} = Setup.server_lite()
+      %{nip: mid_nip} = Setup.server_lite()
+      %{nip: en_nip} = Setup.server_lite()
+      %{nip: endp_nip} = Setup.server()
 
       # Tunnel: Gateway -> Access Point -> Mid -> Exit Node -> Endpoint
       tunnel =
