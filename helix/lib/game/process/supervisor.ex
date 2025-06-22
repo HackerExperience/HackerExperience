@@ -17,8 +17,12 @@ defmodule Game.Process.Supervisor do
            # Let's wait for FeebDB to be fully booted (so the queries are available)
            Feeb.DB.Boot.wait_boot!()
 
-           TOP.on_boot({:multiplayer, 1})
-           TOP.on_boot({:singleplayer, 1})
+           # The "global" shards with ID 1 don't really exist in the test environment; no need to
+           # run them.
+           if Mix.env() != :test do
+             TOP.on_boot({:multiplayer, 1})
+             TOP.on_boot({:singleplayer, 1})
+           end
          end}
       ]
 

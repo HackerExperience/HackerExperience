@@ -80,10 +80,6 @@ jobs:
       - name: Check formatting
         run: mix format --check-formatted
 
-      # TODO: Consider moving this to `linters`. It does a force-compilation (and doesn't need to happen in TEST, albeit harmless)
-      - name: Validate feebdb_schemas.json is up-to-date
-        run: mix feeb_db.list_schemas && git diff --exit-code --no-ext-diff
-
       - name: Test app
         run: mix coveralls.github 2>&1 | tee test_output.log && exit ${PIPESTATUS[0]}
         env:
@@ -95,7 +91,7 @@ jobs:
       - name: Ensure clean test output
         run: |
           if grep -Ei "warning|error" test_output.log; then
-            echo "Found warning or error: ${cat test_output.log}"
+            echo "Found warning or error: $(cat test_output.log)"
             exit 1
           fi
 
@@ -182,3 +178,6 @@ jobs:
 
       - name: Run dialyzer
         run: mix dialyzer --format github
+
+      - name: Validate feebdb_schemas.json is up-to-date
+        run: mix feeb_db.list_schemas && git diff --exit-code --no-ext-diff

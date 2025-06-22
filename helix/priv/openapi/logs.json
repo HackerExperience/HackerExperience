@@ -98,7 +98,7 @@
     }
   },
   "info": {
-    "description": "nil",
+    "description": "Logs API",
     "title": "Logs API",
     "version": "1.0.0"
   },

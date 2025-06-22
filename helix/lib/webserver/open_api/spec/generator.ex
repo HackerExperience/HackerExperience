@@ -17,7 +17,7 @@ defmodule Webserver.OpenApi.Spec.Generator do
   defp generate_info(helix_spec) do
     %{
       title: helix_spec.title,
-      description: helix_spec[:description],
+      description: helix_spec[:description] || helix_spec.title,
       version: helix_spec.version
     }
   end

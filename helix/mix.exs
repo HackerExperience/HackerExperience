@@ -1,13 +1,11 @@
 defmodule Helix.MixProject do
   use Mix.Project
 
-  @env Mix.env()
-
   def project do
     [
       app: :helix,
       version: "0.0.1",
-      elixir: "~> 1.14",
+      elixir: "~> 1.18",
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
       aliases: aliases(),
@@ -33,7 +31,7 @@ defmodule Helix.MixProject do
   def application do
     [
       mod: {Helix.Application, []},
-      extra_applications: extra_applications(@env) ++ [:logger, :runtime_tools]
+      extra_applications: extra_applications(Mix.env()) ++ [:logger, :runtime_tools]
     ]
   end
 
@@ -49,8 +47,8 @@ defmodule Helix.MixProject do
   # Type `mix help deps` for examples and options.
   defp deps do
     [
-      {:cowboy, "~> 2.12"},
-      {:rustler, "~> 0.32.0"},
+      {:cowboy, "~> 2.13"},
+      {:rustler, "~> 0.36.0"},
       {:decimal, "~> 2.3.0"},
       {:feebdb, github: "renatomassaro/feebdb", branch: "main"},
       {:jose, "~> 1.11"},
@@ -58,10 +56,10 @@ defmodule Helix.MixProject do
       {:renatils, "~> 0.1.3"},
       {:docp, "~> 1.0"},
       {:dialyxir, "~> 1.4", only: [:dev], runtime: false},
-      {:mox, "~> 1.1", only: :test},
-      {:excoveralls, "~> 0.18.2", only: :test},
-      {:req, "~> 0.4.8", only: :test},
-      {:mix_test_watch, "~> 1.2", only: [:dev, :test], runtime: false}
+      {:mox, "~> 1.2", only: :test},
+      {:excoveralls, "~> 0.18.5", only: :test},
+      {:req, "~> 0.5.10", only: :test},
+      {:mix_test_watch, "~> 1.3", only: [:dev, :test], runtime: false}
     ]
   end
 

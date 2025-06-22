@@ -60,7 +60,7 @@ defmodule Test.Web.Request do
           Map.put(headers, "test-body-mock", mock_body)
 
         mock_body when is_map(mock_body) ->
-          stringified_body = mock_body |> :json.encode() |> to_string()
+          stringified_body = mock_body |> JSON.encode!()
           Map.put(headers, "test-body-mock", stringified_body)
       end
     end
