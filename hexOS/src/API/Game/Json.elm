@@ -12,8 +12,9 @@ module API.Game.Json exposing
     , encodeLogDeleteRequest, encodeLogEditInput, encodeLogEditOkResponse, encodeLogEditOutput
     , encodeLogEditRequest, encodePlayerSyncInput, encodePlayerSyncOkResponse, encodePlayerSyncOutput
     , encodePlayerSyncRequest, encodeServerLoginInput, encodeServerLoginOkResponse, encodeServerLoginOutput
-    , encodeServerLoginRequest, encodeSoftwareManifest, encodeSoftwareManifestInput
-    , encodeSoftwareManifestOkResponse, encodeSoftwareManifestOutput, encodeSoftwareManifestRequest
+    , encodeServerLoginRequest, encodeSoftwareConfig, encodeSoftwareConfigAppstore, encodeSoftwareManifest
+    , encodeSoftwareManifestInput, encodeSoftwareManifestOkResponse, encodeSoftwareManifestOutput
+    , encodeSoftwareManifestRequest
     , decodeFileDeleteInput, decodeFileDeleteOkResponse, decodeFileDeleteOutput, decodeFileDeleteRequest
     , decodeFileInstallInput, decodeFileInstallOkResponse, decodeFileInstallOutput, decodeFileInstallRequest
     , decodeFileTransferInput, decodeFileTransferOkResponse, decodeFileTransferOutput, decodeFileTransferRequest
@@ -24,8 +25,9 @@ module API.Game.Json exposing
     , decodeLogDeleteRequest, decodeLogEditInput, decodeLogEditOkResponse, decodeLogEditOutput
     , decodeLogEditRequest, decodePlayerSyncInput, decodePlayerSyncOkResponse, decodePlayerSyncOutput
     , decodePlayerSyncRequest, decodeServerLoginInput, decodeServerLoginOkResponse, decodeServerLoginOutput
-    , decodeServerLoginRequest, decodeSoftwareManifest, decodeSoftwareManifestInput
-    , decodeSoftwareManifestOkResponse, decodeSoftwareManifestOutput, decodeSoftwareManifestRequest
+    , decodeServerLoginRequest, decodeSoftwareConfig, decodeSoftwareConfigAppstore, decodeSoftwareManifest
+    , decodeSoftwareManifestInput, decodeSoftwareManifestOkResponse, decodeSoftwareManifestOutput
+    , decodeSoftwareManifestRequest
     )
 
 {-|
@@ -43,8 +45,9 @@ module API.Game.Json exposing
 @docs encodeLogDeleteRequest, encodeLogEditInput, encodeLogEditOkResponse, encodeLogEditOutput
 @docs encodeLogEditRequest, encodePlayerSyncInput, encodePlayerSyncOkResponse, encodePlayerSyncOutput
 @docs encodePlayerSyncRequest, encodeServerLoginInput, encodeServerLoginOkResponse, encodeServerLoginOutput
-@docs encodeServerLoginRequest, encodeSoftwareManifest, encodeSoftwareManifestInput
-@docs encodeSoftwareManifestOkResponse, encodeSoftwareManifestOutput, encodeSoftwareManifestRequest
+@docs encodeServerLoginRequest, encodeSoftwareConfig, encodeSoftwareConfigAppstore, encodeSoftwareManifest
+@docs encodeSoftwareManifestInput, encodeSoftwareManifestOkResponse, encodeSoftwareManifestOutput
+@docs encodeSoftwareManifestRequest
 
 
 ## Decoders
@@ -59,8 +62,9 @@ module API.Game.Json exposing
 @docs decodeLogDeleteRequest, decodeLogEditInput, decodeLogEditOkResponse, decodeLogEditOutput
 @docs decodeLogEditRequest, decodePlayerSyncInput, decodePlayerSyncOkResponse, decodePlayerSyncOutput
 @docs decodePlayerSyncRequest, decodeServerLoginInput, decodeServerLoginOkResponse, decodeServerLoginOutput
-@docs decodeServerLoginRequest, decodeSoftwareManifest, decodeSoftwareManifestInput
-@docs decodeSoftwareManifestOkResponse, decodeSoftwareManifestOutput, decodeSoftwareManifestRequest
+@docs decodeServerLoginRequest, decodeSoftwareConfig, decodeSoftwareConfigAppstore, decodeSoftwareManifest
+@docs decodeSoftwareManifestInput, decodeSoftwareManifestOkResponse, decodeSoftwareManifestOutput
+@docs decodeSoftwareManifestRequest
 
 -}
 
@@ -104,19 +108,71 @@ encodeSoftwareManifestInput rec =
 decodeSoftwareManifest : Json.Decode.Decoder API.Game.Types.SoftwareManifest
 decodeSoftwareManifest =
     Json.Decode.succeed
-        (\extension type_ -> { extension = extension, type_ = type_ })
+        (\config extension type_ ->
+            { config = config, extension = extension, type_ = type_ }
+        )
         |> OpenApi.Common.jsonDecodeAndMap
-            (Json.Decode.field "extension" Json.Decode.string)
+            (Json.Decode.field "config" decodeSoftwareConfig)
         |> OpenApi.Common.jsonDecodeAndMap
-            (Json.Decode.field "type" Json.Decode.string)
+            (Json.Decode.field
+                "extension"
+                Json.Decode.string
+            )
+        |> OpenApi.Common.jsonDecodeAndMap
+            (Json.Decode.field
+                "type"
+                Json.Decode.string
+            )
 
 
 encodeSoftwareManifest : API.Game.Types.SoftwareManifest -> Json.Encode.Value
 encodeSoftwareManifest rec =
     Json.Encode.object
-        [ ( "extension", Json.Encode.string rec.extension )
+        [ ( "config", encodeSoftwareConfig rec.config )
+        , ( "extension", Json.Encode.string rec.extension )
         , ( "type", Json.Encode.string rec.type_ )
         ]
+
+
+decodeSoftwareConfigAppstore : Json.Decode.Decoder API.Game.Types.SoftwareConfigAppstore
+decodeSoftwareConfigAppstore =
+    Json.Decode.succeed
+        (\price -> { price = price })
+        |> OpenApi.Common.jsonDecodeAndMap
+            (Json.Decode.field
+                "price"
+                Json.Decode.int
+            )
+
+
+encodeSoftwareConfigAppstore : API.Game.Types.SoftwareConfigAppstore -> Json.Encode.Value
+encodeSoftwareConfigAppstore rec =
+    Json.Encode.object [ ( "price", Json.Encode.int rec.price ) ]
+
+
+decodeSoftwareConfig : Json.Decode.Decoder API.Game.Types.SoftwareConfig
+decodeSoftwareConfig =
+    Json.Decode.succeed
+        (\appstore -> { appstore = appstore })
+        |> OpenApi.Common.jsonDecodeAndMap
+            (OpenApi.Common.decodeOptionalField
+                "appstore"
+                decodeSoftwareConfigAppstore
+            )
+
+
+encodeSoftwareConfig : API.Game.Types.SoftwareConfig -> Json.Encode.Value
+encodeSoftwareConfig rec =
+    Json.Encode.object
+        (List.filterMap
+            Basics.identity
+            [ Maybe.map
+                (\mapUnpack ->
+                    ( "appstore", encodeSoftwareConfigAppstore mapUnpack )
+                )
+                rec.appstore
+            ]
+        )
 
 
 decodeServerLoginOutput : Json.Decode.Decoder API.Game.Types.ServerLoginOutput

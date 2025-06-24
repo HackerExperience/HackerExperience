@@ -2,8 +2,6 @@ defmodule Game.Endpoint.Software.Manifest do
   @behaviour Webserver.Endpoint.Behaviour
 
   use Norm
-  import Core.Spec
-  import Core.Endpoint
 
   alias Game.{Software}
 

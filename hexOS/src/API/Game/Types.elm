@@ -40,6 +40,8 @@ module API.Game.Types exposing
     , ServerLoginOkResponse
     , ServerLoginOutput
     , ServerLoginRequest
+    , SoftwareConfig
+    , SoftwareConfigAppstore
     , SoftwareManifest
     , SoftwareManifestInput
     , SoftwareManifestOkResponse
@@ -65,8 +67,9 @@ import Game.Model.TunnelID as TunnelID exposing (TunnelID(..))
 @docs InstallationUninstallOkResponse, InstallationUninstallOutput, InstallationUninstallRequest, LogDeleteInput
 @docs LogDeleteOkResponse, LogDeleteOutput, LogDeleteRequest, LogEditInput, LogEditOkResponse, LogEditOutput
 @docs LogEditRequest, PlayerSyncInput, PlayerSyncOkResponse, PlayerSyncOutput, PlayerSyncRequest
-@docs ServerLoginInput, ServerLoginOkResponse, ServerLoginOutput, ServerLoginRequest, SoftwareManifest
-@docs SoftwareManifestInput, SoftwareManifestOkResponse, SoftwareManifestOutput, SoftwareManifestRequest
+@docs ServerLoginInput, ServerLoginOkResponse, ServerLoginOutput, ServerLoginRequest, SoftwareConfig
+@docs SoftwareConfigAppstore, SoftwareManifest, SoftwareManifestInput, SoftwareManifestOkResponse
+@docs SoftwareManifestOutput, SoftwareManifestRequest
 
 -}
 type alias SoftwareManifestOutput =
@@ -78,7 +81,15 @@ type alias SoftwareManifestInput =
 
 
 type alias SoftwareManifest =
-    { extension : String, type_ : String }
+    { config : SoftwareConfig, extension : String, type_ : String }
+
+
+type alias SoftwareConfigAppstore =
+    { price : Int }
+
+
+type alias SoftwareConfig =
+    { appstore : Maybe SoftwareConfigAppstore }
 
 
 type alias ServerLoginOutput =

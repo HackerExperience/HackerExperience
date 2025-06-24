@@ -11,6 +11,10 @@ defmodule Game.Endpoint.Software.ManifestTest do
       assert cracker = Enum.find(manifest, fn software -> software["type"] == "cracker" end)
       assert cracker["type"] == "cracker"
       assert cracker["extension"] == "crc"
+
+      cracker_config = cracker["config"]
+      # Cracker is installable
+      assert cracker_config["appstore"]["price"] == 0
     end
 
     test "returns the manifest (authenticated)", %{shard_id: shard_id, jwt: jwt} do

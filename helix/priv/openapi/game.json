@@ -486,8 +486,31 @@
         "required": [],
         "type": "object"
       },
+      "SoftwareConfig": {
+        "properties": {
+          "appstore": {
+            "$ref": "#/components/schemas/SoftwareConfigAppstore"
+          }
+        },
+        "required": [],
+        "type": "object"
+      },
+      "SoftwareConfigAppstore": {
+        "properties": {
+          "price": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "price"
+        ],
+        "type": "object"
+      },
       "SoftwareManifest": {
         "properties": {
+          "config": {
+            "$ref": "#/components/schemas/SoftwareConfig"
+          },
           "extension": {
             "type": "string"
           },
@@ -500,6 +523,7 @@
           }
         },
         "required": [
+          "config",
           "extension",
           "type"
         ],
