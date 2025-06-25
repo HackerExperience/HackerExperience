@@ -3,7 +3,7 @@
 
 module API.Game.Api exposing
     ( fileDeleteTask, fileInstallTask, fileTransferTask, installationUninstallTask, logDeleteTask, logEditTask
-    , playerSyncTask, serverLoginTask, softwareManifestTask
+    , playerSyncTask, serverLoginTask
     )
 
 {-|
@@ -12,7 +12,7 @@ module API.Game.Api exposing
 ## Operations
 
 @docs fileDeleteTask, fileInstallTask, fileTransferTask, installationUninstallTask, logDeleteTask, logEditTask
-@docs playerSyncTask, serverLoginTask, softwareManifestTask
+@docs playerSyncTask, serverLoginTask
 
 -}
 
@@ -279,28 +279,5 @@ serverLoginTask config =
                 API.Game.Json.decodeServerLoginOkResponse
         , body =
             Http.jsonBody (API.Game.Json.encodeServerLoginRequest config.body)
-        , timeout = Nothing
-        }
-
-
-softwareManifestTask :
-    { server : String, body : API.Game.Types.SoftwareManifestRequest }
-    -> Task.Task (OpenApi.Common.Error e String) API.Game.Types.SoftwareManifestOkResponse
-softwareManifestTask config =
-    Http.task
-        { url =
-            Url.Builder.crossOrigin
-                config.server
-                [ "v1", "software", "manifest" ]
-                []
-        , method = "GET"
-        , headers = []
-        , resolver =
-            OpenApi.Common.jsonResolverCustom
-                (Dict.fromList [])
-                API.Game.Json.decodeSoftwareManifestOkResponse
-        , body =
-            Http.jsonBody
-                (API.Game.Json.encodeSoftwareManifestRequest config.body)
         , timeout = Nothing
         }

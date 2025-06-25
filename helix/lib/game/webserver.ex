@@ -14,8 +14,7 @@ defmodule Game.Webserver do
       {"/v1/server/:nip/file/:file_id/install", %{handler: E.File.Install, method: :post}},
       {"/v1/server/:nip/file/:file_id/transfer", %{handler: E.File.Transfer, method: :post}},
       {"/v1/server/:nip/installation/:installation_id/uninstall",
-       %{handler: E.Installation.Uninstall, method: :post}},
-      {"/v1/software/manifest", %{handler: E.Software.Manifest, method: :get, public: true}}
+       %{handler: E.Installation.Uninstall, method: :post}}
     ]
   end
 

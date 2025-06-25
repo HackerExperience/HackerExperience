@@ -12,9 +12,7 @@ module API.Game.Json exposing
     , encodeLogDeleteRequest, encodeLogEditInput, encodeLogEditOkResponse, encodeLogEditOutput
     , encodeLogEditRequest, encodePlayerSyncInput, encodePlayerSyncOkResponse, encodePlayerSyncOutput
     , encodePlayerSyncRequest, encodeServerLoginInput, encodeServerLoginOkResponse, encodeServerLoginOutput
-    , encodeServerLoginRequest, encodeSoftwareConfig, encodeSoftwareConfigAppstore, encodeSoftwareManifest
-    , encodeSoftwareManifestInput, encodeSoftwareManifestOkResponse, encodeSoftwareManifestOutput
-    , encodeSoftwareManifestRequest
+    , encodeServerLoginRequest
     , decodeFileDeleteInput, decodeFileDeleteOkResponse, decodeFileDeleteOutput, decodeFileDeleteRequest
     , decodeFileInstallInput, decodeFileInstallOkResponse, decodeFileInstallOutput, decodeFileInstallRequest
     , decodeFileTransferInput, decodeFileTransferOkResponse, decodeFileTransferOutput, decodeFileTransferRequest
@@ -25,9 +23,7 @@ module API.Game.Json exposing
     , decodeLogDeleteRequest, decodeLogEditInput, decodeLogEditOkResponse, decodeLogEditOutput
     , decodeLogEditRequest, decodePlayerSyncInput, decodePlayerSyncOkResponse, decodePlayerSyncOutput
     , decodePlayerSyncRequest, decodeServerLoginInput, decodeServerLoginOkResponse, decodeServerLoginOutput
-    , decodeServerLoginRequest, decodeSoftwareConfig, decodeSoftwareConfigAppstore, decodeSoftwareManifest
-    , decodeSoftwareManifestInput, decodeSoftwareManifestOkResponse, decodeSoftwareManifestOutput
-    , decodeSoftwareManifestRequest
+    , decodeServerLoginRequest
     )
 
 {-|
@@ -45,9 +41,7 @@ module API.Game.Json exposing
 @docs encodeLogDeleteRequest, encodeLogEditInput, encodeLogEditOkResponse, encodeLogEditOutput
 @docs encodeLogEditRequest, encodePlayerSyncInput, encodePlayerSyncOkResponse, encodePlayerSyncOutput
 @docs encodePlayerSyncRequest, encodeServerLoginInput, encodeServerLoginOkResponse, encodeServerLoginOutput
-@docs encodeServerLoginRequest, encodeSoftwareConfig, encodeSoftwareConfigAppstore, encodeSoftwareManifest
-@docs encodeSoftwareManifestInput, encodeSoftwareManifestOkResponse, encodeSoftwareManifestOutput
-@docs encodeSoftwareManifestRequest
+@docs encodeServerLoginRequest
 
 
 ## Decoders
@@ -62,9 +56,7 @@ module API.Game.Json exposing
 @docs decodeLogDeleteRequest, decodeLogEditInput, decodeLogEditOkResponse, decodeLogEditOutput
 @docs decodeLogEditRequest, decodePlayerSyncInput, decodePlayerSyncOkResponse, decodePlayerSyncOutput
 @docs decodePlayerSyncRequest, decodeServerLoginInput, decodeServerLoginOkResponse, decodeServerLoginOutput
-@docs decodeServerLoginRequest, decodeSoftwareConfig, decodeSoftwareConfigAppstore, decodeSoftwareManifest
-@docs decodeSoftwareManifestInput, decodeSoftwareManifestOkResponse, decodeSoftwareManifestOutput
-@docs decodeSoftwareManifestRequest
+@docs decodeServerLoginRequest
 
 -}
 
@@ -76,103 +68,6 @@ import Game.Model.TunnelID as TunnelID exposing (TunnelID(..))
 import Json.Decode
 import Json.Encode
 import OpenApi.Common
-
-
-decodeSoftwareManifestOutput : Json.Decode.Decoder API.Game.Types.SoftwareManifestOutput
-decodeSoftwareManifestOutput =
-    Json.Decode.succeed
-        (\manifest -> { manifest = manifest })
-        |> OpenApi.Common.jsonDecodeAndMap
-            (Json.Decode.field
-                "manifest"
-                (Json.Decode.list decodeSoftwareManifest)
-            )
-
-
-encodeSoftwareManifestOutput : API.Game.Types.SoftwareManifestOutput -> Json.Encode.Value
-encodeSoftwareManifestOutput rec =
-    Json.Encode.object
-        [ ( "manifest", Json.Encode.list encodeSoftwareManifest rec.manifest ) ]
-
-
-decodeSoftwareManifestInput : Json.Decode.Decoder API.Game.Types.SoftwareManifestInput
-decodeSoftwareManifestInput =
-    Json.Decode.succeed {}
-
-
-encodeSoftwareManifestInput : API.Game.Types.SoftwareManifestInput -> Json.Encode.Value
-encodeSoftwareManifestInput rec =
-    Json.Encode.object []
-
-
-decodeSoftwareManifest : Json.Decode.Decoder API.Game.Types.SoftwareManifest
-decodeSoftwareManifest =
-    Json.Decode.succeed
-        (\config extension type_ ->
-            { config = config, extension = extension, type_ = type_ }
-        )
-        |> OpenApi.Common.jsonDecodeAndMap
-            (Json.Decode.field "config" decodeSoftwareConfig)
-        |> OpenApi.Common.jsonDecodeAndMap
-            (Json.Decode.field
-                "extension"
-                Json.Decode.string
-            )
-        |> OpenApi.Common.jsonDecodeAndMap
-            (Json.Decode.field
-                "type"
-                Json.Decode.string
-            )
-
-
-encodeSoftwareManifest : API.Game.Types.SoftwareManifest -> Json.Encode.Value
-encodeSoftwareManifest rec =
-    Json.Encode.object
-        [ ( "config", encodeSoftwareConfig rec.config )
-        , ( "extension", Json.Encode.string rec.extension )
-        , ( "type", Json.Encode.string rec.type_ )
-        ]
-
-
-decodeSoftwareConfigAppstore : Json.Decode.Decoder API.Game.Types.SoftwareConfigAppstore
-decodeSoftwareConfigAppstore =
-    Json.Decode.succeed
-        (\price -> { price = price })
-        |> OpenApi.Common.jsonDecodeAndMap
-            (Json.Decode.field
-                "price"
-                Json.Decode.int
-            )
-
-
-encodeSoftwareConfigAppstore : API.Game.Types.SoftwareConfigAppstore -> Json.Encode.Value
-encodeSoftwareConfigAppstore rec =
-    Json.Encode.object [ ( "price", Json.Encode.int rec.price ) ]
-
-
-decodeSoftwareConfig : Json.Decode.Decoder API.Game.Types.SoftwareConfig
-decodeSoftwareConfig =
-    Json.Decode.succeed
-        (\appstore -> { appstore = appstore })
-        |> OpenApi.Common.jsonDecodeAndMap
-            (OpenApi.Common.decodeOptionalField
-                "appstore"
-                decodeSoftwareConfigAppstore
-            )
-
-
-encodeSoftwareConfig : API.Game.Types.SoftwareConfig -> Json.Encode.Value
-encodeSoftwareConfig rec =
-    Json.Encode.object
-        (List.filterMap
-            Basics.identity
-            [ Maybe.map
-                (\mapUnpack ->
-                    ( "appstore", encodeSoftwareConfigAppstore mapUnpack )
-                )
-                rec.appstore
-            ]
-        )
 
 
 decodeServerLoginOutput : Json.Decode.Decoder API.Game.Types.ServerLoginOutput
@@ -523,22 +418,6 @@ encodeFileDeleteInput rec =
         )
 
 
-decodeSoftwareManifestOkResponse : Json.Decode.Decoder API.Game.Types.SoftwareManifestOkResponse
-decodeSoftwareManifestOkResponse =
-    Json.Decode.succeed
-        (\data -> { data = data })
-        |> OpenApi.Common.jsonDecodeAndMap
-            (Json.Decode.field
-                "data"
-                decodeSoftwareManifestOutput
-            )
-
-
-encodeSoftwareManifestOkResponse : API.Game.Types.SoftwareManifestOkResponse -> Json.Encode.Value
-encodeSoftwareManifestOkResponse rec =
-    Json.Encode.object [ ( "data", encodeSoftwareManifestOutput rec.data ) ]
-
-
 decodeServerLoginOkResponse : Json.Decode.Decoder API.Game.Types.ServerLoginOkResponse
 decodeServerLoginOkResponse =
     Json.Decode.succeed
@@ -708,16 +587,6 @@ decodeFileDeleteOkResponse =
 encodeFileDeleteOkResponse : API.Game.Types.FileDeleteOkResponse -> Json.Encode.Value
 encodeFileDeleteOkResponse rec =
     Json.Encode.object [ ( "data", encodeFileDeleteOutput rec.data ) ]
-
-
-decodeSoftwareManifestRequest : Json.Decode.Decoder API.Game.Types.SoftwareManifestRequest
-decodeSoftwareManifestRequest =
-    decodeSoftwareManifestInput
-
-
-encodeSoftwareManifestRequest : API.Game.Types.SoftwareManifestRequest -> Json.Encode.Value
-encodeSoftwareManifestRequest =
-    encodeSoftwareManifestInput
 
 
 decodeServerLoginRequest : Json.Decode.Decoder API.Game.Types.ServerLoginRequest
