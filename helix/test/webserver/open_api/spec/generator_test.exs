@@ -161,8 +161,9 @@ defmodule Webserver.OpenApi.Spec.GeneratorTest do
       index_requested = Map.fetch!(schemas, "index_requested")
 
       assert index_requested.type == :object
-      assert index_requested.required == [:player]
+      assert index_requested.required == [:software, :player]
       assert index_requested.properties[:player] == %{"$ref" => "#/components/schemas/IdxPlayer"}
+      assert index_requested.properties[:software]["$ref"] == "#/components/schemas/IdxSoftware"
 
       # Supports the Enum type
       tunnel_created = Map.fetch!(schemas, "tunnel_created")

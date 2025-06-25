@@ -14,6 +14,7 @@ module API.Events.Types exposing
     , IdxLogRevision
     , IdxPlayer
     , IdxProcess
+    , IdxSoftware
     , IdxTunnel
     , IndexRequested
     , InstallationUninstallFailed
@@ -25,6 +26,9 @@ module API.Events.Types exposing
     , ProcessCompleted
     , ProcessCreated
     , ProcessKilled
+    , SoftwareConfig
+    , SoftwareConfigAppstore
+    , SoftwareManifest
     , TunnelCreated
     )
 
@@ -40,9 +44,10 @@ import Game.Model.TunnelID as TunnelID exposing (TunnelID(..))
 ## Aliases
 
 @docs FileDeleteFailed, FileDeleted, FileInstallFailed, FileInstalled, FileTransferFailed, FileTransferred
-@docs IdxEndpoint, IdxGateway, IdxLog, IdxLogRevision, IdxPlayer, IdxProcess, IdxTunnel, IndexRequested
-@docs InstallationUninstallFailed, InstallationUninstalled, LogDeleteFailed, LogDeleted, LogEditFailed
-@docs LogEdited, ProcessCompleted, ProcessCreated, ProcessKilled, TunnelCreated
+@docs IdxEndpoint, IdxGateway, IdxLog, IdxLogRevision, IdxPlayer, IdxProcess, IdxSoftware, IdxTunnel
+@docs IndexRequested, InstallationUninstallFailed, InstallationUninstalled, LogDeleteFailed, LogDeleted
+@docs LogEditFailed, LogEdited, ProcessCompleted, ProcessCreated, ProcessKilled, SoftwareConfig
+@docs SoftwareConfigAppstore, SoftwareManifest, TunnelCreated
 
 -}
 type alias TunnelCreated =
@@ -97,7 +102,7 @@ type alias InstallationUninstallFailed =
 
 
 type alias IndexRequested =
-    { player : IdxPlayer }
+    { player : IdxPlayer, software : IdxSoftware }
 
 
 type alias FileTransferred =
@@ -128,8 +133,24 @@ type alias FileDeleteFailed =
     { process_id : ProcessID, reason : String }
 
 
+type alias SoftwareManifest =
+    { config : SoftwareConfig, extension : String, type_ : String }
+
+
+type alias SoftwareConfigAppstore =
+    { price : Int }
+
+
+type alias SoftwareConfig =
+    { appstore : Maybe SoftwareConfigAppstore }
+
+
 type alias IdxTunnel =
     { source_nip : NIP, target_nip : NIP, tunnel_id : TunnelID }
+
+
+type alias IdxSoftware =
+    { manifest : List SoftwareManifest }
 
 
 type alias IdxProcess =

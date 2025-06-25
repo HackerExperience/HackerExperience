@@ -161,6 +161,20 @@
         ],
         "type": "object"
       },
+      "IdxSoftware": {
+        "properties": {
+          "manifest": {
+            "items": {
+              "$ref": "#/components/schemas/SoftwareManifest"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "manifest"
+        ],
+        "type": "object"
+      },
       "IdxTunnel": {
         "properties": {
           "source_nip": {
@@ -177,6 +191,49 @@
           "source_nip",
           "target_nip",
           "tunnel_id"
+        ],
+        "type": "object"
+      },
+      "SoftwareConfig": {
+        "properties": {
+          "appstore": {
+            "$ref": "#/components/schemas/SoftwareConfigAppstore"
+          }
+        },
+        "required": [],
+        "type": "object"
+      },
+      "SoftwareConfigAppstore": {
+        "properties": {
+          "price": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "price"
+        ],
+        "type": "object"
+      },
+      "SoftwareManifest": {
+        "properties": {
+          "config": {
+            "$ref": "#/components/schemas/SoftwareConfig"
+          },
+          "extension": {
+            "type": "string"
+          },
+          "type": {
+            "enum": [
+              "cracker",
+              "log_editor"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "config",
+          "extension",
+          "type"
         ],
         "type": "object"
       },
@@ -282,10 +339,14 @@
         "properties": {
           "player": {
             "$ref": "#/components/schemas/IdxPlayer"
+          },
+          "software": {
+            "$ref": "#/components/schemas/IdxSoftware"
           }
         },
         "required": [
-          "player"
+          "player",
+          "software"
         ],
         "type": "object"
       },
