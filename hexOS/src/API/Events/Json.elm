@@ -3,15 +3,15 @@
 
 module API.Events.Json exposing
     ( encodeFileDeleteFailed, encodeFileDeleted, encodeFileInstallFailed, encodeFileInstalled
-    , encodeFileTransferFailed, encodeFileTransferred, encodeIdxEndpoint, encodeIdxGateway, encodeIdxLog
-    , encodeIdxLogRevision, encodeIdxPlayer, encodeIdxProcess, encodeIdxSoftware, encodeIdxTunnel
+    , encodeFileTransferFailed, encodeFileTransferred, encodeIdxEndpoint, encodeIdxFile, encodeIdxGateway
+    , encodeIdxLog, encodeIdxLogRevision, encodeIdxPlayer, encodeIdxProcess, encodeIdxSoftware, encodeIdxTunnel
     , encodeIndexRequested, encodeInstallationUninstallFailed, encodeInstallationUninstalled
     , encodeLogDeleteFailed, encodeLogDeleted, encodeLogEditFailed, encodeLogEdited, encodeProcessCompleted
     , encodeProcessCreated, encodeProcessKilled, encodeSoftwareConfig, encodeSoftwareConfigAppstore
     , encodeSoftwareManifest, encodeTunnelCreated
     , decodeFileDeleteFailed, decodeFileDeleted, decodeFileInstallFailed, decodeFileInstalled
-    , decodeFileTransferFailed, decodeFileTransferred, decodeIdxEndpoint, decodeIdxGateway, decodeIdxLog
-    , decodeIdxLogRevision, decodeIdxPlayer, decodeIdxProcess, decodeIdxSoftware, decodeIdxTunnel
+    , decodeFileTransferFailed, decodeFileTransferred, decodeIdxEndpoint, decodeIdxFile, decodeIdxGateway
+    , decodeIdxLog, decodeIdxLogRevision, decodeIdxPlayer, decodeIdxProcess, decodeIdxSoftware, decodeIdxTunnel
     , decodeIndexRequested, decodeInstallationUninstallFailed, decodeInstallationUninstalled
     , decodeLogDeleteFailed, decodeLogDeleted, decodeLogEditFailed, decodeLogEdited, decodeProcessCompleted
     , decodeProcessCreated, decodeProcessKilled, decodeSoftwareConfig, decodeSoftwareConfigAppstore
@@ -24,8 +24,8 @@ module API.Events.Json exposing
 ## Encoders
 
 @docs encodeFileDeleteFailed, encodeFileDeleted, encodeFileInstallFailed, encodeFileInstalled
-@docs encodeFileTransferFailed, encodeFileTransferred, encodeIdxEndpoint, encodeIdxGateway, encodeIdxLog
-@docs encodeIdxLogRevision, encodeIdxPlayer, encodeIdxProcess, encodeIdxSoftware, encodeIdxTunnel
+@docs encodeFileTransferFailed, encodeFileTransferred, encodeIdxEndpoint, encodeIdxFile, encodeIdxGateway
+@docs encodeIdxLog, encodeIdxLogRevision, encodeIdxPlayer, encodeIdxProcess, encodeIdxSoftware, encodeIdxTunnel
 @docs encodeIndexRequested, encodeInstallationUninstallFailed, encodeInstallationUninstalled
 @docs encodeLogDeleteFailed, encodeLogDeleted, encodeLogEditFailed, encodeLogEdited, encodeProcessCompleted
 @docs encodeProcessCreated, encodeProcessKilled, encodeSoftwareConfig, encodeSoftwareConfigAppstore
@@ -35,8 +35,8 @@ module API.Events.Json exposing
 ## Decoders
 
 @docs decodeFileDeleteFailed, decodeFileDeleted, decodeFileInstallFailed, decodeFileInstalled
-@docs decodeFileTransferFailed, decodeFileTransferred, decodeIdxEndpoint, decodeIdxGateway, decodeIdxLog
-@docs decodeIdxLogRevision, decodeIdxPlayer, decodeIdxProcess, decodeIdxSoftware, decodeIdxTunnel
+@docs decodeFileTransferFailed, decodeFileTransferred, decodeIdxEndpoint, decodeIdxFile, decodeIdxGateway
+@docs decodeIdxLog, decodeIdxLogRevision, decodeIdxPlayer, decodeIdxProcess, decodeIdxSoftware, decodeIdxTunnel
 @docs decodeIndexRequested, decodeInstallationUninstallFailed, decodeInstallationUninstalled
 @docs decodeLogDeleteFailed, decodeLogDeleted, decodeLogEditFailed, decodeLogEdited, decodeProcessCompleted
 @docs decodeProcessCreated, decodeProcessKilled, decodeSoftwareConfig, decodeSoftwareConfigAppstore
@@ -771,17 +771,26 @@ encodeIdxLog rec =
 decodeIdxGateway : Json.Decode.Decoder API.Events.Types.IdxGateway
 decodeIdxGateway =
     Json.Decode.succeed
-        (\logs nip processes tunnels ->
-            { logs = logs
+        (\files logs nip processes tunnels ->
+            { files = files
+            , logs = logs
             , nip = nip
             , processes = processes
             , tunnels = tunnels
             }
         )
         |> OpenApi.Common.jsonDecodeAndMap
-            (Json.Decode.field "logs" (Json.Decode.list decodeIdxLog))
+            (Json.Decode.field "files" (Json.Decode.list decodeIdxFile))
         |> OpenApi.Common.jsonDecodeAndMap
-            (Json.Decode.field "nip" (Json.Decode.map (\nip -> NIP.fromString nip) Json.Decode.string))
+            (Json.Decode.field
+                "logs"
+                (Json.Decode.list decodeIdxLog)
+            )
+        |> OpenApi.Common.jsonDecodeAndMap
+            (Json.Decode.field
+                "nip"
+                (Json.Decode.map (\nip -> NIP.fromString nip) Json.Decode.string)
+            )
         |> OpenApi.Common.jsonDecodeAndMap
             (Json.Decode.field
                 "processes"
@@ -801,23 +810,82 @@ decodeIdxGateway =
 encodeIdxGateway : API.Events.Types.IdxGateway -> Json.Encode.Value
 encodeIdxGateway rec =
     Json.Encode.object
-        [ ( "logs", Json.Encode.list encodeIdxLog rec.logs )
+        [ ( "files", Json.Encode.list encodeIdxFile rec.files )
+        , ( "logs", Json.Encode.list encodeIdxLog rec.logs )
         , ( "nip", Json.Encode.string (NIP.toString rec.nip) )
         , ( "processes", Json.Encode.list encodeIdxProcess rec.processes )
         , ( "tunnels", Json.Encode.list encodeIdxTunnel rec.tunnels )
         ]
 
 
+decodeIdxFile : Json.Decode.Decoder API.Events.Types.IdxFile
+decodeIdxFile =
+    Json.Decode.succeed
+        (\id name path size type_ version ->
+            { id = id
+            , name = name
+            , path = path
+            , size = size
+            , type_ = type_
+            , version = version
+            }
+        )
+        |> OpenApi.Common.jsonDecodeAndMap
+            (Json.Decode.field "id" Json.Decode.string)
+        |> OpenApi.Common.jsonDecodeAndMap
+            (Json.Decode.field "name" Json.Decode.string)
+        |> OpenApi.Common.jsonDecodeAndMap
+            (Json.Decode.field
+                "path"
+                Json.Decode.string
+            )
+        |> OpenApi.Common.jsonDecodeAndMap
+            (Json.Decode.field
+                "size"
+                Json.Decode.int
+            )
+        |> OpenApi.Common.jsonDecodeAndMap
+            (Json.Decode.field
+                "type"
+                Json.Decode.string
+            )
+        |> OpenApi.Common.jsonDecodeAndMap
+            (Json.Decode.field
+                "version"
+                Json.Decode.int
+            )
+
+
+encodeIdxFile : API.Events.Types.IdxFile -> Json.Encode.Value
+encodeIdxFile rec =
+    Json.Encode.object
+        [ ( "id", Json.Encode.string rec.id )
+        , ( "name", Json.Encode.string rec.name )
+        , ( "path", Json.Encode.string rec.path )
+        , ( "size", Json.Encode.int rec.size )
+        , ( "type", Json.Encode.string rec.type_ )
+        , ( "version", Json.Encode.int rec.version )
+        ]
+
+
 decodeIdxEndpoint : Json.Decode.Decoder API.Events.Types.IdxEndpoint
 decodeIdxEndpoint =
     Json.Decode.succeed
-        (\logs nip processes ->
-            { logs = logs, nip = nip, processes = processes }
+        (\files logs nip processes ->
+            { files = files, logs = logs, nip = nip, processes = processes }
         )
         |> OpenApi.Common.jsonDecodeAndMap
-            (Json.Decode.field "logs" (Json.Decode.list decodeIdxLog))
+            (Json.Decode.field "files" (Json.Decode.list decodeIdxFile))
         |> OpenApi.Common.jsonDecodeAndMap
-            (Json.Decode.field "nip" (Json.Decode.map (\nip -> NIP.fromString nip) Json.Decode.string))
+            (Json.Decode.field
+                "logs"
+                (Json.Decode.list decodeIdxLog)
+            )
+        |> OpenApi.Common.jsonDecodeAndMap
+            (Json.Decode.field
+                "nip"
+                (Json.Decode.map (\nip -> NIP.fromString nip) Json.Decode.string)
+            )
         |> OpenApi.Common.jsonDecodeAndMap
             (Json.Decode.field
                 "processes"
@@ -830,7 +898,8 @@ decodeIdxEndpoint =
 encodeIdxEndpoint : API.Events.Types.IdxEndpoint -> Json.Encode.Value
 encodeIdxEndpoint rec =
     Json.Encode.object
-        [ ( "logs", Json.Encode.list encodeIdxLog rec.logs )
+        [ ( "files", Json.Encode.list encodeIdxFile rec.files )
+        , ( "logs", Json.Encode.list encodeIdxLog rec.logs )
         , ( "nip", Json.Encode.string (NIP.toString rec.nip) )
         , ( "processes", Json.Encode.list encodeIdxProcess rec.processes )
         ]

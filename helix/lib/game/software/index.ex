@@ -1,6 +1,5 @@
 defmodule Game.Index.Software do
   use Norm
-  import Core.Spec
   alias Game.{Software}
 
   @type index ::

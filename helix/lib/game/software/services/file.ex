@@ -1,6 +1,6 @@
 defmodule Game.Services.File do
   alias Feeb.DB
-  alias Game.{Entity, File, Installation, Server}
+  alias Game.{Entity, File, FileVisibility, Installation, Server}
 
   def fetch(%Server.ID{} = server_id, filter_params, opts \\ []) do
     filters = [
@@ -21,6 +21,21 @@ defmodule Game.Services.File do
   def fetch_visibility(%Entity.ID{} = entity_id, filter_params, opts \\ []) do
     filters = [
       by_file: &query_visibility_by_file/1
+    ]
+
+    Core.with_context(:player, entity_id, :read, fn ->
+      Core.Fetch.query(filter_params, opts, filters)
+    end)
+  end
+
+  @doc """
+  Returns a list of FileVisibility matching the given filters.
+  """
+  @spec list_visibility(Entity.id(), list, list) ::
+          [FileVisibility.t()]
+  def list_visibility(%Entity.ID{} = entity_id, filter_params, opts \\ []) do
+    filters = [
+      visible_on_server: {:all, {:file_visibilities, :by_server}, format: :raw}
     ]
 
     Core.with_context(:player, entity_id, :read, fn ->

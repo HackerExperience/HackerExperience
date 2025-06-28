@@ -5,6 +5,12 @@
     "schemas": {
       "IdxEndpoint": {
         "properties": {
+          "files": {
+            "items": {
+              "$ref": "#/components/schemas/IdxFile"
+            },
+            "type": "array"
+          },
           "logs": {
             "items": {
               "$ref": "#/components/schemas/IdxLog"
@@ -22,14 +28,56 @@
           }
         },
         "required": [
+          "files",
           "logs",
           "nip",
           "processes"
         ],
         "type": "object"
       },
+      "IdxFile": {
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "path": {
+            "type": "string"
+          },
+          "size": {
+            "type": "integer"
+          },
+          "type": {
+            "enum": [
+              "cracker",
+              "log_editor"
+            ],
+            "type": "string"
+          },
+          "version": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "path",
+          "size",
+          "type",
+          "version"
+        ],
+        "type": "object"
+      },
       "IdxGateway": {
         "properties": {
+          "files": {
+            "items": {
+              "$ref": "#/components/schemas/IdxFile"
+            },
+            "type": "array"
+          },
           "logs": {
             "items": {
               "$ref": "#/components/schemas/IdxLog"
@@ -53,6 +101,7 @@
           }
         },
         "required": [
+          "files",
           "logs",
           "nip",
           "processes",

@@ -9,6 +9,7 @@ module API.Events.Types exposing
     , FileTransferFailed
     , FileTransferred
     , IdxEndpoint
+    , IdxFile
     , IdxGateway
     , IdxLog
     , IdxLogRevision
@@ -44,7 +45,7 @@ import Game.Model.TunnelID as TunnelID exposing (TunnelID(..))
 ## Aliases
 
 @docs FileDeleteFailed, FileDeleted, FileInstallFailed, FileInstalled, FileTransferFailed, FileTransferred
-@docs IdxEndpoint, IdxGateway, IdxLog, IdxLogRevision, IdxPlayer, IdxProcess, IdxSoftware, IdxTunnel
+@docs IdxEndpoint, IdxFile, IdxGateway, IdxLog, IdxLogRevision, IdxPlayer, IdxProcess, IdxSoftware, IdxTunnel
 @docs IndexRequested, InstallationUninstallFailed, InstallationUninstalled, LogDeleteFailed, LogDeleted
 @docs LogEditFailed, LogEdited, ProcessCompleted, ProcessCreated, ProcessKilled, SoftwareConfig
 @docs SoftwareConfigAppstore, SoftwareManifest, TunnelCreated
@@ -183,12 +184,27 @@ type alias IdxLog =
 
 
 type alias IdxGateway =
-    { logs : List IdxLog
+    { files : List IdxFile
+    , logs : List IdxLog
     , nip : NIP
     , processes : List IdxProcess
     , tunnels : List IdxTunnel
     }
 
 
+type alias IdxFile =
+    { id : String
+    , name : String
+    , path : String
+    , size : Int
+    , type_ : String
+    , version : Int
+    }
+
+
 type alias IdxEndpoint =
-    { logs : List IdxLog, nip : NIP, processes : List IdxProcess }
+    { files : List IdxFile
+    , logs : List IdxLog
+    , nip : NIP
+    , processes : List IdxProcess
+    }
