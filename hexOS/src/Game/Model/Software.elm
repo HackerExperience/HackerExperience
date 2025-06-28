@@ -1,6 +1,7 @@
 module Game.Model.Software exposing
     ( Manifest
     , Software
+    , listAppStoreSoftware
     , parseManifest
     )
 
@@ -26,6 +27,29 @@ type alias Manifest =
     Dict String Software
 
 
+
+-- Model
+
+
+listAppStoreSoftware : Manifest -> List Software
+listAppStoreSoftware manifest =
+    let
+        folderFn =
+            \_ software acc ->
+                case software.appStoreConfig of
+                    Just _ ->
+                        software :: acc
+
+                    Nothing ->
+                        acc
+    in
+    Dict.foldl folderFn [] manifest
+
+
+
+-- Model > Parser
+
+
 parseManifest : List Events.SoftwareManifest -> Manifest
 parseManifest idxManifest =
     List.map parseManifestSoftware idxManifest
@@ -38,7 +62,12 @@ parseManifestSoftware idxSoftware =
         s =
             { type_ = SoftwareType.typeFromString idxSoftware.type_
             , extension = idxSoftware.extension
-            , appStoreConfig = Nothing
+            , appStoreConfig = parseAppStoreConfig idxSoftware.config.appstore
             }
     in
     ( idxSoftware.type_, s )
+
+
+parseAppStoreConfig : Maybe Events.SoftwareConfigAppstore -> Maybe AppStoreConfig
+parseAppStoreConfig idxAppStoreConfig =
+    Maybe.map (\{ price } -> { price = price, version = 10 }) idxAppStoreConfig

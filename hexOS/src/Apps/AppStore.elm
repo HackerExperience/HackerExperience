@@ -1,23 +1,14 @@
 module Apps.AppStore exposing (..)
 
-import API.Game as GameAPI
-import API.Types
 import Apps.Input as App
 import Apps.Manifest as App
-import Dict exposing (Dict)
 import Effect exposing (Effect)
 import Game
-import Game.Bus as Game
-import Game.Model.Log as Log exposing (Log, LogType(..))
-import Game.Model.LogID as LogID exposing (LogID, RawLogID)
-import Game.Model.NIP exposing (NIP)
-import Game.Model.ProcessOperation as Operation
-import Game.Model.Server as Server
-import Html.Attributes as HA
-import Maybe.Extra as Maybe
+import Game.Model.Software as Software exposing (Manifest, Software)
+import Game.Model.SoftwareType as SoftwareType exposing (SoftwareType)
 import OS.AppID exposing (AppID)
 import OS.Bus
-import OS.CtxMenu as CtxMenu
+import OS.CtxMenu
 import OS.CtxMenu.Menus as CtxMenu
 import UI exposing (UI, cl, clIf, col, div, row, text)
 import UI.Icon
@@ -26,34 +17,229 @@ import WM
 
 type Msg
     = ToOS OS.Bus.Action
-    | ToCtxMenu CtxMenu.Msg
-    | Foo
+    | ToCtxMenu OS.CtxMenu.Msg
+    | SelectTab Tab
+    | OpenAppDetails SoftwareType
+
+
+type Tab
+    = TabApps (Maybe SoftwareType)
+    | TabInstallations
 
 
 type alias Model =
     { appId : AppID
+    , tab : Tab
     }
 
 
 
 -- Model
+
+
+getTabName : Tab -> String
+getTabName tab =
+    case tab of
+        TabApps _ ->
+            "Apps"
+
+        TabInstallations ->
+            "Installations"
+
+
+
 -- Update
 
 
 update : Game.Model -> Msg -> Model -> ( Model, Effect Msg )
-update game msg model =
-    ( model, Effect.none )
+update _ msg model =
+    case msg of
+        SelectTab tab ->
+            ( { model | tab = tab }, Effect.none )
+
+        OpenAppDetails type_ ->
+            ( { model | tab = TabApps (Just type_) }, Effect.none )
+
+        ToOS _ ->
+            -- Handled by OS
+            ( model, Effect.none )
+
+        ToCtxMenu _ ->
+            -- Handled by OS
+            ( model, Effect.none )
 
 
 
 -- View
 
 
-view : Model -> Game.Model -> CtxMenu.Model -> UI Msg
-view model game ctxMenu =
-    col
-        [ cl "app-appstore" ]
-        [ text "AppStore" ]
+view : Model -> Game.Model -> OS.CtxMenu.Model -> UI Msg
+view model game _ =
+    row [ cl "app-appstore" ]
+        [ viewSideBar model
+        , vBody model game
+        ]
+
+
+
+-- View > Body
+
+
+vBody : Model -> Game.Model -> UI Msg
+vBody model game =
+    let
+        body =
+            case model.tab of
+                TabApps Nothing ->
+                    vBodyAppsIndex model game
+
+                TabApps (Just type_) ->
+                    vBodyAppsDetail model type_
+
+                TabInstallations ->
+                    vBodyInstallations model
+    in
+    col [ cl "a-ast-body" ]
+        [ body ]
+
+
+
+-- View > Tab: "Apps"
+
+
+vBodyAppsIndex : Model -> Game.Model -> UI Msg
+vBodyAppsIndex _ game =
+    let
+        apps =
+            renderAppsEntries game.manifest
+    in
+    row [ cl "a-ast-apps-index" ] apps
+
+
+renderAppsEntries : Manifest -> List (UI Msg)
+renderAppsEntries manifest =
+    let
+        appStoreSoftware =
+            Software.listAppStoreSoftware manifest
+    in
+    List.foldl renderAppsEntry [] appStoreSoftware
+
+
+renderAppsEntry : Software -> List (UI Msg) -> List (UI Msg)
+renderAppsEntry software acc =
+    let
+        name =
+            SoftwareType.typeToName software.type_
+
+        icon =
+            UI.Icon.msOutline (SoftwareType.typeToIcon software.type_) Nothing
+                |> UI.Icon.withClass "a-ast-apps-idx-entry-icon"
+                |> UI.Icon.toUI
+
+        downloadIcon =
+            UI.Icon.msOutline "download" Nothing
+                |> UI.Icon.withClass "a-ast-apps-idx-entry-overlay-icon"
+                |> UI.Icon.toUI
+
+        downloadOverlay =
+            div
+                [ cl "a-ast-apps-idx-entry-overlay"
+                , UI.stopPropagation "click" (SelectTab TabInstallations)
+                ]
+                [ downloadIcon ]
+
+        entry =
+            col
+                [ cl "a-ast-apps-idx-entry"
+                , UI.onClick (OpenAppDetails software.type_)
+                ]
+                [ icon
+                , text name
+                , downloadOverlay
+                ]
+    in
+    entry :: acc
+
+
+vBodyAppsDetail : Model -> SoftwareType -> UI Msg
+vBodyAppsDetail _ type_ =
+    let
+        backIcon =
+            UI.Icon.msOutline "arrow_back" Nothing
+                |> UI.Icon.withClass "a-ast-apps-dtl-hdr-backicon"
+                |> UI.Icon.toUI
+
+        backEl =
+            div [ UI.onClick (SelectTab <| TabApps Nothing) ]
+                [ backIcon ]
+
+        header =
+            row [ cl "a-ast-apps-dtl-header" ]
+                [ backEl
+                , text "App Details"
+                ]
+    in
+    col [ cl "a-ast-apps-details" ]
+        [ header
+        , renderAppDetailBody type_
+        ]
+
+
+renderAppDetailBody : SoftwareType -> UI Msg
+renderAppDetailBody type_ =
+    col [ cl "a-ast-apps-dtl-body" ]
+        [ text (SoftwareType.typeToString type_)
+        , text "What? Were you expecting more information? Come back later (:"
+        ]
+
+
+
+-- View > Tab: "Installations"
+
+
+vBodyInstallations : Model -> UI Msg
+vBodyInstallations _ =
+    div [] [ text "Installations" ]
+
+
+
+-- View > Sidebar
+
+
+viewSideBar : Model -> UI Msg
+viewSideBar model =
+    let
+        tabs =
+            renderTabs model
+    in
+    col [ cl "a-ast-sidebar" ]
+        tabs
+
+
+renderTabs : Model -> List (UI Msg)
+renderTabs model =
+    [ renderTab (TabApps Nothing) model.tab
+    , renderTab TabInstallations model.tab
+    ]
+
+
+renderTab : Tab -> Tab -> UI Msg
+renderTab tab selectedTab =
+    let
+        isTabSelected =
+            case ( tab, selectedTab ) of
+                ( TabApps _, TabApps _ ) ->
+                    True
+
+                _ ->
+                    tab == selectedTab
+    in
+    row
+        [ cl "a-ast-sb-tab"
+        , clIf isTabSelected "a-ast-sb-tab-selected"
+        , UI.onClickIf (not isTabSelected) <| SelectTab tab
+        ]
+        [ text <| getTabName tab ]
 
 
 
@@ -63,7 +249,7 @@ view model game ctxMenu =
 getWindowConfig : WM.WindowInfo -> WM.WindowConfig
 getWindowConfig _ =
     { lenX = 800
-    , lenY = 600
+    , lenY = 500
     , title = "AppStore"
     , childBehavior = Nothing
     , misc = Nothing
@@ -77,7 +263,7 @@ willOpen _ input =
 
 didOpen : WM.WindowInfo -> App.InitialInput -> ( Model, Effect Msg )
 didOpen { appId } _ =
-    ( { appId = appId }, Effect.none )
+    ( { appId = appId, tab = TabApps Nothing }, Effect.none )
 
 
 

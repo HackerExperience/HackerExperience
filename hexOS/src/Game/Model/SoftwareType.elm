@@ -1,6 +1,8 @@
 module Game.Model.SoftwareType exposing
     ( SoftwareType(..)
     , typeFromString
+    , typeToIcon
+    , typeToName
     , typeToString
     )
 
@@ -35,3 +37,31 @@ typeFromString rawType =
 
         _ ->
             SoftwareInvalid rawType
+
+
+typeToName : SoftwareType -> String
+typeToName type_ =
+    case type_ of
+        SoftwareCracker ->
+            "Cracker"
+
+        SoftwareLogEditor ->
+            "Log Editor"
+
+        SoftwareInvalid _ ->
+            "Invalid"
+
+
+{-| NOTE: None of these icons are definitive. Just placeholders.
+-}
+typeToIcon : SoftwareType -> String
+typeToIcon type_ =
+    case type_ of
+        SoftwareCracker ->
+            "tools_power_drill"
+
+        SoftwareLogEditor ->
+            "edit_note"
+
+        SoftwareInvalid _ ->
+            "close"

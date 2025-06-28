@@ -1022,8 +1022,8 @@ renderWindowTitle appId window isDragging =
         buttonsHtml =
             row
                 [ cl "os-w-title-actions"
-                , stopPropagation "mousedown"
-                , stopPropagation "mouseup"
+                , UI.stopPropagation "mousedown" (PerformAction OS.Bus.NoOp)
+                , UI.stopPropagation "mouseup" (PerformAction OS.Bus.NoOp)
                 ]
                 [ collapseButtonHtml
                 , closeButtonHtml
@@ -1048,12 +1048,6 @@ renderWindowTitle appId window isDragging =
 renderWindowContent : UI Msg -> UI Msg
 renderWindowContent innerContent =
     col [ cl "os-w-content" ] [ innerContent ]
-
-
-stopPropagation : String -> UI.Attribute Msg
-stopPropagation event =
-    HE.stopPropagationOn event
-        (JD.succeed <| (\msg -> ( msg, True )) (PerformAction OS.Bus.NoOp))
 
 
 getWindowInnerContent : Model -> AppID -> WM.Window -> Apps.Model -> Game.Model -> UI Apps.Msg
