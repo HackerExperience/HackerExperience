@@ -184,6 +184,7 @@ viewOverlayApps =
         launchableApps =
             [ App.LogViewerApp
             , App.RemoteAccessApp
+            , App.AppStoreApp
             , App.DemoApp
             ]
 

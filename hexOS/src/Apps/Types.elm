@@ -3,6 +3,7 @@
 
 module Apps.Types exposing (..)
 
+import Apps.AppStore as AppStore
 import Apps.Demo as Demo
 import Apps.LogViewer as LogViewer
 import Apps.LogViewer.LogEditPopup as LogEditPopup
@@ -15,6 +16,7 @@ import OS.AppID exposing (AppID)
 
 type Msg
     = InvalidMsg
+    | AppStoreMsg AppID AppStore.Msg
     | LogViewerMsg AppID LogViewer.Msg
     | RemoteAccessMsg AppID RemoteAccess.Msg
     | DemoMsg AppID Demo.Msg
@@ -26,6 +28,7 @@ type Msg
 
 type Model
     = InvalidModel
+    | AppStoreModel AppStore.Model
     | LogViewerModel LogViewer.Model
     | RemoteAccessModel RemoteAccess.Model
     | DemoModel Demo.Model
