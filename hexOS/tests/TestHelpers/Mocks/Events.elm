@@ -17,6 +17,9 @@ indexRequested =
         , gateways = []
         , endpoints = []
         }
+    , software =
+        { manifest = []
+        }
     }
 
 
@@ -24,6 +27,7 @@ idxGateway : Events.IdxGateway
 idxGateway =
     { nip = defaultNip
     , tunnels = []
+    , files = []
     , logs = []
     , processes = []
     }

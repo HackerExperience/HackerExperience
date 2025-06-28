@@ -104,6 +104,7 @@ config =
             ]
         -- Below ignored files are WIP and should eventually be fixed (either used or removed)
         |> Rule.ignoreErrorsForFiles [ "src/Common/Assets.elm" ]
+        |> Rule.ignoreErrorsForFiles [ "src/Game/Model/SoftwareType.elm" ]
     , NoUnused.Parameters.rule
         |> ignoreSdkFiles
     , NoUnused.Patterns.rule
@@ -133,6 +134,7 @@ config =
         -- The same comment applies to "RawNIP".
         |> Rule.ignoreErrorsForFiles
             [ "src/Game/Model/LogID.elm"
+            , "src/Game/Model/FileID.elm"
             , "src/Game/Model/TunnelID.elm"
             , "src/Game/Model/ProcessID.elm"
             , "src/Game/Model/NIP.elm"
