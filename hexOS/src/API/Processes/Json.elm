@@ -2,10 +2,10 @@
 
 
 module API.Processes.Json exposing
-    ( encodeFileDelete, encodeFileInstall, encodeFileTransfer, encodeInstallationUninstall, encodeLogDelete
-    , encodeLogEdit
-    , decodeFileDelete, decodeFileInstall, decodeFileTransfer, decodeInstallationUninstall, decodeLogDelete
-    , decodeLogEdit
+    ( encodeAppstoreInstall, encodeFileDelete, encodeFileInstall, encodeFileTransfer
+    , encodeInstallationUninstall, encodeLogDelete, encodeLogEdit
+    , decodeAppstoreInstall, decodeFileDelete, decodeFileInstall, decodeFileTransfer
+    , decodeInstallationUninstall, decodeLogDelete, decodeLogEdit
     )
 
 {-|
@@ -13,14 +13,14 @@ module API.Processes.Json exposing
 
 ## Encoders
 
-@docs encodeFileDelete, encodeFileInstall, encodeFileTransfer, encodeInstallationUninstall, encodeLogDelete
-@docs encodeLogEdit
+@docs encodeAppstoreInstall, encodeFileDelete, encodeFileInstall, encodeFileTransfer
+@docs encodeInstallationUninstall, encodeLogDelete, encodeLogEdit
 
 
 ## Decoders
 
-@docs decodeFileDelete, decodeFileInstall, decodeFileTransfer, decodeInstallationUninstall, decodeLogDelete
-@docs decodeLogEdit
+@docs decodeAppstoreInstall, decodeFileDelete, decodeFileInstall, decodeFileTransfer
+@docs decodeInstallationUninstall, decodeLogDelete, decodeLogEdit
 
 -}
 
@@ -103,4 +103,14 @@ decodeFileDelete =
 
 encodeFileDelete : API.Processes.Types.FileDelete -> Json.Encode.Value
 encodeFileDelete rec =
+    Json.Encode.object []
+
+
+decodeAppstoreInstall : Json.Decode.Decoder API.Processes.Types.AppstoreInstall
+decodeAppstoreInstall =
+    Json.Decode.succeed {}
+
+
+encodeAppstoreInstall : API.Processes.Types.AppstoreInstall -> Json.Encode.Value
+encodeAppstoreInstall rec =
     Json.Encode.object []

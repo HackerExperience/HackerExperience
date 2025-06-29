@@ -2,7 +2,9 @@ defmodule Test.Setup.Process.Spec do
   use Test.Setup.Definition
 
   alias Game.Process.Executable
+  alias Game.{Software}
 
+  alias Game.Process.AppStore.Install, as: AppStoreInstallProcess
   alias Game.Process.File.Delete, as: FileDeleteProcess
   alias Game.Process.File.Install, as: FileInstallProcess
   alias Game.Process.File.Transfer, as: FileTransferProcess
@@ -13,6 +15,7 @@ defmodule Test.Setup.Process.Spec do
   alias Test.Process.NoopDLK, as: NoopDLKProcess
 
   @implementations [
+    :appstore_install,
     :file_delete,
     :file_install,
     :file_transfer,
@@ -35,6 +38,19 @@ defmodule Test.Setup.Process.Spec do
 
   def spec(:noop_dlk, server_id, entity_id, _opts),
     do: build_spec(NoopDLKProcess, server_id, entity_id, %{}, %{}, %{})
+
+  def spec(:appstore_install, server_id, entity_id, opts) do
+    software_type = opts[:software_type] || :cracker
+
+    default_meta = %{software: Software.get(software_type)}
+    default_params = %{}
+
+    params = opts[:params] || default_params
+    meta = opts[:meta] || default_meta
+    relay = %{}
+
+    build_spec(AppStoreInstallProcess, server_id, entity_id, params, meta, relay)
+  end
 
   def spec(:file_delete, server_id, entity_id, opts) do
     file = opts[:file] || S.file!(server_id, visible_by: entity_id)
