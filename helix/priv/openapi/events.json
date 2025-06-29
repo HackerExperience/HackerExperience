@@ -286,6 +286,44 @@
         ],
         "type": "object"
       },
+      "appstore_install_failed": {
+        "properties": {
+          "process_id": {
+            "type": "string"
+          },
+          "reason": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "process_id",
+          "reason"
+        ],
+        "type": "object"
+      },
+      "appstore_installed": {
+        "properties": {
+          "file_name": {
+            "type": "string"
+          },
+          "installation_id": {
+            "type": "string"
+          },
+          "memory_usage": {
+            "type": "integer"
+          },
+          "process_id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "file_name",
+          "installation_id",
+          "memory_usage",
+          "process_id"
+        ],
+        "type": "object"
+      },
       "file_delete_failed": {
         "properties": {
           "process_id": {

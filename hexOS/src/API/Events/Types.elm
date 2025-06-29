@@ -2,7 +2,9 @@
 
 
 module API.Events.Types exposing
-    ( FileDeleteFailed
+    ( AppstoreInstallFailed
+    , AppstoreInstalled
+    , FileDeleteFailed
     , FileDeleted
     , FileInstallFailed
     , FileInstalled
@@ -44,11 +46,11 @@ import Game.Model.TunnelID as TunnelID exposing (TunnelID(..))
 
 ## Aliases
 
-@docs FileDeleteFailed, FileDeleted, FileInstallFailed, FileInstalled, FileTransferFailed, FileTransferred
-@docs IdxEndpoint, IdxFile, IdxGateway, IdxLog, IdxLogRevision, IdxPlayer, IdxProcess, IdxSoftware, IdxTunnel
-@docs IndexRequested, InstallationUninstallFailed, InstallationUninstalled, LogDeleteFailed, LogDeleted
-@docs LogEditFailed, LogEdited, ProcessCompleted, ProcessCreated, ProcessKilled, SoftwareConfig
-@docs SoftwareConfigAppstore, SoftwareManifest, TunnelCreated
+@docs AppstoreInstallFailed, AppstoreInstalled, FileDeleteFailed, FileDeleted, FileInstallFailed, FileInstalled
+@docs FileTransferFailed, FileTransferred, IdxEndpoint, IdxFile, IdxGateway, IdxLog, IdxLogRevision, IdxPlayer
+@docs IdxProcess, IdxSoftware, IdxTunnel, IndexRequested, InstallationUninstallFailed, InstallationUninstalled
+@docs LogDeleteFailed, LogDeleted, LogEditFailed, LogEdited, ProcessCompleted, ProcessCreated, ProcessKilled
+@docs SoftwareConfig, SoftwareConfigAppstore, SoftwareManifest, TunnelCreated
 
 -}
 type alias TunnelCreated =
@@ -131,6 +133,18 @@ type alias FileDeleted =
 
 
 type alias FileDeleteFailed =
+    { process_id : ProcessID, reason : String }
+
+
+type alias AppstoreInstalled =
+    { file_name : String
+    , installation_id : String
+    , memory_usage : Int
+    , process_id : ProcessID
+    }
+
+
+type alias AppstoreInstallFailed =
     { process_id : ProcessID, reason : String }
 
 

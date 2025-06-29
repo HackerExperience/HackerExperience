@@ -2,20 +2,20 @@
 
 
 module API.Events.Json exposing
-    ( encodeFileDeleteFailed, encodeFileDeleted, encodeFileInstallFailed, encodeFileInstalled
-    , encodeFileTransferFailed, encodeFileTransferred, encodeIdxEndpoint, encodeIdxFile, encodeIdxGateway
-    , encodeIdxLog, encodeIdxLogRevision, encodeIdxPlayer, encodeIdxProcess, encodeIdxSoftware, encodeIdxTunnel
-    , encodeIndexRequested, encodeInstallationUninstallFailed, encodeInstallationUninstalled
-    , encodeLogDeleteFailed, encodeLogDeleted, encodeLogEditFailed, encodeLogEdited, encodeProcessCompleted
-    , encodeProcessCreated, encodeProcessKilled, encodeSoftwareConfig, encodeSoftwareConfigAppstore
-    , encodeSoftwareManifest, encodeTunnelCreated
-    , decodeFileDeleteFailed, decodeFileDeleted, decodeFileInstallFailed, decodeFileInstalled
-    , decodeFileTransferFailed, decodeFileTransferred, decodeIdxEndpoint, decodeIdxFile, decodeIdxGateway
-    , decodeIdxLog, decodeIdxLogRevision, decodeIdxPlayer, decodeIdxProcess, decodeIdxSoftware, decodeIdxTunnel
-    , decodeIndexRequested, decodeInstallationUninstallFailed, decodeInstallationUninstalled
-    , decodeLogDeleteFailed, decodeLogDeleted, decodeLogEditFailed, decodeLogEdited, decodeProcessCompleted
-    , decodeProcessCreated, decodeProcessKilled, decodeSoftwareConfig, decodeSoftwareConfigAppstore
-    , decodeSoftwareManifest, decodeTunnelCreated
+    ( encodeAppstoreInstallFailed, encodeAppstoreInstalled, encodeFileDeleteFailed, encodeFileDeleted
+    , encodeFileInstallFailed, encodeFileInstalled, encodeFileTransferFailed, encodeFileTransferred
+    , encodeIdxEndpoint, encodeIdxFile, encodeIdxGateway, encodeIdxLog, encodeIdxLogRevision, encodeIdxPlayer
+    , encodeIdxProcess, encodeIdxSoftware, encodeIdxTunnel, encodeIndexRequested
+    , encodeInstallationUninstallFailed, encodeInstallationUninstalled, encodeLogDeleteFailed, encodeLogDeleted
+    , encodeLogEditFailed, encodeLogEdited, encodeProcessCompleted, encodeProcessCreated, encodeProcessKilled
+    , encodeSoftwareConfig, encodeSoftwareConfigAppstore, encodeSoftwareManifest, encodeTunnelCreated
+    , decodeAppstoreInstallFailed, decodeAppstoreInstalled, decodeFileDeleteFailed, decodeFileDeleted
+    , decodeFileInstallFailed, decodeFileInstalled, decodeFileTransferFailed, decodeFileTransferred
+    , decodeIdxEndpoint, decodeIdxFile, decodeIdxGateway, decodeIdxLog, decodeIdxLogRevision, decodeIdxPlayer
+    , decodeIdxProcess, decodeIdxSoftware, decodeIdxTunnel, decodeIndexRequested
+    , decodeInstallationUninstallFailed, decodeInstallationUninstalled, decodeLogDeleteFailed, decodeLogDeleted
+    , decodeLogEditFailed, decodeLogEdited, decodeProcessCompleted, decodeProcessCreated, decodeProcessKilled
+    , decodeSoftwareConfig, decodeSoftwareConfigAppstore, decodeSoftwareManifest, decodeTunnelCreated
     )
 
 {-|
@@ -23,24 +23,24 @@ module API.Events.Json exposing
 
 ## Encoders
 
-@docs encodeFileDeleteFailed, encodeFileDeleted, encodeFileInstallFailed, encodeFileInstalled
-@docs encodeFileTransferFailed, encodeFileTransferred, encodeIdxEndpoint, encodeIdxFile, encodeIdxGateway
-@docs encodeIdxLog, encodeIdxLogRevision, encodeIdxPlayer, encodeIdxProcess, encodeIdxSoftware, encodeIdxTunnel
-@docs encodeIndexRequested, encodeInstallationUninstallFailed, encodeInstallationUninstalled
-@docs encodeLogDeleteFailed, encodeLogDeleted, encodeLogEditFailed, encodeLogEdited, encodeProcessCompleted
-@docs encodeProcessCreated, encodeProcessKilled, encodeSoftwareConfig, encodeSoftwareConfigAppstore
-@docs encodeSoftwareManifest, encodeTunnelCreated
+@docs encodeAppstoreInstallFailed, encodeAppstoreInstalled, encodeFileDeleteFailed, encodeFileDeleted
+@docs encodeFileInstallFailed, encodeFileInstalled, encodeFileTransferFailed, encodeFileTransferred
+@docs encodeIdxEndpoint, encodeIdxFile, encodeIdxGateway, encodeIdxLog, encodeIdxLogRevision, encodeIdxPlayer
+@docs encodeIdxProcess, encodeIdxSoftware, encodeIdxTunnel, encodeIndexRequested
+@docs encodeInstallationUninstallFailed, encodeInstallationUninstalled, encodeLogDeleteFailed, encodeLogDeleted
+@docs encodeLogEditFailed, encodeLogEdited, encodeProcessCompleted, encodeProcessCreated, encodeProcessKilled
+@docs encodeSoftwareConfig, encodeSoftwareConfigAppstore, encodeSoftwareManifest, encodeTunnelCreated
 
 
 ## Decoders
 
-@docs decodeFileDeleteFailed, decodeFileDeleted, decodeFileInstallFailed, decodeFileInstalled
-@docs decodeFileTransferFailed, decodeFileTransferred, decodeIdxEndpoint, decodeIdxFile, decodeIdxGateway
-@docs decodeIdxLog, decodeIdxLogRevision, decodeIdxPlayer, decodeIdxProcess, decodeIdxSoftware, decodeIdxTunnel
-@docs decodeIndexRequested, decodeInstallationUninstallFailed, decodeInstallationUninstalled
-@docs decodeLogDeleteFailed, decodeLogDeleted, decodeLogEditFailed, decodeLogEdited, decodeProcessCompleted
-@docs decodeProcessCreated, decodeProcessKilled, decodeSoftwareConfig, decodeSoftwareConfigAppstore
-@docs decodeSoftwareManifest, decodeTunnelCreated
+@docs decodeAppstoreInstallFailed, decodeAppstoreInstalled, decodeFileDeleteFailed, decodeFileDeleted
+@docs decodeFileInstallFailed, decodeFileInstalled, decodeFileTransferFailed, decodeFileTransferred
+@docs decodeIdxEndpoint, decodeIdxFile, decodeIdxGateway, decodeIdxLog, decodeIdxLogRevision, decodeIdxPlayer
+@docs decodeIdxProcess, decodeIdxSoftware, decodeIdxTunnel, decodeIndexRequested
+@docs decodeInstallationUninstallFailed, decodeInstallationUninstalled, decodeLogDeleteFailed, decodeLogDeleted
+@docs decodeLogEditFailed, decodeLogEdited, decodeProcessCompleted, decodeProcessCreated, decodeProcessKilled
+@docs decodeSoftwareConfig, decodeSoftwareConfigAppstore, decodeSoftwareManifest, decodeTunnelCreated
 
 -}
 
@@ -485,6 +485,63 @@ decodeFileDeleteFailed =
 
 encodeFileDeleteFailed : API.Events.Types.FileDeleteFailed -> Json.Encode.Value
 encodeFileDeleteFailed rec =
+    Json.Encode.object
+        [ ( "process_id", Json.Encode.string (ProcessID.toValue rec.process_id) )
+        , ( "reason", Json.Encode.string rec.reason )
+        ]
+
+
+decodeAppstoreInstalled : Json.Decode.Decoder API.Events.Types.AppstoreInstalled
+decodeAppstoreInstalled =
+    Json.Decode.succeed
+        (\file_name installation_id memory_usage process_id ->
+            { file_name = file_name
+            , installation_id = installation_id
+            , memory_usage = memory_usage
+            , process_id = process_id
+            }
+        )
+        |> OpenApi.Common.jsonDecodeAndMap
+            (Json.Decode.field "file_name" Json.Decode.string)
+        |> OpenApi.Common.jsonDecodeAndMap
+            (Json.Decode.field
+                "installation_id"
+                Json.Decode.string
+            )
+        |> OpenApi.Common.jsonDecodeAndMap
+            (Json.Decode.field
+                "memory_usage"
+                Json.Decode.int
+            )
+        |> OpenApi.Common.jsonDecodeAndMap
+            (Json.Decode.field
+                "process_id"
+                (Json.Decode.map ProcessID Json.Decode.string)
+            )
+
+
+encodeAppstoreInstalled : API.Events.Types.AppstoreInstalled -> Json.Encode.Value
+encodeAppstoreInstalled rec =
+    Json.Encode.object
+        [ ( "file_name", Json.Encode.string rec.file_name )
+        , ( "installation_id", Json.Encode.string rec.installation_id )
+        , ( "memory_usage", Json.Encode.int rec.memory_usage )
+        , ( "process_id", Json.Encode.string (ProcessID.toValue rec.process_id) )
+        ]
+
+
+decodeAppstoreInstallFailed : Json.Decode.Decoder API.Events.Types.AppstoreInstallFailed
+decodeAppstoreInstallFailed =
+    Json.Decode.succeed
+        (\process_id reason -> { process_id = process_id, reason = reason })
+        |> OpenApi.Common.jsonDecodeAndMap
+            (Json.Decode.field "process_id" (Json.Decode.map ProcessID Json.Decode.string))
+        |> OpenApi.Common.jsonDecodeAndMap
+            (Json.Decode.field "reason" Json.Decode.string)
+
+
+encodeAppstoreInstallFailed : API.Events.Types.AppstoreInstallFailed -> Json.Encode.Value
+encodeAppstoreInstallFailed rec =
     Json.Encode.object
         [ ( "process_id", Json.Encode.string (ProcessID.toValue rec.process_id) )
         , ( "reason", Json.Encode.string rec.reason )
