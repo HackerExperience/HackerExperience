@@ -27,6 +27,7 @@ import Game.Bus as Action exposing (Action)
 import Game.Model.NIP as NIP exposing (NIP, RawNIP)
 import Game.Model.ProcessOperation as Operation exposing (Operation)
 import Game.Model.Server as Server exposing (Endpoint, Gateway, Server, ServerType(..))
+import Game.Model.Software as Software exposing (Manifest)
 import Game.Model.Tunnel as Tunnel exposing (Tunnels)
 import Game.Universe exposing (Universe(..))
 import Maybe.Extra as Maybe
@@ -39,6 +40,7 @@ type alias Model =
     , gateways : Dict RawNIP Gateway
     , endpoints : Dict RawNIP Endpoint
     , servers : Dict RawNIP Server
+    , manifest : Manifest
     , apiCtx : API.Types.InputContext
     }
 
@@ -59,6 +61,7 @@ init token universe index =
     , gateways = gateways
     , endpoints = Server.parseEndpoints index.player.endpoints
     , servers = Server.parseServers gateways index.player.gateways index.player.endpoints
+    , manifest = Software.parseManifest index.software.manifest
     , apiCtx = buildApiContext token universe
     }
 

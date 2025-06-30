@@ -9,7 +9,9 @@ defmodule Game.Installation do
   @context :server
   @table :installations
 
+  # TODO: Derive from Software schema
   @file_types [
+    :cracker,
     :log_editor
   ]
 

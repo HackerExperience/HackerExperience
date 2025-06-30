@@ -37,6 +37,7 @@ game universe =
                 , gateways = Dict.empty
                 , endpoints = Dict.empty
                 , servers = Dict.empty
+                , manifest = Dict.empty
                 }
     in
     map genGame randomNip

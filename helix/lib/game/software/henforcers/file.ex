@@ -61,6 +61,7 @@ defmodule Game.Henforcers.File do
   def can_install?(%Server{} = server, %Entity{} = entity, %File.ID{} = file_id) do
     with {true, %{file: file}} <- file_exists?(file_id, server),
          {true, %{visibility: visibility}} <- is_visible?(file, entity.id) do
+      # TODO: Enforce file type is installable
       Henforcer.success(%{file: file, visibility: visibility})
     end
   end

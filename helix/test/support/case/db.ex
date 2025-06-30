@@ -8,6 +8,7 @@ defmodule Test.DBCase do
       import Test.Assertions
       # import Test.Finders
       # import Test.Utils
+      import Core.Spec, only: [validate_spec: 2]
 
       alias Renatils.Random
       alias Test.Setup

@@ -31,6 +31,7 @@ defmodule Game.Process do
   @table :processes
 
   @process_types [
+    :appstore_install,
     :file_delete,
     :file_install,
     :file_transfer,
@@ -97,6 +98,7 @@ defmodule Game.Process do
 
   #
 
+  def process_mod(:appstore_install), do: Process.AppStore.Install
   def process_mod(:file_delete), do: Process.File.Delete
   def process_mod(:file_install), do: Process.File.Install
   def process_mod(:file_transfer), do: Process.File.Transfer

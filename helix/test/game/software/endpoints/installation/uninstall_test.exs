@@ -5,11 +5,11 @@ defmodule Game.Endpoint.Installation.UninstallTest do
   setup [:with_game_db, :with_game_webserver]
 
   describe "Installation.Uninstall request" do
-    test "successfully starts a InstallationUninstallProcess", %{shard_id: shard_id} do
-      # TODO: `player` (and `jwt`?) should automagically show up when `with_game_webserver`
-      player = Setup.player!()
-      jwt = U.jwt_token(uid: player.external_id)
-
+    test "successfully starts a InstallationUninstallProcess", %{
+      shard_id: shard_id,
+      jwt: jwt,
+      player: player
+    } do
       %{server: server, nip: nip} = Setup.server_full(entity_id: player.id)
       %{installation: installation} = Setup.file(server.id, visible_by: player.id, installed?: true)
       DB.commit()
@@ -29,11 +29,10 @@ defmodule Game.Endpoint.Installation.UninstallTest do
       assert process.registry.tgt_installation_id == installation.id
     end
 
-    test "returns an error if attempting to uninstall someone else's installation" do
-      # TODO: `player` (and `jwt`?) should automagically show up when `with_game_webserver`
-      player = Setup.player!()
-      jwt = U.jwt_token(uid: player.external_id)
-
+    test "returns an error if attempting to uninstall someone else's installation", %{
+      jwt: jwt,
+      player: player
+    } do
       # There is a Tunnel from Gateway -> Endpoint
       %{nip: gtw_nip} = Setup.server(entity_id: player.id)
       %{nip: endp_nip, server: endpoint} = Setup.server()
@@ -52,11 +51,10 @@ defmodule Game.Endpoint.Installation.UninstallTest do
     end
 
     # This one is a mouthful
-    test "returns an error if attempting to uninstall an already uninstalled installation" do
-      # TODO: `player` (and `jwt`?) should automagically show up when `with_game_webserver`
-      player = Setup.player!()
-      jwt = U.jwt_token(uid: player.external_id)
-
+    test "returns an error if attempting to uninstall an already uninstalled installation", %{
+      jwt: jwt,
+      player: player
+    } do
       %{server: server, nip: nip} = Setup.server_full(entity_id: player.id)
       %{installation: installation} = Setup.file(server.id, visible_by: player.id, installed?: true)
       DB.commit()

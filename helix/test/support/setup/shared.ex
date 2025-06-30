@@ -40,7 +40,7 @@ defmodule Test.Setup.Shared do
 
   # Webserver
 
-  def with_game_webserver(%{db_context: db_context}) do
+  def with_game_webserver(%{shard_id: shard_id, db_context: db_context}) do
     webserver_url =
       case db_context do
         :singleplayer -> "http://localhost:5001/v1"
@@ -48,7 +48,19 @@ defmodule Test.Setup.Shared do
       end
 
     Process.put(:test_http_client_base_url, webserver_url)
-    :ok
+
+    # Now let's setup a sample Player and JWT so tests don't need to manually create it
+    player = Setup.player!()
+
+    # When generating the JWT, we commit the transaction and re-start it because this process is
+    # slow (takes 1s). We don't want to block DB transactions for that long (in prod, mostly).
+    # In order to not have different `feebdb_repo_timeout` settings for tests, let's do the same
+    # here and ensure the token generation does not affect the default repo timeout
+    DB.commit()
+    jwt = Test.Utils.jwt_token(uid: player.external_id)
+    DB.begin(db_context, shard_id, :write)
+
+    {:ok, %{player: player, jwt: jwt}}
   end
 
   def with_lobby_webserver(_) do

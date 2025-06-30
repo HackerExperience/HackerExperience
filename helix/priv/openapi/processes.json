@@ -3,6 +3,11 @@
     "requestBodies": {},
     "responses": {},
     "schemas": {
+      "appstore_install": {
+        "properties": {},
+        "required": [],
+        "type": "object"
+      },
       "file_delete": {
         "properties": {},
         "required": [],

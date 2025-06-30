@@ -2,18 +2,22 @@
 
 
 module API.Events.Types exposing
-    ( FileDeleteFailed
+    ( AppstoreInstallFailed
+    , AppstoreInstalled
+    , FileDeleteFailed
     , FileDeleted
     , FileInstallFailed
     , FileInstalled
     , FileTransferFailed
     , FileTransferred
     , IdxEndpoint
+    , IdxFile
     , IdxGateway
     , IdxLog
     , IdxLogRevision
     , IdxPlayer
     , IdxProcess
+    , IdxSoftware
     , IdxTunnel
     , IndexRequested
     , InstallationUninstallFailed
@@ -25,6 +29,9 @@ module API.Events.Types exposing
     , ProcessCompleted
     , ProcessCreated
     , ProcessKilled
+    , SoftwareConfig
+    , SoftwareConfigAppstore
+    , SoftwareManifest
     , TunnelCreated
     )
 
@@ -39,10 +46,11 @@ import Game.Model.TunnelID as TunnelID exposing (TunnelID(..))
 
 ## Aliases
 
-@docs FileDeleteFailed, FileDeleted, FileInstallFailed, FileInstalled, FileTransferFailed, FileTransferred
-@docs IdxEndpoint, IdxGateway, IdxLog, IdxLogRevision, IdxPlayer, IdxProcess, IdxTunnel, IndexRequested
-@docs InstallationUninstallFailed, InstallationUninstalled, LogDeleteFailed, LogDeleted, LogEditFailed
-@docs LogEdited, ProcessCompleted, ProcessCreated, ProcessKilled, TunnelCreated
+@docs AppstoreInstallFailed, AppstoreInstalled, FileDeleteFailed, FileDeleted, FileInstallFailed, FileInstalled
+@docs FileTransferFailed, FileTransferred, IdxEndpoint, IdxFile, IdxGateway, IdxLog, IdxLogRevision, IdxPlayer
+@docs IdxProcess, IdxSoftware, IdxTunnel, IndexRequested, InstallationUninstallFailed, InstallationUninstalled
+@docs LogDeleteFailed, LogDeleted, LogEditFailed, LogEdited, ProcessCompleted, ProcessCreated, ProcessKilled
+@docs SoftwareConfig, SoftwareConfigAppstore, SoftwareManifest, TunnelCreated
 
 -}
 type alias TunnelCreated =
@@ -97,7 +105,7 @@ type alias InstallationUninstallFailed =
 
 
 type alias IndexRequested =
-    { player : IdxPlayer }
+    { player : IdxPlayer, software : IdxSoftware }
 
 
 type alias FileTransferred =
@@ -128,8 +136,36 @@ type alias FileDeleteFailed =
     { process_id : ProcessID, reason : String }
 
 
+type alias AppstoreInstalled =
+    { file_name : String
+    , installation_id : String
+    , memory_usage : Int
+    , process_id : ProcessID
+    }
+
+
+type alias AppstoreInstallFailed =
+    { process_id : ProcessID, reason : String }
+
+
+type alias SoftwareManifest =
+    { config : SoftwareConfig, extension : String, type_ : String }
+
+
+type alias SoftwareConfigAppstore =
+    { price : Int }
+
+
+type alias SoftwareConfig =
+    { appstore : Maybe SoftwareConfigAppstore }
+
+
 type alias IdxTunnel =
     { source_nip : NIP, target_nip : NIP, tunnel_id : TunnelID }
+
+
+type alias IdxSoftware =
+    { manifest : List SoftwareManifest }
 
 
 type alias IdxProcess =
@@ -162,12 +198,27 @@ type alias IdxLog =
 
 
 type alias IdxGateway =
-    { logs : List IdxLog
+    { files : List IdxFile
+    , logs : List IdxLog
     , nip : NIP
     , processes : List IdxProcess
     , tunnels : List IdxTunnel
     }
 
 
+type alias IdxFile =
+    { id : String
+    , name : String
+    , path : String
+    , size : Int
+    , type_ : String
+    , version : Int
+    }
+
+
 type alias IdxEndpoint =
-    { logs : List IdxLog, nip : NIP, processes : List IdxProcess }
+    { files : List IdxFile
+    , logs : List IdxLog
+    , nip : NIP
+    , processes : List IdxProcess
+    }

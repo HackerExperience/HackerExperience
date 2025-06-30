@@ -18,7 +18,7 @@ new =
 
 fromIdxGateway : Events.IdxGateway -> Server
 fromIdxGateway idxGtw =
-    Server.buildServer ServerGateway idxGtw.nip Nothing idxGtw.logs idxGtw.processes
+    Server.buildServer ServerGateway idxGtw.nip Nothing idxGtw.logs idxGtw.files idxGtw.processes
 
 
 

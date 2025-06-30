@@ -101,7 +101,13 @@ defmodule Core.Webserver.Belt.Session do
       }
 
       {:ok,
-       %{id: claims.session_id, universe: request.universe, shard_id: shard_id, data: session_data}}
+       %{
+         id: claims.session_id,
+         type: :private,
+         universe: request.universe,
+         shard_id: shard_id,
+         data: session_data
+       }}
     else
       :user_not_found ->
         raise "User not found"
