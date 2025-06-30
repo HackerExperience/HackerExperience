@@ -29,6 +29,21 @@ defmodule Game.Services.File do
   end
 
   @doc """
+  Returns a list of File matching the given filters.
+  """
+  @spec list(Entity.id(), list, list) ::
+          [File.t()]
+  def list(%Server.ID{} = server_id, filter_params, opts \\ []) do
+    filters = [
+      by_type_and_version: &query_file_by_type_and_version/1
+    ]
+
+    Core.with_context(:server, server_id, :read, fn ->
+      Core.Fetch.query(filter_params, opts, filters)
+    end)
+  end
+
+  @doc """
   Returns a list of FileVisibility matching the given filters.
   """
   @spec list_visibility(Entity.id(), list, list) ::
@@ -56,6 +71,7 @@ defmodule Game.Services.File do
     end)
   end
 
+  # TODO: This should be moved to the Installation service
   def install_file(%File{} = file) do
     %{
       file_type: file.type,
@@ -119,6 +135,9 @@ defmodule Game.Services.File do
 
   # TODO
   defp get_memory_usage(%File{} = _file), do: 5
+
+  defp query_file_by_type_and_version({type, version}) when is_atom(type) and is_integer(version),
+    do: DB.all({:files, :by_type_and_version}, [type, version])
 
   defp query_visibility_by_file(%File{} = file),
     do: DB.one({:file_visibilities, :fetch}, [file.server_id, file.id])

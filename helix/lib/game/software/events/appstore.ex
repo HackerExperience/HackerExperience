@@ -10,18 +10,21 @@ defmodule Game.Events.AppStore do
 
     alias Game.{File, Installation, Process}
 
-    defstruct [:file, :installation, :process]
+    defstruct [:file, :installation, :action, :process]
 
     @type t :: %__MODULE__{
-            file: File.t(),
-            installation: Installation.t(),
+            file: File.t() | nil,
+            installation: Installation.t() | nil,
+            action: :download_and_install | :download_only | :install_only,
             process: Process.t(:appstore_install)
           }
 
     @name :appstore_installed
 
-    def new(installation = %Installation{}, file = %File{}, process = %Process{}) do
-      %__MODULE__{installation: installation, file: file, process: process}
+    @valid_actions [:download_and_install, :download_only, :install_only]
+
+    def new(installation, file, action, process = %Process{}) when action in @valid_actions do
+      %__MODULE__{installation: installation, file: file, action: action, process: process}
       |> Event.new()
     end
 

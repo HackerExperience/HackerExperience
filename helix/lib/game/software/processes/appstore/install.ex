@@ -13,6 +13,11 @@ defmodule Game.Process.AppStore.Install do
 
   def get_process_type(_, _), do: :appstore_install
 
+  def on_db_load(%__MODULE__{} = raw) do
+    raw
+    |> Map.put(:software_type, String.to_existing_atom(raw.software_type))
+  end
+
   defmodule Processable do
     use Game.Process.Processable.Definition
 
@@ -29,13 +34,12 @@ defmodule Game.Process.AppStore.Install do
 
       with {true, %{entity: entity, target: server, access_type: :local}} <-
              Henforcers.Server.has_access?(process),
-           {true, %{software: software}} <-
-             Henforcers.AppStore.can_install?(server, entity, file_type),
-           file_params = get_software_creation_params(software),
-           {:ok, file} <- Svc.File.create_file(entity.id, server.id, file_params),
-           {:ok, installation} <- Svc.File.install_file(file) do
+           {true, %{action: action} = install_relay} <-
+             Henforcers.AppStore.can_install?(server, file_type),
+           {:ok, %{file: file, installation: installation}} <-
+             apply_action(server, entity, action, install_relay) do
         Core.commit()
-        {:ok, AppStoreInstalledEvent.new(installation, file, process)}
+        {:ok, AppStoreInstalledEvent.new(installation, file, action, process)}
       else
         {false, henforcer_error, _} ->
           Core.rollback()
@@ -50,6 +54,31 @@ defmodule Game.Process.AppStore.Install do
       end
     end
 
+    defp apply_action(server, entity, :download_and_install, %{software: software}) do
+      file_params = get_software_creation_params(software)
+
+      with {:ok, file} <- Svc.File.create_file(entity.id, server.id, file_params),
+           {:ok, installation} <- Svc.File.install_file(file) do
+        {:ok, %{file: file, installation: installation}}
+      end
+    end
+
+    defp apply_action(server, entity, :download_only, %{software: software}) do
+      file_params = get_software_creation_params(software)
+
+      with {:ok, file} <- Svc.File.create_file(entity.id, server.id, file_params) do
+        {:ok, %{file: file, installation: nil}}
+      end
+    end
+
+    defp apply_action(_server, _entity, :install_only, %{matching_files: matching_files}) do
+      file = List.first(matching_files)
+
+      with {:ok, installation} <- Svc.File.install_file(file) do
+        {:ok, %{file: nil, installation: installation}}
+      end
+    end
+
     defp get_software_creation_params(software) do
       %{
         # TODO
@@ -61,6 +90,7 @@ defmodule Game.Process.AppStore.Install do
       }
     end
 
+    defp format_henforcer_error({_, :already_installed}), do: "file_already_installed"
     defp format_henforcer_error({:file, :not_found}), do: "file_not_found"
     defp format_henforcer_error({:file_visibility, :not_found}), do: "file_not_found"
     defp format_henforcer_error({:server, :not_belongs}), do: "server_not_belongs"

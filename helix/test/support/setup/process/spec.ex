@@ -42,7 +42,7 @@ defmodule Test.Setup.Process.Spec do
   def spec(:appstore_install, server_id, entity_id, opts) do
     software_type = opts[:software_type] || :cracker
 
-    default_meta = %{software: Software.get(software_type)}
+    default_meta = %{software: Software.get!(software_type)}
     default_params = %{}
 
     params = opts[:params] || default_params

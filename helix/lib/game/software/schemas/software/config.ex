@@ -26,7 +26,12 @@ defmodule Game.Software.Config do
   def new, do: %__MODULE__{appstore: nil}
 
   def with_appstore(config, opts \\ []) do
-    appstore_config = %{price: opts[:price] || 0}
+    appstore_config = %{
+      price: opts[:price] || 0,
+      version: opts[:version] || 10,
+      size: opts[:size] || 10
+    }
+
     %{config | appstore: appstore_config}
   end
 end

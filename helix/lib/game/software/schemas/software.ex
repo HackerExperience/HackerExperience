@@ -3,6 +3,16 @@ defmodule Game.Software do
 
   alias Game.Software.Config, as: SoftwareConfig
 
+  @type t :: %__MODULE__{
+          type: type(),
+          extension: atom(),
+          config: map
+        }
+
+  @type type ::
+          :cracker
+          | :log_editor
+
   def all do
     base_config = SoftwareConfig.new()
 
@@ -22,9 +32,8 @@ defmodule Game.Software do
     }
   end
 
-  def get(type) do
-    Map.fetch!(all(), type)
-  end
+  def get(type), do: Map.get(all(), type)
+  def get!(type), do: Map.fetch!(all(), type)
 
   def types(:all), do: Map.keys(all())
 
