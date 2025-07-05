@@ -78,6 +78,9 @@
             },
             "type": "array"
           },
+          "id": {
+            "type": "string"
+          },
           "logs": {
             "items": {
               "$ref": "#/components/schemas/IdxLog"
@@ -102,6 +105,7 @@
         },
         "required": [
           "files",
+          "id",
           "logs",
           "nip",
           "processes",

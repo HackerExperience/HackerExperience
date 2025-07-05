@@ -44,7 +44,7 @@ defmodule Game.Index.Player do
 
     %{
       mainframe_nip: mainframe_nip,
-      gateways: Enum.map(gateways, fn server -> Index.Server.gateway_index(entity, server) end)
+      gateways: Enum.map(gateways, fn server -> Index.Server.gateway_index(entity.id, server) end)
     }
     |> index_add_endpoints(entity)
   end

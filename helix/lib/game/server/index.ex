@@ -1,7 +1,7 @@
 defmodule Game.Index.Server do
   use Norm
   import Core.Spec
-  alias Core.NIP
+  alias Core.{ID, NIP}
   alias Game.Index
   alias Game.Services, as: Svc
   alias Game.{Entity, Server}
@@ -26,6 +26,7 @@ defmodule Game.Index.Server do
 
   @type rendered_gateway_index ::
           %{
+            id: ID.external(),
             nip: binary(),
             tunnels: Index.Tunnel.rendered_index(),
             files: Index.File.rendered_index(),
@@ -45,13 +46,14 @@ defmodule Game.Index.Server do
     selection(
       schema(%{
         __openapi_name: "IdxGateway",
+        id: external_id(),
         nip: nip(),
         tunnels: coll_of(Index.Tunnel.spec()),
         files: coll_of(Index.File.spec()),
         logs: coll_of(Index.Log.spec()),
         processes: coll_of(Index.Process.spec())
       }),
-      [:nip, :tunnels, :files, :logs, :processes]
+      [:id, :nip, :tunnels, :files, :logs, :processes]
     )
   end
 
@@ -68,17 +70,17 @@ defmodule Game.Index.Server do
     )
   end
 
-  @spec gateway_index(Entity.t(), Server.t()) ::
+  @spec gateway_index(Entity.id(), Server.t()) ::
           gateway_index
-  def gateway_index(entity, server) do
+  def gateway_index(%Entity.ID{} = entity_id, server) do
     %{nip: nip} = Svc.NetworkConnection.fetch!(by_server_id: server.id)
 
     %{
       id: server.id,
       nip: nip,
-      files: Index.File.index(entity.id, server.id),
-      logs: Index.Log.index(entity.id, server.id),
-      processes: Index.Process.index(entity.id, server.id),
+      files: Index.File.index(entity_id, server.id),
+      logs: Index.Log.index(entity_id, server.id),
+      processes: Index.Process.index(entity_id, server.id),
       tunnels: Index.Tunnel.index(nip)
     }
   end
@@ -98,6 +100,7 @@ defmodule Game.Index.Server do
           rendered_gateway_index
   def render_gateway_index(index, entity_id) do
     %{
+      id: index.id |> ID.to_external(entity_id),
       nip: index.nip |> NIP.to_external(),
       files: Index.File.render_index(index.files, entity_id),
       logs: Index.Log.render_index(index.logs, entity_id),

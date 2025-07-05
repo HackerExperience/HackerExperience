@@ -199,6 +199,7 @@ type alias IdxLog =
 
 type alias IdxGateway =
     { files : List IdxFile
+    , id : String
     , logs : List IdxLog
     , nip : NIP
     , processes : List IdxProcess

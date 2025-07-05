@@ -828,8 +828,9 @@ encodeIdxLog rec =
 decodeIdxGateway : Json.Decode.Decoder API.Events.Types.IdxGateway
 decodeIdxGateway =
     Json.Decode.succeed
-        (\files logs nip processes tunnels ->
+        (\files id logs nip processes tunnels ->
             { files = files
+            , id = id
             , logs = logs
             , nip = nip
             , processes = processes
@@ -839,9 +840,13 @@ decodeIdxGateway =
         |> OpenApi.Common.jsonDecodeAndMap
             (Json.Decode.field "files" (Json.Decode.list decodeIdxFile))
         |> OpenApi.Common.jsonDecodeAndMap
+            (Json.Decode.field "id" Json.Decode.string)
+        |> OpenApi.Common.jsonDecodeAndMap
             (Json.Decode.field
                 "logs"
-                (Json.Decode.list decodeIdxLog)
+                (Json.Decode.list
+                    decodeIdxLog
+                )
             )
         |> OpenApi.Common.jsonDecodeAndMap
             (Json.Decode.field
@@ -868,6 +873,7 @@ encodeIdxGateway : API.Events.Types.IdxGateway -> Json.Encode.Value
 encodeIdxGateway rec =
     Json.Encode.object
         [ ( "files", Json.Encode.list encodeIdxFile rec.files )
+        , ( "id", Json.Encode.string rec.id )
         , ( "logs", Json.Encode.list encodeIdxLog rec.logs )
         , ( "nip", Json.Encode.string (NIP.toString rec.nip) )
         , ( "processes", Json.Encode.list encodeIdxProcess rec.processes )
