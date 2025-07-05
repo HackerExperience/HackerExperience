@@ -1,6 +1,17 @@
 {
   "components": {
     "requestBodies": {
+      "AppStoreInstallRequest": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/AppStoreInstallInput"
+            }
+          }
+        },
+        "description": "TODO description",
+        "required": true
+      },
       "FileDeleteRequest": {
         "content": {
           "application/json": {
@@ -91,6 +102,24 @@
       }
     },
     "responses": {
+      "AppStoreInstallOkResponse": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "properties": {
+                "data": {
+                  "$ref": "#/components/schemas/AppStoreInstallOutput"
+                }
+              },
+              "required": [
+                "data"
+              ],
+              "type": "object"
+            }
+          }
+        },
+        "description": "TODO description"
+      },
       "FileDeleteOkResponse": {
         "content": {
           "application/json": {
@@ -277,6 +306,22 @@
       }
     },
     "schemas": {
+      "AppStoreInstallInput": {
+        "properties": {},
+        "required": [],
+        "type": "object"
+      },
+      "AppStoreInstallOutput": {
+        "properties": {
+          "process": {
+            "$ref": "#/components/schemas/IdxProcess"
+          }
+        },
+        "required": [
+          "process"
+        ],
+        "type": "object"
+      },
       "FileDeleteInput": {
         "properties": {
           "tunnel_id": {
@@ -747,6 +792,44 @@
         "responses": {
           "200": {
             "$ref": "#/components/responses/ServerLoginOkResponse"
+          }
+        },
+        "security": [
+          {
+            "AuthorizationToken": []
+          }
+        ]
+      }
+    },
+    "/v1/server/{server_id}/appstore/{software_type}/install": {
+      "post": {
+        "operationId": "AppStoreInstall",
+        "parameters": [
+          {
+            "description": "",
+            "in": "path",
+            "name": "server_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "",
+            "in": "path",
+            "name": "software_type",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/AppStoreInstallRequest"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/AppStoreInstallOkResponse"
           }
         },
         "security": [

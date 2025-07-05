@@ -6,6 +6,7 @@ import Html.Attributes as HA
 import Html.Events as HE
 import Html.Keyed as Keyed
 import Html.Lazy as Lazy
+import Json.Decode as JD
 
 
 type alias Document msg =
@@ -235,3 +236,18 @@ pointer =
 onClick : msg -> Attribute msg
 onClick msg =
     HE.onClick msg
+
+
+onClickIf : Bool -> msg -> Attribute msg
+onClickIf condition msg =
+    if condition then
+        onClick msg
+
+    else
+        emptyAttr
+
+
+stopPropagation : String -> msg -> Attribute msg
+stopPropagation event msg =
+    HE.stopPropagationOn event
+        (JD.succeed <| (\evMsg -> ( evMsg, True )) msg)

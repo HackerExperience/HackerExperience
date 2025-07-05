@@ -2,23 +2,25 @@
 
 
 module API.Game.Json exposing
-    ( encodeFileDeleteInput, encodeFileDeleteOkResponse, encodeFileDeleteOutput, encodeFileDeleteRequest
-    , encodeFileInstallInput, encodeFileInstallOkResponse, encodeFileInstallOutput, encodeFileInstallRequest
-    , encodeFileTransferInput, encodeFileTransferOkResponse, encodeFileTransferOutput, encodeFileTransferRequest
-    , encodeGenericBadRequest, encodeGenericBadRequestResponse, encodeGenericError, encodeGenericErrorResponse
-    , encodeGenericUnauthorizedResponse, encodeIdxProcess, encodeInstallationUninstallInput
-    , encodeInstallationUninstallOkResponse, encodeInstallationUninstallOutput
+    ( encodeAppStoreInstallInput, encodeAppStoreInstallOkResponse, encodeAppStoreInstallOutput
+    , encodeAppStoreInstallRequest, encodeFileDeleteInput, encodeFileDeleteOkResponse, encodeFileDeleteOutput
+    , encodeFileDeleteRequest, encodeFileInstallInput, encodeFileInstallOkResponse, encodeFileInstallOutput
+    , encodeFileInstallRequest, encodeFileTransferInput, encodeFileTransferOkResponse, encodeFileTransferOutput
+    , encodeFileTransferRequest, encodeGenericBadRequest, encodeGenericBadRequestResponse, encodeGenericError
+    , encodeGenericErrorResponse, encodeGenericUnauthorizedResponse, encodeIdxProcess
+    , encodeInstallationUninstallInput, encodeInstallationUninstallOkResponse, encodeInstallationUninstallOutput
     , encodeInstallationUninstallRequest, encodeLogDeleteInput, encodeLogDeleteOkResponse, encodeLogDeleteOutput
     , encodeLogDeleteRequest, encodeLogEditInput, encodeLogEditOkResponse, encodeLogEditOutput
     , encodeLogEditRequest, encodePlayerSyncInput, encodePlayerSyncOkResponse, encodePlayerSyncOutput
     , encodePlayerSyncRequest, encodeServerLoginInput, encodeServerLoginOkResponse, encodeServerLoginOutput
     , encodeServerLoginRequest
-    , decodeFileDeleteInput, decodeFileDeleteOkResponse, decodeFileDeleteOutput, decodeFileDeleteRequest
-    , decodeFileInstallInput, decodeFileInstallOkResponse, decodeFileInstallOutput, decodeFileInstallRequest
-    , decodeFileTransferInput, decodeFileTransferOkResponse, decodeFileTransferOutput, decodeFileTransferRequest
-    , decodeGenericBadRequest, decodeGenericBadRequestResponse, decodeGenericError, decodeGenericErrorResponse
-    , decodeGenericUnauthorizedResponse, decodeIdxProcess, decodeInstallationUninstallInput
-    , decodeInstallationUninstallOkResponse, decodeInstallationUninstallOutput
+    , decodeAppStoreInstallInput, decodeAppStoreInstallOkResponse, decodeAppStoreInstallOutput
+    , decodeAppStoreInstallRequest, decodeFileDeleteInput, decodeFileDeleteOkResponse, decodeFileDeleteOutput
+    , decodeFileDeleteRequest, decodeFileInstallInput, decodeFileInstallOkResponse, decodeFileInstallOutput
+    , decodeFileInstallRequest, decodeFileTransferInput, decodeFileTransferOkResponse, decodeFileTransferOutput
+    , decodeFileTransferRequest, decodeGenericBadRequest, decodeGenericBadRequestResponse, decodeGenericError
+    , decodeGenericErrorResponse, decodeGenericUnauthorizedResponse, decodeIdxProcess
+    , decodeInstallationUninstallInput, decodeInstallationUninstallOkResponse, decodeInstallationUninstallOutput
     , decodeInstallationUninstallRequest, decodeLogDeleteInput, decodeLogDeleteOkResponse, decodeLogDeleteOutput
     , decodeLogDeleteRequest, decodeLogEditInput, decodeLogEditOkResponse, decodeLogEditOutput
     , decodeLogEditRequest, decodePlayerSyncInput, decodePlayerSyncOkResponse, decodePlayerSyncOutput
@@ -31,12 +33,13 @@ module API.Game.Json exposing
 
 ## Encoders
 
-@docs encodeFileDeleteInput, encodeFileDeleteOkResponse, encodeFileDeleteOutput, encodeFileDeleteRequest
-@docs encodeFileInstallInput, encodeFileInstallOkResponse, encodeFileInstallOutput, encodeFileInstallRequest
-@docs encodeFileTransferInput, encodeFileTransferOkResponse, encodeFileTransferOutput, encodeFileTransferRequest
-@docs encodeGenericBadRequest, encodeGenericBadRequestResponse, encodeGenericError, encodeGenericErrorResponse
-@docs encodeGenericUnauthorizedResponse, encodeIdxProcess, encodeInstallationUninstallInput
-@docs encodeInstallationUninstallOkResponse, encodeInstallationUninstallOutput
+@docs encodeAppStoreInstallInput, encodeAppStoreInstallOkResponse, encodeAppStoreInstallOutput
+@docs encodeAppStoreInstallRequest, encodeFileDeleteInput, encodeFileDeleteOkResponse, encodeFileDeleteOutput
+@docs encodeFileDeleteRequest, encodeFileInstallInput, encodeFileInstallOkResponse, encodeFileInstallOutput
+@docs encodeFileInstallRequest, encodeFileTransferInput, encodeFileTransferOkResponse, encodeFileTransferOutput
+@docs encodeFileTransferRequest, encodeGenericBadRequest, encodeGenericBadRequestResponse, encodeGenericError
+@docs encodeGenericErrorResponse, encodeGenericUnauthorizedResponse, encodeIdxProcess
+@docs encodeInstallationUninstallInput, encodeInstallationUninstallOkResponse, encodeInstallationUninstallOutput
 @docs encodeInstallationUninstallRequest, encodeLogDeleteInput, encodeLogDeleteOkResponse, encodeLogDeleteOutput
 @docs encodeLogDeleteRequest, encodeLogEditInput, encodeLogEditOkResponse, encodeLogEditOutput
 @docs encodeLogEditRequest, encodePlayerSyncInput, encodePlayerSyncOkResponse, encodePlayerSyncOutput
@@ -46,12 +49,13 @@ module API.Game.Json exposing
 
 ## Decoders
 
-@docs decodeFileDeleteInput, decodeFileDeleteOkResponse, decodeFileDeleteOutput, decodeFileDeleteRequest
-@docs decodeFileInstallInput, decodeFileInstallOkResponse, decodeFileInstallOutput, decodeFileInstallRequest
-@docs decodeFileTransferInput, decodeFileTransferOkResponse, decodeFileTransferOutput, decodeFileTransferRequest
-@docs decodeGenericBadRequest, decodeGenericBadRequestResponse, decodeGenericError, decodeGenericErrorResponse
-@docs decodeGenericUnauthorizedResponse, decodeIdxProcess, decodeInstallationUninstallInput
-@docs decodeInstallationUninstallOkResponse, decodeInstallationUninstallOutput
+@docs decodeAppStoreInstallInput, decodeAppStoreInstallOkResponse, decodeAppStoreInstallOutput
+@docs decodeAppStoreInstallRequest, decodeFileDeleteInput, decodeFileDeleteOkResponse, decodeFileDeleteOutput
+@docs decodeFileDeleteRequest, decodeFileInstallInput, decodeFileInstallOkResponse, decodeFileInstallOutput
+@docs decodeFileInstallRequest, decodeFileTransferInput, decodeFileTransferOkResponse, decodeFileTransferOutput
+@docs decodeFileTransferRequest, decodeGenericBadRequest, decodeGenericBadRequestResponse, decodeGenericError
+@docs decodeGenericErrorResponse, decodeGenericUnauthorizedResponse, decodeIdxProcess
+@docs decodeInstallationUninstallInput, decodeInstallationUninstallOkResponse, decodeInstallationUninstallOutput
 @docs decodeInstallationUninstallRequest, decodeLogDeleteInput, decodeLogDeleteOkResponse, decodeLogDeleteOutput
 @docs decodeLogDeleteRequest, decodeLogEditInput, decodeLogEditOkResponse, decodeLogEditOutput
 @docs decodeLogEditRequest, decodePlayerSyncInput, decodePlayerSyncOkResponse, decodePlayerSyncOutput
@@ -418,6 +422,32 @@ encodeFileDeleteInput rec =
         )
 
 
+decodeAppStoreInstallOutput : Json.Decode.Decoder API.Game.Types.AppStoreInstallOutput
+decodeAppStoreInstallOutput =
+    Json.Decode.succeed
+        (\process -> { process = process })
+        |> OpenApi.Common.jsonDecodeAndMap
+            (Json.Decode.field
+                "process"
+                decodeIdxProcess
+            )
+
+
+encodeAppStoreInstallOutput : API.Game.Types.AppStoreInstallOutput -> Json.Encode.Value
+encodeAppStoreInstallOutput rec =
+    Json.Encode.object [ ( "process", encodeIdxProcess rec.process ) ]
+
+
+decodeAppStoreInstallInput : Json.Decode.Decoder API.Game.Types.AppStoreInstallInput
+decodeAppStoreInstallInput =
+    Json.Decode.succeed {}
+
+
+encodeAppStoreInstallInput : API.Game.Types.AppStoreInstallInput -> Json.Encode.Value
+encodeAppStoreInstallInput rec =
+    Json.Encode.object []
+
+
 decodeServerLoginOkResponse : Json.Decode.Decoder API.Game.Types.ServerLoginOkResponse
 decodeServerLoginOkResponse =
     Json.Decode.succeed
@@ -589,6 +619,22 @@ encodeFileDeleteOkResponse rec =
     Json.Encode.object [ ( "data", encodeFileDeleteOutput rec.data ) ]
 
 
+decodeAppStoreInstallOkResponse : Json.Decode.Decoder API.Game.Types.AppStoreInstallOkResponse
+decodeAppStoreInstallOkResponse =
+    Json.Decode.succeed
+        (\data -> { data = data })
+        |> OpenApi.Common.jsonDecodeAndMap
+            (Json.Decode.field
+                "data"
+                decodeAppStoreInstallOutput
+            )
+
+
+encodeAppStoreInstallOkResponse : API.Game.Types.AppStoreInstallOkResponse -> Json.Encode.Value
+encodeAppStoreInstallOkResponse rec =
+    Json.Encode.object [ ( "data", encodeAppStoreInstallOutput rec.data ) ]
+
+
 decodeServerLoginRequest : Json.Decode.Decoder API.Game.Types.ServerLoginRequest
 decodeServerLoginRequest =
     decodeServerLoginInput
@@ -667,3 +713,13 @@ decodeFileDeleteRequest =
 encodeFileDeleteRequest : API.Game.Types.FileDeleteRequest -> Json.Encode.Value
 encodeFileDeleteRequest =
     encodeFileDeleteInput
+
+
+decodeAppStoreInstallRequest : Json.Decode.Decoder API.Game.Types.AppStoreInstallRequest
+decodeAppStoreInstallRequest =
+    decodeAppStoreInstallInput
+
+
+encodeAppStoreInstallRequest : API.Game.Types.AppStoreInstallRequest -> Json.Encode.Value
+encodeAppStoreInstallRequest =
+    encodeAppStoreInstallInput

@@ -20,9 +20,10 @@ defmodule Game.Events.Player.IndexRequested do
     def spec do
       selection(
         schema(%{
-          player: Index.Player.output_spec()
+          player: Index.Player.output_spec(),
+          software: Index.Software.output_spec()
         }),
-        [:player]
+        [:player, :software]
       )
     end
 
@@ -31,7 +32,8 @@ defmodule Game.Events.Player.IndexRequested do
 
       payload =
         %{
-          player: player |> Index.Player.index() |> Index.Player.render_index(player.id)
+          player: player |> Index.Player.index() |> Index.Player.render_index(player.id),
+          software: Index.Software.index() |> Index.Software.render_index()
         }
 
       {:ok, payload}

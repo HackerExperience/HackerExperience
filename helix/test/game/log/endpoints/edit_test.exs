@@ -6,11 +6,7 @@ defmodule Game.Endpoint.Log.EditTest do
   setup [:with_game_db, :with_game_webserver]
 
   describe "Log.Edit request" do
-    test "successfully edits a log (Gateway)", %{shard_id: shard_id} do
-      # TODO: `player` (and `jwt`?) should automagically show up when `with_game_webserver`
-      player = Setup.player!()
-      jwt = U.jwt_token(uid: player.external_id)
-
+    test "successfully edits a log (Gateway)", %{shard_id: shard_id, jwt: jwt, player: player} do
       %{server: gateway, nip: gtw_nip} = Setup.server(entity_id: player.id)
       log = Setup.log!(gateway.id, visible_by: player.id)
 

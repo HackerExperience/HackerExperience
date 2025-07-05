@@ -45,8 +45,12 @@ defmodule Test.Setup.Server do
       |> Server.new()
       |> DB.insert!()
 
-    %{server: server}
+    if not Keyword.get(opts, :skip_seed, false),
+      do: Svc.Server.seed_universe!(server.id)
+
+    %{server: server, type: :lite}
     |> Map.merge(related)
+    |> gather_server_data(opts)
   end
 
   def new!(opts \\ []), do: opts |> new() |> Map.fetch!(:server)
@@ -104,6 +108,16 @@ defmodule Test.Setup.Server do
     # TODO: No longer creating a NIP because that's automatic, but here is where I'd create more
     # useful data for a "full" server
     related
+  end
+
+  defp gather_server_data(%{type: :lite, server: server} = related, _opts) do
+    nip =
+      with %{nip: nip} <- Svc.NetworkConnection.fetch(by_server_id: server.id) do
+        nip
+      end
+
+    related
+    |> Map.merge(%{nip: nip})
   end
 
   defp gather_server_data(%{server: server} = related, _opts) do

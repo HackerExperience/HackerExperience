@@ -1,7 +1,7 @@
 -- This is an auto-generated file; manual changes will be overwritten!
 
 
-module API.Processes.Types exposing (FileDelete, FileInstall, FileTransfer, InstallationUninstall, LogDelete, LogEdit)
+module API.Processes.Types exposing (AppstoreInstall, FileDelete, FileInstall, FileTransfer, InstallationUninstall, LogDelete, LogEdit)
 
 import Game.Model.LogID as LogID exposing (LogID(..))
 import Game.Model.NIP as NIP exposing (NIP(..))
@@ -14,7 +14,7 @@ import Game.Model.TunnelID as TunnelID exposing (TunnelID(..))
 
 ## Aliases
 
-@docs FileDelete, FileInstall, FileTransfer, InstallationUninstall, LogDelete, LogEdit
+@docs AppstoreInstall, FileDelete, FileInstall, FileTransfer, InstallationUninstall, LogDelete, LogEdit
 
 -}
 type alias LogEdit =
@@ -38,4 +38,8 @@ type alias FileInstall =
 
 
 type alias FileDelete =
+    {}
+
+
+type alias AppstoreInstall =
     {}

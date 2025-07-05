@@ -39,7 +39,7 @@ defmodule Game.Services.Server do
     |> DB.insert!()
   end
 
-  defp seed_universe!(server_id) do
+  def seed_universe!(server_id) do
     # Make sure this server has a public connection to the Internet
     {:ok, _} =
       %{server_id: server_id, nip: NIP.new(0, Renatils.Random.ip())}

@@ -16,6 +16,7 @@ Apps.Types... something to consider for the future.
 
 -- Maybe rename to OS.dispatcher? or something like that
 
+import Apps.AppStore as AppStore
 import Apps.Demo as Demo
 import Apps.Input as App
 import Apps.LogViewer as LogViewer
@@ -41,6 +42,9 @@ willOpen app windowInfo input =
     case app of
         App.InvalidApp ->
             OS.Bus.NoOp
+
+        App.AppStoreApp ->
+            AppStore.willOpen windowInfo input
 
         App.LogViewerApp ->
             LogViewer.willOpen windowInfo input
@@ -107,6 +111,12 @@ didOpen app appId windowInfo input =
             , Effect.msgToCmd Apps.InvalidMsg
             )
 
+        App.AppStoreApp ->
+            wrapMe
+                Apps.AppStoreModel
+                Apps.AppStoreMsg
+                AppStore.didOpen
+
         App.LogViewerApp ->
             wrapMe
                 Apps.LogViewerModel
@@ -164,6 +174,12 @@ didOpenChild parentId parentModel childInfo windowInfo input =
         Apps.InvalidModel ->
             ( Apps.InvalidModel, Effect.none, OS.Bus.NoOp )
 
+        Apps.AppStoreModel model ->
+            wrapMe
+                Apps.AppStoreModel
+                Apps.AppStoreMsg
+                (AppStore.didOpenChild model)
+
         Apps.LogViewerModel model ->
             wrapMe
                 Apps.LogViewerModel
@@ -199,6 +215,9 @@ willClose window appModel =
     case appModel of
         Apps.InvalidModel ->
             OS.Bus.NoOp
+
+        Apps.AppStoreModel model ->
+            AppStore.willClose window.appId model window
 
         Apps.LogViewerModel model ->
             LogViewer.willClose window.appId model window
@@ -239,6 +258,12 @@ didCloseChild parentId parentModel childInfo parentWindow =
         Apps.InvalidModel ->
             ( Apps.InvalidModel, Effect.none, OS.Bus.NoOp )
 
+        Apps.AppStoreModel model ->
+            wrapMe
+                Apps.AppStoreModel
+                Apps.AppStoreMsg
+                (AppStore.didCloseChild model)
+
         Apps.LogViewerModel model ->
             wrapMe
                 Apps.LogViewerModel
@@ -275,6 +300,9 @@ willFocus app appId window =
         App.InvalidApp ->
             OS.Bus.NoOp
 
+        App.AppStoreApp ->
+            AppStore.willFocus appId window
+
         App.LogViewerApp ->
             LogViewer.willFocus appId window
 
@@ -300,6 +328,9 @@ getWindowConfig windowInfo =
     case windowInfo.app of
         App.InvalidApp ->
             WM.dummyWindowConfig
+
+        App.AppStoreApp ->
+            AppStore.getWindowConfig windowInfo
 
         App.LogViewerApp ->
             LogViewer.getWindowConfig windowInfo

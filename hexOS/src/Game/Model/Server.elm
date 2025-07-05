@@ -23,6 +23,7 @@ module Game.Model.Server exposing
 import API.Events.Types as Events
 import Dict exposing (Dict)
 import Game.Bus exposing (Action)
+import Game.Model.File as File exposing (Files)
 import Game.Model.Log as Log exposing (Log, Logs)
 import Game.Model.NIP as NIP exposing (NIP, RawNIP)
 import Game.Model.Process as Process exposing (Process, Processes)
@@ -41,6 +42,7 @@ type alias Server =
     { type_ : ServerType
     , nip : NIP
     , logs : Logs
+    , files : Files
     , tunnelId : Maybe TunnelID
     , processes : Processes
     }
@@ -67,12 +69,20 @@ type ServerType
 -- Model > Server
 
 
-buildServer : ServerType -> NIP -> Maybe TunnelID -> List Events.IdxLog -> List Events.IdxProcess -> Server
-buildServer serverType nip tunnelId idxLogs idxProcesses =
+buildServer :
+    ServerType
+    -> NIP
+    -> Maybe TunnelID
+    -> List Events.IdxLog
+    -> List Events.IdxFile
+    -> List Events.IdxProcess
+    -> Server
+buildServer serverType nip tunnelId idxLogs idxFiles idxProcesses =
     { type_ = serverType
     , nip = nip
     , tunnelId = tunnelId
     , logs = Log.parse idxLogs
+    , files = File.parse idxFiles
     , processes = Process.parse idxProcesses
     }
         |> applyProcessOperations
@@ -99,7 +109,7 @@ buildGatewayServers idxGateways =
     let
         buildGatewayServer =
             \gtw ->
-                buildServer ServerGateway gtw.nip Nothing gtw.logs gtw.processes
+                buildServer ServerGateway gtw.nip Nothing gtw.logs gtw.files gtw.processes
     in
     List.foldl (\gtw acc -> ( NIP.toString gtw.nip, buildGatewayServer gtw ) :: acc)
         []
@@ -116,7 +126,7 @@ buildEndpointServers allTunnels idxEndpoints =
 
         buildEndpointServer =
             \endp ->
-                buildServer ServerEndpoint endp.nip (findTunnel endp.nip) endp.logs endp.processes
+                buildServer ServerEndpoint endp.nip (findTunnel endp.nip) endp.logs endp.files endp.processes
     in
     List.foldl (\endp acc -> ( NIP.toString endp.nip, buildEndpointServer endp ) :: acc)
         []
@@ -159,6 +169,7 @@ invalidServer =
     , nip = NIP.invalidNip
     , tunnelId = Nothing
     , logs = OrderedDict.empty
+    , files = Dict.empty
     , processes = OrderedDict.empty
     }
 

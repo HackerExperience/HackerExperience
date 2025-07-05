@@ -51,6 +51,10 @@ defmodule Game.Webserver.Spec do
       {Endpoint.Log.Edit, :post} => %{
         path: "/v1/server/{nip}/log/{log_id}/edit",
         responses: [200]
+      },
+      {Endpoint.AppStore.Install, :post} => %{
+        path: "/v1/server/{server_id}/appstore/{software_type}/install",
+        responses: [200]
       }
     }
   end

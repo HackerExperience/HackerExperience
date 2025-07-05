@@ -51,13 +51,19 @@ defmodule Test.DB do
   function.
   """
   def with_random_autoincrement(_opts \\ []) do
-    %{entity: %{id: entity_id}, server: %{id: server_id}} = Setup.server_lite()
-    rand = :rand.uniform() |> Kernel.*(1_000_000_000) |> trunc()
+    if not Process.get(:auto_increment_set, false) do
+      %{entity: %{id: entity_id}, server: %{id: server_id}} = Setup.server_lite(skip_seed: true)
+      rand = :rand.uniform() |> Kernel.*(1_000_000_000) |> trunc()
 
-    DB.raw!("PRAGMA defer_foreign_keys=1")
-    DB.raw!("UPDATE players SET id = '#{rand}' WHERE id = '#{entity_id}'")
-    DB.raw!("UPDATE entities SET id = '#{rand}' WHERE id = '#{entity_id}'")
-    DB.raw!("UPDATE servers SET id = '#{rand}', entity_id = '#{rand}' WHERE id = '#{server_id}'")
+      DB.raw!("PRAGMA defer_foreign_keys=1")
+      DB.raw!("UPDATE players SET id = '#{rand}' WHERE id = '#{entity_id}'")
+      DB.raw!("UPDATE entities SET id = '#{rand}' WHERE id = '#{entity_id}'")
+      DB.raw!("UPDATE servers SET id = '#{rand}', entity_id = '#{rand}' WHERE id = '#{server_id}'")
+
+      Process.put(:auto_increment_set, true)
+    end
+
+    :ok
   end
 
   defp delete_all_dbs do

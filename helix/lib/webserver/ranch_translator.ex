@@ -4,9 +4,10 @@ defmodule Webserver.RanchTranslator do
         _min_level,
         :error,
         :format,
-        {~c"Ranch listener" ++ _, [_ref, _server_pid, _stream_id, req_pid, reason, stack]}
+        {~c"Ranch listener" ++ _, [ref, conn_pid, stream_id, stream_pid, {reason, stack}]}
       ) do
-    prefix_msg = "Cowboy request died: #{inspect(req_pid)}\n\n"
+    ctx = {ref, conn_pid, stream_id, stream_pid}
+    prefix_msg = "Cowboy request died: #{inspect(ctx)}\n\n"
     translate_ranch(prefix_msg, reason, stack)
   end
 

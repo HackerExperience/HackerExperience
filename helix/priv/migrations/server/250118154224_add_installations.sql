@@ -2,7 +2,7 @@ CREATE TABLE installations (
   id INTEGER PRIMARY KEY,
   file_type TEXT NOT NULL,
   file_version INTEGER NOT NULL,
-  -- `file_id` refers to the File who originated the Installation, but it's nullable since the File
+  -- `file_id` refers to the File that originated the Installation, but it's nullable since the File
   -- may have been deleted after the installation took place.
   file_id INTEGER,
   memory_usage INTEGER NOT NULL,
