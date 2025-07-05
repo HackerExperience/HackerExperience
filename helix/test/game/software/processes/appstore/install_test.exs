@@ -140,7 +140,6 @@ defmodule Game.Process.AppStore.InstallTest do
 
       # Create an "almost matching" File and Installation -- missed the version by 1!
       Setup.file(server.id, type: :cracker, version: appstore_config.version + 1, installed?: true)
-
       DB.commit()
 
       # It will still download and install the Software, since the existing one is not a perfect match

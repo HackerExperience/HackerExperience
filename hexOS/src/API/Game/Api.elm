@@ -2,8 +2,8 @@
 
 
 module API.Game.Api exposing
-    ( fileDeleteTask, fileInstallTask, fileTransferTask, installationUninstallTask, logDeleteTask, logEditTask
-    , playerSyncTask, serverLoginTask
+    ( appStoreInstallTask, fileDeleteTask, fileInstallTask, fileTransferTask, installationUninstallTask
+    , logDeleteTask, logEditTask, playerSyncTask, serverLoginTask
     )
 
 {-|
@@ -11,8 +11,8 @@ module API.Game.Api exposing
 
 ## Operations
 
-@docs fileDeleteTask, fileInstallTask, fileTransferTask, installationUninstallTask, logDeleteTask, logEditTask
-@docs playerSyncTask, serverLoginTask
+@docs appStoreInstallTask, fileDeleteTask, fileInstallTask, fileTransferTask, installationUninstallTask
+@docs logDeleteTask, logEditTask, playerSyncTask, serverLoginTask
 
 -}
 
@@ -279,5 +279,39 @@ serverLoginTask config =
                 API.Game.Json.decodeServerLoginOkResponse
         , body =
             Http.jsonBody (API.Game.Json.encodeServerLoginRequest config.body)
+        , timeout = Nothing
+        }
+
+
+appStoreInstallTask :
+    { server : String
+    , authorization : { authorization : String }
+    , body : API.Game.Types.AppStoreInstallRequest
+    , params : { server_id : String, software_type : String }
+    }
+    -> Task.Task (OpenApi.Common.Error e String) API.Game.Types.AppStoreInstallOkResponse
+appStoreInstallTask config =
+    Http.task
+        { url =
+            Url.Builder.crossOrigin
+                config.server
+                [ "v1"
+                , "server"
+                , config.params.server_id
+                , "appstore"
+                , config.params.software_type
+                , "install"
+                ]
+                []
+        , method = "POST"
+        , headers =
+            [ Http.header "Authorization" config.authorization.authorization ]
+        , resolver =
+            OpenApi.Common.jsonResolverCustom
+                (Dict.fromList [])
+                API.Game.Json.decodeAppStoreInstallOkResponse
+        , body =
+            Http.jsonBody
+                (API.Game.Json.encodeAppStoreInstallRequest config.body)
         , timeout = Nothing
         }

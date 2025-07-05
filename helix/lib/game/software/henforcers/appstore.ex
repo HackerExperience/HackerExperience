@@ -1,6 +1,5 @@
 defmodule Game.Henforcers.AppStore do
   alias Core.Henforcer
-  alias Game.{Software}
   alias Game.Services, as: Svc
   alias Game.Henforcers
 
