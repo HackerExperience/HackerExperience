@@ -14,7 +14,8 @@ import Game.Model.ServerID as ServerID
 indexRequested : Events.IndexRequested
 indexRequested =
     { player =
-        { mainframe_nip = defaultNip
+        { mainframe_id = "srvid"
+        , mainframe_nip = defaultNip
         , gateways = []
         , endpoints = []
         }

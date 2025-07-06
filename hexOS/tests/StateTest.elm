@@ -4,6 +4,7 @@ import Event exposing (Event)
 import Game.Bus exposing (Action(..))
 import Game.Model.LogID as LogID
 import Game.Model.NIP as NIP
+import Game.Model.ServerID as ServerID
 import Game.Msg exposing (Msg(..))
 import Game.Universe as Universe exposing (Universe(..))
 import State
@@ -44,12 +45,15 @@ msgPerformActionTests =
                             TM.state
                                 |> TM.withUniverse Singleplayer
 
+                        otherId =
+                            ServerID.fromValue "other"
+
                         otherNip =
                             NIP.fromString "0@1.1.1.1"
 
                         -- We'll go to MP
                         msg =
-                            PerformAction (SwitchGateway Multiplayer otherNip)
+                            PerformAction (SwitchGateway Multiplayer otherId otherNip)
 
                         ( newState, effect ) =
                             State.update msg initialState
@@ -63,7 +67,7 @@ msgPerformActionTests =
                         , E.equal newState.currentUniverse Multiplayer
 
                         -- `currentSession` is now pointing to the new server
-                        , E.equal newState.currentSession (WM.toLocalSessionId otherNip)
+                        , E.equal newState.currentSession (WM.toLocalSessionId otherId otherNip)
 
                         -- Active gateway has changed in the MP model
                         , E.equal newState.mp.activeGateway otherNip

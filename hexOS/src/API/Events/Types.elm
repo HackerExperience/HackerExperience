@@ -175,6 +175,7 @@ type alias IdxProcess =
 type alias IdxPlayer =
     { endpoints : List IdxEndpoint
     , gateways : List IdxGateway
+    , mainframe_id : String
     , mainframe_nip : NIP
     }
 

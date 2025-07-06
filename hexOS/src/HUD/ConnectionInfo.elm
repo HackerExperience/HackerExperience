@@ -16,6 +16,7 @@ import Game
 import Game.Bus as Game
 import Game.Model.NIP as NIP exposing (NIP)
 import Game.Model.Server exposing (Gateway)
+import Game.Model.ServerID exposing (ServerID)
 import Game.Model.Tunnel exposing (Tunnel)
 import Game.Universe as Universe exposing (Universe(..))
 import Html.Events as HE
@@ -61,7 +62,7 @@ type Msg
     | OnSelectorLeave
     | OnDropdownEnter
     | OnDropdownLeave
-    | SwitchGateway Universe NIP
+    | SwitchGateway Universe ServerID NIP
     | SwitchEndpoint Universe NIP
     | ToggleWMSession
     | ToOS OS.Bus.Action
@@ -118,8 +119,8 @@ update state msg model =
         OnDropdownLeave ->
             ( { model | isDropdownHovered = False }, Effect.none )
 
-        SwitchGateway universe gatewayNip ->
-            updateSwitchGateway state model universe gatewayNip
+        SwitchGateway universe gatewayId gatewayNip ->
+            updateSwitchGateway state model universe gatewayId gatewayNip
 
         SwitchEndpoint universe endpointNip ->
             updateSwitchEndpoint model universe endpointNip
@@ -132,8 +133,8 @@ update state msg model =
             ( model, Effect.none )
 
 
-updateSwitchGateway : State -> Model -> Universe -> NIP -> ( Model, Effect Msg )
-updateSwitchGateway state model gtwUniverse gtwNip =
+updateSwitchGateway : State -> Model -> Universe -> ServerID -> NIP -> ( Model, Effect Msg )
+updateSwitchGateway state model gtwUniverse gtwId gtwNip =
     let
         -- Always switch, except if the selected gateway is the activeGateway in the activeUniverse
         shouldSwitch =
@@ -141,7 +142,7 @@ updateSwitchGateway state model gtwUniverse gtwNip =
 
         effect =
             if shouldSwitch then
-                Effect.msgToCmd <| ToOS <| OS.Bus.ToGame (Game.SwitchGateway gtwUniverse gtwNip)
+                Effect.msgToCmd (ToOS (OS.Bus.ToGame (Game.SwitchGateway gtwUniverse gtwId gtwNip)))
 
             else
                 Effect.none
@@ -443,7 +444,7 @@ gatewaySelectorEntries : Universe -> Gateway -> List (UI Msg) -> List (UI Msg)
 gatewaySelectorEntries gtwUniverse gateway acc =
     let
         onClickMsg =
-            SwitchGateway gtwUniverse gateway.nip
+            SwitchGateway gtwUniverse gateway.id gateway.nip
 
         label =
             case gtwUniverse of

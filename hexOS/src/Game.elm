@@ -27,6 +27,7 @@ import Game.Bus as Action exposing (Action)
 import Game.Model.NIP as NIP exposing (NIP, RawNIP)
 import Game.Model.ProcessOperation as Operation exposing (Operation)
 import Game.Model.Server as Server exposing (Endpoint, Gateway, Server, ServerType(..))
+import Game.Model.ServerID as ServerID exposing (ServerID)
 import Game.Model.Software as Software exposing (Manifest)
 import Game.Model.Tunnel as Tunnel exposing (Tunnels)
 import Game.Universe exposing (Universe(..))
@@ -35,6 +36,7 @@ import Maybe.Extra as Maybe
 
 type alias Model =
     { universe : Universe
+    , mainframeId : ServerID
     , mainframeNip : NIP
     , activeGateway : NIP
     , gateways : Dict RawNIP Gateway
@@ -56,6 +58,7 @@ init token universe index =
             Server.parseGateways index.player.gateways
     in
     { universe = universe
+    , mainframeId = ServerID.fromValue index.player.mainframe_id
     , mainframeNip = index.player.mainframe_nip
     , activeGateway = index.player.mainframe_nip
     , gateways = gateways

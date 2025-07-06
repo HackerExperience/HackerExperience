@@ -699,9 +699,10 @@ encodeIdxProcess rec =
 decodeIdxPlayer : Json.Decode.Decoder API.Events.Types.IdxPlayer
 decodeIdxPlayer =
     Json.Decode.succeed
-        (\endpoints gateways mainframe_nip ->
+        (\endpoints gateways mainframe_id mainframe_nip ->
             { endpoints = endpoints
             , gateways = gateways
+            , mainframe_id = mainframe_id
             , mainframe_nip = mainframe_nip
             }
         )
@@ -717,6 +718,11 @@ decodeIdxPlayer =
             )
         |> OpenApi.Common.jsonDecodeAndMap
             (Json.Decode.field
+                "mainframe_id"
+                Json.Decode.string
+            )
+        |> OpenApi.Common.jsonDecodeAndMap
+            (Json.Decode.field
                 "mainframe_nip"
                 (Json.Decode.map (\nip -> NIP.fromString nip) Json.Decode.string)
             )
@@ -727,6 +733,7 @@ encodeIdxPlayer rec =
     Json.Encode.object
         [ ( "endpoints", Json.Encode.list encodeIdxEndpoint rec.endpoints )
         , ( "gateways", Json.Encode.list encodeIdxGateway rec.gateways )
+        , ( "mainframe_id", Json.Encode.string rec.mainframe_id )
         , ( "mainframe_nip", Json.Encode.string (NIP.toString rec.mainframe_nip) )
         ]
 

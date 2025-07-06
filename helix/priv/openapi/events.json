@@ -184,6 +184,9 @@
             },
             "type": "array"
           },
+          "mainframe_id": {
+            "type": "string"
+          },
           "mainframe_nip": {
             "type": "string"
           }
@@ -191,6 +194,7 @@
         "required": [
           "endpoints",
           "gateways",
+          "mainframe_id",
           "mainframe_nip"
         ],
         "type": "object"

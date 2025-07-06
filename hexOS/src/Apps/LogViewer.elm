@@ -434,7 +434,7 @@ didOpen { appId, sessionId } _ =
         -- TODO: Not worrying about this for now.
         nip =
             case sessionId of
-                WM.LocalSessionID nip_ ->
+                WM.LocalSessionID _ nip_ ->
                     nip_
 
                 WM.RemoteSessionID nip_ ->
