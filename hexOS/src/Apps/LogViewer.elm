@@ -430,18 +430,8 @@ willOpen _ input =
 
 didOpen : WM.WindowInfo -> App.InitialInput -> ( Model, Effect Msg )
 didOpen { appId, sessionId } _ =
-    let
-        -- TODO: Not worrying about this for now.
-        nip =
-            case sessionId of
-                WM.LocalSessionID _ nip_ ->
-                    nip_
-
-                WM.RemoteSessionID nip_ ->
-                    nip_
-    in
     ( { appId = appId
-      , nip = nip
+      , nip = WM.getSessionNIP sessionId
       , customSelectionMap = Dict.empty
       }
     , Effect.none

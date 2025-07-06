@@ -16,6 +16,8 @@ module WM exposing
     , focusApp
     , focusVibrateApp
     , getLinkedChildren
+    , getSessionNIP
+    , getSessionServerID
     , getWindow
     , hasLinkedChildren
     , init
@@ -241,6 +243,26 @@ isSessionLocal session =
 
         RemoteSessionID _ ->
             False
+
+
+getSessionServerID : SessionID -> Maybe ServerID
+getSessionServerID session =
+    case session of
+        LocalSessionID serverId _ ->
+            Just serverId
+
+        RemoteSessionID _ ->
+            Nothing
+
+
+getSessionNIP : SessionID -> NIP
+getSessionNIP session =
+    case session of
+        LocalSessionID _ nip ->
+            nip
+
+        RemoteSessionID nip ->
+            nip
 
 
 sessionIdToString : SessionID -> String

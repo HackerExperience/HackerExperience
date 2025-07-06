@@ -4,6 +4,7 @@ import Apps.Input as App
 import Apps.Manifest as App
 import Effect exposing (Effect)
 import Game
+import Game.Model.ServerID as ServerID exposing (ServerID)
 import Game.Model.Software as Software exposing (Manifest, Software)
 import Game.Model.SoftwareType as SoftwareType exposing (SoftwareType)
 import OS.AppID exposing (AppID)
@@ -29,6 +30,7 @@ type Tab
 
 type alias Model =
     { appId : AppID
+    , serverId : ServerID
     , tab : Tab
     }
 
@@ -262,8 +264,18 @@ willOpen _ input =
 
 
 didOpen : WM.WindowInfo -> App.InitialInput -> ( Model, Effect Msg )
-didOpen { appId } _ =
-    ( { appId = appId, tab = TabApps Nothing }, Effect.none )
+didOpen { appId, sessionId } _ =
+    let
+        serverId =
+            WM.getSessionServerID sessionId
+                |> Maybe.withDefault (ServerID.fromValue "invalid")
+    in
+    ( { appId = appId
+      , serverId = serverId
+      , tab = TabApps Nothing
+      }
+    , Effect.none
+    )
 
 
 
