@@ -1,5 +1,7 @@
 module Apps.AppStore exposing (..)
 
+import API.Game as GameAPI
+import API.Types
 import Apps.Input as App
 import Apps.Manifest as App
 import Effect exposing (Effect)
@@ -21,6 +23,8 @@ type Msg
     | ToCtxMenu OS.CtxMenu.Msg
     | SelectTab Tab
     | OpenAppDetails SoftwareType
+    | DownloadSoftware SoftwareType
+    | OnAppStoreInstallResponse SoftwareType API.Types.AppStoreInstallResult
 
 
 type Tab
@@ -54,13 +58,30 @@ getTabName tab =
 
 
 update : Game.Model -> Msg -> Model -> ( Model, Effect Msg )
-update _ msg model =
+update game msg model =
     case msg of
         SelectTab tab ->
             ( { model | tab = tab }, Effect.none )
 
         OpenAppDetails type_ ->
             ( { model | tab = TabApps (Just type_) }, Effect.none )
+
+        DownloadSoftware softwareType ->
+            let
+                config =
+                    GameAPI.appStoreInstallConfig
+                        game.apiCtx
+                        model.serverId
+                        softwareType
+            in
+            ( model
+            , Effect.batch
+                [ Effect.appStoreInstall (OnAppStoreInstallResponse softwareType) config
+                ]
+            )
+
+        OnAppStoreInstallResponse _ _ ->
+            ( model, Effect.none )
 
         ToOS _ ->
             -- Handled by OS
@@ -146,7 +167,7 @@ renderAppsEntry software acc =
         downloadOverlay =
             div
                 [ cl "a-ast-apps-idx-entry-overlay"
-                , UI.stopPropagation "click" (SelectTab TabInstallations)
+                , UI.stopPropagation "click" (DownloadSoftware software.type_)
                 ]
                 [ downloadIcon ]
 

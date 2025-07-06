@@ -4,6 +4,7 @@ import API.Game.Types as GameTypes
 import API.Lobby.Types as LobbyTypes
 import Game.Model.LogID exposing (LogID)
 import Game.Model.NIP exposing (NIP)
+import Game.Model.ServerID exposing (ServerID)
 
 
 
@@ -53,6 +54,28 @@ type alias AuthorizationHeader =
 
 
 -- Game
+-- Game > AppStore > Install
+
+
+type alias AppStoreInstallInput =
+    { body : GameTypes.AppStoreInstallRequest
+    , params : AppStoreInstallParams
+    }
+
+
+type alias AppStoreInstallParams =
+    { server_id : ServerID, software_type : String }
+
+
+type alias AppStoreInstallError =
+    GameTypes.GenericError
+
+
+type alias AppStoreInstallResult =
+    Result (Error AppStoreInstallError) GameTypes.AppStoreInstallOutput
+
+
+
 -- Game > Log > Delete
 
 

@@ -22,6 +22,7 @@ import Dict
 import Game.Model.LogID as LogID exposing (LogID(..))
 import Game.Model.NIP as NIP exposing (NIP(..))
 import Game.Model.ProcessID as ProcessID exposing (ProcessID(..))
+import Game.Model.ServerID as ServerID exposing (ServerID(..))
 import Game.Model.TunnelID as TunnelID exposing (TunnelID(..))
 import Http
 import Json.Decode
@@ -287,7 +288,7 @@ appStoreInstallTask :
     { server : String
     , authorization : { authorization : String }
     , body : API.Game.Types.AppStoreInstallRequest
-    , params : { server_id : String, software_type : String }
+    , params : { server_id : ServerID, software_type : String }
     }
     -> Task.Task (OpenApi.Common.Error e String) API.Game.Types.AppStoreInstallOkResponse
 appStoreInstallTask config =
@@ -297,7 +298,7 @@ appStoreInstallTask config =
                 config.server
                 [ "v1"
                 , "server"
-                , config.params.server_id
+                , ServerID.toString config.params.server_id
                 , "appstore"
                 , config.params.software_type
                 , "install"

@@ -21,6 +21,7 @@ defmodule OpenAPI.Elm.Formatter do
     :nip,
     :log_id,
     :process_id,
+    :server_id,
     :tunnel_id
   ]
 
@@ -55,6 +56,10 @@ defmodule OpenAPI.Elm.Formatter do
 
   defp handle(:process_id, file) do
     replace("process_id", "String", "ProcessID", file)
+  end
+
+  defp handle(:server_id, file) do
+    replace("server_id", "String", "ServerID", file)
   end
 
   defp handle(:tunnel_id, file) do

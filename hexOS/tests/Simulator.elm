@@ -35,6 +35,10 @@ simulateEffect effect =
 
         Effect.APIRequest apiRequest ->
             case apiRequest of
+                AppStoreInstall _ _ ->
+                    -- TODO
+                    SimulatedEffect.Cmd.none
+
                 LogDelete _ _ ->
                     -- TODO
                     SimulatedEffect.Cmd.none

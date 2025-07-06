@@ -4,7 +4,7 @@ module Effect exposing (..)
 
 import API.Game as GameAPI
 import API.Lobby as LobbyAPI
-import API.Types exposing (InputConfig, InputToken)
+import API.Types as API exposing (InputConfig, InputToken)
 import API.Utils
 import Browser.Dom
 import Json.Encode as JE
@@ -25,10 +25,11 @@ type Effect msg
 
 
 type APIRequestEnum msg
-    = LobbyLogin (API.Types.LobbyLoginResult -> msg) (InputConfig API.Types.LobbyLoginInput)
-    | LogDelete (API.Types.LogDeleteResult -> msg) (InputConfig API.Types.LogDeleteInput)
-    | LogEdit (API.Types.LogEditResult -> msg) (InputConfig API.Types.LogEditInput)
-    | ServerLogin (API.Types.ServerLoginResult -> msg) (InputConfig API.Types.ServerLoginInput)
+    = LobbyLogin (API.LobbyLoginResult -> msg) (InputConfig API.LobbyLoginInput)
+    | AppStoreInstall (API.AppStoreInstallResult -> msg) (InputConfig API.AppStoreInstallInput)
+    | LogDelete (API.LogDeleteResult -> msg) (InputConfig API.LogDeleteInput)
+    | LogEdit (API.LogEditResult -> msg) (InputConfig API.LogEditInput)
+    | ServerLogin (API.ServerLoginResult -> msg) (InputConfig API.ServerLoginInput)
 
 
 
@@ -78,6 +79,9 @@ applyApiRequest : APIRequestEnum msg -> Seeds -> ( Seeds, Cmd msg )
 applyApiRequest apiRequest seeds =
     case apiRequest of
         -- Game
+        AppStoreInstall msg config ->
+            ( seeds, Task.attempt msg (GameAPI.appStoreInstallTask config) )
+
         LogDelete msg config ->
             ( seeds, Task.attempt msg (GameAPI.logDeleteTask config) )
 
@@ -139,15 +143,27 @@ domFocus domId msg =
 
 
 -- Effects > API Requests > Game
+-- AppStore
+
+
+appStoreInstall :
+    (API.AppStoreInstallResult -> msg)
+    -> InputConfig API.AppStoreInstallInput
+    -> Effect msg
+appStoreInstall msg config =
+    APIRequest (AppStoreInstall msg config)
+
+
+
 -- Log
 
 
-logDelete : (API.Types.LogDeleteResult -> msg) -> InputConfig API.Types.LogDeleteInput -> Effect msg
+logDelete : (API.LogDeleteResult -> msg) -> InputConfig API.LogDeleteInput -> Effect msg
 logDelete msg config =
     APIRequest (LogDelete msg config)
 
 
-logEdit : (API.Types.LogEditResult -> msg) -> InputConfig API.Types.LogEditInput -> Effect msg
+logEdit : (API.LogEditResult -> msg) -> InputConfig API.LogEditInput -> Effect msg
 logEdit msg config =
     APIRequest (LogEdit msg config)
 
@@ -156,7 +172,7 @@ logEdit msg config =
 -- Server
 
 
-serverLogin : (API.Types.ServerLoginResult -> msg) -> InputConfig API.Types.ServerLoginInput -> Effect msg
+serverLogin : (API.ServerLoginResult -> msg) -> InputConfig API.ServerLoginInput -> Effect msg
 serverLogin msg config =
     APIRequest (ServerLogin msg config)
 
@@ -165,7 +181,7 @@ serverLogin msg config =
 -- Effects > API Requests > Lobby
 
 
-lobbyLogin : (API.Types.LobbyLoginResult -> msg) -> InputConfig API.Types.LobbyLoginInput -> Effect msg
+lobbyLogin : (API.LobbyLoginResult -> msg) -> InputConfig API.LobbyLoginInput -> Effect msg
 lobbyLogin msg config =
     APIRequest (LobbyLogin msg config)
 
@@ -189,14 +205,17 @@ map toMsg effect =
         APIRequest apiRequestType ->
             case apiRequestType of
                 -- Game
-                ServerLogin msg body ->
-                    APIRequest (ServerLogin (\result -> toMsg (msg result)) body)
+                AppStoreInstall msg body ->
+                    APIRequest (AppStoreInstall (\result -> toMsg (msg result)) body)
 
                 LogDelete msg body ->
                     APIRequest (LogDelete (\result -> toMsg (msg result)) body)
 
                 LogEdit msg body ->
                     APIRequest (LogEdit (\result -> toMsg (msg result)) body)
+
+                ServerLogin msg body ->
+                    APIRequest (ServerLogin (\result -> toMsg (msg result)) body)
 
                 -- Lobby
                 LobbyLogin msg body ->

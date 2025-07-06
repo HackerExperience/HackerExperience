@@ -11,6 +11,8 @@ import API.Types as Types
 import API.Utils exposing (PrivateErrType(..), dataMapper, extractBodyAndParams, mapError, mapResponse)
 import Game.Model.LogID exposing (LogID)
 import Game.Model.NIP exposing (NIP)
+import Game.Model.ServerID exposing (ServerID)
+import Game.Model.SoftwareType as SoftwareType exposing (SoftwareType)
 import Game.Model.TunnelID exposing (TunnelID)
 import Task exposing (Task)
 
@@ -99,7 +101,12 @@ logEditTask config =
 -- Requests > Server > Login
 
 
-serverLoginConfig : InputContext -> NIP -> NIP -> Maybe TunnelID -> InputConfig Types.ServerLoginInput
+serverLoginConfig :
+    InputContext
+    -> NIP
+    -> NIP
+    -> Maybe TunnelID
+    -> InputConfig Types.ServerLoginInput
 serverLoginConfig ctx sourceNip targetNip tunnelId =
     let
         input =
@@ -115,6 +122,46 @@ serverLoginTask :
     -> Task (Error Types.ServerLoginError) GameTypes.ServerLoginOutput
 serverLoginTask config =
     Api.serverLoginTask (extractBodyAndParams config)
+        |> mapResponse dataMapper
+        |> mapError
+            (\apiError ->
+                case apiError of
+                    -- TODO
+                    LegitimateError _ ->
+                        InternalError
+
+                    UnexpectedError ->
+                        InternalError
+            )
+
+
+
+-- Requests > Software > AppStoreInstall
+
+
+appStoreInstallConfig :
+    InputContext
+    -> ServerID
+    -> SoftwareType
+    -> InputConfig Types.AppStoreInstallInput
+appStoreInstallConfig ctx serverId softwareType =
+    let
+        rawSoftwareType =
+            SoftwareType.typeToString softwareType
+
+        input =
+            { body = {}
+            , params = { server_id = serverId, software_type = rawSoftwareType }
+            }
+    in
+    { server = ctx.server, input = input, authToken = ctx.token }
+
+
+appStoreInstallTask :
+    InputConfig Types.AppStoreInstallInput
+    -> Task (Error Types.AppStoreInstallError) GameTypes.AppStoreInstallOutput
+appStoreInstallTask config =
+    Api.appStoreInstallTask (extractBodyAndParams config)
         |> mapResponse dataMapper
         |> mapError
             (\apiError ->

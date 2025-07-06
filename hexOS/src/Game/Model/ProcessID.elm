@@ -22,8 +22,8 @@ type alias RawProcessID =
 
 
 toString : ProcessID -> String
-toString logId =
-    toValue logId
+toString processId =
+    toValue processId
 
 
 toValue : ProcessID -> String
