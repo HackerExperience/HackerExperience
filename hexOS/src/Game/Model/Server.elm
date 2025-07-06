@@ -29,6 +29,7 @@ import Game.Model.NIP as NIP exposing (NIP, RawNIP)
 import Game.Model.Process as Process exposing (Process, Processes)
 import Game.Model.ProcessData as ProcessData
 import Game.Model.ProcessOperation as Operation exposing (Operation)
+import Game.Model.ServerID as ServerID exposing (ServerID)
 import Game.Model.Tunnel as Tunnel exposing (Tunnels)
 import Game.Model.TunnelID exposing (TunnelID)
 import OrderedDict
@@ -49,7 +50,8 @@ type alias Server =
 
 
 type alias Gateway =
-    { nip : NIP
+    { id : ServerID
+    , nip : NIP
     , tunnels : Tunnels
     , activeEndpoint : Maybe NIP
     }
@@ -193,7 +195,8 @@ parseGateway gateway =
         activeEndpoint =
             Maybe.map (\t -> t.targetNip) (List.head tunnels)
     in
-    { nip = gateway.nip
+    { id = ServerID.fromValue gateway.id
+    , nip = gateway.nip
     , tunnels = Tunnel.parse gateway.tunnels
     , activeEndpoint = activeEndpoint
     }
@@ -201,7 +204,8 @@ parseGateway gateway =
 
 invalidGateway : Gateway
 invalidGateway =
-    { nip = NIP.invalidNip
+    { id = ServerID.fromValue "invalid"
+    , nip = NIP.invalidNip
     , tunnels = []
     , activeEndpoint = Nothing
     }

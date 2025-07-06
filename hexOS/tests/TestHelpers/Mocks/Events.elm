@@ -4,6 +4,7 @@ import API.Events.Types as Events
 import Game.Model.LogID as LogID exposing (LogID)
 import Game.Model.NIP as NIP exposing (NIP)
 import Game.Model.ProcessID as ProcessID
+import Game.Model.ServerID as ServerID
 
 
 
@@ -25,7 +26,8 @@ indexRequested =
 
 idxGateway : Events.IdxGateway
 idxGateway =
-    { nip = defaultNip
+    { id = "srvid"
+    , nip = defaultNip
     , tunnels = []
     , files = []
     , logs = []
