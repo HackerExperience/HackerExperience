@@ -24,7 +24,8 @@ defmodule Game.Services.Installation do
           [Installation.t()]
   def list(%Server.ID{} = server_id, filter_params, opts \\ []) do
     filters = [
-      by_file_type_and_version: &query_by_file_type_and_version/1
+      by_file_type_and_version: &query_by_file_type_and_version/1,
+      all: &query_all/1
     ]
 
     Core.with_context(:server, server_id, :read, fn ->
@@ -34,6 +35,9 @@ defmodule Game.Services.Installation do
 
   defp query_by_file_type_and_version({type, version}) when is_atom(type) and is_integer(version),
     do: DB.all({:installations, :by_file_type_and_version}, [type, version])
+
+  defp query_all(true),
+    do: DB.all(Installation)
 
   def uninstall(%Installation{} = installation) do
     DB.delete(installation)

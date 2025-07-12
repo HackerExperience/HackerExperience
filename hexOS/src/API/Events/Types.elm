@@ -2,45 +2,12 @@
 
 
 module API.Events.Types exposing
-    ( AppstoreInstallFailed
-    , AppstoreInstalled
-    , FileDeleteFailed
-    , FileDeleted
-    , FileInstallFailed
-    , FileInstalled
-    , FileTransferFailed
-    , FileTransferred
-    , IdxEndpoint
-    , IdxFile
-    , IdxGateway
-    , IdxLog
-    , IdxLogRevision
-    , IdxPlayer
-    , IdxProcess
-    , IdxSoftware
-    , IdxTunnel
-    , IndexRequested
-    , InstallationUninstallFailed
-    , InstallationUninstalled
-    , LogDeleteFailed
-    , LogDeleted
-    , LogEditFailed
-    , LogEdited
-    , ProcessCompleted
-    , ProcessCreated
-    , ProcessKilled
-    , SoftwareConfig
-    , SoftwareConfigAppstore
-    , SoftwareManifest
-    , TunnelCreated
+    ( AppstoreInstallFailed, AppstoreInstalled, FileDeleteFailed, FileDeleted, FileInstallFailed, FileInstalled
+    , FileTransferFailed, FileTransferred, IdxEndpoint, IdxFile, IdxGateway, IdxInstallation, IdxLog
+    , IdxLogRevision, IdxPlayer, IdxProcess, IdxSoftware, IdxTunnel, IndexRequested, InstallationUninstallFailed
+    , InstallationUninstalled, LogDeleteFailed, LogDeleted, LogEditFailed, LogEdited, ProcessCompleted
+    , ProcessCreated, ProcessKilled, SoftwareConfig, SoftwareConfigAppstore, SoftwareManifest, TunnelCreated
     )
-
-import Game.Model.LogID as LogID exposing (LogID(..))
-import Game.Model.NIP as NIP exposing (NIP(..))
-import Game.Model.ProcessID as ProcessID exposing (ProcessID(..))
-import Game.Model.ServerID as ServerID exposing (ServerID(..))
-import Game.Model.TunnelID as TunnelID exposing (TunnelID(..))
-
 
 {-|
 
@@ -48,12 +15,21 @@ import Game.Model.TunnelID as TunnelID exposing (TunnelID(..))
 ## Aliases
 
 @docs AppstoreInstallFailed, AppstoreInstalled, FileDeleteFailed, FileDeleted, FileInstallFailed, FileInstalled
-@docs FileTransferFailed, FileTransferred, IdxEndpoint, IdxFile, IdxGateway, IdxLog, IdxLogRevision, IdxPlayer
-@docs IdxProcess, IdxSoftware, IdxTunnel, IndexRequested, InstallationUninstallFailed, InstallationUninstalled
-@docs LogDeleteFailed, LogDeleted, LogEditFailed, LogEdited, ProcessCompleted, ProcessCreated, ProcessKilled
-@docs SoftwareConfig, SoftwareConfigAppstore, SoftwareManifest, TunnelCreated
+@docs FileTransferFailed, FileTransferred, IdxEndpoint, IdxFile, IdxGateway, IdxInstallation, IdxLog
+@docs IdxLogRevision, IdxPlayer, IdxProcess, IdxSoftware, IdxTunnel, IndexRequested, InstallationUninstallFailed
+@docs InstallationUninstalled, LogDeleteFailed, LogDeleted, LogEditFailed, LogEdited, ProcessCompleted
+@docs ProcessCreated, ProcessKilled, SoftwareConfig, SoftwareConfigAppstore, SoftwareManifest, TunnelCreated
 
 -}
+
+import Game.Model.LogID as LogID exposing (LogID(..))
+import Game.Model.NIP as NIP exposing (NIP(..))
+import Game.Model.ProcessID as ProcessID exposing (ProcessID(..))
+import Game.Model.ServerID as ServerID exposing (ServerID(..))
+import Game.Model.TunnelID as TunnelID exposing (TunnelID(..))
+import OpenApi.Common
+
+
 type alias TunnelCreated =
     { access : String
     , index : IdxEndpoint
@@ -199,9 +175,19 @@ type alias IdxLog =
     }
 
 
+type alias IdxInstallation =
+    { file_id : OpenApi.Common.Nullable String
+    , file_type : String
+    , file_version : Int
+    , id : String
+    , memory_usage : Int
+    }
+
+
 type alias IdxGateway =
     { files : List IdxFile
     , id : String
+    , installations : List IdxInstallation
     , logs : List IdxLog
     , nip : NIP
     , processes : List IdxProcess

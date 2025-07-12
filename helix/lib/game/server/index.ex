@@ -10,6 +10,7 @@ defmodule Game.Index.Server do
           %{
             id: Server.id(),
             nip: NIP.t(),
+            installations: Index.Installation.index(),
             tunnels: Index.Tunnel.index(),
             files: Index.File.index(),
             logs: Index.Log.index(),
@@ -28,6 +29,7 @@ defmodule Game.Index.Server do
           %{
             id: ID.external(),
             nip: binary(),
+            installations: Index.Installation.rendered_index(),
             tunnels: Index.Tunnel.rendered_index(),
             files: Index.File.rendered_index(),
             logs: Index.Log.rendered_index(),
@@ -48,12 +50,13 @@ defmodule Game.Index.Server do
         __openapi_name: "IdxGateway",
         id: external_id(),
         nip: nip(),
+        installations: coll_of(Index.Installation.spec()),
         tunnels: coll_of(Index.Tunnel.spec()),
         files: coll_of(Index.File.spec()),
         logs: coll_of(Index.Log.spec()),
         processes: coll_of(Index.Process.spec())
       }),
-      [:id, :nip, :tunnels, :files, :logs, :processes]
+      [:id, :nip, :installations, :tunnels, :files, :logs, :processes]
     )
   end
 
@@ -78,10 +81,11 @@ defmodule Game.Index.Server do
     %{
       id: server.id,
       nip: nip,
+      installations: Index.Installation.index(server.id),
+      tunnels: Index.Tunnel.index(nip),
       files: Index.File.index(entity_id, server.id),
       logs: Index.Log.index(entity_id, server.id),
-      processes: Index.Process.index(entity_id, server.id),
-      tunnels: Index.Tunnel.index(nip)
+      processes: Index.Process.index(entity_id, server.id)
     }
   end
 
@@ -102,10 +106,11 @@ defmodule Game.Index.Server do
     %{
       id: index.id |> ID.to_external(entity_id),
       nip: index.nip |> NIP.to_external(),
+      installations: Index.Installation.render_index(index.installations, entity_id),
+      tunnels: Index.Tunnel.render_index(index.tunnels, index.id, entity_id),
       files: Index.File.render_index(index.files, entity_id),
       logs: Index.Log.render_index(index.logs, entity_id),
-      processes: Index.Process.render_index(index.processes, entity_id),
-      tunnels: Index.Tunnel.render_index(index.tunnels, index.id, entity_id)
+      processes: Index.Process.render_index(index.processes, entity_id)
     }
   end
 

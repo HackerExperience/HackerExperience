@@ -169,6 +169,13 @@ defmodule Webserver.OpenApi.Spec.GeneratorTest do
       tunnel_created = Map.fetch!(schemas, "tunnel_created")
       assert tunnel_created.properties.access.type == :string
       assert tunnel_created.properties.access.enum == Game.Tunnel.access_types()
+
+      # Supports the Maybe type. Notice the maybe is applied to the property, not to the actual
+      # value. This is okay for now, but it might become an issue in the future.
+      idx_installation = Map.fetch!(schemas, "IdxInstallation")
+      assert idx_installation.properties.file_id.type == :string
+      assert idx_installation.properties.file_id.nullable == true
+      assert :file_id in idx_installation.required
     end
   end
 

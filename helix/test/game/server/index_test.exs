@@ -19,10 +19,11 @@ defmodule Game.Index.ServerTest do
       # Keys have the expected values
       assert index.id == gateway.id
       assert index.nip == nip
+      assert index.installations == []
+      assert index.tunnels == []
       assert index.files == []
       assert index.logs == []
       assert index.processes == []
-      assert index.tunnels == []
     end
   end
 

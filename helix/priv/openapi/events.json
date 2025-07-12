@@ -81,6 +81,12 @@
           "id": {
             "type": "string"
           },
+          "installations": {
+            "items": {
+              "$ref": "#/components/schemas/IdxInstallation"
+            },
+            "type": "array"
+          },
           "logs": {
             "items": {
               "$ref": "#/components/schemas/IdxLog"
@@ -106,10 +112,43 @@
         "required": [
           "files",
           "id",
+          "installations",
           "logs",
           "nip",
           "processes",
           "tunnels"
+        ],
+        "type": "object"
+      },
+      "IdxInstallation": {
+        "properties": {
+          "file_id": {
+            "nullable": true,
+            "type": "string"
+          },
+          "file_type": {
+            "enum": [
+              "cracker",
+              "log_editor"
+            ],
+            "type": "string"
+          },
+          "file_version": {
+            "type": "integer"
+          },
+          "id": {
+            "type": "string"
+          },
+          "memory_usage": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "file_id",
+          "file_type",
+          "file_version",
+          "id",
+          "memory_usage"
         ],
         "type": "object"
       },

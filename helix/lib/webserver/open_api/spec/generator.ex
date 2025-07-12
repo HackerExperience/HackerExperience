@@ -275,11 +275,9 @@ defmodule Webserver.OpenApi.Spec.Generator do
               }
 
             scalar_type ->
-              if Map.has_key?(definition, :enum) do
-                %{type: scalar_type, enum: definition.enum}
-              else
-                %{type: scalar_type}
-              end
+              %{type: scalar_type}
+              |> Renatils.Map.merge_if(%{nullable: true}, definition[:nullable] == true)
+              |> Renatils.Map.merge_if(%{enum: definition[:enum]}, Map.has_key?(definition, :enum))
           end
 
         Map.put(acc, entry, property)
@@ -353,6 +351,15 @@ defmodule Webserver.OpenApi.Spec.Generator do
     get_openapi_type_from_spec(left, name, acc)
   end
 
+  # Clause for maybe($type)
+  defp get_openapi_type_from_spec(
+         %Norm.Core.AnyOf{specs: [left, %Norm.Core.Spec{predicate: "is_nil()"}]},
+         name,
+         acc
+       ) do
+    get_openapi_type_from_spec(left, name, acc)
+  end
+
   defp get_openapi_type_from_spec(%Norm.Core.Spec{predicate: predicate}, _name, _acc),
     do: type_from_predicate(predicate)
 
@@ -361,6 +368,12 @@ defmodule Webserver.OpenApi.Spec.Generator do
 
   defp get_openapi_metadata_from_spec({:enum, _, values}),
     do: %{enum: values}
+
+  defp get_openapi_metadata_from_spec(%Norm.Core.AnyOf{
+         specs: [_, %Norm.Core.Spec{predicate: "is_nil()"}]
+       }) do
+    %{nullable: true}
+  end
 
   defp get_openapi_metadata_from_spec(%_{}), do: %{}
 

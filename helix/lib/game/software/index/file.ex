@@ -12,7 +12,12 @@ defmodule Game.Index.File do
           [rendered_file]
 
   @typep rendered_file :: %{
-           id: ID.external()
+           id: ID.external(),
+           name: binary(),
+           type: binary(),
+           version: integer(),
+           size: integer(),
+           path: binary()
          }
 
   def spec do
@@ -20,13 +25,13 @@ defmodule Game.Index.File do
       schema(%{
         __openapi_name: "IdxFile",
         id: external_id(),
-        type: enum(Software.types(:all) |> Enum.map(&to_string/1)),
         name: binary(),
+        type: enum(Software.types(:all) |> Enum.map(&to_string/1)),
         size: integer(),
         version: integer(),
         path: binary()
       }),
-      [:id, :type, :name, :size, :version, :path]
+      [:id, :name, :type, :size, :version, :path]
     )
   end
 
@@ -57,8 +62,8 @@ defmodule Game.Index.File do
   defp render_file(%File{} = file, entity_id) do
     %{
       id: ID.to_external(file.id, entity_id, file.server_id),
-      type: "#{file.type}",
       name: "#{file.name}",
+      type: "#{file.type}",
       version: file.version,
       size: file.size,
       path: file.path
