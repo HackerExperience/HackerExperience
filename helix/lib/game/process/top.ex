@@ -340,8 +340,7 @@ defmodule Game.Process.TOP do
           %{state: state, dropped: [Process.t()], paused: [Process.t()]}
   defp run_schedule(state, processes, reason, events) when is_list(processes) do
     {duration, result} = :timer.tc(fn -> do_run_schedule(state, processes, reason) end)
-
-    duration = get_duration(duration)
+    duration = Renatils.Timer.format_duration(duration)
 
     case result.state.next do
       {_, time_left, _} ->
@@ -516,9 +515,4 @@ defmodule Game.Process.TOP do
   defp with_registry(key) do
     {:via, Registry, {TOP.Registry.name(), key}}
   end
-
-  defp get_duration(d) when d < 1000, do: "#{d}μs"
-  defp get_duration(d) when d < 10_000, do: "#{Float.round(d / 1000, 2)}ms"
-  defp get_duration(d) when d < 100_000, do: "#{Float.round(d / 1000, 1)}ms"
-  defp get_duration(d), do: "#{trunc(d / 1000)}ms"
 end

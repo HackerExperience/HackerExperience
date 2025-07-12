@@ -118,14 +118,9 @@ defmodule Webserver.Dispatcher do
     method = cowboy_request.method |> String.upcase()
     path = cowboy_request.path
     resp_status = conveyor.response_status
-    duration = get_duration(duration)
+    duration = Renatils.Timer.format_duration(duration)
     Logger.info("#{method} #{path} - Served #{resp_status} in #{duration}")
   end
-
-  defp get_duration(d) when d < 1000, do: "#{d}μs"
-  defp get_duration(d) when d < 10_000, do: "#{Float.round(d / 1000, 2)}ms"
-  defp get_duration(d) when d < 100_000, do: "#{Float.round(d / 1000, 1)}ms"
-  defp get_duration(d), do: "#{trunc(d / 1000)}ms"
 
   defp emit_events(%{events: []}), do: :ok
 
