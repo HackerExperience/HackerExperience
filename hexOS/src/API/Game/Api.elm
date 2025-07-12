@@ -19,6 +19,7 @@ module API.Game.Api exposing
 import API.Game.Json
 import API.Game.Types
 import Dict
+import Game.Model.FileID as FileID exposing (FileID(..))
 import Game.Model.LogID as LogID exposing (LogID(..))
 import Game.Model.NIP as NIP exposing (NIP(..))
 import Game.Model.ProcessID as ProcessID exposing (ProcessID(..))
@@ -58,7 +59,7 @@ fileDeleteTask :
     { server : String
     , authorization : { authorization : String }
     , body : API.Game.Types.FileDeleteRequest
-    , params : { file_id : String, nip : NIP }
+    , params : { file_id : FileID, nip : NIP }
     }
     -> Task.Task (OpenApi.Common.Error e String) API.Game.Types.FileDeleteOkResponse
 fileDeleteTask config =
@@ -70,7 +71,7 @@ fileDeleteTask config =
                 , "server"
                 , NIP.toString config.params.nip
                 , "file"
-                , config.params.file_id
+                , FileID.toString config.params.file_id
                 , "delete"
                 ]
                 []
@@ -91,7 +92,7 @@ fileInstallTask :
     { server : String
     , authorization : { authorization : String }
     , body : API.Game.Types.FileInstallRequest
-    , params : { file_id : String, nip : NIP }
+    , params : { file_id : FileID, nip : NIP }
     }
     -> Task.Task (OpenApi.Common.Error e String) API.Game.Types.FileInstallOkResponse
 fileInstallTask config =
@@ -103,7 +104,7 @@ fileInstallTask config =
                 , "server"
                 , NIP.toString config.params.nip
                 , "file"
-                , config.params.file_id
+                , FileID.toString config.params.file_id
                 , "install"
                 ]
                 []
@@ -124,7 +125,7 @@ fileTransferTask :
     { server : String
     , authorization : { authorization : String }
     , body : API.Game.Types.FileTransferRequest
-    , params : { file_id : String, nip : NIP }
+    , params : { file_id : FileID, nip : NIP }
     }
     -> Task.Task (OpenApi.Common.Error e String) API.Game.Types.FileTransferOkResponse
 fileTransferTask config =
@@ -136,7 +137,7 @@ fileTransferTask config =
                 , "server"
                 , NIP.toString config.params.nip
                 , "file"
-                , config.params.file_id
+                , FileID.toString config.params.file_id
                 , "transfer"
                 ]
                 []

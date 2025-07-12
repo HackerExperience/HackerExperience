@@ -49,6 +49,7 @@ module API.Events.Json exposing
 -}
 
 import API.Events.Types
+import Game.Model.FileID as FileID exposing (FileID(..))
 import Game.Model.LogID as LogID exposing (LogID(..))
 import Game.Model.NIP as NIP exposing (NIP(..))
 import Game.Model.ProcessID as ProcessID exposing (ProcessID(..))
@@ -366,7 +367,7 @@ decodeFileTransferred =
     Json.Decode.succeed
         (\file_id process_id -> { file_id = file_id, process_id = process_id })
         |> OpenApi.Common.jsonDecodeAndMap
-            (Json.Decode.field "file_id" Json.Decode.string)
+            (Json.Decode.field "file_id" (Json.Decode.map FileID Json.Decode.string))
         |> OpenApi.Common.jsonDecodeAndMap
             (Json.Decode.field
                 "process_id"
@@ -377,7 +378,7 @@ decodeFileTransferred =
 encodeFileTransferred : API.Events.Types.FileTransferred -> Json.Encode.Value
 encodeFileTransferred rec =
     Json.Encode.object
-        [ ( "file_id", Json.Encode.string rec.file_id )
+        [ ( "file_id", Json.Encode.string (FileID.toValue rec.file_id) )
         , ( "process_id", Json.Encode.string (ProcessID.toValue rec.process_id) )
         ]
 
@@ -462,7 +463,7 @@ decodeFileDeleted =
     Json.Decode.succeed
         (\file_id process_id -> { file_id = file_id, process_id = process_id })
         |> OpenApi.Common.jsonDecodeAndMap
-            (Json.Decode.field "file_id" Json.Decode.string)
+            (Json.Decode.field "file_id" (Json.Decode.map FileID Json.Decode.string))
         |> OpenApi.Common.jsonDecodeAndMap
             (Json.Decode.field
                 "process_id"
@@ -473,7 +474,7 @@ decodeFileDeleted =
 encodeFileDeleted : API.Events.Types.FileDeleted -> Json.Encode.Value
 encodeFileDeleted rec =
     Json.Encode.object
-        [ ( "file_id", Json.Encode.string rec.file_id )
+        [ ( "file_id", Json.Encode.string (FileID.toValue rec.file_id) )
         , ( "process_id", Json.Encode.string (ProcessID.toValue rec.process_id) )
         ]
 

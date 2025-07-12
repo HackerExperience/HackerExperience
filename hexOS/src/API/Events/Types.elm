@@ -22,6 +22,7 @@ module API.Events.Types exposing
 
 -}
 
+import Game.Model.FileID as FileID exposing (FileID(..))
 import Game.Model.LogID as LogID exposing (LogID(..))
 import Game.Model.NIP as NIP exposing (NIP(..))
 import Game.Model.ProcessID as ProcessID exposing (ProcessID(..))
@@ -86,7 +87,7 @@ type alias IndexRequested =
 
 
 type alias FileTransferred =
-    { file_id : String, process_id : ProcessID }
+    { file_id : FileID, process_id : ProcessID }
 
 
 type alias FileTransferFailed =
@@ -106,7 +107,7 @@ type alias FileInstallFailed =
 
 
 type alias FileDeleted =
-    { file_id : String, process_id : ProcessID }
+    { file_id : FileID, process_id : ProcessID }
 
 
 type alias FileDeleteFailed =
