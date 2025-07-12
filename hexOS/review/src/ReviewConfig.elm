@@ -133,11 +133,12 @@ config =
         -- as "Raw*ID"s remain as an implementation detail and are never exposed by the API.
         -- The same comment applies to "RawNIP".
         |> Rule.ignoreErrorsForFiles
-            [ "src/Game/Model/LogID.elm"
+            [ "src/Game/Model/NIP.elm"
+            , "src/Game/Model/LogID.elm"
             , "src/Game/Model/FileID.elm"
-            , "src/Game/Model/TunnelID.elm"
+            , "src/Game/Model/InstallationID.elm"
             , "src/Game/Model/ProcessID.elm"
-            , "src/Game/Model/NIP.elm"
+            , "src/Game/Model/TunnelID.elm"
             ]
         -- Below files are wrong and should eventually be fixed
         |> Rule.ignoreErrorsForFiles [ "src/WM.elm" ]

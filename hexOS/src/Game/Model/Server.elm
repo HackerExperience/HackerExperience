@@ -24,6 +24,7 @@ import API.Events.Types as Events
 import Dict exposing (Dict)
 import Game.Bus exposing (Action)
 import Game.Model.File as File exposing (Files)
+import Game.Model.Installation as Installation exposing (Installations)
 import Game.Model.Log as Log exposing (Log, Logs)
 import Game.Model.NIP as NIP exposing (NIP, RawNIP)
 import Game.Model.Process as Process exposing (Process, Processes)
@@ -42,6 +43,7 @@ import OrderedDict
 type alias Server =
     { type_ : ServerType
     , nip : NIP
+    , installations : Installations
     , logs : Logs
     , files : Files
     , tunnelId : Maybe TunnelID
@@ -49,6 +51,9 @@ type alias Server =
     }
 
 
+{-| Unless I change my mind, `Gateway` and `Endpoint` are deprecated, and we should stick to having
+all this information in the `Server` type. Just use `Maybe`s or whatever.
+-}
 type alias Gateway =
     { id : ServerID
     , nip : NIP
@@ -57,6 +62,9 @@ type alias Gateway =
     }
 
 
+{-| Unless I change my mind, `Gateway` and `Endpoint` are deprecated, and we should stick to having
+all this information in the `Server` type. Just use `Maybe`s or whatever.
+-}
 type alias Endpoint =
     { nip : NIP
     }
@@ -75,14 +83,16 @@ buildServer :
     ServerType
     -> NIP
     -> Maybe TunnelID
+    -> List Events.IdxInstallation
     -> List Events.IdxLog
     -> List Events.IdxFile
     -> List Events.IdxProcess
     -> Server
-buildServer serverType nip tunnelId idxLogs idxFiles idxProcesses =
+buildServer serverType nip tunnelId idxInstallations idxLogs idxFiles idxProcesses =
     { type_ = serverType
     , nip = nip
     , tunnelId = tunnelId
+    , installations = Installation.parse idxInstallations
     , logs = Log.parse idxLogs
     , files = File.parse idxFiles
     , processes = Process.parse idxProcesses
@@ -111,7 +121,14 @@ buildGatewayServers idxGateways =
     let
         buildGatewayServer =
             \gtw ->
-                buildServer ServerGateway gtw.nip Nothing gtw.logs gtw.files gtw.processes
+                buildServer
+                    ServerGateway
+                    gtw.nip
+                    Nothing
+                    gtw.installations
+                    gtw.logs
+                    gtw.files
+                    gtw.processes
     in
     List.foldl (\gtw acc -> ( NIP.toString gtw.nip, buildGatewayServer gtw ) :: acc)
         []
@@ -128,7 +145,14 @@ buildEndpointServers allTunnels idxEndpoints =
 
         buildEndpointServer =
             \endp ->
-                buildServer ServerEndpoint endp.nip (findTunnel endp.nip) endp.logs endp.files endp.processes
+                buildServer
+                    ServerEndpoint
+                    endp.nip
+                    (findTunnel endp.nip)
+                    []
+                    endp.logs
+                    endp.files
+                    endp.processes
     in
     List.foldl (\endp acc -> ( NIP.toString endp.nip, buildEndpointServer endp ) :: acc)
         []
@@ -170,6 +194,7 @@ invalidServer =
     { type_ = ServerGateway
     , nip = NIP.invalidNip
     , tunnelId = Nothing
+    , installations = Dict.empty
     , logs = OrderedDict.empty
     , files = Dict.empty
     , processes = OrderedDict.empty

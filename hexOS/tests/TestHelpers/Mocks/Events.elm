@@ -29,6 +29,7 @@ idxGateway : Events.IdxGateway
 idxGateway =
     { id = "srvid"
     , nip = defaultNip
+    , installations = []
     , tunnels = []
     , files = []
     , logs = []
