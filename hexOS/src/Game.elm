@@ -253,14 +253,26 @@ switchActiveEndpoint newActiveEndpointNip model =
 handleProcessOperation : Model -> NIP -> Operation -> Model
 handleProcessOperation model nip operation =
     case operation of
+        Operation.Starting (Operation.AppStoreInstall _) ->
+            manifestProcessOperationHandler model operation
+
         Operation.Starting _ ->
             defaultProcessStartingHandler model nip operation
+
+        Operation.Started (Operation.AppStoreInstall _) _ ->
+            manifestProcessOperationHandler model operation
 
         Operation.Started _ _ ->
             defaultProcessStartedHandler model nip operation
 
+        Operation.Finished (Operation.AppStoreInstall _) _ ->
+            manifestProcessOperationHandler model operation
+
         Operation.Finished _ _ ->
             defaultProcessStartedHandler model nip operation
+
+        Operation.StartFailed (Operation.AppStoreInstall _) ->
+            manifestProcessOperationHandler model operation
 
         Operation.StartFailed _ ->
             defaultProcessStartedHandler model nip operation
@@ -274,6 +286,11 @@ defaultProcessStartingHandler model nip operation =
 defaultProcessStartedHandler : Model -> NIP -> Operation -> Model
 defaultProcessStartedHandler model nip operation =
     updateServer nip (Server.handleProcessOperation operation) model
+
+
+manifestProcessOperationHandler : Model -> Operation -> Model
+manifestProcessOperationHandler model operation =
+    { model | manifest = Software.handleProcessOperation operation model.manifest }
 
 
 

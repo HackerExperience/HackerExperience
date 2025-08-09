@@ -156,6 +156,9 @@ onProcessCreatedEvent event processes =
 getProcessOperation : ProcessData -> Maybe ProcessOperation.OperationType
 getProcessOperation data =
     case data of
+        ProcessData.AppStoreInstall { softwareType } ->
+            Just <| ProcessOperation.AppStoreInstall softwareType
+
         ProcessData.LogDelete { logId } ->
             Just <| ProcessOperation.LogDelete logId
 

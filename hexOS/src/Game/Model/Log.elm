@@ -298,6 +298,9 @@ handleProcessOperation operation logs =
         Operation.StartFailed (Operation.LogEdit logId) ->
             updateLog logId (\log -> { log | currentOp = Nothing }) logs
 
+        _ ->
+            logs
+
 
 
 -- Event Handlers

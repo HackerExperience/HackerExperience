@@ -199,4 +199,33 @@ defmodule Game.Process.AppStore.InstallTest do
       assert event.data.reason == "server_not_belongs"
     end
   end
+
+  describe "E2E - Processable" do
+    test "upon completion, installs the file", ctx do
+      %{server: server, player: player} = Setup.server()
+
+      process =
+        Setup.process!(server.id,
+          type: :appstore_install,
+          completed?: true,
+          spec: [software_type: :cracker]
+        )
+
+      DB.commit()
+      U.start_sse_listener(ctx, player, total_expected_events: 2)
+
+      # Complete the Process
+      U.simulate_process_completion(process)
+
+      # SSE events were published
+      proc_completed_event = U.wait_sse_event!("process_completed")
+      assert proc_completed_event.data.process_id |> U.from_eid(player.id) == process.id
+      assert proc_completed_event.data.data == "{\"software_type\":\"cracker\"}"
+
+      appstore_installed_event = U.wait_sse_event!("appstore_installed")
+      assert appstore_installed_event.data.file_name
+      assert appstore_installed_event.data.installation_id
+      assert appstore_installed_event.data.file_id
+    end
+  end
 end

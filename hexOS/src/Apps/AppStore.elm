@@ -6,8 +6,11 @@ import Apps.Input as App
 import Apps.Manifest as App
 import Effect exposing (Effect)
 import Game
+import Game.Bus as Game
 import Game.Model.File exposing (Files)
 import Game.Model.Installation exposing (Installations)
+import Game.Model.NIP as NIP
+import Game.Model.ProcessOperation as Operation
 import Game.Model.ServerID as ServerID exposing (ServerID)
 import Game.Model.Software as Software exposing (Manifest, Software)
 import Game.Model.SoftwareType as SoftwareType exposing (SoftwareType)
@@ -77,10 +80,18 @@ update game msg model =
                         game.apiCtx
                         model.serverId
                         softwareType
+
+                toGameMsg =
+                    Game.ProcessOperation
+                        -- TODO: This `invalidNip` call is here as a temporary placeholder.
+                        -- Refactor the Msg so the NIP is made optional.
+                        NIP.invalidNip
+                        (Operation.Starting <| Operation.AppStoreInstall softwareType)
             in
             ( model
             , Effect.batch
                 [ Effect.appStoreInstall (OnAppStoreInstallResponse softwareType) config
+                , Effect.msgToCmd <| ToOS <| OS.Bus.ToGame toGameMsg
                 ]
             )
 
@@ -188,7 +199,19 @@ renderAppsEntry installableSoftware software acc =
 
 renderAppEntryOverlay : Bool -> Software -> UI Msg
 renderAppEntryOverlay isInstallable software =
-    if isInstallable then
+    if Maybe.isJust software.currentOp then
+        let
+            -- TODO: Ideally this should be a UI.Spinner component
+            spinnerIcon =
+                UI.Icon.msOutline "progress_activity" Nothing
+                    |> UI.Icon.withClass "a-ast-apps-idx-entry-overlay-icon"
+                    |> UI.Icon.toUI
+        in
+        div
+            [ cl "a-ast-apps-idx-entry-spinner-overlay" ]
+            [ spinnerIcon ]
+
+    else if isInstallable then
         let
             downloadIcon =
                 UI.Icon.msOutline "download" Nothing
@@ -209,8 +232,7 @@ renderAppEntryOverlay isInstallable software =
                     |> UI.Icon.toUI
         in
         div
-            [ cl "a-ast-apps-idx-entry-installed-overlay"
-            ]
+            [ cl "a-ast-apps-idx-entry-installed-overlay" ]
             [ installedIcon ]
 
 

@@ -110,9 +110,13 @@ encodeFileDelete rec =
 
 decodeAppstoreInstall : Json.Decode.Decoder API.Processes.Types.AppstoreInstall
 decodeAppstoreInstall =
-    Json.Decode.succeed {}
+    Json.Decode.succeed
+        (\software_type -> { software_type = software_type })
+        |> OpenApi.Common.jsonDecodeAndMap
+            (Json.Decode.field "software_type" Json.Decode.string)
 
 
 encodeAppstoreInstall : API.Processes.Types.AppstoreInstall -> Json.Encode.Value
 encodeAppstoreInstall rec =
-    Json.Encode.object []
+    Json.Encode.object
+        [ ( "software_type", Json.Encode.string rec.software_type ) ]

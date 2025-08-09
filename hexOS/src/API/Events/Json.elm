@@ -500,15 +500,21 @@ encodeFileDeleteFailed rec =
 decodeAppstoreInstalled : Json.Decode.Decoder API.Events.Types.AppstoreInstalled
 decodeAppstoreInstalled =
     Json.Decode.succeed
-        (\file_name installation_id memory_usage process_id ->
-            { file_name = file_name
+        (\file_id file_name installation_id memory_usage process_id ->
+            { file_id = file_id
+            , file_name = file_name
             , installation_id = installation_id
             , memory_usage = memory_usage
             , process_id = process_id
             }
         )
         |> OpenApi.Common.jsonDecodeAndMap
-            (Json.Decode.field "file_name" Json.Decode.string)
+            (Json.Decode.field "file_id" (Json.Decode.map FileID Json.Decode.string))
+        |> OpenApi.Common.jsonDecodeAndMap
+            (Json.Decode.field
+                "file_name"
+                Json.Decode.string
+            )
         |> OpenApi.Common.jsonDecodeAndMap
             (Json.Decode.field
                 "installation_id"
@@ -529,7 +535,8 @@ decodeAppstoreInstalled =
 encodeAppstoreInstalled : API.Events.Types.AppstoreInstalled -> Json.Encode.Value
 encodeAppstoreInstalled rec =
     Json.Encode.object
-        [ ( "file_name", Json.Encode.string rec.file_name )
+        [ ( "file_id", Json.Encode.string (FileID.toValue rec.file_id) )
+        , ( "file_name", Json.Encode.string rec.file_name )
         , ( "installation_id", Json.Encode.string rec.installation_id )
         , ( "memory_usage", Json.Encode.int rec.memory_usage )
         , ( "process_id", Json.Encode.string (ProcessID.toValue rec.process_id) )

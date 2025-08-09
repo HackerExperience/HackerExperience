@@ -284,11 +284,19 @@ handleProcessOperation operation server =
         Operation.Starting (Operation.LogEdit _) ->
             handleProcessOperationLog operation server
 
+        Operation.Starting (Operation.AppStoreInstall _) ->
+            -- This is handled at Game directly
+            server
+
         Operation.Started (Operation.LogDelete _) _ ->
             handleProcessOperationLog operation server
 
         Operation.Started (Operation.LogEdit _) _ ->
             handleProcessOperationLog operation server
+
+        Operation.Started (Operation.AppStoreInstall _) _ ->
+            -- This is handled at Game directly
+            server
 
         Operation.Finished (Operation.LogDelete _) _ ->
             handleProcessOperationLog operation server
@@ -296,11 +304,19 @@ handleProcessOperation operation server =
         Operation.Finished (Operation.LogEdit _) _ ->
             handleProcessOperationLog operation server
 
+        Operation.Finished (Operation.AppStoreInstall _) _ ->
+            -- This is handled at Game directly
+            server
+
         Operation.StartFailed (Operation.LogDelete _) ->
             handleProcessOperationLog operation server
 
         Operation.StartFailed (Operation.LogEdit _) ->
             handleProcessOperationLog operation server
+
+        Operation.StartFailed (Operation.AppStoreInstall _) ->
+            -- This is handled at Game directly
+            server
 
 
 handleProcessOperationLog : Operation -> Server -> Server

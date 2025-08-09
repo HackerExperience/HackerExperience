@@ -36,11 +36,12 @@ defmodule Game.Events.AppStore do
         selection(
           schema(%{
             installation_id: external_id(),
+            file_id: external_id(),
             file_name: binary(),
             memory_usage: integer(),
             process_id: external_id()
           }),
-          [:installation_id, :file_name, :memory_usage, :process_id]
+          [:installation_id, :file_id, :file_name, :memory_usage, :process_id]
         )
       end
 
@@ -51,6 +52,7 @@ defmodule Game.Events.AppStore do
         payload =
           %{
             installation_id: installation.id |> ID.to_external(entity_id, server_id),
+            file_id: file.id |> ID.to_external(entity_id, server_id),
             file_name: file.name,
             memory_usage: installation.memory_usage,
             process_id: process.id |> ID.to_external(entity_id, server_id)

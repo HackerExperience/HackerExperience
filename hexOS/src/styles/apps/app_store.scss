@@ -49,6 +49,10 @@
             display: flex;
         }
 
+        .a-ast-apps-idx-entry-spinner-overlay {
+            display: flex;
+        }
+
         .a-ast-apps-idx-entry-installed-overlay {
             display: flex;
         }
@@ -74,6 +78,19 @@
     &:hover {
         background-color: sec-400();
         border: 1px solid prim-400();
+    }
+}
+
+.a-ast-apps-idx-entry-spinner-overlay {
+    position: absolute;
+    padding: s-1();
+    right: 0;
+    top: 0;
+
+    .ui-icon {
+        color: prim-400();
+        font-size: 26px;
+        animation: spin 2s linear infinite;
     }
 }
 

@@ -44,4 +44,4 @@ type alias FileDelete =
 
 
 type alias AppstoreInstall =
-    {}
+    { software_type : String }

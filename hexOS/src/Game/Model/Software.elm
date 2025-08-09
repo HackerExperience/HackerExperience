@@ -2,6 +2,7 @@ module Game.Model.Software exposing
     ( Manifest
     , Software
     , getAppStoreInstallableSoftware
+    , handleProcessOperation
     , listAppStoreSoftware
     , parseManifest
     )
@@ -11,6 +12,8 @@ import Dict exposing (Dict)
 import Game.Model.File exposing (Files)
 import Game.Model.FileID exposing (FileID)
 import Game.Model.Installation exposing (Installations)
+import Game.Model.ProcessID exposing (ProcessID)
+import Game.Model.ProcessOperation as Operation exposing (Operation)
 import Game.Model.SoftwareType as SoftwareType exposing (SoftwareType)
 import List.Extra as List
 import Maybe.Extra as Maybe
@@ -20,6 +23,7 @@ type alias Software =
     { type_ : SoftwareType
     , extension : String
     , appStoreConfig : Maybe AppStoreConfig
+    , currentOp : Maybe SoftwareOperation
     }
 
 
@@ -27,6 +31,11 @@ type alias AppStoreConfig =
     { price : Int
     , version : Int
     }
+
+
+type SoftwareOperation
+    = OpStartingAppStoreInstall
+    | OpAppStoreInstall ProcessID
 
 
 type alias Manifest =
@@ -101,6 +110,21 @@ getAppStoreInstallableSoftware softwares files installations =
     List.foldl builderFn [] softwares
 
 
+updateSoftware : SoftwareType -> (Software -> Software) -> Manifest -> Manifest
+updateSoftware softwareType updater manifest =
+    let
+        justUpdateIt =
+            \maybeSoftware ->
+                case maybeSoftware of
+                    Just software ->
+                        Just <| updater software
+
+                    Nothing ->
+                        Nothing
+    in
+    Dict.update (SoftwareType.typeToString softwareType) justUpdateIt manifest
+
+
 
 -- Model > Parser
 
@@ -118,6 +142,7 @@ parseManifestSoftware idxSoftware =
             { type_ = SoftwareType.typeFromString idxSoftware.type_
             , extension = idxSoftware.extension
             , appStoreConfig = parseAppStoreConfig idxSoftware.config.appstore
+            , currentOp = Nothing
             }
     in
     ( idxSoftware.type_, s )
@@ -126,3 +151,32 @@ parseManifestSoftware idxSoftware =
 parseAppStoreConfig : Maybe Events.SoftwareConfigAppstore -> Maybe AppStoreConfig
 parseAppStoreConfig idxAppStoreConfig =
     Maybe.map (\{ price } -> { price = price, version = 10 }) idxAppStoreConfig
+
+
+
+-- Process handlers
+
+
+handleProcessOperation : Operation -> Manifest -> Manifest
+handleProcessOperation operation manifest =
+    case operation of
+        Operation.Starting (Operation.AppStoreInstall softwareType) ->
+            updateSoftware
+                softwareType
+                (\s -> { s | currentOp = Just OpStartingAppStoreInstall })
+                manifest
+
+        Operation.Started (Operation.AppStoreInstall softwareType) processId ->
+            updateSoftware
+                softwareType
+                (\s -> { s | currentOp = Just <| OpAppStoreInstall processId })
+                manifest
+
+        Operation.Finished (Operation.AppStoreInstall softwareType) _ ->
+            updateSoftware softwareType (\s -> { s | currentOp = Nothing }) manifest
+
+        Operation.StartFailed (Operation.AppStoreInstall softwareType) ->
+            updateSoftware softwareType (\s -> { s | currentOp = Nothing }) manifest
+
+        _ ->
+            manifest

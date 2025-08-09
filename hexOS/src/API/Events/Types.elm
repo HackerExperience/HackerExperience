@@ -115,7 +115,8 @@ type alias FileDeleteFailed =
 
 
 type alias AppstoreInstalled =
-    { file_name : String
+    { file_id : FileID
+    , file_name : String
     , installation_id : String
     , memory_usage : Int
     , process_id : ProcessID

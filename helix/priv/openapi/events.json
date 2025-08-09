@@ -350,6 +350,9 @@
       },
       "appstore_installed": {
         "properties": {
+          "file_id": {
+            "type": "string"
+          },
           "file_name": {
             "type": "string"
           },
@@ -364,6 +367,7 @@
           }
         },
         "required": [
+          "file_id",
           "file_name",
           "installation_id",
           "memory_usage",

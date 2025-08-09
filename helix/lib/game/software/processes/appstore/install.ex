@@ -124,17 +124,17 @@ defmodule Game.Process.AppStore.Install do
   defmodule Viewable do
     use Game.Process.Viewable.Definition
 
-    # TODO: Enhance when implementing the View in the client
-
     def spec do
       selection(
-        schema(%{}),
-        []
+        schema(%{
+          software_type: enum(Software.types(:installable) |> Enum.map(&to_string/1))
+        }),
+        [:software_type]
       )
     end
 
-    def render_data(_, _, _) do
-      %{}
+    def render_data(_, %{software_type: software_type}, _) do
+      %{software_type: to_string(software_type)}
     end
   end
 end
