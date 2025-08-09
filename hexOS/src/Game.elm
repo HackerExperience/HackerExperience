@@ -8,6 +8,7 @@ module Game exposing
     , getGateway
     , getGateways
     , getServer
+    , getServerById
     , handleProcessOperation
     , init
     , onLogDeletedEvent
@@ -23,6 +24,7 @@ import API.Events.Types as Events
 import API.Types
 import API.Utils
 import Dict exposing (Dict)
+import Dict.Extra as Dict
 import Game.Bus as Action exposing (Action)
 import Game.Model.NIP as NIP exposing (NIP, RawNIP)
 import Game.Model.ProcessOperation as Operation exposing (Operation)
@@ -81,6 +83,18 @@ getServer model nip =
         |> Maybe.withDefault Server.invalidServer
 
 
+{-| Returns the Server (searching by ID), assuming it must exist.
+-}
+getServerById : Model -> ServerID -> Server
+getServerById model serverId =
+    case findNipByServerId model serverId of
+        Just nip ->
+            getServer model nip
+
+        Nothing ->
+            Server.invalidServer
+
+
 {-| Returns the Server, if it exists.
 -}
 findServer : Model -> NIP -> Maybe Server
@@ -102,6 +116,12 @@ findEndpointServer : Model -> NIP -> Maybe Server
 findEndpointServer model nip =
     findServer model nip
         |> Maybe.filter (\server -> server.type_ == ServerEndpoint)
+
+
+findNipByServerId : Model -> ServerID -> Maybe NIP
+findNipByServerId model serverId =
+    Dict.find (\_ gtw -> gtw.id == serverId) model.gateways
+        |> Maybe.map (\( rawNip, _ ) -> NIP.fromString rawNip)
 
 
 {-| Updates the Server, if it exists. Perform a no-op if it doesn't.

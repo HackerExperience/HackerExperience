@@ -1,6 +1,7 @@
 module Game.Model.File exposing
     ( File
     , Files
+    , findByTypeAndVersion
     , parse
     )
 
@@ -30,6 +31,15 @@ type alias File =
 
 
 -- Model
+-- Model > Query
+
+
+findByTypeAndVersion : Files -> SoftwareType -> Int -> Maybe File
+findByTypeAndVersion files queryType queryVersion =
+    Nothing
+
+
+
 -- Model > Parser
 
 

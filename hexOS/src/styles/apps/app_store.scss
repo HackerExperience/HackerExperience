@@ -45,7 +45,11 @@
             opacity: 1;
         }
 
-        .a-ast-apps-idx-entry-overlay {
+        .a-ast-apps-idx-entry-download-overlay {
+            display: flex;
+        }
+
+        .a-ast-apps-idx-entry-installed-overlay {
             display: flex;
         }
     }
@@ -60,17 +64,28 @@
     opacity: 0.8;
 }
 
-.a-ast-apps-idx-entry-overlay {
+.a-ast-apps-idx-entry-download-overlay {
     display: none;
     position: absolute;
     right: 0;
     top: 0;
     padding: s-1();
 
-
     &:hover {
         background-color: sec-400();
         border: 1px solid prim-400();
+    }
+}
+
+.a-ast-apps-idx-entry-installed-overlay {
+    position: absolute;
+    padding: s-1();
+    right: 0;
+    top: 0;
+
+    .ui-icon {
+        color: green;
+        font-size: 26px;
     }
 }
 

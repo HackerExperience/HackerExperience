@@ -6,9 +6,13 @@ import Apps.Input as App
 import Apps.Manifest as App
 import Effect exposing (Effect)
 import Game
+import Game.Model.File exposing (Files)
+import Game.Model.Installation exposing (Installations)
 import Game.Model.ServerID as ServerID exposing (ServerID)
 import Game.Model.Software as Software exposing (Manifest, Software)
 import Game.Model.SoftwareType as SoftwareType exposing (SoftwareType)
+import List.Extra as List
+import Maybe.Extra as Maybe
 import OS.AppID exposing (AppID)
 import OS.Bus
 import OS.CtxMenu
@@ -117,7 +121,7 @@ vBody model game =
                     vBodyAppsIndex model game
 
                 TabApps (Just type_) ->
-                    vBodyAppsDetail model type_
+                    vBodyAppsDetail model game type_
 
                 TabInstallations ->
                     vBodyInstallations model
@@ -131,45 +135,43 @@ vBody model game =
 
 
 vBodyAppsIndex : Model -> Game.Model -> UI Msg
-vBodyAppsIndex _ game =
+vBodyAppsIndex model game =
     let
+        server =
+            Game.getServerById game model.serverId
+
         apps =
-            renderAppsEntries game.manifest
+            renderAppsEntries game.manifest server.files server.installations
     in
     row [ cl "a-ast-apps-index" ] apps
 
 
-renderAppsEntries : Manifest -> List (UI Msg)
-renderAppsEntries manifest =
+renderAppsEntries : Manifest -> Files -> Installations -> List (UI Msg)
+renderAppsEntries manifest files installations =
     let
         appStoreSoftware =
             Software.listAppStoreSoftware manifest
+
+        appStoreInstallableSoftware =
+            Software.getAppStoreInstallableSoftware appStoreSoftware files installations
     in
-    List.foldl renderAppsEntry [] appStoreSoftware
+    List.foldl (renderAppsEntry appStoreInstallableSoftware) [] appStoreSoftware
 
 
-renderAppsEntry : Software -> List (UI Msg) -> List (UI Msg)
-renderAppsEntry software acc =
+renderAppsEntry : List SoftwareType -> Software -> List (UI Msg) -> List (UI Msg)
+renderAppsEntry installableSoftware software acc =
     let
         name =
             SoftwareType.typeToName software.type_
+
+        isInstallable =
+            List.find (\type_ -> type_ == software.type_) installableSoftware
+                |> Maybe.isJust
 
         icon =
             UI.Icon.msOutline (SoftwareType.typeToIcon software.type_) Nothing
                 |> UI.Icon.withClass "a-ast-apps-idx-entry-icon"
                 |> UI.Icon.toUI
-
-        downloadIcon =
-            UI.Icon.msOutline "download" Nothing
-                |> UI.Icon.withClass "a-ast-apps-idx-entry-overlay-icon"
-                |> UI.Icon.toUI
-
-        downloadOverlay =
-            div
-                [ cl "a-ast-apps-idx-entry-overlay"
-                , UI.stopPropagation "click" (DownloadSoftware software.type_)
-                ]
-                [ downloadIcon ]
 
         entry =
             col
@@ -178,14 +180,42 @@ renderAppsEntry software acc =
                 ]
                 [ icon
                 , text name
-                , downloadOverlay
+                , renderAppEntryOverlay isInstallable software
                 ]
     in
     entry :: acc
 
 
-vBodyAppsDetail : Model -> SoftwareType -> UI Msg
-vBodyAppsDetail _ type_ =
+renderAppEntryOverlay : Bool -> Software -> UI Msg
+renderAppEntryOverlay isInstallable software =
+    if isInstallable then
+        let
+            downloadIcon =
+                UI.Icon.msOutline "download" Nothing
+                    |> UI.Icon.withClass "a-ast-apps-idx-entry-overlay-icon"
+                    |> UI.Icon.toUI
+        in
+        div
+            [ cl "a-ast-apps-idx-entry-download-overlay"
+            , UI.stopPropagation "click" (DownloadSoftware software.type_)
+            ]
+            [ downloadIcon ]
+
+    else
+        let
+            installedIcon =
+                UI.Icon.msOutline "check_circle" Nothing
+                    |> UI.Icon.withClass "a-ast-apps-idx-entry-overlay-icon"
+                    |> UI.Icon.toUI
+        in
+        div
+            [ cl "a-ast-apps-idx-entry-installed-overlay"
+            ]
+            [ installedIcon ]
+
+
+vBodyAppsDetail : Model -> Game.Model -> SoftwareType -> UI Msg
+vBodyAppsDetail model game type_ =
     let
         backIcon =
             UI.Icon.msOutline "arrow_back" Nothing
@@ -204,15 +234,41 @@ vBodyAppsDetail _ type_ =
     in
     col [ cl "a-ast-apps-details" ]
         [ header
-        , renderAppDetailBody type_
+        , renderAppDetailBody model game type_
         ]
 
 
-renderAppDetailBody : SoftwareType -> UI Msg
-renderAppDetailBody type_ =
+renderAppDetailBody : Model -> Game.Model -> SoftwareType -> UI Msg
+renderAppDetailBody model game softwareType =
+    let
+        server =
+            Game.getServerById game model.serverId
+
+        appStoreSoftware =
+            Software.listAppStoreSoftware game.manifest
+                -- This filtering is a premature optimization to make sure we don't iterate over
+                -- irrelevant software types. We only care about `softwareType` in this context.
+                |> List.filter (\{ type_ } -> type_ == softwareType)
+
+        installableSoftware =
+            Software.getAppStoreInstallableSoftware
+                appStoreSoftware
+                server.files
+                server.installations
+
+        isInstallable =
+            List.find (\type_ -> type_ == softwareType) installableSoftware
+                |> Maybe.isJust
+    in
     col [ cl "a-ast-apps-dtl-body" ]
-        [ text (SoftwareType.typeToString type_)
+        [ text (SoftwareType.typeToString softwareType)
         , text "What? Were you expecting more information? Come back later (:"
+        , if isInstallable then
+            -- TODO: Turn this into a functional button once the UI is ironed out
+            text "Click here to install (just kidding)"
+
+          else
+            text "Already installed"
         ]
 
 
