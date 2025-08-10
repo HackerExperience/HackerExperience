@@ -7,6 +7,7 @@ module Game.Model.Server exposing
     , handleProcessOperation
     , invalidGateway
     , invalidServer
+    , listFiles
     , listLogs
     , onAppStoreInstalledEvent
     , onLogDeletedEvent
@@ -24,7 +25,7 @@ module Game.Model.Server exposing
 import API.Events.Types as Events
 import Dict exposing (Dict)
 import Game.Bus exposing (Action)
-import Game.Model.File as File exposing (Files)
+import Game.Model.File as File exposing (File, Files)
 import Game.Model.Installation as Installation exposing (Installations)
 import Game.Model.Log as Log exposing (Log, Logs)
 import Game.Model.NIP as NIP exposing (NIP, RawNIP)
@@ -261,6 +262,15 @@ switchActiveEndpoint gateway endpointNip =
 
         Nothing ->
             gateway
+
+
+
+-- Model > Files
+
+
+listFiles : Server -> List File
+listFiles server =
+    File.filesToList server.files
 
 
 

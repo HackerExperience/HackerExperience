@@ -5,7 +5,10 @@ import Apps.Manifest as App
 import Effect exposing (Effect)
 import Game
 import Game.Bus as Game
+import Game.Model.File exposing (File)
 import Game.Model.NIP exposing (NIP)
+import Game.Model.Server as Server
+import Game.Model.SoftwareType as SoftwareType
 import OS.AppID exposing (AppID)
 import OS.Bus
 import OS.CtxMenu
@@ -28,6 +31,19 @@ type alias Model =
 
 
 -- Model
+
+
+filterFiles : Model -> Game.Model -> List File
+filterFiles model game =
+    -- TODO: Currently this is not doing any filtering other than grabbing all files in the server
+    let
+        server =
+            Game.getServer game model.nip
+    in
+    Server.listFiles server
+
+
+
 -- Update
 
 
@@ -52,8 +68,90 @@ update game msg model =
 
 view : Model -> Game.Model -> OS.CtxMenu.Model -> UI Msg
 view model game _ =
-    row [ cl "app-fileexplorer" ]
-        [ text "File Explorer"
+    col [ cl "app-file-explorer" ]
+        [ vHeader model
+        , vBody model game
+        ]
+
+
+vHeader : Model -> UI Msg
+vHeader model =
+    row [ cl "a-fex-header" ]
+        [ text "Header" ]
+
+
+vBody : Model -> Game.Model -> UI Msg
+vBody model game =
+    col [ cl "a-fex-body" ]
+        (vFileList model game)
+
+
+{-| TODO: Lazify
+-}
+vFileList : Model -> Game.Model -> List (UI Msg)
+vFileList model game =
+    let
+        files =
+            filterFiles model game
+    in
+    List.map (\file -> vFileRow model file) files
+
+
+vFileRow : Model -> File -> UI Msg
+vFileRow model file =
+    let
+        iconName =
+            SoftwareType.typeToIcon file.type_
+
+        iconNode =
+            UI.Icon.msOutline iconName Nothing
+                |> UI.Icon.withClass "a-fex-fr-icon"
+                |> UI.Icon.toUI
+
+        extensionNode =
+            row [ cl "a-fex-fr-extension" ]
+                [ text ".crc" ]
+
+        nameNode =
+            row [ cl "a-fex-fr-name" ]
+                [ text file.name
+                , extensionNode
+                ]
+
+        versionNode =
+            row [ cl "a-fex-fr-version" ]
+                [ text "1.0" ]
+    in
+    row [ cl "a-fex-file-row" ]
+        [ iconNode
+        , nameNode
+        , versionNode
+        , vFileRowActions file
+        ]
+
+
+vFileRowActions : File -> UI Msg
+vFileRowActions file =
+    let
+        installAction =
+            UI.Icon.msOutline "play_circle" Nothing
+                |> UI.Icon.withClass "a-fex-fr-a-entry"
+                |> UI.Icon.toUI
+
+        deleteAction =
+            UI.Icon.msOutline "delete" Nothing
+                |> UI.Icon.withClass "a-fex-fr-a-entry"
+                |> UI.Icon.toUI
+
+        infoAction =
+            UI.Icon.msOutline "info" Nothing
+                |> UI.Icon.withClass "a-fex-fr-a-entry"
+                |> UI.Icon.toUI
+    in
+    row [ cl "a-fex-fr-actions" ]
+        [ infoAction
+        , installAction
+        , deleteAction
         ]
 
 
@@ -63,7 +161,7 @@ view model game _ =
 
 getWindowConfig : WM.WindowInfo -> WM.WindowConfig
 getWindowConfig _ =
-    { lenX = 600
+    { lenX = 500
     , lenY = 500
     , title = "File Explorer"
     , childBehavior = Nothing

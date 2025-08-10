@@ -1,6 +1,7 @@
 module Game.Model.File exposing
     ( File
     , Files
+    , filesToList
     , onAppStoreInstalledEvent
     , parse
     )
@@ -32,6 +33,15 @@ type alias File =
 
 
 -- Model
+
+
+filesToList : Files -> List File
+filesToList files =
+    Dict.toList files
+        |> List.map (\( _, file ) -> file)
+
+
+
 -- Model > Parser
 
 
