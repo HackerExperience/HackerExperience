@@ -1,6 +1,7 @@
 module Game.Model.Installation exposing
     ( Installation
     , Installations
+    , onAppStoreInstalledEvent
     , parse
     )
 
@@ -57,3 +58,20 @@ parseInstallation idxInstallation =
     , fileVersion = idxInstallation.file_version
     , memoryUsage = idxInstallation.memory_usage
     }
+
+
+
+-- Event handlers
+
+
+onAppStoreInstalledEvent : Events.AppstoreInstalled -> Installations -> Installations
+onAppStoreInstalledEvent event installations =
+    -- The `installation` object is optional in the `AppStoreInstalledEvent`. When absent, it means
+    -- the Installation already exists (and only the File was missing). When present, it means the
+    -- Installation was actually inserted by the AppStoreInstall process.
+    case event.installation of
+        OpenApi.Present idxInstallation ->
+            Dict.insert idxInstallation.id (parseInstallation idxInstallation) installations
+
+        OpenApi.Null ->
+            installations

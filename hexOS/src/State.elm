@@ -217,6 +217,16 @@ updateAction state action =
 updateEvent : State -> Event -> ( State, Effect Msg )
 updateEvent state event_ =
     case event_ of
+        Event.AppStoreInstalled event universe ->
+            let
+                game =
+                    getUniverse state universe
+
+                newModel =
+                    Game.onAppStoreInstalledEvent game event
+            in
+            ( replaceUniverse state newModel universe, Effect.none )
+
         Event.LogDeleted event universe ->
             let
                 game =

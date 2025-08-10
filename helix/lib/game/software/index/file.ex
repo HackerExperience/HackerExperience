@@ -59,7 +59,9 @@ defmodule Game.Index.File do
     Enum.map(index, &render_file(&1, entity_id))
   end
 
-  defp render_file(%File{} = file, entity_id) do
+  @spec render_file(File.t(), Entity.id()) ::
+          rendered_file
+  def render_file(%File{} = file, entity_id) do
     %{
       id: ID.to_external(file.id, entity_id, file.server_id),
       name: "#{file.name}",

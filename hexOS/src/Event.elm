@@ -11,6 +11,7 @@ import Json.Decode as JD
 
 type Event
     = IndexRequested Events.IndexRequested Universe
+    | AppStoreInstalled Events.AppstoreInstalled Universe
     | LogDeleted Events.LogDeleted Universe
     | LogEdited Events.LogEdited Universe
     | ProcessCompleted Events.ProcessCompleted Universe
@@ -56,6 +57,10 @@ dataDecoder universe eventName =
                 "index_requested" ->
                     JD.map (\x -> IndexRequested x universe)
                         Events.decodeIndexRequested
+
+                "appstore_installed" ->
+                    JD.map (\x -> AppStoreInstalled x universe)
+                        Events.decodeAppstoreInstalled
 
                 "log_deleted" ->
                     JD.map (\x -> LogDeleted x universe)

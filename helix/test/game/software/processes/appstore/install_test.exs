@@ -223,9 +223,8 @@ defmodule Game.Process.AppStore.InstallTest do
       assert proc_completed_event.data.data == "{\"software_type\":\"cracker\"}"
 
       appstore_installed_event = U.wait_sse_event!("appstore_installed")
-      assert appstore_installed_event.data.file_name
-      assert appstore_installed_event.data.installation_id
-      assert appstore_installed_event.data.file_id
+      assert appstore_installed_event.data.file
+      assert appstore_installed_event.data.installation
     end
   end
 end

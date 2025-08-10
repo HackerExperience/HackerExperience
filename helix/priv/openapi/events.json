@@ -350,27 +350,39 @@
       },
       "appstore_installed": {
         "properties": {
-          "file_id": {
-            "type": "string"
+          "file": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/IdxFile"
+              }
+            ],
+            "type": [
+              "null",
+              "object"
+            ]
           },
-          "file_name": {
-            "type": "string"
+          "installation": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/IdxInstallation"
+              }
+            ],
+            "type": [
+              "null",
+              "object"
+            ]
           },
-          "installation_id": {
+          "nip": {
             "type": "string"
-          },
-          "memory_usage": {
-            "type": "integer"
           },
           "process_id": {
             "type": "string"
           }
         },
         "required": [
-          "file_id",
-          "file_name",
-          "installation_id",
-          "memory_usage",
+          "file",
+          "installation",
+          "nip",
           "process_id"
         ],
         "type": "object"

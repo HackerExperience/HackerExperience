@@ -500,30 +500,125 @@ encodeFileDeleteFailed rec =
 decodeAppstoreInstalled : Json.Decode.Decoder API.Events.Types.AppstoreInstalled
 decodeAppstoreInstalled =
     Json.Decode.succeed
-        (\file_id file_name installation_id memory_usage process_id ->
-            { file_id = file_id
-            , file_name = file_name
-            , installation_id = installation_id
-            , memory_usage = memory_usage
+        (\file installation nip process_id ->
+            { file = file
+            , installation = installation
+            , nip = nip
             , process_id = process_id
             }
         )
         |> OpenApi.Common.jsonDecodeAndMap
-            (Json.Decode.field "file_id" (Json.Decode.map FileID Json.Decode.string))
-        |> OpenApi.Common.jsonDecodeAndMap
             (Json.Decode.field
-                "file_name"
-                Json.Decode.string
+                "file"
+                (Json.Decode.oneOf
+                    [ Json.Decode.map
+                        OpenApi.Common.Present
+                        (Json.Decode.succeed
+                            (\id name path size type_ version ->
+                                { id = id
+                                , name = name
+                                , path = path
+                                , size = size
+                                , type_ = type_
+                                , version = version
+                                }
+                            )
+                            |> OpenApi.Common.jsonDecodeAndMap
+                                (Json.Decode.field
+                                    "id"
+                                    Json.Decode.string
+                                )
+                            |> OpenApi.Common.jsonDecodeAndMap
+                                (Json.Decode.field
+                                    "name"
+                                    Json.Decode.string
+                                )
+                            |> OpenApi.Common.jsonDecodeAndMap
+                                (Json.Decode.field
+                                    "path"
+                                    Json.Decode.string
+                                )
+                            |> OpenApi.Common.jsonDecodeAndMap
+                                (Json.Decode.field
+                                    "size"
+                                    Json.Decode.int
+                                )
+                            |> OpenApi.Common.jsonDecodeAndMap
+                                (Json.Decode.field
+                                    "type"
+                                    Json.Decode.string
+                                )
+                            |> OpenApi.Common.jsonDecodeAndMap
+                                (Json.Decode.field
+                                    "version"
+                                    Json.Decode.int
+                                )
+                        )
+                    , Json.Decode.null OpenApi.Common.Null
+                    ]
+                )
             )
         |> OpenApi.Common.jsonDecodeAndMap
             (Json.Decode.field
-                "installation_id"
-                Json.Decode.string
+                "installation"
+                (Json.Decode.oneOf
+                    [ Json.Decode.map
+                        OpenApi.Common.Present
+                        (Json.Decode.succeed
+                            (\file_id file_type file_version id memory_usage ->
+                                { file_id =
+                                    file_id
+                                , file_type =
+                                    file_type
+                                , file_version =
+                                    file_version
+                                , id = id
+                                , memory_usage =
+                                    memory_usage
+                                }
+                            )
+                            |> OpenApi.Common.jsonDecodeAndMap
+                                (Json.Decode.field
+                                    "file_id"
+                                    (Json.Decode.oneOf
+                                        [ Json.Decode.map
+                                            OpenApi.Common.Present
+                                            Json.Decode.string
+                                        , Json.Decode.null
+                                            OpenApi.Common.Null
+                                        ]
+                                    )
+                                )
+                            |> OpenApi.Common.jsonDecodeAndMap
+                                (Json.Decode.field
+                                    "file_type"
+                                    Json.Decode.string
+                                )
+                            |> OpenApi.Common.jsonDecodeAndMap
+                                (Json.Decode.field
+                                    "file_version"
+                                    Json.Decode.int
+                                )
+                            |> OpenApi.Common.jsonDecodeAndMap
+                                (Json.Decode.field
+                                    "id"
+                                    Json.Decode.string
+                                )
+                            |> OpenApi.Common.jsonDecodeAndMap
+                                (Json.Decode.field
+                                    "memory_usage"
+                                    Json.Decode.int
+                                )
+                        )
+                    , Json.Decode.null
+                        OpenApi.Common.Null
+                    ]
+                )
             )
         |> OpenApi.Common.jsonDecodeAndMap
             (Json.Decode.field
-                "memory_usage"
-                Json.Decode.int
+                "nip"
+                (Json.Decode.map (\nip -> NIP.fromString nip) Json.Decode.string)
             )
         |> OpenApi.Common.jsonDecodeAndMap
             (Json.Decode.field
@@ -535,10 +630,43 @@ decodeAppstoreInstalled =
 encodeAppstoreInstalled : API.Events.Types.AppstoreInstalled -> Json.Encode.Value
 encodeAppstoreInstalled rec =
     Json.Encode.object
-        [ ( "file_id", Json.Encode.string (FileID.toValue rec.file_id) )
-        , ( "file_name", Json.Encode.string rec.file_name )
-        , ( "installation_id", Json.Encode.string rec.installation_id )
-        , ( "memory_usage", Json.Encode.int rec.memory_usage )
+        [ ( "file"
+          , case rec.file of
+                OpenApi.Common.Null ->
+                    Json.Encode.null
+
+                OpenApi.Common.Present value ->
+                    Json.Encode.object
+                        [ ( "id", Json.Encode.string value.id )
+                        , ( "name", Json.Encode.string value.name )
+                        , ( "path", Json.Encode.string value.path )
+                        , ( "size", Json.Encode.int value.size )
+                        , ( "type", Json.Encode.string value.type_ )
+                        , ( "version", Json.Encode.int value.version )
+                        ]
+          )
+        , ( "installation"
+          , case rec.installation of
+                OpenApi.Common.Null ->
+                    Json.Encode.null
+
+                OpenApi.Common.Present value ->
+                    Json.Encode.object
+                        [ ( "file_id"
+                          , case value.file_id of
+                                OpenApi.Common.Null ->
+                                    Json.Encode.null
+
+                                OpenApi.Common.Present value0 ->
+                                    Json.Encode.string value0
+                          )
+                        , ( "file_type", Json.Encode.string value.file_type )
+                        , ( "file_version", Json.Encode.int value.file_version )
+                        , ( "id", Json.Encode.string value.id )
+                        , ( "memory_usage", Json.Encode.int value.memory_usage )
+                        ]
+          )
+        , ( "nip", Json.Encode.string (NIP.toString rec.nip) )
         , ( "process_id", Json.Encode.string (ProcessID.toValue rec.process_id) )
         ]
 

@@ -48,7 +48,9 @@ defmodule Game.Index.Installation do
     Enum.map(index, &render_installation(&1, entity_id))
   end
 
-  defp render_installation(%Installation{} = installation, entity_id) do
+  @spec render_installation(Installation.t(), Entity.id()) ::
+          rendered_installation
+  def render_installation(%Installation{} = installation, entity_id) do
     maybe_file_id =
       if not is_nil(installation.file_id) do
         ID.to_external(installation.file_id, entity_id, installation.server_id)

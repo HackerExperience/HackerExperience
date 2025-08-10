@@ -9,6 +9,7 @@ defmodule Game.Events.AppStore do
     use Core.Event.Definition
 
     alias Game.{File, Installation, Process}
+    alias Game.Index
 
     defstruct [:file, :installation, :action, :process]
 
@@ -35,26 +36,35 @@ defmodule Game.Events.AppStore do
       def spec do
         selection(
           schema(%{
-            installation_id: external_id(),
-            file_id: external_id(),
-            file_name: binary(),
-            memory_usage: integer(),
+            nip: nip(),
+            file: maybe(Index.File.spec()),
+            installation: maybe(Index.Installation.spec()),
             process_id: external_id()
           }),
-          [:installation_id, :file_id, :file_name, :memory_usage, :process_id]
+          [:nip, :file, :installation, :process_id]
         )
       end
 
       def generate_payload(%{data: %{process: process, file: file, installation: installation}}) do
         entity_id = process.entity_id
         server_id = process.server_id
+        %{nip: nip} = Svc.NetworkConnection.fetch!(by_server_id: server_id)
+
+        file =
+          if file do
+            Index.File.render_file(file, process.entity_id)
+          end
+
+        installation =
+          if installation do
+            Index.Installation.render_installation(installation, process.entity_id)
+          end
 
         payload =
           %{
-            installation_id: installation.id |> ID.to_external(entity_id, server_id),
-            file_id: file.id |> ID.to_external(entity_id, server_id),
-            file_name: file.name,
-            memory_usage: installation.memory_usage,
+            nip: NIP.to_external(nip),
+            file: file,
+            installation: installation,
             process_id: process.id |> ID.to_external(entity_id, server_id)
           }
 

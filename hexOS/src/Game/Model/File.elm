@@ -2,6 +2,7 @@ module Game.Model.File exposing
     ( File
     , Files
     , findByTypeAndVersion
+    , onAppStoreInstalledEvent
     , parse
     )
 
@@ -9,6 +10,7 @@ import API.Events.Types as Events
 import Dict exposing (Dict)
 import Game.Model.FileID as FileID exposing (FileID, RawFileID)
 import Game.Model.SoftwareType as SoftwareType exposing (SoftwareType)
+import OpenApi.Common as OpenApi
 
 
 
@@ -58,3 +60,20 @@ parseFile idxFile =
     , type_ = SoftwareType.typeFromString idxFile.type_
     , version = idxFile.version
     }
+
+
+
+-- Event handlers
+
+
+onAppStoreInstalledEvent : Events.AppstoreInstalled -> Files -> Files
+onAppStoreInstalledEvent event files =
+    -- The `file` object is optional in the `AppStoreInstalledEvent`. When absent, it means the File
+    -- already exists (and only the Installation was missing). When present, it means the File was
+    -- actually inserted by the AppStoreInstall process.
+    case event.file of
+        OpenApi.Present idxFile ->
+            Dict.insert idxFile.id (parseFile idxFile) files
+
+        OpenApi.Null ->
+            files

@@ -8,6 +8,7 @@ module Game.Model.Server exposing
     , invalidGateway
     , invalidServer
     , listLogs
+    , onAppStoreInstalledEvent
     , onLogDeletedEvent
     , onLogEditedEvent
     , onProcessCompletedEvent
@@ -326,6 +327,14 @@ handleProcessOperationLog operation server =
 
 
 -- Event handlers
+
+
+onAppStoreInstalledEvent : Events.AppstoreInstalled -> Server -> Server
+onAppStoreInstalledEvent event server =
+    { server
+        | files = File.onAppStoreInstalledEvent event server.files
+        , installations = Installation.onAppStoreInstalledEvent event server.installations
+    }
 
 
 onLogDeletedEvent : Events.LogDeleted -> Server -> Server
