@@ -1,7 +1,7 @@
 defmodule Core.Webserver.Belt.Session do
   @env Mix.env()
 
-  # TODO: Maybe convert the session and session.data maps in proper structs
+  # TODO: Maybe convert the session and session.data maps in proper structs (YES PLEASE)
 
   alias Feeb.DB
   alias Webserver.Conveyor

@@ -67,6 +67,8 @@ defmodule Game.Process do
   @derived_fields [:id]
 
   def new(params) do
+    # TODO: Format `resources` so it doesn't store the full Decimal struct (and convert it back on
+    # `format_resources/3`)
     params
     |> validate_data_struct!()
     |> Schema.cast()

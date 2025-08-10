@@ -4,6 +4,8 @@ defmodule Game.Events.Process do
     `ProcessCreatedEvent` is fired when a process is created. This event has an initial optimistic
     behaviour, so it is fired in two different moments.
 
+    # TODO: I think I don't need this confirmation step anymore. Just Created / CreateFailed
+    # Double check, but I think the entire process creation (execution) step is sync.
     First, it is fired from ProcessAction, right after the process is created and inserted in the
     database. At this stage, the Process is said to be optimistic (unconfirmed) because the server
     may not be able to allocate resources to this process.
@@ -12,6 +14,7 @@ defmodule Game.Events.Process do
     successful and the process creation has been confirmed. We only publish to the Client if the
     process is confirmed as created.
 
+    # TODO: There is no need for CreateFailedEvent to exist at all, given all is sync
     If creation fails, we emit the `ProcessCreateFailedEvent`.
     """
 

@@ -152,6 +152,8 @@ defmodule Game.Process.TOP do
   # GenServer API
 
   def init({universe, universe_shard_id, server_id}) do
+    Logger.debug("Starting TOP for server #{server_id}")
+
     # PS: shard_id may not be necessary here, but overall I think it's better to relay the full ctx
     Elixir.Process.put(:helix_universe, universe)
     Elixir.Process.put(:helix_universe_shard_id, universe_shard_id)
@@ -339,6 +341,7 @@ defmodule Game.Process.TOP do
   @spec run_schedule(state, [Process.t()], scheduler_run_reason, [Event.t()]) ::
           %{state: state, dropped: [Process.t()], paused: [Process.t()]}
   defp run_schedule(state, processes, reason, events) when is_list(processes) do
+    Logger.debug("Scheduling #{length(processes)} processes...")
     {duration, result} = :timer.tc(fn -> do_run_schedule(state, processes, reason) end)
     duration = Renatils.Timer.format_duration(duration)
 

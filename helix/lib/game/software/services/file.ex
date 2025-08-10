@@ -108,6 +108,8 @@ defmodule Game.Services.File do
   end
 
   def delete(%File{} = file) do
+    # NOTE: When deleting a File, I'm not changing anything in the Installations table. This is not
+    # technically necessary, but I might benefit from nullifying the `installations.file_id` column.
     DB.delete(file)
   end
 
