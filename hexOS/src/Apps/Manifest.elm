@@ -4,6 +4,7 @@ module Apps.Manifest exposing (..)
 type Manifest
     = InvalidApp
     | AppStoreApp
+    | FileExplorerApp
     | LogViewerApp
     | RemoteAccessApp
     | DemoApp
@@ -18,6 +19,9 @@ getName app =
     case app of
         AppStoreApp ->
             "AppStore"
+
+        FileExplorerApp ->
+            "File Explorer"
 
         LogViewerApp ->
             "Log Viewer"
@@ -46,6 +50,9 @@ getIcon app =
     case app of
         AppStoreApp ->
             "install_desktop"
+
+        FileExplorerApp ->
+            "folder"
 
         LogViewerApp ->
             "list_alt"

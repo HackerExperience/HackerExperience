@@ -12,6 +12,7 @@ module OS exposing
 
 import Apps.AppStore as AppStore
 import Apps.Demo as Demo
+import Apps.FileExplorer as FileExplorer
 import Apps.Input as App
 import Apps.LogViewer as LogViewer
 import Apps.LogViewer.LogEditPopup as LogEditPopup
@@ -643,6 +644,28 @@ dispatchUpdateApp state model appMsg =
                 _ ->
                     ( model, Effect.none )
 
+        Apps.FileExplorerMsg _ (FileExplorer.ToOS busAction) ->
+            ( model, Effect.msgToCmd (PerformAction busAction) )
+
+        Apps.FileExplorerMsg _ (FileExplorer.ToCtxMenu ctxMenuMsg) ->
+            ( model, Effect.msgToCmd (PerformAction (OS.Bus.ToCtxMenu ctxMenuMsg)) )
+
+        Apps.FileExplorerMsg appId subMsg ->
+            case getAppModel model.appModels appId of
+                Apps.FileExplorerModel appModel ->
+                    updateApp
+                        state
+                        model
+                        appId
+                        appModel
+                        subMsg
+                        Apps.FileExplorerModel
+                        Apps.FileExplorerMsg
+                        FileExplorer.update
+
+                _ ->
+                    ( model, Effect.none )
+
         Apps.LogViewerMsg _ (LogViewer.ToOS busAction) ->
             ( model, Effect.msgToCmd (PerformAction busAction) )
 
@@ -1058,6 +1081,9 @@ getWindowInnerContent { ctxMenu } appId _ appModel universe =
 
         Apps.AppStoreModel model ->
             Html.map (Apps.AppStoreMsg appId) <| AppStore.view model universe ctxMenu
+
+        Apps.FileExplorerModel model ->
+            Html.map (Apps.FileExplorerMsg appId) <| FileExplorer.view model universe ctxMenu
 
         Apps.LogViewerModel model ->
             Html.map (Apps.LogViewerMsg appId) <| LogViewer.view model universe ctxMenu

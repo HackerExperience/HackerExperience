@@ -18,6 +18,7 @@ Apps.Types... something to consider for the future.
 
 import Apps.AppStore as AppStore
 import Apps.Demo as Demo
+import Apps.FileExplorer as FileExplorer
 import Apps.Input as App
 import Apps.LogViewer as LogViewer
 import Apps.LogViewer.LogEditPopup as LogEditPopup
@@ -45,6 +46,9 @@ willOpen app windowInfo input =
 
         App.AppStoreApp ->
             AppStore.willOpen windowInfo input
+
+        App.FileExplorerApp ->
+            FileExplorer.willOpen windowInfo input
 
         App.LogViewerApp ->
             LogViewer.willOpen windowInfo input
@@ -117,6 +121,12 @@ didOpen app appId windowInfo input =
                 Apps.AppStoreMsg
                 AppStore.didOpen
 
+        App.FileExplorerApp ->
+            wrapMe
+                Apps.FileExplorerModel
+                Apps.FileExplorerMsg
+                FileExplorer.didOpen
+
         App.LogViewerApp ->
             wrapMe
                 Apps.LogViewerModel
@@ -180,6 +190,12 @@ didOpenChild parentId parentModel childInfo windowInfo input =
                 Apps.AppStoreMsg
                 (AppStore.didOpenChild model)
 
+        Apps.FileExplorerModel model ->
+            wrapMe
+                Apps.FileExplorerModel
+                Apps.FileExplorerMsg
+                (FileExplorer.didOpenChild model)
+
         Apps.LogViewerModel model ->
             wrapMe
                 Apps.LogViewerModel
@@ -218,6 +234,9 @@ willClose window appModel =
 
         Apps.AppStoreModel model ->
             AppStore.willClose window.appId model window
+
+        Apps.FileExplorerModel model ->
+            FileExplorer.willClose window.appId model window
 
         Apps.LogViewerModel model ->
             LogViewer.willClose window.appId model window
@@ -264,6 +283,12 @@ didCloseChild parentId parentModel childInfo parentWindow =
                 Apps.AppStoreMsg
                 (AppStore.didCloseChild model)
 
+        Apps.FileExplorerModel model ->
+            wrapMe
+                Apps.FileExplorerModel
+                Apps.FileExplorerMsg
+                (FileExplorer.didCloseChild model)
+
         Apps.LogViewerModel model ->
             wrapMe
                 Apps.LogViewerModel
@@ -303,6 +328,9 @@ willFocus app appId window =
         App.AppStoreApp ->
             AppStore.willFocus appId window
 
+        App.FileExplorerApp ->
+            FileExplorer.willFocus appId window
+
         App.LogViewerApp ->
             LogViewer.willFocus appId window
 
@@ -331,6 +359,9 @@ getWindowConfig windowInfo =
 
         App.AppStoreApp ->
             AppStore.getWindowConfig windowInfo
+
+        App.FileExplorerApp ->
+            FileExplorer.getWindowConfig windowInfo
 
         App.LogViewerApp ->
             LogViewer.getWindowConfig windowInfo
