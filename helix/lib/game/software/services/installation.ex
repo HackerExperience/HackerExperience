@@ -20,7 +20,7 @@ defmodule Game.Services.Installation do
   @doc """
   Returns a list of File matching the given filters.
   """
-  @spec list(Entity.id(), list, list) ::
+  @spec list(Server.id(), list, list) ::
           [Installation.t()]
   def list(%Server.ID{} = server_id, filter_params, opts \\ []) do
     filters = [

@@ -3,7 +3,7 @@ defmodule Game.Index.Software do
   alias Game.{Software}
 
   @type index ::
-          %{manifest: list()}
+          %{manifest: map()}
 
   @type rendered_index ::
           %{manifest: map()}
