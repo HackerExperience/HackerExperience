@@ -19,7 +19,6 @@ import Maybe.Extra as Maybe
 import OS.AppID exposing (AppID)
 import OS.Bus
 import OS.CtxMenu
-import OS.CtxMenu.Menus as CtxMenu
 import UI exposing (UI, cl, clIf, col, div, row, text)
 import UI.Icon
 import WM

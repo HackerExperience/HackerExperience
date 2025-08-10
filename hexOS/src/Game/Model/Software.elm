@@ -10,7 +10,6 @@ module Game.Model.Software exposing
 import API.Events.Types as Events
 import Dict exposing (Dict)
 import Game.Model.File exposing (Files)
-import Game.Model.FileID exposing (FileID)
 import Game.Model.Installation exposing (Installations)
 import Game.Model.ProcessID exposing (ProcessID)
 import Game.Model.ProcessOperation as Operation exposing (Operation)

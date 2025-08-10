@@ -5,7 +5,7 @@ module Game.Model.ProcessOperation exposing
 
 import Game.Model.LogID exposing (LogID)
 import Game.Model.ProcessID exposing (ProcessID)
-import Game.Model.SoftwareType as SoftwareType exposing (SoftwareType)
+import Game.Model.SoftwareType exposing (SoftwareType)
 
 
 {-| NOTE: Could this ever be replaced by ProcessType???
