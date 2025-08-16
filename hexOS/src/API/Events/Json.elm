@@ -514,8 +514,10 @@ decodeAppstoreInstalled =
                     [ Json.Decode.map
                         OpenApi.Common.Present
                         (Json.Decode.succeed
-                            (\id name path size type_ version ->
+                            (\id installation_id name path size type_ version ->
                                 { id = id
+                                , installation_id =
+                                    installation_id
                                 , name = name
                                 , path = path
                                 , size = size
@@ -527,6 +529,18 @@ decodeAppstoreInstalled =
                                 (Json.Decode.field
                                     "id"
                                     Json.Decode.string
+                                )
+                            |> OpenApi.Common.jsonDecodeAndMap
+                                (Json.Decode.field
+                                    "installation_id"
+                                    (Json.Decode.oneOf
+                                        [ Json.Decode.map
+                                            OpenApi.Common.Present
+                                            Json.Decode.string
+                                        , Json.Decode.null
+                                            OpenApi.Common.Null
+                                        ]
+                                    )
                                 )
                             |> OpenApi.Common.jsonDecodeAndMap
                                 (Json.Decode.field
@@ -638,6 +652,14 @@ encodeAppstoreInstalled rec =
                 OpenApi.Common.Present value ->
                     Json.Encode.object
                         [ ( "id", Json.Encode.string value.id )
+                        , ( "installation_id"
+                          , case value.installation_id of
+                                OpenApi.Common.Null ->
+                                    Json.Encode.null
+
+                                OpenApi.Common.Present value0 ->
+                                    Json.Encode.string value0
+                          )
                         , ( "name", Json.Encode.string value.name )
                         , ( "path", Json.Encode.string value.path )
                         , ( "size", Json.Encode.int value.size )
@@ -1105,8 +1127,9 @@ encodeIdxGateway rec =
 decodeIdxFile : Json.Decode.Decoder API.Events.Types.IdxFile
 decodeIdxFile =
     Json.Decode.succeed
-        (\id name path size type_ version ->
+        (\id installation_id name path size type_ version ->
             { id = id
+            , installation_id = installation_id
             , name = name
             , path = path
             , size = size
@@ -1117,7 +1140,22 @@ decodeIdxFile =
         |> OpenApi.Common.jsonDecodeAndMap
             (Json.Decode.field "id" Json.Decode.string)
         |> OpenApi.Common.jsonDecodeAndMap
-            (Json.Decode.field "name" Json.Decode.string)
+            (Json.Decode.field
+                "installation_id"
+                (Json.Decode.oneOf
+                    [ Json.Decode.map
+                        OpenApi.Common.Present
+                        Json.Decode.string
+                    , Json.Decode.null
+                        OpenApi.Common.Null
+                    ]
+                )
+            )
+        |> OpenApi.Common.jsonDecodeAndMap
+            (Json.Decode.field
+                "name"
+                Json.Decode.string
+            )
         |> OpenApi.Common.jsonDecodeAndMap
             (Json.Decode.field
                 "path"
@@ -1144,6 +1182,14 @@ encodeIdxFile : API.Events.Types.IdxFile -> Json.Encode.Value
 encodeIdxFile rec =
     Json.Encode.object
         [ ( "id", Json.Encode.string rec.id )
+        , ( "installation_id"
+          , case rec.installation_id of
+                OpenApi.Common.Null ->
+                    Json.Encode.null
+
+                OpenApi.Common.Present value ->
+                    Json.Encode.string value
+          )
         , ( "name", Json.Encode.string rec.name )
         , ( "path", Json.Encode.string rec.path )
         , ( "size", Json.Encode.int rec.size )

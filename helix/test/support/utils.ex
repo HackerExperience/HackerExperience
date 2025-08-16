@@ -6,7 +6,7 @@ defmodule Test.Utils do
   defdelegate wait_sse_event!(event_name), to: U.SSEListener
 
   # Core.ID
-  defdelegate to_eid(entity_id, object, dom_id \\ nil, sub_id \\ nil), to: U.ID, as: :to_eid
+  defdelegate to_eid(object_id, entity_id, dom_id \\ nil, sub_id \\ nil), to: U.ID, as: :to_eid
   defdelegate from_eid(external_id, entity_id), to: U.ID, as: :from_external_id
   defdelegate from_external_id(external_id, entity_id), to: U.ID
 

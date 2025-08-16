@@ -40,6 +40,10 @@
           "id": {
             "type": "string"
           },
+          "installation_id": {
+            "nullable": true,
+            "type": "string"
+          },
           "name": {
             "type": "string"
           },
@@ -62,6 +66,7 @@
         },
         "required": [
           "id",
+          "installation_id",
           "name",
           "path",
           "size",

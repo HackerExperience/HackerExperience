@@ -118,6 +118,7 @@ type alias AppstoreInstalled =
     { file :
         OpenApi.Common.Nullable
             { id : String
+            , installation_id : OpenApi.Common.Nullable String
             , name : String
             , path : String
             , size : Int
@@ -213,6 +214,7 @@ type alias IdxGateway =
 
 type alias IdxFile =
     { id : String
+    , installation_id : OpenApi.Common.Nullable String
     , name : String
     , path : String
     , size : Int

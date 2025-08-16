@@ -78,12 +78,14 @@ defmodule Game.Index.Server do
   def gateway_index(%Entity.ID{} = entity_id, server) do
     %{nip: nip} = Svc.NetworkConnection.fetch!(by_server_id: server.id)
 
+    installations = Index.Installation.index(server.id)
+
     %{
       id: server.id,
       nip: nip,
-      installations: Index.Installation.index(server.id),
+      installations: installations,
       tunnels: Index.Tunnel.index(nip),
-      files: Index.File.index(entity_id, server.id),
+      files: Index.File.index(entity_id, server.id, installations),
       logs: Index.Log.index(entity_id, server.id),
       processes: Index.Process.index(entity_id, server.id)
     }
@@ -94,7 +96,7 @@ defmodule Game.Index.Server do
   def endpoint_index(%Entity.ID{} = entity_id, server_id, nip) do
     %{
       nip: nip,
-      files: Index.File.index(entity_id, server_id),
+      files: Index.File.index(entity_id, server_id, []),
       logs: Index.Log.index(entity_id, server_id),
       processes: Index.Process.index(entity_id, server_id)
     }

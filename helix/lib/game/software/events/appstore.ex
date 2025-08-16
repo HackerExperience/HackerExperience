@@ -32,7 +32,6 @@ defmodule Game.Events.AppStore do
     defmodule Publishable do
       use Core.Event.Publishable.Definition
 
-      # TODO: Enhance to include full File and Installation (Client needs both)
       def spec do
         selection(
           schema(%{
@@ -50,9 +49,11 @@ defmodule Game.Events.AppStore do
         server_id = process.server_id
         %{nip: nip} = Svc.NetworkConnection.fetch!(by_server_id: server_id)
 
+        # TODO: Always return the full file and full installation, inconditionally. It will simplify
+        # the client-side logic.
         file =
           if file do
-            Index.File.render_file(file, process.entity_id)
+            Index.File.render_file({file, nil}, process.entity_id)
           end
 
         installation =
