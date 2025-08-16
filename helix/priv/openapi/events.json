@@ -356,6 +356,18 @@
       "appstore_installed": {
         "properties": {
           "file": {
+            "$ref": "#/components/schemas/IdxFile"
+          },
+          "installation": {
+            "$ref": "#/components/schemas/IdxInstallation"
+          },
+          "nip": {
+            "type": "string"
+          },
+          "process_id": {
+            "type": "string"
+          },
+          "tmp_file": {
             "allOf": [
               {
                 "$ref": "#/components/schemas/IdxFile"
@@ -365,23 +377,6 @@
               "null",
               "object"
             ]
-          },
-          "installation": {
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/IdxInstallation"
-              }
-            ],
-            "type": [
-              "null",
-              "object"
-            ]
-          },
-          "nip": {
-            "type": "string"
-          },
-          "process_id": {
-            "type": "string"
           }
         },
         "required": [

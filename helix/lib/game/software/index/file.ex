@@ -17,7 +17,8 @@ defmodule Game.Index.File do
            type: binary(),
            version: integer(),
            size: integer(),
-           path: binary()
+           path: binary(),
+           installation_id: ID.external() | nil
          }
 
   def spec do

@@ -342,8 +342,8 @@ handleProcessOperationLog operation server =
 onAppStoreInstalledEvent : Events.AppstoreInstalled -> Server -> Server
 onAppStoreInstalledEvent event server =
     { server
-        | files = File.onAppStoreInstalledEvent event server.files
-        , installations = Installation.onAppStoreInstalledEvent event server.installations
+        | files = File.onAppStoreInstalledEvent event.file server.files
+        , installations = Installation.onAppStoreInstalledEvent event.installation server.installations
     }
 
 

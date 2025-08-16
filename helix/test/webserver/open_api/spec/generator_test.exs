@@ -178,9 +178,9 @@ defmodule Webserver.OpenApi.Spec.GeneratorTest do
 
       # Supports a nullable Ref
       appstore_installed = Map.fetch!(schemas, "appstore_installed")
-      file_property = appstore_installed.properties.file
-      assert Enum.sort(file_property.type) == Enum.sort([:object, :null])
-      assert [%{"$ref" => ref}] = file_property.allOf
+      tmp_file_property = appstore_installed.properties.tmp_file
+      assert Enum.sort(tmp_file_property.type) == Enum.sort([:object, :null])
+      assert [%{"$ref" => ref}] = tmp_file_property.allOf
       assert ref == "#/components/schemas/IdxFile"
     end
   end

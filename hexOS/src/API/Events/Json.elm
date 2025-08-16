@@ -500,29 +500,53 @@ encodeFileDeleteFailed rec =
 decodeAppstoreInstalled : Json.Decode.Decoder API.Events.Types.AppstoreInstalled
 decodeAppstoreInstalled =
     Json.Decode.succeed
-        (\file installation nip process_id ->
+        (\file installation nip process_id tmp_file ->
             { file = file
             , installation = installation
             , nip = nip
             , process_id = process_id
+            , tmp_file = tmp_file
             }
         )
         |> OpenApi.Common.jsonDecodeAndMap
+            (Json.Decode.field "file" decodeIdxFile)
+        |> OpenApi.Common.jsonDecodeAndMap
             (Json.Decode.field
-                "file"
+                "installation"
+                decodeIdxInstallation
+            )
+        |> OpenApi.Common.jsonDecodeAndMap
+            (Json.Decode.field
+                "nip"
+                (Json.Decode.map (\nip -> NIP.fromString nip) Json.Decode.string)
+            )
+        |> OpenApi.Common.jsonDecodeAndMap
+            (Json.Decode.field
+                "process_id"
+                (Json.Decode.map ProcessID Json.Decode.string)
+            )
+        |> OpenApi.Common.jsonDecodeAndMap
+            (OpenApi.Common.decodeOptionalField
+                "tmp_file"
                 (Json.Decode.oneOf
                     [ Json.Decode.map
                         OpenApi.Common.Present
                         (Json.Decode.succeed
                             (\id installation_id name path size type_ version ->
-                                { id = id
+                                { id =
+                                    id
                                 , installation_id =
                                     installation_id
-                                , name = name
-                                , path = path
-                                , size = size
-                                , type_ = type_
-                                , version = version
+                                , name =
+                                    name
+                                , path =
+                                    path
+                                , size =
+                                    size
+                                , type_ =
+                                    type_
+                                , version =
+                                    version
                                 }
                             )
                             |> OpenApi.Common.jsonDecodeAndMap
@@ -568,129 +592,51 @@ decodeAppstoreInstalled =
                                     Json.Decode.int
                                 )
                         )
-                    , Json.Decode.null OpenApi.Common.Null
-                    ]
-                )
-            )
-        |> OpenApi.Common.jsonDecodeAndMap
-            (Json.Decode.field
-                "installation"
-                (Json.Decode.oneOf
-                    [ Json.Decode.map
-                        OpenApi.Common.Present
-                        (Json.Decode.succeed
-                            (\file_id file_type file_version id memory_usage ->
-                                { file_id =
-                                    file_id
-                                , file_type =
-                                    file_type
-                                , file_version =
-                                    file_version
-                                , id = id
-                                , memory_usage =
-                                    memory_usage
-                                }
-                            )
-                            |> OpenApi.Common.jsonDecodeAndMap
-                                (Json.Decode.field
-                                    "file_id"
-                                    (Json.Decode.oneOf
-                                        [ Json.Decode.map
-                                            OpenApi.Common.Present
-                                            Json.Decode.string
-                                        , Json.Decode.null
-                                            OpenApi.Common.Null
-                                        ]
-                                    )
-                                )
-                            |> OpenApi.Common.jsonDecodeAndMap
-                                (Json.Decode.field
-                                    "file_type"
-                                    Json.Decode.string
-                                )
-                            |> OpenApi.Common.jsonDecodeAndMap
-                                (Json.Decode.field
-                                    "file_version"
-                                    Json.Decode.int
-                                )
-                            |> OpenApi.Common.jsonDecodeAndMap
-                                (Json.Decode.field
-                                    "id"
-                                    Json.Decode.string
-                                )
-                            |> OpenApi.Common.jsonDecodeAndMap
-                                (Json.Decode.field
-                                    "memory_usage"
-                                    Json.Decode.int
-                                )
-                        )
                     , Json.Decode.null
                         OpenApi.Common.Null
                     ]
                 )
-            )
-        |> OpenApi.Common.jsonDecodeAndMap
-            (Json.Decode.field
-                "nip"
-                (Json.Decode.map (\nip -> NIP.fromString nip) Json.Decode.string)
-            )
-        |> OpenApi.Common.jsonDecodeAndMap
-            (Json.Decode.field
-                "process_id"
-                (Json.Decode.map ProcessID Json.Decode.string)
             )
 
 
 encodeAppstoreInstalled : API.Events.Types.AppstoreInstalled -> Json.Encode.Value
 encodeAppstoreInstalled rec =
     Json.Encode.object
-        [ ( "file"
-          , case rec.file of
-                OpenApi.Common.Null ->
-                    Json.Encode.null
+        (List.filterMap
+            Basics.identity
+            [ Just ( "file", encodeIdxFile rec.file )
+            , Just ( "installation", encodeIdxInstallation rec.installation )
+            , Just ( "nip", Json.Encode.string (NIP.toString rec.nip) )
+            , Just ( "process_id", Json.Encode.string (ProcessID.toValue rec.process_id) )
+            , Maybe.map
+                (\mapUnpack ->
+                    ( "tmp_file"
+                    , case mapUnpack of
+                        OpenApi.Common.Null ->
+                            Json.Encode.null
 
-                OpenApi.Common.Present value ->
-                    Json.Encode.object
-                        [ ( "id", Json.Encode.string value.id )
-                        , ( "installation_id"
-                          , case value.installation_id of
-                                OpenApi.Common.Null ->
-                                    Json.Encode.null
+                        OpenApi.Common.Present value ->
+                            Json.Encode.object
+                                [ ( "id", Json.Encode.string value.id )
+                                , ( "installation_id"
+                                  , case value.installation_id of
+                                        OpenApi.Common.Null ->
+                                            Json.Encode.null
 
-                                OpenApi.Common.Present value0 ->
-                                    Json.Encode.string value0
-                          )
-                        , ( "name", Json.Encode.string value.name )
-                        , ( "path", Json.Encode.string value.path )
-                        , ( "size", Json.Encode.int value.size )
-                        , ( "type", Json.Encode.string value.type_ )
-                        , ( "version", Json.Encode.int value.version )
-                        ]
-          )
-        , ( "installation"
-          , case rec.installation of
-                OpenApi.Common.Null ->
-                    Json.Encode.null
-
-                OpenApi.Common.Present value ->
-                    Json.Encode.object
-                        [ ( "file_id"
-                          , case value.file_id of
-                                OpenApi.Common.Null ->
-                                    Json.Encode.null
-
-                                OpenApi.Common.Present value0 ->
-                                    Json.Encode.string value0
-                          )
-                        , ( "file_type", Json.Encode.string value.file_type )
-                        , ( "file_version", Json.Encode.int value.file_version )
-                        , ( "id", Json.Encode.string value.id )
-                        , ( "memory_usage", Json.Encode.int value.memory_usage )
-                        ]
-          )
-        , ( "nip", Json.Encode.string (NIP.toString rec.nip) )
-        , ( "process_id", Json.Encode.string (ProcessID.toValue rec.process_id) )
-        ]
+                                        OpenApi.Common.Present value0 ->
+                                            Json.Encode.string value0
+                                  )
+                                , ( "name", Json.Encode.string value.name )
+                                , ( "path", Json.Encode.string value.path )
+                                , ( "size", Json.Encode.int value.size )
+                                , ( "type", Json.Encode.string value.type_ )
+                                , ( "version", Json.Encode.int value.version )
+                                ]
+                    )
+                )
+                rec.tmp_file
+            ]
+        )
 
 
 decodeAppstoreInstallFailed : Json.Decode.Decoder API.Events.Types.AppstoreInstallFailed

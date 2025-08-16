@@ -46,7 +46,7 @@ defmodule Game.Process.AppStore.InstallTest do
       assert event.data.process == process
     end
 
-    test "creates only the file when a matching installation already exists" do
+    test "creates and installs file when only a matching installation exists" do
       server = Setup.server!()
       appstore_config = Software.get!(:cracker).config.appstore
 
@@ -71,7 +71,7 @@ defmodule Game.Process.AppStore.InstallTest do
         assert [] == DB.all(File)
       end)
 
-      # With this context, AppStoreInstallProcess should only download the file to the server
+      # With this context, AppStoreInstallProcess should still download and install file
       assert {:ok, event} = U.processable_on_complete(process)
 
       # After the process has completed, we now have this new File present in the server
@@ -82,13 +82,14 @@ defmodule Game.Process.AppStore.InstallTest do
       assert file.version == appstore_config.version
       assert file.version == appstore_config.size
 
-      # Installation remains unchanged
-      assert [installation] == DB.all(Installation)
+      # There are now two installations
+      assert [_installation_1, _installation_2] = DB.all(Installation)
 
       # Event contains the expected data
-      assert event.data.action == :download_only
+      assert event.data.action == :download_and_install
       assert event.data.file == file
-      refute event.data.installation
+      assert event.data.installation
+      assert event.data.installation.file_id == file.id
     end
 
     test "creates only the installation when a matching file already exists" do
@@ -126,7 +127,7 @@ defmodule Game.Process.AppStore.InstallTest do
 
       # Event contains the expected data
       assert event.data.action == :install_only
-      refute event.data.file
+      assert event.data.file.id == file.id
       assert event.data.installation == installation
     end
 

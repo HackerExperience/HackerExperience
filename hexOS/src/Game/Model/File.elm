@@ -78,14 +78,6 @@ parseFile idxFile =
 -- Event handlers
 
 
-onAppStoreInstalledEvent : Events.AppstoreInstalled -> Files -> Files
-onAppStoreInstalledEvent event files =
-    -- The `file` object is optional in the `AppStoreInstalledEvent`. When absent, it means the File
-    -- already exists (and only the Installation was missing). When present, it means the File was
-    -- actually inserted by the AppStoreInstall process.
-    case event.file of
-        OpenApi.Present idxFile ->
-            Dict.insert idxFile.id (parseFile idxFile) files
-
-        OpenApi.Null ->
-            files
+onAppStoreInstalledEvent : Events.IdxFile -> Files -> Files
+onAppStoreInstalledEvent idxFile files =
+    Dict.insert idxFile.id (parseFile idxFile) files

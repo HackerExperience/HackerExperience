@@ -63,19 +63,11 @@ defmodule Game.Process.AppStore.Install do
       end
     end
 
-    defp apply_action(server, entity, :download_only, %{software: software}) do
-      file_params = get_software_creation_params(software)
-
-      with {:ok, file} <- Svc.File.create_file(entity.id, server.id, file_params) do
-        {:ok, %{file: file, installation: nil}}
-      end
-    end
-
     defp apply_action(_server, _entity, :install_only, %{matching_files: matching_files}) do
       file = List.first(matching_files)
 
       with {:ok, installation} <- Svc.File.install_file(file) do
-        {:ok, %{file: nil, installation: installation}}
+        {:ok, %{file: file, installation: installation}}
       end
     end
 

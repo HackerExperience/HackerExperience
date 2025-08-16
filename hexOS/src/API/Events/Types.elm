@@ -115,26 +115,22 @@ type alias FileDeleteFailed =
 
 
 type alias AppstoreInstalled =
-    { file :
-        OpenApi.Common.Nullable
-            { id : String
-            , installation_id : OpenApi.Common.Nullable String
-            , name : String
-            , path : String
-            , size : Int
-            , type_ : String
-            , version : Int
-            }
-    , installation :
-        OpenApi.Common.Nullable
-            { file_id : OpenApi.Common.Nullable String
-            , file_type : String
-            , file_version : Int
-            , id : String
-            , memory_usage : Int
-            }
+    { file : IdxFile
+    , installation : IdxInstallation
     , nip : NIP
     , process_id : ProcessID
+    , tmp_file :
+        Maybe
+            (OpenApi.Common.Nullable
+                { id : String
+                , installation_id : OpenApi.Common.Nullable String
+                , name : String
+                , path : String
+                , size : Int
+                , type_ : String
+                , version : Int
+                }
+            )
     }
 
 

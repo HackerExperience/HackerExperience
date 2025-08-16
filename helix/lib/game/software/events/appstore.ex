@@ -14,15 +14,15 @@ defmodule Game.Events.AppStore do
     defstruct [:file, :installation, :action, :process]
 
     @type t :: %__MODULE__{
-            file: File.t() | nil,
-            installation: Installation.t() | nil,
-            action: :download_and_install | :download_only | :install_only,
+            file: File.t(),
+            installation: Installation.t(),
+            action: :download_and_install | :install_only,
             process: Process.t(:appstore_install)
           }
 
     @name :appstore_installed
 
-    @valid_actions [:download_and_install, :download_only, :install_only]
+    @valid_actions [:download_and_install, :install_only]
 
     def new(installation, file, action, process = %Process{}) when action in @valid_actions do
       %__MODULE__{installation: installation, file: file, action: action, process: process}
@@ -36,9 +36,13 @@ defmodule Game.Events.AppStore do
         selection(
           schema(%{
             nip: nip(),
-            file: maybe(Index.File.spec()),
-            installation: maybe(Index.Installation.spec()),
-            process_id: external_id()
+            file: Index.File.spec(),
+            installation: Index.Installation.spec(),
+            process_id: external_id(),
+            # Please ignore `tmp_file`. It's here temporarily until another Spec ends up having
+            # the nature of `maybe(spec)`. We want to keep that in place in order to retain
+            # test coverage (and I'm too lazy to create a test-specific spec for now).
+            tmp_file: maybe(Index.File.spec())
           }),
           [:nip, :file, :installation, :process_id]
         )
@@ -49,23 +53,11 @@ defmodule Game.Events.AppStore do
         server_id = process.server_id
         %{nip: nip} = Svc.NetworkConnection.fetch!(by_server_id: server_id)
 
-        # TODO: Always return the full file and full installation, inconditionally. It will simplify
-        # the client-side logic.
-        file =
-          if file do
-            Index.File.render_file({file, nil}, process.entity_id)
-          end
-
-        installation =
-          if installation do
-            Index.Installation.render_installation(installation, process.entity_id)
-          end
-
         payload =
           %{
             nip: NIP.to_external(nip),
-            file: file,
-            installation: installation,
+            file: Index.File.render_file({file, installation.id}, entity_id),
+            installation: Index.Installation.render_installation(installation, entity_id),
             process_id: process.id |> ID.to_external(entity_id, server_id)
           }
 

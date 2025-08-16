@@ -64,14 +64,6 @@ parseInstallation idxInstallation =
 -- Event handlers
 
 
-onAppStoreInstalledEvent : Events.AppstoreInstalled -> Installations -> Installations
-onAppStoreInstalledEvent event installations =
-    -- The `installation` object is optional in the `AppStoreInstalledEvent`. When absent, it means
-    -- the Installation already exists (and only the File was missing). When present, it means the
-    -- Installation was actually inserted by the AppStoreInstall process.
-    case event.installation of
-        OpenApi.Present idxInstallation ->
-            Dict.insert idxInstallation.id (parseInstallation idxInstallation) installations
-
-        OpenApi.Null ->
-            installations
+onAppStoreInstalledEvent : Events.IdxInstallation -> Installations -> Installations
+onAppStoreInstalledEvent idxInstallation installations =
+    Dict.insert idxInstallation.id (parseInstallation idxInstallation) installations

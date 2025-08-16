@@ -52,14 +52,11 @@ defmodule Game.Henforcers.AppStore do
     relay = %{matching_files: matching_files, matching_installations: matching_installations}
 
     case {matching_files, matching_installations} do
-      {[], []} ->
+      {[], _} ->
         {:ok, :download_and_install, relay}
 
       {_, []} ->
         {:ok, :install_only, relay}
-
-      {[], _} ->
-        {:ok, :download_only, relay}
 
       {_, _} ->
         {:error, {:appstore_action, :already_installed}}
@@ -71,9 +68,6 @@ defmodule Game.Henforcers.AppStore do
       case action do
         :download_and_install ->
           [:sufficient_memory, :sufficient_storage]
-
-        :download_only ->
-          [:sufficient_storage]
 
         :install_only ->
           [:sufficient_memory]
