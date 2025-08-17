@@ -12,6 +12,7 @@ module Game exposing
     , handleProcessOperation
     , init
     , onAppStoreInstalledEvent
+    , onFileDeletedEvent
     , onLogDeletedEvent
     , onLogEditedEvent
     , onProcessCompletedEvent
@@ -311,6 +312,11 @@ getAllTunnels model =
 onAppStoreInstalledEvent : Model -> Events.AppstoreInstalled -> Model
 onAppStoreInstalledEvent model event =
     updateServer event.nip (Server.onAppStoreInstalledEvent event) model
+
+
+onFileDeletedEvent : Model -> Events.FileDeleted -> Model
+onFileDeletedEvent model event =
+    updateServer event.nip (Server.onFileDeletedEvent event) model
 
 
 onLogDeletedEvent : Model -> Events.LogDeleted -> Model

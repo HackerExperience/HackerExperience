@@ -10,6 +10,7 @@ module Game.Model.Server exposing
     , listFiles
     , listLogs
     , onAppStoreInstalledEvent
+    , onFileDeletedEvent
     , onLogDeletedEvent
     , onLogEditedEvent
     , onProcessCompletedEvent
@@ -345,6 +346,11 @@ onAppStoreInstalledEvent event server =
         | files = File.onAppStoreInstalledEvent event.file server.files
         , installations = Installation.onAppStoreInstalledEvent event.installation server.installations
     }
+
+
+onFileDeletedEvent : Events.FileDeleted -> Server -> Server
+onFileDeletedEvent event server =
+    { server | files = File.onFileDeletedEvent event server.files }
 
 
 onLogDeletedEvent : Events.LogDeleted -> Server -> Server

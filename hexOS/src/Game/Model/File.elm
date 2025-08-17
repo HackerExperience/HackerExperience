@@ -3,6 +3,7 @@ module Game.Model.File exposing
     , Files
     , filesToList
     , onAppStoreInstalledEvent
+    , onFileDeletedEvent
     , parse
     )
 
@@ -81,3 +82,8 @@ parseFile idxFile =
 onAppStoreInstalledEvent : Events.IdxFile -> Files -> Files
 onAppStoreInstalledEvent idxFile files =
     Dict.insert idxFile.id (parseFile idxFile) files
+
+
+onFileDeletedEvent : Events.FileDeleted -> Files -> Files
+onFileDeletedEvent event files =
+    Dict.remove (FileID.toValue event.file_id) files

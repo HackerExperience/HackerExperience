@@ -1,11 +1,14 @@
 module Apps.FileExplorer exposing (..)
 
+import API.Game as GameAPI
+import API.Types
 import Apps.Input as App
 import Apps.Manifest as App
 import Effect exposing (Effect)
 import Game
 import Game.Bus as Game
 import Game.Model.File exposing (File)
+import Game.Model.FileID exposing (FileID)
 import Game.Model.NIP exposing (NIP)
 import Game.Model.Server as Server
 import Game.Model.SoftwareType as SoftwareType
@@ -20,7 +23,8 @@ import WM
 type Msg
     = ToOS OS.Bus.Action
     | ToCtxMenu OS.CtxMenu.Msg
-    | Foo
+    | OnDeleteFile FileID
+    | OnDeleteFileResponse FileID API.Types.FileDeleteResult
 
 
 type alias Model =
@@ -50,7 +54,22 @@ filterFiles model game =
 update : Game.Model -> Msg -> Model -> ( Model, Effect Msg )
 update game msg model =
     case msg of
-        Foo ->
+        OnDeleteFile fileId ->
+            let
+                server =
+                    Game.getServer game model.nip
+
+                config =
+                    GameAPI.fileDeleteConfig game.apiCtx model.nip fileId server.tunnelId
+            in
+            ( model
+            , Effect.batch
+                [ Effect.fileDelete (OnDeleteFileResponse fileId) config
+                ]
+            )
+
+        OnDeleteFileResponse _ _ ->
+            -- Side-effects are handled by the ProcessCreatedEvent
             ( model, Effect.none )
 
         ToOS _ ->
@@ -133,14 +152,22 @@ vFileRow model file =
 vFileRowActions : File -> UI Msg
 vFileRowActions file =
     let
-        installAction =
-            UI.Icon.msOutline "play_circle" Nothing
-                |> UI.Icon.withClass "a-fex-fr-a-entry"
-                |> UI.Icon.toUI
+        installOrUninstallAction =
+            case file.installationId of
+                Just _ ->
+                    UI.Icon.msOutline "stop_circle" Nothing
+                        |> UI.Icon.withClass "a-fex-fr-a-entry"
+                        |> UI.Icon.toUI
+
+                Nothing ->
+                    UI.Icon.msOutline "play_circle" Nothing
+                        |> UI.Icon.withClass "a-fex-fr-a-entry"
+                        |> UI.Icon.toUI
 
         deleteAction =
             UI.Icon.msOutline "delete" Nothing
                 |> UI.Icon.withClass "a-fex-fr-a-entry"
+                |> UI.Icon.withOnClick (OnDeleteFile file.id)
                 |> UI.Icon.toUI
 
         infoAction =
@@ -150,7 +177,7 @@ vFileRowActions file =
     in
     row [ cl "a-fex-fr-actions" ]
         [ infoAction
-        , installAction
+        , installOrUninstallAction
         , deleteAction
         ]
 

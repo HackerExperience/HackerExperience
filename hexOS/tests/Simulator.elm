@@ -39,6 +39,10 @@ simulateEffect effect =
                     -- TODO
                     SimulatedEffect.Cmd.none
 
+                FileDelete _ _ ->
+                    -- TODO
+                    SimulatedEffect.Cmd.none
+
                 LogDelete _ _ ->
                     -- TODO
                     SimulatedEffect.Cmd.none

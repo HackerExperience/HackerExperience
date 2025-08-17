@@ -2,6 +2,7 @@ module API.Types exposing (..)
 
 import API.Game.Types as GameTypes
 import API.Lobby.Types as LobbyTypes
+import Game.Model.FileID exposing (FileID)
 import Game.Model.LogID exposing (LogID)
 import Game.Model.NIP exposing (NIP)
 import Game.Model.ServerID exposing (ServerID)
@@ -73,6 +74,28 @@ type alias AppStoreInstallError =
 
 type alias AppStoreInstallResult =
     Result (Error AppStoreInstallError) GameTypes.AppStoreInstallOutput
+
+
+
+-- Game > File > Delete
+
+
+type alias FileDeleteInput =
+    { body : GameTypes.FileDeleteRequest
+    , params : FileDeleteParams
+    }
+
+
+type alias FileDeleteParams =
+    { nip : NIP, file_id : FileID }
+
+
+type alias FileDeleteError =
+    GameTypes.GenericError
+
+
+type alias FileDeleteResult =
+    Result (Error FileDeleteError) GameTypes.FileDeleteOutput
 
 
 

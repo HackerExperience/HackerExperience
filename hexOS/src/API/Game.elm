@@ -9,6 +9,7 @@ import API.Types as Types
         , InputContext
         )
 import API.Utils exposing (PrivateErrType(..), dataMapper, extractBodyAndParams, mapError, mapResponse)
+import Game.Model.FileID exposing (FileID)
 import Game.Model.LogID exposing (LogID)
 import Game.Model.NIP exposing (NIP)
 import Game.Model.ServerID exposing (ServerID)
@@ -19,6 +20,39 @@ import Task exposing (Task)
 
 
 -- Requests
+-- Requests > File > Delete
+
+
+fileDeleteConfig : InputContext -> NIP -> FileID -> Maybe TunnelID -> InputConfig Types.FileDeleteInput
+fileDeleteConfig ctx nip fileId tunnelId =
+    let
+        input =
+            { body = { tunnel_id = tunnelId }
+            , params = { nip = nip, file_id = fileId }
+            }
+    in
+    { server = ctx.server, input = input, authToken = ctx.token }
+
+
+fileDeleteTask :
+    InputConfig Types.FileDeleteInput
+    -> Task (Error Types.FileDeleteError) GameTypes.FileDeleteOutput
+fileDeleteTask config =
+    Api.fileDeleteTask (extractBodyAndParams config)
+        |> mapResponse dataMapper
+        |> mapError
+            (\apiError ->
+                case apiError of
+                    -- TODO
+                    LegitimateError _ ->
+                        InternalError
+
+                    UnexpectedError ->
+                        InternalError
+            )
+
+
+
 -- Requests > Log > Delete
 
 
