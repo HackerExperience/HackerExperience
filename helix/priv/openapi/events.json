@@ -447,6 +447,9 @@
           "memory_usage": {
             "type": "integer"
           },
+          "nip": {
+            "type": "string"
+          },
           "process_id": {
             "type": "string"
           }
@@ -455,6 +458,7 @@
           "file_name",
           "installation_id",
           "memory_usage",
+          "nip",
           "process_id"
         ],
         "type": "object"
@@ -524,12 +528,16 @@
           "installation_id": {
             "type": "string"
           },
+          "nip": {
+            "type": "string"
+          },
           "process_id": {
             "type": "string"
           }
         },
         "required": [
           "installation_id",
+          "nip",
           "process_id"
         ],
         "type": "object"

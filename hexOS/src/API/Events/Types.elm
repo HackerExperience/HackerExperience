@@ -75,7 +75,7 @@ type alias LogDeleteFailed =
 
 
 type alias InstallationUninstalled =
-    { installation_id : String, process_id : ProcessID }
+    { installation_id : String, nip : NIP, process_id : ProcessID }
 
 
 type alias InstallationUninstallFailed =
@@ -98,6 +98,7 @@ type alias FileInstalled =
     { file_name : String
     , installation_id : String
     , memory_usage : Int
+    , nip : NIP
     , process_id : ProcessID
     }
 

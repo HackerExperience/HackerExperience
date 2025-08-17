@@ -76,4 +76,42 @@ defmodule Game.Process.File.InstallTest do
       assert event.data.reason == "server_not_belongs"
     end
   end
+
+  describe "E2E" do
+    test "upon completion, installs the file", ctx do
+      %{player: player, server: server, nip: nip} = Setup.server()
+
+      # Player is installing `File`. This process already reached its objective
+      %{process: process, spec: %{file: file}} =
+        Setup.process(server.id, type: :file_install, completed?: true)
+
+      DB.commit()
+
+      U.start_sse_listener(ctx, player, total_expected_events: 2)
+
+      # There are no Installations initially
+      Core.with_context(:server, server.id, :read, fn ->
+        assert [] == DB.all(Installation)
+      end)
+
+      # Complete the Process
+      U.simulate_process_completion(process)
+
+      # First the Client is notified about the process being complete
+      process_completed_sse = U.wait_sse_event!("process_completed")
+      assert process_completed_sse.data.process_id |> U.from_eid(player.id) == process.id
+
+      # Then it is notified about the side-effect of the process completion
+      file_installed_sse = U.wait_sse_event!("file_installed")
+      assert file_installed_sse.data.nip == nip |> NIP.to_external()
+      assert file_installed_sse.data.file_name == file.name
+
+      # Now we have one installation for this file
+      Core.with_context(:server, server.id, :read, fn ->
+        assert [installation] = DB.all(Installation)
+        assert file_installed_sse.data.installation_id |> U.from_eid(player.id) == installation.id
+        assert installation.file_id == file.id
+      end)
+    end
+  end
 end

@@ -303,11 +303,16 @@ encodeLogDeleteFailed rec =
 decodeInstallationUninstalled : Json.Decode.Decoder API.Events.Types.InstallationUninstalled
 decodeInstallationUninstalled =
     Json.Decode.succeed
-        (\installation_id process_id ->
-            { installation_id = installation_id, process_id = process_id }
+        (\installation_id nip process_id ->
+            { installation_id = installation_id
+            , nip = nip
+            , process_id = process_id
+            }
         )
         |> OpenApi.Common.jsonDecodeAndMap
             (Json.Decode.field "installation_id" Json.Decode.string)
+        |> OpenApi.Common.jsonDecodeAndMap
+            (Json.Decode.field "nip" (Json.Decode.map (\nip -> NIP.fromString nip) Json.Decode.string))
         |> OpenApi.Common.jsonDecodeAndMap
             (Json.Decode.field
                 "process_id"
@@ -319,6 +324,7 @@ encodeInstallationUninstalled : API.Events.Types.InstallationUninstalled -> Json
 encodeInstallationUninstalled rec =
     Json.Encode.object
         [ ( "installation_id", Json.Encode.string rec.installation_id )
+        , ( "nip", Json.Encode.string (NIP.toString rec.nip) )
         , ( "process_id", Json.Encode.string (ProcessID.toValue rec.process_id) )
         ]
 
@@ -404,10 +410,11 @@ encodeFileTransferFailed rec =
 decodeFileInstalled : Json.Decode.Decoder API.Events.Types.FileInstalled
 decodeFileInstalled =
     Json.Decode.succeed
-        (\file_name installation_id memory_usage process_id ->
+        (\file_name installation_id memory_usage nip process_id ->
             { file_name = file_name
             , installation_id = installation_id
             , memory_usage = memory_usage
+            , nip = nip
             , process_id = process_id
             }
         )
@@ -425,6 +432,11 @@ decodeFileInstalled =
             )
         |> OpenApi.Common.jsonDecodeAndMap
             (Json.Decode.field
+                "nip"
+                (Json.Decode.map (\nip -> NIP.fromString nip) Json.Decode.string)
+            )
+        |> OpenApi.Common.jsonDecodeAndMap
+            (Json.Decode.field
                 "process_id"
                 (Json.Decode.map ProcessID Json.Decode.string)
             )
@@ -436,6 +448,7 @@ encodeFileInstalled rec =
         [ ( "file_name", Json.Encode.string rec.file_name )
         , ( "installation_id", Json.Encode.string rec.installation_id )
         , ( "memory_usage", Json.Encode.int rec.memory_usage )
+        , ( "nip", Json.Encode.string (NIP.toString rec.nip) )
         , ( "process_id", Json.Encode.string (ProcessID.toValue rec.process_id) )
         ]
 

@@ -1,7 +1,7 @@
 defmodule Game.Process.Installation.UninstallTest do
   use Test.DBCase, async: true
 
-  alias Game.{Installation}
+  alias Game.{File, Installation}
 
   alias Game.Process.Installation.Uninstall, as: InstallationUninstallProcess
 
@@ -76,6 +76,45 @@ defmodule Game.Process.Installation.UninstallTest do
 
       assert event.name == :installation_uninstall_failed
       assert event.data.reason == "server_not_belongs"
+    end
+  end
+
+  describe "E2E" do
+    test "upon completion, uninstalls the installation", ctx do
+      %{player: player, server: server, nip: nip} = Setup.server()
+
+      %{process: process, spec: %{installation: installation, file: file}} =
+        Setup.process(server.id, type: :installation_uninstall, completed?: true)
+
+      assert process.type == :installation_uninstall
+      assert process.registry.tgt_installation_id == installation.id
+      DB.commit()
+
+      # There is an Installation initially
+      Core.with_context(:server, server.id, :read, fn ->
+        assert [installation] == DB.all(Installation)
+        assert installation.file_id == file.id
+      end)
+
+      U.start_sse_listener(ctx, player, total_expected_events: 2)
+
+      # Complete the Process
+      U.simulate_process_completion(process)
+
+      # First the Client is notified about the process being complete
+      process_completed_sse = U.wait_sse_event!("process_completed")
+      assert process_completed_sse.data.process_id |> U.from_eid(player.id) == process.id
+
+      # Then it is notified about the side-effect of the process completion
+      inst_uninstalled_sse = U.wait_sse_event!("installation_uninstalled")
+      assert inst_uninstalled_sse.data.nip == nip |> NIP.to_external()
+      assert inst_uninstalled_sse.data.installation_id |> U.from_eid(player.id) == installation.id
+
+      # Now we no longer have any installation in the server, but the file is still there
+      Core.with_context(:server, server.id, :read, fn ->
+        assert [] == DB.all(Installation)
+        assert [file] == DB.all(File)
+      end)
     end
   end
 end

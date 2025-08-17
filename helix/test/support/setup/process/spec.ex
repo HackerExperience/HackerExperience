@@ -115,19 +115,24 @@ defmodule Test.Setup.Process.Spec do
   end
 
   def spec(:installation_uninstall, server_id, entity_id, opts) do
-    default_installation = fn ->
-      %{installation: installation} = S.file(server_id, visible_by: entity_id, installed?: true)
-      installation
-    end
+    {installation, file} =
+      case {opts[:installation], opts[:file]} do
+        {%_{} = installation, file} ->
+          {installation, file}
 
-    installation = opts[:installation] || default_installation.()
+        {nil, _} ->
+          %{installation: installation, file: file} =
+            S.file(server_id, visible_by: entity_id, installed?: true)
+
+          {installation, file}
+      end
 
     default_meta = %{installation: installation}
     default_params = %{}
 
     params = opts[:params] || default_params
     meta = opts[:meta] || default_meta
-    relay = %{installation: installation}
+    relay = %{installation: installation, file: file}
 
     build_spec(InstallationUninstallProcess, server_id, entity_id, params, meta, relay)
   end
