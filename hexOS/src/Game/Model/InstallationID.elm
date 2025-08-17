@@ -2,6 +2,8 @@ module Game.Model.InstallationID exposing
     ( InstallationID(..)
     , RawInstallationID
     , fromValue
+    , toString
+    , toValue
     )
 
 -- Types
@@ -17,6 +19,16 @@ type alias RawInstallationID =
 
 
 -- Functions
+
+
+toString : InstallationID -> String
+toString installationId =
+    toValue installationId
+
+
+toValue : InstallationID -> String
+toValue (InstallationID id) =
+    id
 
 
 fromValue : String -> InstallationID

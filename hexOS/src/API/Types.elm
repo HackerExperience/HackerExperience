@@ -99,6 +99,28 @@ type alias FileDeleteResult =
 
 
 
+-- Game > File > Install
+
+
+type alias FileInstallInput =
+    { body : GameTypes.FileInstallRequest
+    , params : FileInstallParams
+    }
+
+
+type alias FileInstallParams =
+    { nip : NIP, file_id : FileID }
+
+
+type alias FileInstallError =
+    GameTypes.GenericError
+
+
+type alias FileInstallResult =
+    Result (Error FileInstallError) GameTypes.FileInstallOutput
+
+
+
 -- Game > Log > Delete
 
 

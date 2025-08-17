@@ -28,6 +28,7 @@ type APIRequestEnum msg
     = LobbyLogin (API.LobbyLoginResult -> msg) (InputConfig API.LobbyLoginInput)
     | AppStoreInstall (API.AppStoreInstallResult -> msg) (InputConfig API.AppStoreInstallInput)
     | FileDelete (API.FileDeleteResult -> msg) (InputConfig API.FileDeleteInput)
+    | FileInstall (API.FileInstallResult -> msg) (InputConfig API.FileInstallInput)
     | LogDelete (API.LogDeleteResult -> msg) (InputConfig API.LogDeleteInput)
     | LogEdit (API.LogEditResult -> msg) (InputConfig API.LogEditInput)
     | ServerLogin (API.ServerLoginResult -> msg) (InputConfig API.ServerLoginInput)
@@ -85,6 +86,9 @@ applyApiRequest apiRequest seeds =
 
         FileDelete msg config ->
             ( seeds, Task.attempt msg (GameAPI.fileDeleteTask config) )
+
+        FileInstall msg config ->
+            ( seeds, Task.attempt msg (GameAPI.fileInstallTask config) )
 
         LogDelete msg config ->
             ( seeds, Task.attempt msg (GameAPI.logDeleteTask config) )
@@ -167,6 +171,11 @@ fileDelete msg config =
     APIRequest (FileDelete msg config)
 
 
+fileInstall : (API.FileInstallResult -> msg) -> InputConfig API.FileInstallInput -> Effect msg
+fileInstall msg config =
+    APIRequest (FileInstall msg config)
+
+
 
 -- Log
 
@@ -223,6 +232,9 @@ map toMsg effect =
 
                 FileDelete msg body ->
                     APIRequest (FileDelete (\result -> toMsg (msg result)) body)
+
+                FileInstall msg body ->
+                    APIRequest (FileInstall (\result -> toMsg (msg result)) body)
 
                 LogDelete msg body ->
                     APIRequest (LogDelete (\result -> toMsg (msg result)) body)

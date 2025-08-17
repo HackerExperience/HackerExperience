@@ -4,13 +4,14 @@ module Game.Model.File exposing
     , filesToList
     , onAppStoreInstalledEvent
     , onFileDeletedEvent
+    , onFileInstalledEvent
     , parse
     )
 
 import API.Events.Types as Events
 import Dict exposing (Dict)
 import Game.Model.FileID as FileID exposing (FileID, RawFileID)
-import Game.Model.InstallationID as InstallationID exposing (InstallationID, RawInstallationID)
+import Game.Model.InstallationID as InstallationID exposing (InstallationID)
 import Game.Model.SoftwareType as SoftwareType exposing (SoftwareType)
 import OpenApi.Common as OpenApi
 
@@ -40,8 +41,7 @@ type alias File =
 
 filesToList : Files -> List File
 filesToList files =
-    Dict.toList files
-        |> List.map (\( _, file ) -> file)
+    Dict.values files
 
 
 
@@ -87,3 +87,8 @@ onAppStoreInstalledEvent idxFile files =
 onFileDeletedEvent : Events.FileDeleted -> Files -> Files
 onFileDeletedEvent event files =
     Dict.remove (FileID.toValue event.file_id) files
+
+
+onFileInstalledEvent : Events.IdxFile -> Files -> Files
+onFileInstalledEvent idxFile files =
+    Dict.insert idxFile.id (parseFile idxFile) files

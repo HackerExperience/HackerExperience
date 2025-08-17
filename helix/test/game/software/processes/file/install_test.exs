@@ -104,12 +104,12 @@ defmodule Game.Process.File.InstallTest do
       # Then it is notified about the side-effect of the process completion
       file_installed_sse = U.wait_sse_event!("file_installed")
       assert file_installed_sse.data.nip == nip |> NIP.to_external()
-      assert file_installed_sse.data.file_name == file.name
+      assert file_installed_sse.data.file.id |> U.from_eid(player.id) == file.id
 
       # Now we have one installation for this file
       Core.with_context(:server, server.id, :read, fn ->
         assert [installation] = DB.all(Installation)
-        assert file_installed_sse.data.installation_id |> U.from_eid(player.id) == installation.id
+        assert file_installed_sse.data.installation.id |> U.from_eid(player.id) == installation.id
         assert installation.file_id == file.id
       end)
     end

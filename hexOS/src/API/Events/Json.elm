@@ -50,6 +50,7 @@ module API.Events.Json exposing
 
 import API.Events.Types
 import Game.Model.FileID as FileID exposing (FileID(..))
+import Game.Model.InstallationID as InstallationID exposing (InstallationID(..))
 import Game.Model.LogID as LogID exposing (LogID(..))
 import Game.Model.NIP as NIP exposing (NIP(..))
 import Game.Model.ProcessID as ProcessID exposing (ProcessID(..))
@@ -310,7 +311,7 @@ decodeInstallationUninstalled =
             }
         )
         |> OpenApi.Common.jsonDecodeAndMap
-            (Json.Decode.field "installation_id" Json.Decode.string)
+            (Json.Decode.field "installation_id" (Json.Decode.map InstallationID Json.Decode.string))
         |> OpenApi.Common.jsonDecodeAndMap
             (Json.Decode.field "nip" (Json.Decode.map (\nip -> NIP.fromString nip) Json.Decode.string))
         |> OpenApi.Common.jsonDecodeAndMap
@@ -323,7 +324,7 @@ decodeInstallationUninstalled =
 encodeInstallationUninstalled : API.Events.Types.InstallationUninstalled -> Json.Encode.Value
 encodeInstallationUninstalled rec =
     Json.Encode.object
-        [ ( "installation_id", Json.Encode.string rec.installation_id )
+        [ ( "installation_id", Json.Encode.string (InstallationID.toValue rec.installation_id) )
         , ( "nip", Json.Encode.string (NIP.toString rec.nip) )
         , ( "process_id", Json.Encode.string (ProcessID.toValue rec.process_id) )
         ]
@@ -410,25 +411,19 @@ encodeFileTransferFailed rec =
 decodeFileInstalled : Json.Decode.Decoder API.Events.Types.FileInstalled
 decodeFileInstalled =
     Json.Decode.succeed
-        (\file_name installation_id memory_usage nip process_id ->
-            { file_name = file_name
-            , installation_id = installation_id
-            , memory_usage = memory_usage
+        (\file installation nip process_id ->
+            { file = file
+            , installation = installation
             , nip = nip
             , process_id = process_id
             }
         )
         |> OpenApi.Common.jsonDecodeAndMap
-            (Json.Decode.field "file_name" Json.Decode.string)
+            (Json.Decode.field "file" decodeIdxFile)
         |> OpenApi.Common.jsonDecodeAndMap
             (Json.Decode.field
-                "installation_id"
-                Json.Decode.string
-            )
-        |> OpenApi.Common.jsonDecodeAndMap
-            (Json.Decode.field
-                "memory_usage"
-                Json.Decode.int
+                "installation"
+                decodeIdxInstallation
             )
         |> OpenApi.Common.jsonDecodeAndMap
             (Json.Decode.field
@@ -445,9 +440,8 @@ decodeFileInstalled =
 encodeFileInstalled : API.Events.Types.FileInstalled -> Json.Encode.Value
 encodeFileInstalled rec =
     Json.Encode.object
-        [ ( "file_name", Json.Encode.string rec.file_name )
-        , ( "installation_id", Json.Encode.string rec.installation_id )
-        , ( "memory_usage", Json.Encode.int rec.memory_usage )
+        [ ( "file", encodeIdxFile rec.file )
+        , ( "installation", encodeIdxInstallation rec.installation )
         , ( "nip", Json.Encode.string (NIP.toString rec.nip) )
         , ( "process_id", Json.Encode.string (ProcessID.toValue rec.process_id) )
         ]

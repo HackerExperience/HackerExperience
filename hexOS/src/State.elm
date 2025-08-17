@@ -237,6 +237,16 @@ updateEvent state event_ =
             in
             ( replaceUniverse state newModel universe, Effect.none )
 
+        Event.FileInstalled event universe ->
+            let
+                game =
+                    getUniverse state universe
+
+                newModel =
+                    Game.onFileInstalledEvent game event
+            in
+            ( replaceUniverse state newModel universe, Effect.none )
+
         Event.LogDeleted event universe ->
             let
                 game =

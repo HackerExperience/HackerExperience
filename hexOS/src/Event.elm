@@ -13,6 +13,7 @@ type Event
     = IndexRequested Events.IndexRequested Universe
     | AppStoreInstalled Events.AppstoreInstalled Universe
     | FileDeleted Events.FileDeleted Universe
+    | FileInstalled Events.FileInstalled Universe
     | LogDeleted Events.LogDeleted Universe
     | LogEdited Events.LogEdited Universe
     | ProcessCompleted Events.ProcessCompleted Universe
@@ -66,6 +67,10 @@ dataDecoder universe eventName =
                 "file_deleted" ->
                     JD.map (\x -> FileDeleted x universe)
                         Events.decodeFileDeleted
+
+                "file_installed" ->
+                    JD.map (\x -> FileInstalled x universe)
+                        Events.decodeFileInstalled
 
                 "log_deleted" ->
                     JD.map (\x -> LogDeleted x universe)

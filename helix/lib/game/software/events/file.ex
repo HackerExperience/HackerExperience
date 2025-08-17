@@ -10,6 +10,7 @@ defmodule Game.Events.File do
     use Core.Event.Definition
 
     alias Game.{File, Installation, Process}
+    alias Game.Index
 
     defstruct [:file, :installation, :process]
 
@@ -33,12 +34,11 @@ defmodule Game.Events.File do
         selection(
           schema(%{
             nip: nip(),
-            installation_id: external_id(),
-            file_name: binary(),
-            memory_usage: integer(),
+            file: Index.File.spec(),
+            installation: Index.Installation.spec(),
             process_id: external_id()
           }),
-          [:nip, :installation_id, :file_name, :memory_usage, :process_id]
+          [:nip, :file, :installation, :process_id]
         )
       end
 
@@ -50,9 +50,8 @@ defmodule Game.Events.File do
         payload =
           %{
             nip: NIP.to_external(nip),
-            installation_id: installation.id |> ID.to_external(entity_id, server_id),
-            file_name: file.name,
-            memory_usage: installation.memory_usage,
+            file: Index.File.render_file({file, installation.id}, entity_id),
+            installation: Index.Installation.render_installation(installation, entity_id),
             process_id: process.id |> ID.to_external(entity_id, server_id)
           }
 

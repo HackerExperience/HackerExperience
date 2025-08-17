@@ -6,7 +6,6 @@ import Apps.Input as App
 import Apps.Manifest as App
 import Effect exposing (Effect)
 import Game
-import Game.Bus as Game
 import Game.Model.File exposing (File)
 import Game.Model.FileID exposing (FileID)
 import Game.Model.NIP exposing (NIP)
@@ -15,7 +14,7 @@ import Game.Model.SoftwareType as SoftwareType
 import OS.AppID exposing (AppID)
 import OS.Bus
 import OS.CtxMenu
-import UI exposing (UI, cl, clIf, col, div, row, text)
+import UI exposing (UI, cl, col, row, text)
 import UI.Icon
 import WM
 
@@ -25,6 +24,8 @@ type Msg
     | ToCtxMenu OS.CtxMenu.Msg
     | OnDeleteFile FileID
     | OnDeleteFileResponse FileID API.Types.FileDeleteResult
+    | OnInstallFile FileID
+    | OnInstallFileResponse FileID API.Types.FileInstallResult
 
 
 type alias Model =
@@ -72,6 +73,21 @@ update game msg model =
             -- Side-effects are handled by the ProcessCreatedEvent
             ( model, Effect.none )
 
+        OnInstallFile fileId ->
+            let
+                config =
+                    GameAPI.fileInstallConfig game.apiCtx model.nip fileId
+            in
+            ( model
+            , Effect.batch
+                [ Effect.fileInstall (OnInstallFileResponse fileId) config
+                ]
+            )
+
+        OnInstallFileResponse _ _ ->
+            -- Side-effects are handled by the ProcessCreatedEvent
+            ( model, Effect.none )
+
         ToOS _ ->
             -- Handled by OS
             ( model, Effect.none )
@@ -94,7 +110,7 @@ view model game _ =
 
 
 vHeader : Model -> UI Msg
-vHeader model =
+vHeader _ =
     row [ cl "a-fex-header" ]
         [ text "Header" ]
 
@@ -117,7 +133,7 @@ vFileList model game =
 
 
 vFileRow : Model -> File -> UI Msg
-vFileRow model file =
+vFileRow _ file =
     let
         iconName =
             SoftwareType.typeToIcon file.type_
@@ -162,6 +178,7 @@ vFileRowActions file =
                 Nothing ->
                     UI.Icon.msOutline "play_circle" Nothing
                         |> UI.Icon.withClass "a-fex-fr-a-entry"
+                        |> UI.Icon.withOnClick (OnInstallFile file.id)
                         |> UI.Icon.toUI
 
         deleteAction =

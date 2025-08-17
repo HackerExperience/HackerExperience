@@ -438,14 +438,11 @@
       },
       "file_installed": {
         "properties": {
-          "file_name": {
-            "type": "string"
+          "file": {
+            "$ref": "#/components/schemas/IdxFile"
           },
-          "installation_id": {
-            "type": "string"
-          },
-          "memory_usage": {
-            "type": "integer"
+          "installation": {
+            "$ref": "#/components/schemas/IdxInstallation"
           },
           "nip": {
             "type": "string"
@@ -455,9 +452,8 @@
           }
         },
         "required": [
-          "file_name",
-          "installation_id",
-          "memory_usage",
+          "file",
+          "installation",
           "nip",
           "process_id"
         ],

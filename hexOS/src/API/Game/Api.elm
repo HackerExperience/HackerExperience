@@ -20,6 +20,7 @@ import API.Game.Json
 import API.Game.Types
 import Dict
 import Game.Model.FileID as FileID exposing (FileID(..))
+import Game.Model.InstallationID as InstallationID exposing (InstallationID(..))
 import Game.Model.LogID as LogID exposing (LogID(..))
 import Game.Model.NIP as NIP exposing (NIP(..))
 import Game.Model.ProcessID as ProcessID exposing (ProcessID(..))
@@ -158,7 +159,7 @@ installationUninstallTask :
     { server : String
     , authorization : { authorization : String }
     , body : API.Game.Types.InstallationUninstallRequest
-    , params : { installation_id : String, nip : NIP }
+    , params : { installation_id : InstallationID, nip : NIP }
     }
     -> Task.Task (OpenApi.Common.Error e String) API.Game.Types.InstallationUninstallOkResponse
 installationUninstallTask config =
@@ -170,7 +171,7 @@ installationUninstallTask config =
                 , "server"
                 , NIP.toString config.params.nip
                 , "installation"
-                , config.params.installation_id
+                , InstallationID.toString config.params.installation_id
                 , "uninstall"
                 ]
                 []

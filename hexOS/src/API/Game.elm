@@ -53,6 +53,39 @@ fileDeleteTask config =
 
 
 
+-- Requests > File > Install
+
+
+fileInstallConfig : InputContext -> NIP -> FileID -> InputConfig Types.FileInstallInput
+fileInstallConfig ctx nip fileId =
+    let
+        input =
+            { body = {}
+            , params = { nip = nip, file_id = fileId }
+            }
+    in
+    { server = ctx.server, input = input, authToken = ctx.token }
+
+
+fileInstallTask :
+    InputConfig Types.FileInstallInput
+    -> Task (Error Types.FileInstallError) GameTypes.FileInstallOutput
+fileInstallTask config =
+    Api.fileInstallTask (extractBodyAndParams config)
+        |> mapResponse dataMapper
+        |> mapError
+            (\apiError ->
+                case apiError of
+                    -- TODO
+                    LegitimateError _ ->
+                        InternalError
+
+                    UnexpectedError ->
+                        InternalError
+            )
+
+
+
 -- Requests > Log > Delete
 
 

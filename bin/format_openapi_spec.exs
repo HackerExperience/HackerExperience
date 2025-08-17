@@ -20,6 +20,7 @@ defmodule OpenAPI.Elm.Formatter do
   @custom_types [
     :nip,
     :file_id,
+    :installation_id,
     :log_id,
     :process_id,
     :server_id,
@@ -53,6 +54,10 @@ defmodule OpenAPI.Elm.Formatter do
 
   defp handle(:file_id, file) do
     replace("file_id", "String", "FileID", file)
+  end
+
+  defp handle(:installation_id, file) do
+    replace("installation_id", "String", "InstallationID", file)
   end
 
   defp handle(:log_id, file) do

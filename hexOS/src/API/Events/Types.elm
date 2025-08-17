@@ -23,6 +23,7 @@ module API.Events.Types exposing
 -}
 
 import Game.Model.FileID as FileID exposing (FileID(..))
+import Game.Model.InstallationID as InstallationID exposing (InstallationID(..))
 import Game.Model.LogID as LogID exposing (LogID(..))
 import Game.Model.NIP as NIP exposing (NIP(..))
 import Game.Model.ProcessID as ProcessID exposing (ProcessID(..))
@@ -75,7 +76,7 @@ type alias LogDeleteFailed =
 
 
 type alias InstallationUninstalled =
-    { installation_id : String, nip : NIP, process_id : ProcessID }
+    { installation_id : InstallationID, nip : NIP, process_id : ProcessID }
 
 
 type alias InstallationUninstallFailed =
@@ -95,9 +96,8 @@ type alias FileTransferFailed =
 
 
 type alias FileInstalled =
-    { file_name : String
-    , installation_id : String
-    , memory_usage : Int
+    { file : IdxFile
+    , installation : IdxInstallation
     , nip : NIP
     , process_id : ProcessID
     }

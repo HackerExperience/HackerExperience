@@ -2,6 +2,7 @@ module Game.Model.Installation exposing
     ( Installation
     , Installations
     , onAppStoreInstalledEvent
+    , onFileInstalledEvent
     , parse
     )
 
@@ -66,4 +67,9 @@ parseInstallation idxInstallation =
 
 onAppStoreInstalledEvent : Events.IdxInstallation -> Installations -> Installations
 onAppStoreInstalledEvent idxInstallation installations =
+    Dict.insert idxInstallation.id (parseInstallation idxInstallation) installations
+
+
+onFileInstalledEvent : Events.IdxInstallation -> Installations -> Installations
+onFileInstalledEvent idxInstallation installations =
     Dict.insert idxInstallation.id (parseInstallation idxInstallation) installations
