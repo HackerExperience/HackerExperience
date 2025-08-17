@@ -58,6 +58,7 @@ defmodule Lobby.Endpoint.User.LoginTest do
 
     test "fails with missing input", %{shard_id: shard_id} do
       valid_params = valid_raw()
+      DB.commit()
 
       [
         {Map.drop(valid_params, ["password"]), "password"},

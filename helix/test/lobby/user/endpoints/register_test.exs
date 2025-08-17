@@ -26,6 +26,7 @@ defmodule Lobby.Endpoint.User.RegisterTest do
     end
 
     test "fails with missing parameters", %{shard_id: shard_id} do
+      DB.commit()
       valid_params = valid_raw()
 
       [
@@ -41,6 +42,7 @@ defmodule Lobby.Endpoint.User.RegisterTest do
     end
 
     test "fails if username is taken", %{shard_id: shard_id} do
+      DB.commit()
       params_1 = valid_raw(username: "abc", email: "foo1@bar.com")
       params_2 = valid_raw(username: "abc", email: "foo2@bar.com")
 
@@ -53,6 +55,7 @@ defmodule Lobby.Endpoint.User.RegisterTest do
     end
 
     test "fails if email is taken", %{shard_id: shard_id} do
+      DB.commit()
       params_1 = valid_raw(username: "abc1", email: "foo@bar.com")
       params_2 = valid_raw(username: "abc2", email: "foo@bar.com")
 
