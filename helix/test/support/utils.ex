@@ -12,6 +12,7 @@ defmodule Test.Utils do
 
   # File
   defdelegate get_all_files(server_id), to: U.File
+  defdelegate get_all_file_visibilities(player_id), to: U.File
 
   # Log
   defdelegate get_all_logs(server_id), to: U.Log

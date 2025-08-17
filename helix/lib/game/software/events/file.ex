@@ -181,8 +181,9 @@ defmodule Game.Events.File do
       end
 
       @doc """
-      Only the Process owner receives this event.
+      The process owner, and anyone else with visibility over the file, should receive the event.
       """
+      # TODO: Notify all players that have visibility over the file.
       def whom_to_publish(%{data: %{process: %{entity_id: entity_id}}}),
         do: %{player: entity_id}
     end

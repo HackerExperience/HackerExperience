@@ -88,6 +88,7 @@ defmodule Game.Index.Log do
       Enum.map(visible_logs, fn {log_group_id, revisions_ids} ->
         revisions =
           Enum.map(revisions_ids, fn {log_id, personal_revision_id, revision_id, source} ->
+            # TODO: When log archiving is implemented, handle the scenario where `log` is `nil`
             log = Svc.Log.fetch(server_id, by_id_and_revision_id: {log_id, revision_id})
             {log, personal_revision_id, source}
           end)

@@ -38,6 +38,32 @@ defmodule Game.Index.FileTest do
       assert [] == Index.File.index(entity.id, other_server.id, [])
     end
 
+    test "handles scenario where some previously visible files were deleted" do
+      %{server: server, entity: entity} = Setup.server()
+
+      file_1 = Setup.file!(server.id, visible_by: entity.id)
+      file_2 = Setup.file!(server.id, visible_by: entity.id)
+
+      # `file_2` will be deleted
+      Core.with_context(:server, server.id, :write, fn ->
+        assert {:ok, _} = Svc.File.delete(file_2)
+      end)
+
+      # `file_3` was created after `file_2` was deleted. It must have a different ID
+      file_3 = Setup.file!(server.id, visible_by: entity.id)
+      refute file_3.id == file_2.id
+
+      # Only the 2 existing files were returned
+      assert [{idx_file_1, nil}, {idx_file_3, nil}] =
+               Index.File.index(entity.id, server.id, []) |> Enum.sort()
+
+      assert idx_file_1.id == file_1.id
+      assert idx_file_3.id == file_3.id
+
+      # Despite the Player still having visibility over 3 files
+      assert [_fv_1, _fv_2, _fv_3] = U.get_all_file_visibilities(entity.id)
+    end
+
     test "includes installation id when file is installed" do
       %{server: gateway, entity: entity} = Setup.server()
 

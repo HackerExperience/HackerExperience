@@ -55,8 +55,11 @@ defmodule Game.Index.File do
         |> Svc.File.fetch(by_id: raw_file_id)
         |> maybe_inject_installation_id(installations_by_file_id)
       end)
+      |> Enum.reject(&is_nil/1)
     end)
   end
+
+  defp maybe_inject_installation_id(nil, _), do: nil
 
   defp maybe_inject_installation_id(file, installations) do
     case installations[file.id] do

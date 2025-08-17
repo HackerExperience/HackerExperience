@@ -60,6 +60,7 @@ defmodule Game.Events.Log do
       @doc """
       Everyone who has visibility on that log (any revision) receives the event (TODO)
       """
+      # TODO: Notify all players that have visibility over the log.
       def whom_to_publish(%{data: %{process: %{entity_id: entity_id}}}),
         do: %{player: entity_id}
     end
