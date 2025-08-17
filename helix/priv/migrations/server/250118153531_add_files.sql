@@ -1,5 +1,7 @@
 CREATE TABLE files (
-  id INTEGER PRIMARY KEY,
+  -- NOTE: `AUTOINCREMENT` is used on purpose because we can't reuse old ROWIDs (might conflict with
+  -- FileVisibility entries).
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
   type TEXT NOT NULL,
   name TEXT NOT NULL,
   -- NOTE: A version of `23` means "2.3"
