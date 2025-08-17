@@ -407,12 +407,16 @@
           "file_id": {
             "type": "string"
           },
+          "nip": {
+            "type": "string"
+          },
           "process_id": {
             "type": "string"
           }
         },
         "required": [
           "file_id",
+          "nip",
           "process_id"
         ],
         "type": "object"

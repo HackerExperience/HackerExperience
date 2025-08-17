@@ -87,7 +87,7 @@ defmodule Game.Process.File.DeleteTest do
   describe "E2E" do
     @tag capture_log: true
     test "upon completion, deletes affected processes and submits events to player(s)", ctx do
-      %{player: player, server: server} = Setup.player()
+      %{player: player, server: server, nip: nip} = Setup.server()
 
       # Player is deleting `File`. This process already reached its objective
       %{process: proc_delete, spec: %{file: file}} =
@@ -113,6 +113,7 @@ defmodule Game.Process.File.DeleteTest do
 
       # Then he is notified about the side-effect of the process completion
       file_deleted_sse = U.wait_sse_event!("file_deleted")
+      assert file_deleted_sse.data.nip == nip |> NIP.to_external()
       assert file_deleted_sse.data.file_id |> U.from_eid(player.id) == file.id
 
       # And then he is notified about `proc_install` being killed

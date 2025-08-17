@@ -160,10 +160,11 @@ defmodule Game.Events.File do
       def spec do
         selection(
           schema(%{
+            nip: nip(),
             file_id: external_id(),
             process_id: external_id()
           }),
-          [:file_id, :process_id]
+          [:nip, :file_id, :process_id]
         )
       end
 
@@ -171,8 +172,11 @@ defmodule Game.Events.File do
         entity_id = process.entity_id
         server_id = process.server_id
 
+        %{nip: nip} = Svc.NetworkConnection.fetch!(by_server_id: server_id)
+
         payload =
           %{
+            nip: NIP.to_external(nip),
             file_id: file.id |> ID.to_external(entity_id, server_id),
             process_id: process.id |> ID.to_external(entity_id, server_id)
           }

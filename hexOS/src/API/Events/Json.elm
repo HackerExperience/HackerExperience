@@ -461,9 +461,13 @@ encodeFileInstallFailed rec =
 decodeFileDeleted : Json.Decode.Decoder API.Events.Types.FileDeleted
 decodeFileDeleted =
     Json.Decode.succeed
-        (\file_id process_id -> { file_id = file_id, process_id = process_id })
+        (\file_id nip process_id ->
+            { file_id = file_id, nip = nip, process_id = process_id }
+        )
         |> OpenApi.Common.jsonDecodeAndMap
             (Json.Decode.field "file_id" (Json.Decode.map FileID Json.Decode.string))
+        |> OpenApi.Common.jsonDecodeAndMap
+            (Json.Decode.field "nip" (Json.Decode.map (\nip -> NIP.fromString nip) Json.Decode.string))
         |> OpenApi.Common.jsonDecodeAndMap
             (Json.Decode.field
                 "process_id"
@@ -475,6 +479,7 @@ encodeFileDeleted : API.Events.Types.FileDeleted -> Json.Encode.Value
 encodeFileDeleted rec =
     Json.Encode.object
         [ ( "file_id", Json.Encode.string (FileID.toValue rec.file_id) )
+        , ( "nip", Json.Encode.string (NIP.toString rec.nip) )
         , ( "process_id", Json.Encode.string (ProcessID.toValue rec.process_id) )
         ]
 

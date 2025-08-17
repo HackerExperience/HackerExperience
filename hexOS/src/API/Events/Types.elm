@@ -107,7 +107,7 @@ type alias FileInstallFailed =
 
 
 type alias FileDeleted =
-    { file_id : FileID, process_id : ProcessID }
+    { file_id : FileID, nip : NIP, process_id : ProcessID }
 
 
 type alias FileDeleteFailed =
