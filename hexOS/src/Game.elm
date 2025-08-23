@@ -14,6 +14,7 @@ module Game exposing
     , onAppStoreInstalledEvent
     , onFileDeletedEvent
     , onFileInstalledEvent
+    , onInstallationUninstalledEvent
     , onLogDeletedEvent
     , onLogEditedEvent
     , onProcessCompletedEvent
@@ -323,6 +324,11 @@ onFileDeletedEvent model event =
 onFileInstalledEvent : Model -> Events.FileInstalled -> Model
 onFileInstalledEvent model event =
     updateServer event.nip (Server.onFileInstalledEvent event) model
+
+
+onInstallationUninstalledEvent : Model -> Events.InstallationUninstalled -> Model
+onInstallationUninstalledEvent model event =
+    updateServer event.nip (Server.onInstallationUninstalledEvent event) model
 
 
 onLogDeletedEvent : Model -> Events.LogDeleted -> Model

@@ -12,6 +12,7 @@ module Game.Model.Server exposing
     , onAppStoreInstalledEvent
     , onFileDeletedEvent
     , onFileInstalledEvent
+    , onInstallationUninstalledEvent
     , onLogDeletedEvent
     , onLogEditedEvent
     , onProcessCompletedEvent
@@ -359,6 +360,14 @@ onFileInstalledEvent event server =
     { server
         | files = File.onFileInstalledEvent event.file server.files
         , installations = Installation.onFileInstalledEvent event.installation server.installations
+    }
+
+
+onInstallationUninstalledEvent : Events.InstallationUninstalled -> Server -> Server
+onInstallationUninstalledEvent event server =
+    { server
+        | files = File.onInstallationUninstalledEvent event server.files
+        , installations = Installation.onInstallationUninstalledEvent event server.installations
     }
 
 

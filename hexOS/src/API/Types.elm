@@ -3,6 +3,7 @@ module API.Types exposing (..)
 import API.Game.Types as GameTypes
 import API.Lobby.Types as LobbyTypes
 import Game.Model.FileID exposing (FileID)
+import Game.Model.InstallationID exposing (InstallationID)
 import Game.Model.LogID exposing (LogID)
 import Game.Model.NIP exposing (NIP)
 import Game.Model.ServerID exposing (ServerID)
@@ -118,6 +119,28 @@ type alias FileInstallError =
 
 type alias FileInstallResult =
     Result (Error FileInstallError) GameTypes.FileInstallOutput
+
+
+
+-- Game > Installation > Uninstall
+
+
+type alias InstallationUninstallInput =
+    { body : GameTypes.InstallationUninstallRequest
+    , params : InstallationUninstallParams
+    }
+
+
+type alias InstallationUninstallParams =
+    { nip : NIP, installation_id : InstallationID }
+
+
+type alias InstallationUninstallError =
+    GameTypes.GenericError
+
+
+type alias InstallationUninstallResult =
+    Result (Error InstallationUninstallError) GameTypes.InstallationUninstallOutput
 
 
 

@@ -29,6 +29,7 @@ type APIRequestEnum msg
     | AppStoreInstall (API.AppStoreInstallResult -> msg) (InputConfig API.AppStoreInstallInput)
     | FileDelete (API.FileDeleteResult -> msg) (InputConfig API.FileDeleteInput)
     | FileInstall (API.FileInstallResult -> msg) (InputConfig API.FileInstallInput)
+    | InstUninstall (API.InstallationUninstallResult -> msg) (InputConfig API.InstallationUninstallInput)
     | LogDelete (API.LogDeleteResult -> msg) (InputConfig API.LogDeleteInput)
     | LogEdit (API.LogEditResult -> msg) (InputConfig API.LogEditInput)
     | ServerLogin (API.ServerLoginResult -> msg) (InputConfig API.ServerLoginInput)
@@ -89,6 +90,9 @@ applyApiRequest apiRequest seeds =
 
         FileInstall msg config ->
             ( seeds, Task.attempt msg (GameAPI.fileInstallTask config) )
+
+        InstUninstall msg config ->
+            ( seeds, Task.attempt msg (GameAPI.installationUninstallTask config) )
 
         LogDelete msg config ->
             ( seeds, Task.attempt msg (GameAPI.logDeleteTask config) )
@@ -177,6 +181,18 @@ fileInstall msg config =
 
 
 
+-- Installation
+
+
+installationUninstall :
+    (API.InstallationUninstallResult -> msg)
+    -> InputConfig API.InstallationUninstallInput
+    -> Effect msg
+installationUninstall msg config =
+    APIRequest (InstUninstall msg config)
+
+
+
 -- Log
 
 
@@ -235,6 +251,9 @@ map toMsg effect =
 
                 FileInstall msg body ->
                     APIRequest (FileInstall (\result -> toMsg (msg result)) body)
+
+                InstUninstall msg body ->
+                    APIRequest (InstUninstall (\result -> toMsg (msg result)) body)
 
                 LogDelete msg body ->
                     APIRequest (LogDelete (\result -> toMsg (msg result)) body)

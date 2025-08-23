@@ -3,6 +3,7 @@ module Game.Model.Installation exposing
     , Installations
     , onAppStoreInstalledEvent
     , onFileInstalledEvent
+    , onInstallationUninstalledEvent
     , parse
     )
 
@@ -73,3 +74,8 @@ onAppStoreInstalledEvent idxInstallation installations =
 onFileInstalledEvent : Events.IdxInstallation -> Installations -> Installations
 onFileInstalledEvent idxInstallation installations =
     Dict.insert idxInstallation.id (parseInstallation idxInstallation) installations
+
+
+onInstallationUninstalledEvent : Events.InstallationUninstalled -> Installations -> Installations
+onInstallationUninstalledEvent { installation_id } installations =
+    Dict.remove (InstallationID.toValue installation_id) installations

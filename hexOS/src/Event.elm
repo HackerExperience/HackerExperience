@@ -14,6 +14,7 @@ type Event
     | AppStoreInstalled Events.AppstoreInstalled Universe
     | FileDeleted Events.FileDeleted Universe
     | FileInstalled Events.FileInstalled Universe
+    | InstallationUninstalled Events.InstallationUninstalled Universe
     | LogDeleted Events.LogDeleted Universe
     | LogEdited Events.LogEdited Universe
     | ProcessCompleted Events.ProcessCompleted Universe
@@ -79,6 +80,10 @@ dataDecoder universe eventName =
                 "log_edited" ->
                     JD.map (\x -> LogEdited x universe)
                         Events.decodeLogEdited
+
+                "installation_uninstalled" ->
+                    JD.map (\x -> InstallationUninstalled x universe)
+                        Events.decodeInstallationUninstalled
 
                 "process_completed" ->
                     JD.map (\x -> ProcessCompleted x universe)

@@ -8,6 +8,7 @@ import Effect exposing (Effect)
 import Game
 import Game.Model.File exposing (File)
 import Game.Model.FileID exposing (FileID)
+import Game.Model.InstallationID exposing (InstallationID)
 import Game.Model.NIP exposing (NIP)
 import Game.Model.Server as Server
 import Game.Model.SoftwareType as SoftwareType
@@ -26,6 +27,8 @@ type Msg
     | OnDeleteFileResponse FileID API.Types.FileDeleteResult
     | OnInstallFile FileID
     | OnInstallFileResponse FileID API.Types.FileInstallResult
+    | OnUninstallInstallation InstallationID
+    | OnUninstallInstallationResponse InstallationID API.Types.InstallationUninstallResult
 
 
 type alias Model =
@@ -85,6 +88,21 @@ update game msg model =
             )
 
         OnInstallFileResponse _ _ ->
+            -- Side-effects are handled by the ProcessCreatedEvent
+            ( model, Effect.none )
+
+        OnUninstallInstallation installationId ->
+            let
+                config =
+                    GameAPI.installationUninstallConfig game.apiCtx model.nip installationId
+            in
+            ( model
+            , Effect.batch
+                [ Effect.installationUninstall (OnUninstallInstallationResponse installationId) config
+                ]
+            )
+
+        OnUninstallInstallationResponse _ _ ->
             -- Side-effects are handled by the ProcessCreatedEvent
             ( model, Effect.none )
 
@@ -170,9 +188,10 @@ vFileRowActions file =
     let
         installOrUninstallAction =
             case file.installationId of
-                Just _ ->
+                Just installationId ->
                     UI.Icon.msOutline "stop_circle" Nothing
                         |> UI.Icon.withClass "a-fex-fr-a-entry"
+                        |> UI.Icon.withOnClick (OnUninstallInstallation installationId)
                         |> UI.Icon.toUI
 
                 Nothing ->

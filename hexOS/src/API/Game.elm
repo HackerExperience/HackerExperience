@@ -10,6 +10,7 @@ import API.Types as Types
         )
 import API.Utils exposing (PrivateErrType(..), dataMapper, extractBodyAndParams, mapError, mapResponse)
 import Game.Model.FileID exposing (FileID)
+import Game.Model.InstallationID exposing (InstallationID)
 import Game.Model.LogID exposing (LogID)
 import Game.Model.NIP exposing (NIP)
 import Game.Model.ServerID exposing (ServerID)
@@ -72,6 +73,43 @@ fileInstallTask :
     -> Task (Error Types.FileInstallError) GameTypes.FileInstallOutput
 fileInstallTask config =
     Api.fileInstallTask (extractBodyAndParams config)
+        |> mapResponse dataMapper
+        |> mapError
+            (\apiError ->
+                case apiError of
+                    -- TODO
+                    LegitimateError _ ->
+                        InternalError
+
+                    UnexpectedError ->
+                        InternalError
+            )
+
+
+
+-- Requests > Installation > Uninstall
+
+
+installationUninstallConfig :
+    InputContext
+    -> NIP
+    -> InstallationID
+    -> InputConfig Types.InstallationUninstallInput
+installationUninstallConfig ctx nip installationId =
+    let
+        input =
+            { body = {}
+            , params = { nip = nip, installation_id = installationId }
+            }
+    in
+    { server = ctx.server, input = input, authToken = ctx.token }
+
+
+installationUninstallTask :
+    InputConfig Types.InstallationUninstallInput
+    -> Task (Error Types.InstallationUninstallError) GameTypes.InstallationUninstallOutput
+installationUninstallTask config =
+    Api.installationUninstallTask (extractBodyAndParams config)
         |> mapResponse dataMapper
         |> mapError
             (\apiError ->
