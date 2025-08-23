@@ -2,8 +2,11 @@ module API.Types exposing (..)
 
 import API.Game.Types as GameTypes
 import API.Lobby.Types as LobbyTypes
+import Game.Model.FileID exposing (FileID)
+import Game.Model.InstallationID exposing (InstallationID)
 import Game.Model.LogID exposing (LogID)
 import Game.Model.NIP exposing (NIP)
+import Game.Model.ServerID exposing (ServerID)
 
 
 
@@ -53,6 +56,94 @@ type alias AuthorizationHeader =
 
 
 -- Game
+-- Game > AppStore > Install
+
+
+type alias AppStoreInstallInput =
+    { body : GameTypes.AppStoreInstallRequest
+    , params : AppStoreInstallParams
+    }
+
+
+type alias AppStoreInstallParams =
+    { server_id : ServerID, software_type : String }
+
+
+type alias AppStoreInstallError =
+    GameTypes.GenericError
+
+
+type alias AppStoreInstallResult =
+    Result (Error AppStoreInstallError) GameTypes.AppStoreInstallOutput
+
+
+
+-- Game > File > Delete
+
+
+type alias FileDeleteInput =
+    { body : GameTypes.FileDeleteRequest
+    , params : FileDeleteParams
+    }
+
+
+type alias FileDeleteParams =
+    { nip : NIP, file_id : FileID }
+
+
+type alias FileDeleteError =
+    GameTypes.GenericError
+
+
+type alias FileDeleteResult =
+    Result (Error FileDeleteError) GameTypes.FileDeleteOutput
+
+
+
+-- Game > File > Install
+
+
+type alias FileInstallInput =
+    { body : GameTypes.FileInstallRequest
+    , params : FileInstallParams
+    }
+
+
+type alias FileInstallParams =
+    { nip : NIP, file_id : FileID }
+
+
+type alias FileInstallError =
+    GameTypes.GenericError
+
+
+type alias FileInstallResult =
+    Result (Error FileInstallError) GameTypes.FileInstallOutput
+
+
+
+-- Game > Installation > Uninstall
+
+
+type alias InstallationUninstallInput =
+    { body : GameTypes.InstallationUninstallRequest
+    , params : InstallationUninstallParams
+    }
+
+
+type alias InstallationUninstallParams =
+    { nip : NIP, installation_id : InstallationID }
+
+
+type alias InstallationUninstallError =
+    GameTypes.GenericError
+
+
+type alias InstallationUninstallResult =
+    Result (Error InstallationUninstallError) GameTypes.InstallationUninstallOutput
+
+
+
 -- Game > Log > Delete
 
 

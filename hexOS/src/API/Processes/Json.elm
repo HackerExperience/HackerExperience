@@ -2,10 +2,10 @@
 
 
 module API.Processes.Json exposing
-    ( encodeFileDelete, encodeFileInstall, encodeFileTransfer, encodeInstallationUninstall, encodeLogDelete
-    , encodeLogEdit
-    , decodeFileDelete, decodeFileInstall, decodeFileTransfer, decodeInstallationUninstall, decodeLogDelete
-    , decodeLogEdit
+    ( encodeAppstoreInstall, encodeFileDelete, encodeFileInstall, encodeFileTransfer
+    , encodeInstallationUninstall, encodeLogDelete, encodeLogEdit
+    , decodeAppstoreInstall, decodeFileDelete, decodeFileInstall, decodeFileTransfer
+    , decodeInstallationUninstall, decodeLogDelete, decodeLogEdit
     )
 
 {-|
@@ -13,21 +13,24 @@ module API.Processes.Json exposing
 
 ## Encoders
 
-@docs encodeFileDelete, encodeFileInstall, encodeFileTransfer, encodeInstallationUninstall, encodeLogDelete
-@docs encodeLogEdit
+@docs encodeAppstoreInstall, encodeFileDelete, encodeFileInstall, encodeFileTransfer
+@docs encodeInstallationUninstall, encodeLogDelete, encodeLogEdit
 
 
 ## Decoders
 
-@docs decodeFileDelete, decodeFileInstall, decodeFileTransfer, decodeInstallationUninstall, decodeLogDelete
-@docs decodeLogEdit
+@docs decodeAppstoreInstall, decodeFileDelete, decodeFileInstall, decodeFileTransfer
+@docs decodeInstallationUninstall, decodeLogDelete, decodeLogEdit
 
 -}
 
 import API.Processes.Types
+import Game.Model.FileID as FileID exposing (FileID(..))
+import Game.Model.InstallationID as InstallationID exposing (InstallationID(..))
 import Game.Model.LogID as LogID exposing (LogID(..))
 import Game.Model.NIP as NIP exposing (NIP(..))
 import Game.Model.ProcessID as ProcessID exposing (ProcessID(..))
+import Game.Model.ServerID as ServerID exposing (ServerID(..))
 import Game.Model.TunnelID as TunnelID exposing (TunnelID(..))
 import Json.Decode
 import Json.Encode
@@ -104,3 +107,17 @@ decodeFileDelete =
 encodeFileDelete : API.Processes.Types.FileDelete -> Json.Encode.Value
 encodeFileDelete rec =
     Json.Encode.object []
+
+
+decodeAppstoreInstall : Json.Decode.Decoder API.Processes.Types.AppstoreInstall
+decodeAppstoreInstall =
+    Json.Decode.succeed
+        (\software_type -> { software_type = software_type })
+        |> OpenApi.Common.jsonDecodeAndMap
+            (Json.Decode.field "software_type" Json.Decode.string)
+
+
+encodeAppstoreInstall : API.Processes.Types.AppstoreInstall -> Json.Encode.Value
+encodeAppstoreInstall rec =
+    Json.Encode.object
+        [ ( "software_type", Json.Encode.string rec.software_type ) ]

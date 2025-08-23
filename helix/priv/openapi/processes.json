@@ -3,6 +3,20 @@
     "requestBodies": {},
     "responses": {},
     "schemas": {
+      "appstore_install": {
+        "properties": {
+          "software_type": {
+            "enum": [
+              "cracker"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "software_type"
+        ],
+        "type": "object"
+      },
       "file_delete": {
         "properties": {},
         "required": [],

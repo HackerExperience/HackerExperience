@@ -10,7 +10,9 @@ module OS exposing
     , updateViewport
     )
 
+import Apps.AppStore as AppStore
 import Apps.Demo as Demo
+import Apps.FileExplorer as FileExplorer
 import Apps.Input as App
 import Apps.LogViewer as LogViewer
 import Apps.LogViewer.LogEditPopup as LogEditPopup
@@ -620,6 +622,50 @@ dispatchUpdateApp state model appMsg =
         Apps.InvalidMsg ->
             ( model, Effect.none )
 
+        Apps.AppStoreMsg _ (AppStore.ToOS busAction) ->
+            ( model, Effect.msgToCmd (PerformAction busAction) )
+
+        Apps.AppStoreMsg _ (AppStore.ToCtxMenu ctxMenuMsg) ->
+            ( model, Effect.msgToCmd (PerformAction (OS.Bus.ToCtxMenu ctxMenuMsg)) )
+
+        Apps.AppStoreMsg appId subMsg ->
+            case getAppModel model.appModels appId of
+                Apps.AppStoreModel appModel ->
+                    updateApp
+                        state
+                        model
+                        appId
+                        appModel
+                        subMsg
+                        Apps.AppStoreModel
+                        Apps.AppStoreMsg
+                        AppStore.update
+
+                _ ->
+                    ( model, Effect.none )
+
+        Apps.FileExplorerMsg _ (FileExplorer.ToOS busAction) ->
+            ( model, Effect.msgToCmd (PerformAction busAction) )
+
+        Apps.FileExplorerMsg _ (FileExplorer.ToCtxMenu ctxMenuMsg) ->
+            ( model, Effect.msgToCmd (PerformAction (OS.Bus.ToCtxMenu ctxMenuMsg)) )
+
+        Apps.FileExplorerMsg appId subMsg ->
+            case getAppModel model.appModels appId of
+                Apps.FileExplorerModel appModel ->
+                    updateApp
+                        state
+                        model
+                        appId
+                        appModel
+                        subMsg
+                        Apps.FileExplorerModel
+                        Apps.FileExplorerMsg
+                        FileExplorer.update
+
+                _ ->
+                    ( model, Effect.none )
+
         Apps.LogViewerMsg _ (LogViewer.ToOS busAction) ->
             ( model, Effect.msgToCmd (PerformAction busAction) )
 
@@ -999,8 +1045,8 @@ renderWindowTitle appId window isDragging =
         buttonsHtml =
             row
                 [ cl "os-w-title-actions"
-                , stopPropagation "mousedown"
-                , stopPropagation "mouseup"
+                , UI.stopPropagation "mousedown" (PerformAction OS.Bus.NoOp)
+                , UI.stopPropagation "mouseup" (PerformAction OS.Bus.NoOp)
                 ]
                 [ collapseButtonHtml
                 , closeButtonHtml
@@ -1027,17 +1073,17 @@ renderWindowContent innerContent =
     col [ cl "os-w-content" ] [ innerContent ]
 
 
-stopPropagation : String -> UI.Attribute Msg
-stopPropagation event =
-    HE.stopPropagationOn event
-        (JD.succeed <| (\msg -> ( msg, True )) (PerformAction OS.Bus.NoOp))
-
-
 getWindowInnerContent : Model -> AppID -> WM.Window -> Apps.Model -> Game.Model -> UI Apps.Msg
 getWindowInnerContent { ctxMenu } appId _ appModel universe =
     case appModel of
         Apps.InvalidModel ->
             UI.emptyEl
+
+        Apps.AppStoreModel model ->
+            Html.map (Apps.AppStoreMsg appId) <| AppStore.view model universe ctxMenu
+
+        Apps.FileExplorerModel model ->
+            Html.map (Apps.FileExplorerMsg appId) <| FileExplorer.view model universe ctxMenu
 
         Apps.LogViewerModel model ->
             Html.map (Apps.LogViewerMsg appId) <| LogViewer.view model universe ctxMenu

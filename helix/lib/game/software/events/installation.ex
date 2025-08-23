@@ -31,19 +31,22 @@ defmodule Game.Events.Installation do
       def spec do
         selection(
           schema(%{
+            nip: nip(),
             installation_id: external_id(),
             process_id: external_id()
           }),
-          [:installation_id, :process_id]
+          [:nip, :installation_id, :process_id]
         )
       end
 
       def generate_payload(%{data: %{process: process, installation: installation}}) do
         entity_id = process.entity_id
         server_id = process.server_id
+        %{nip: nip} = Svc.NetworkConnection.fetch!(by_server_id: server_id)
 
         payload =
           %{
+            nip: NIP.to_external(nip),
             installation_id: installation.id |> ID.to_external(entity_id, server_id),
             process_id: process.id |> ID.to_external(entity_id, server_id)
           }

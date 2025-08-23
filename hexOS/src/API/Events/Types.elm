@@ -2,49 +2,36 @@
 
 
 module API.Events.Types exposing
-    ( FileDeleteFailed
-    , FileDeleted
-    , FileInstallFailed
-    , FileInstalled
-    , FileTransferFailed
-    , FileTransferred
-    , IdxEndpoint
-    , IdxGateway
-    , IdxLog
-    , IdxLogRevision
-    , IdxPlayer
-    , IdxProcess
-    , IdxTunnel
-    , IndexRequested
-    , InstallationUninstallFailed
-    , InstallationUninstalled
-    , LogDeleteFailed
-    , LogDeleted
-    , LogEditFailed
-    , LogEdited
-    , ProcessCompleted
-    , ProcessCreated
-    , ProcessKilled
-    , TunnelCreated
+    ( AppstoreInstallFailed, AppstoreInstalled, FileDeleteFailed, FileDeleted, FileInstallFailed, FileInstalled
+    , FileTransferFailed, FileTransferred, IdxEndpoint, IdxFile, IdxGateway, IdxInstallation, IdxLog
+    , IdxLogRevision, IdxPlayer, IdxProcess, IdxSoftware, IdxTunnel, IndexRequested, InstallationUninstallFailed
+    , InstallationUninstalled, LogDeleteFailed, LogDeleted, LogEditFailed, LogEdited, ProcessCompleted
+    , ProcessCreated, ProcessKilled, SoftwareConfig, SoftwareConfigAppstore, SoftwareManifest, TunnelCreated
     )
-
-import Game.Model.LogID as LogID exposing (LogID(..))
-import Game.Model.NIP as NIP exposing (NIP(..))
-import Game.Model.ProcessID as ProcessID exposing (ProcessID(..))
-import Game.Model.TunnelID as TunnelID exposing (TunnelID(..))
-
 
 {-|
 
 
 ## Aliases
 
-@docs FileDeleteFailed, FileDeleted, FileInstallFailed, FileInstalled, FileTransferFailed, FileTransferred
-@docs IdxEndpoint, IdxGateway, IdxLog, IdxLogRevision, IdxPlayer, IdxProcess, IdxTunnel, IndexRequested
-@docs InstallationUninstallFailed, InstallationUninstalled, LogDeleteFailed, LogDeleted, LogEditFailed
-@docs LogEdited, ProcessCompleted, ProcessCreated, ProcessKilled, TunnelCreated
+@docs AppstoreInstallFailed, AppstoreInstalled, FileDeleteFailed, FileDeleted, FileInstallFailed, FileInstalled
+@docs FileTransferFailed, FileTransferred, IdxEndpoint, IdxFile, IdxGateway, IdxInstallation, IdxLog
+@docs IdxLogRevision, IdxPlayer, IdxProcess, IdxSoftware, IdxTunnel, IndexRequested, InstallationUninstallFailed
+@docs InstallationUninstalled, LogDeleteFailed, LogDeleted, LogEditFailed, LogEdited, ProcessCompleted
+@docs ProcessCreated, ProcessKilled, SoftwareConfig, SoftwareConfigAppstore, SoftwareManifest, TunnelCreated
 
 -}
+
+import Game.Model.FileID as FileID exposing (FileID(..))
+import Game.Model.InstallationID as InstallationID exposing (InstallationID(..))
+import Game.Model.LogID as LogID exposing (LogID(..))
+import Game.Model.NIP as NIP exposing (NIP(..))
+import Game.Model.ProcessID as ProcessID exposing (ProcessID(..))
+import Game.Model.ServerID as ServerID exposing (ServerID(..))
+import Game.Model.TunnelID as TunnelID exposing (TunnelID(..))
+import OpenApi.Common
+
+
 type alias TunnelCreated =
     { access : String
     , index : IdxEndpoint
@@ -89,7 +76,7 @@ type alias LogDeleteFailed =
 
 
 type alias InstallationUninstalled =
-    { installation_id : String, process_id : ProcessID }
+    { installation_id : InstallationID, nip : NIP, process_id : ProcessID }
 
 
 type alias InstallationUninstallFailed =
@@ -97,11 +84,11 @@ type alias InstallationUninstallFailed =
 
 
 type alias IndexRequested =
-    { player : IdxPlayer }
+    { player : IdxPlayer, software : IdxSoftware }
 
 
 type alias FileTransferred =
-    { file_id : String, process_id : ProcessID }
+    { file_id : FileID, process_id : ProcessID }
 
 
 type alias FileTransferFailed =
@@ -109,9 +96,9 @@ type alias FileTransferFailed =
 
 
 type alias FileInstalled =
-    { file_name : String
-    , installation_id : String
-    , memory_usage : Int
+    { file : IdxFile
+    , installation : IdxInstallation
+    , nip : NIP
     , process_id : ProcessID
     }
 
@@ -121,15 +108,55 @@ type alias FileInstallFailed =
 
 
 type alias FileDeleted =
-    { file_id : String, process_id : ProcessID }
+    { file_id : FileID, nip : NIP, process_id : ProcessID }
 
 
 type alias FileDeleteFailed =
     { process_id : ProcessID, reason : String }
 
 
+type alias AppstoreInstalled =
+    { file : IdxFile
+    , installation : IdxInstallation
+    , nip : NIP
+    , process_id : ProcessID
+    , tmp_file :
+        Maybe
+            (OpenApi.Common.Nullable
+                { id : String
+                , installation_id : OpenApi.Common.Nullable String
+                , name : String
+                , path : String
+                , size : Int
+                , type_ : String
+                , version : Int
+                }
+            )
+    }
+
+
+type alias AppstoreInstallFailed =
+    { process_id : ProcessID, reason : String }
+
+
+type alias SoftwareManifest =
+    { config : SoftwareConfig, extension : String, type_ : String }
+
+
+type alias SoftwareConfigAppstore =
+    { price : Int }
+
+
+type alias SoftwareConfig =
+    { appstore : Maybe SoftwareConfigAppstore }
+
+
 type alias IdxTunnel =
     { source_nip : NIP, target_nip : NIP, tunnel_id : TunnelID }
+
+
+type alias IdxSoftware =
+    { manifest : List SoftwareManifest }
 
 
 type alias IdxProcess =
@@ -139,6 +166,7 @@ type alias IdxProcess =
 type alias IdxPlayer =
     { endpoints : List IdxEndpoint
     , gateways : List IdxGateway
+    , mainframe_id : String
     , mainframe_nip : NIP
     }
 
@@ -161,13 +189,40 @@ type alias IdxLog =
     }
 
 
+type alias IdxInstallation =
+    { file_id : OpenApi.Common.Nullable String
+    , file_type : String
+    , file_version : Int
+    , id : String
+    , memory_usage : Int
+    }
+
+
 type alias IdxGateway =
-    { logs : List IdxLog
+    { files : List IdxFile
+    , id : String
+    , installations : List IdxInstallation
+    , logs : List IdxLog
     , nip : NIP
     , processes : List IdxProcess
     , tunnels : List IdxTunnel
     }
 
 
+type alias IdxFile =
+    { id : String
+    , installation_id : OpenApi.Common.Nullable String
+    , name : String
+    , path : String
+    , size : Int
+    , type_ : String
+    , version : Int
+    }
+
+
 type alias IdxEndpoint =
-    { logs : List IdxLog, nip : NIP, processes : List IdxProcess }
+    { files : List IdxFile
+    , logs : List IdxLog
+    , nip : NIP
+    , processes : List IdxProcess
+    }

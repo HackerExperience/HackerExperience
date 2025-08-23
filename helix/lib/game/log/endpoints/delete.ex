@@ -84,6 +84,8 @@ defmodule Game.Endpoint.Log.Delete do
     render_process(request, process, session, %{log_id: log_eid})
   end
 
+  # TODO: I think `format_henforcer_error` should be moved to a util (not necessarily Core.Endpoint
+  # because Henforcer is also used in Events) -- globally.
   defp format_henforcer_error({:server, :not_belongs}), do: "nip_not_found"
   defp format_henforcer_error({:tunnel, :not_found}), do: "nip_not_found"
   defp format_henforcer_error({:nip, :not_found}), do: "nip_not_found"

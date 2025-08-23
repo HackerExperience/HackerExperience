@@ -16,6 +16,8 @@ module WM exposing
     , focusApp
     , focusVibrateApp
     , getLinkedChildren
+    , getSessionNIP
+    , getSessionServerID
     , getWindow
     , hasLinkedChildren
     , init
@@ -43,6 +45,7 @@ OS gerencia as Msgs/Updates etc. Tentar fazer assim (mas tudo bem se nao rolar)
 import Apps.Manifest as App
 import Dict exposing (Dict)
 import Game.Model.NIP as NIP exposing (NIP)
+import Game.Model.ServerID as ServerID exposing (ServerID)
 import Game.Universe as Universe exposing (Universe)
 import List.Extra as List
 import Maybe.Extra as Maybe
@@ -51,7 +54,7 @@ import OS.Bus
 
 
 type SessionID
-    = LocalSessionID NIP
+    = LocalSessionID ServerID NIP
     | RemoteSessionID NIP
 
 
@@ -222,9 +225,9 @@ getViewportLimits model lenX lenY =
 -- Model > Session
 
 
-toLocalSessionId : NIP -> SessionID
-toLocalSessionId nip =
-    LocalSessionID nip
+toLocalSessionId : ServerID -> NIP -> SessionID
+toLocalSessionId serverId nip =
+    LocalSessionID serverId nip
 
 
 toRemoteSessionId : NIP -> SessionID
@@ -235,31 +238,51 @@ toRemoteSessionId nip =
 isSessionLocal : SessionID -> Bool
 isSessionLocal session =
     case session of
-        LocalSessionID _ ->
+        LocalSessionID _ _ ->
             True
 
         RemoteSessionID _ ->
             False
 
 
+getSessionServerID : SessionID -> Maybe ServerID
+getSessionServerID session =
+    case session of
+        LocalSessionID serverId _ ->
+            Just serverId
+
+        RemoteSessionID _ ->
+            Nothing
+
+
+getSessionNIP : SessionID -> NIP
+getSessionNIP session =
+    case session of
+        LocalSessionID _ nip ->
+            nip
+
+        RemoteSessionID nip ->
+            nip
+
+
 sessionIdToString : SessionID -> String
 sessionIdToString session =
     case session of
-        LocalSessionID nip ->
+        LocalSessionID _ nip ->
             NIP.toString nip
 
         RemoteSessionID nip ->
             NIP.toString nip
 
 
-toggleSession : NIP -> NIP -> SessionID -> SessionID
-toggleSession gatewayNip endpointNip currentSession =
+toggleSession : ServerID -> NIP -> NIP -> SessionID -> SessionID
+toggleSession gatewayId gatewayNip endpointNip currentSession =
     case currentSession of
-        LocalSessionID _ ->
+        LocalSessionID _ _ ->
             RemoteSessionID endpointNip
 
         RemoteSessionID _ ->
-            LocalSessionID gatewayNip
+            LocalSessionID gatewayId gatewayNip
 
 
 
@@ -762,7 +785,7 @@ dummyWindow =
     , blockedByApp = Nothing
     , childBehavior = Nothing
     , universe = Universe.Singleplayer
-    , sessionID = LocalSessionID NIP.invalidNip
+    , sessionID = LocalSessionID (ServerID.fromValue "invalid") NIP.invalidNip
     }
 
 

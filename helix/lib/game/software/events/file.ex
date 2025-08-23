@@ -10,6 +10,7 @@ defmodule Game.Events.File do
     use Core.Event.Definition
 
     alias Game.{File, Installation, Process}
+    alias Game.Index
 
     defstruct [:file, :installation, :process]
 
@@ -32,24 +33,25 @@ defmodule Game.Events.File do
       def spec do
         selection(
           schema(%{
-            installation_id: external_id(),
-            file_name: binary(),
-            memory_usage: integer(),
+            nip: nip(),
+            file: Index.File.spec(),
+            installation: Index.Installation.spec(),
             process_id: external_id()
           }),
-          [:installation_id, :file_name, :memory_usage, :process_id]
+          [:nip, :file, :installation, :process_id]
         )
       end
 
       def generate_payload(%{data: %{process: process, file: file, installation: installation}}) do
         entity_id = process.entity_id
         server_id = process.server_id
+        %{nip: nip} = Svc.NetworkConnection.fetch!(by_server_id: server_id)
 
         payload =
           %{
-            installation_id: installation.id |> ID.to_external(entity_id, server_id),
-            file_name: file.name,
-            memory_usage: installation.memory_usage,
+            nip: NIP.to_external(nip),
+            file: Index.File.render_file({file, installation.id}, entity_id),
+            installation: Index.Installation.render_installation(installation, entity_id),
             process_id: process.id |> ID.to_external(entity_id, server_id)
           }
 
@@ -160,19 +162,22 @@ defmodule Game.Events.File do
       def spec do
         selection(
           schema(%{
+            nip: nip(),
             file_id: external_id(),
             process_id: external_id()
           }),
-          [:file_id, :process_id]
+          [:nip, :file_id, :process_id]
         )
       end
 
       def generate_payload(%{data: %{process: process, file: file}}) do
         entity_id = process.entity_id
         server_id = process.server_id
+        %{nip: nip} = Svc.NetworkConnection.fetch!(by_server_id: server_id)
 
         payload =
           %{
+            nip: NIP.to_external(nip),
             file_id: file.id |> ID.to_external(entity_id, server_id),
             process_id: process.id |> ID.to_external(entity_id, server_id)
           }
@@ -181,8 +186,9 @@ defmodule Game.Events.File do
       end
 
       @doc """
-      Only the Process owner receives this event.
+      The process owner, and anyone else with visibility over the file, should receive the event.
       """
+      # TODO: Notify all players that have visibility over the file.
       def whom_to_publish(%{data: %{process: %{entity_id: entity_id}}}),
         do: %{player: entity_id}
     end

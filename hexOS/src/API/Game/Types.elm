@@ -2,7 +2,11 @@
 
 
 module API.Game.Types exposing
-    ( FileDeleteInput
+    ( AppStoreInstallInput
+    , AppStoreInstallOkResponse
+    , AppStoreInstallOutput
+    , AppStoreInstallRequest
+    , FileDeleteInput
     , FileDeleteOkResponse
     , FileDeleteOutput
     , FileDeleteRequest
@@ -42,9 +46,12 @@ module API.Game.Types exposing
     , ServerLoginRequest
     )
 
+import Game.Model.FileID as FileID exposing (FileID(..))
+import Game.Model.InstallationID as InstallationID exposing (InstallationID(..))
 import Game.Model.LogID as LogID exposing (LogID(..))
 import Game.Model.NIP as NIP exposing (NIP(..))
 import Game.Model.ProcessID as ProcessID exposing (ProcessID(..))
+import Game.Model.ServerID as ServerID exposing (ServerID(..))
 import Game.Model.TunnelID as TunnelID exposing (TunnelID(..))
 
 
@@ -53,6 +60,7 @@ import Game.Model.TunnelID as TunnelID exposing (TunnelID(..))
 
 ## Aliases
 
+@docs AppStoreInstallInput, AppStoreInstallOkResponse, AppStoreInstallOutput, AppStoreInstallRequest
 @docs FileDeleteInput, FileDeleteOkResponse, FileDeleteOutput, FileDeleteRequest, FileInstallInput
 @docs FileInstallOkResponse, FileInstallOutput, FileInstallRequest, FileTransferInput, FileTransferOkResponse
 @docs FileTransferOutput, FileTransferRequest, GenericBadRequest, GenericBadRequestResponse, GenericError
@@ -143,6 +151,14 @@ type alias FileDeleteInput =
     { tunnel_id : Maybe TunnelID }
 
 
+type alias AppStoreInstallOutput =
+    { process : IdxProcess }
+
+
+type alias AppStoreInstallInput =
+    {}
+
+
 type alias ServerLoginOkResponse =
     { data : ServerLoginOutput }
 
@@ -187,6 +203,10 @@ type alias FileDeleteOkResponse =
     { data : FileDeleteOutput }
 
 
+type alias AppStoreInstallOkResponse =
+    { data : AppStoreInstallOutput }
+
+
 type alias ServerLoginRequest =
     ServerLoginInput
 
@@ -217,3 +237,7 @@ type alias FileInstallRequest =
 
 type alias FileDeleteRequest =
     FileDeleteInput
+
+
+type alias AppStoreInstallRequest =
+    AppStoreInstallInput

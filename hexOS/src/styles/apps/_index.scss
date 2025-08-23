@@ -1,3 +1,7 @@
-@use "confirmation_prompt";
+// Apps
+@use "app_store";
+@use "file_explorer";
 @use "log_viewer";
+// Popups
+@use "confirmation_prompt";
 @use "log_edit_popup";

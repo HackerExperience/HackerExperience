@@ -5,11 +5,7 @@ defmodule Game.Endpoint.Log.DeleteTest do
   setup [:with_game_db, :with_game_webserver]
 
   describe "Log.Delete request" do
-    test "successfully starts a LogDeleteProcess (gateway)" do
-      # TODO: `player` (and `jwt`?) should automagically show up when `with_game_webserver`
-      player = Setup.player!()
-      jwt = U.jwt_token(uid: player.external_id)
-
+    test "successfully starts a LogDeleteProcess (gateway)", %{jwt: jwt, player: player} do
       %{server: gateway, nip: nip} = Setup.server_full(entity_id: player.id)
       log = Setup.log!(gateway.id, visible_by: player.id)
       DB.commit()
@@ -39,11 +35,7 @@ defmodule Game.Endpoint.Log.DeleteTest do
       assert process_created_event.data.process.data.log_id == log.id
     end
 
-    test "successfully starts a LogDeleteProcess (endpoint)" do
-      # TODO: `player` (and `jwt`?) should automagically show up when `with_game_webserver`
-      player = Setup.player!()
-      jwt = U.jwt_token(uid: player.external_id)
-
+    test "successfully starts a LogDeleteProcess (endpoint)", %{jwt: jwt, player: player} do
       # There is a Tunnel from Gateway -> Endpoint
       %{nip: gtw_nip, server: gateway} = Setup.server(entity_id: player.id)
       %{nip: endp_nip, server: endpoint} = Setup.server()
@@ -75,10 +67,7 @@ defmodule Game.Endpoint.Log.DeleteTest do
       assert [_] = U.get_all_processes(endpoint.id)
     end
 
-    test "returns an error if log is in another server" do
-      player = Setup.player!()
-      jwt = U.jwt_token(uid: player.external_id)
-
+    test "returns an error if log is in another server", %{jwt: jwt, player: player} do
       %{nip: nip} = Setup.server_full(entity_id: player.id)
       # The log exists and is visible by the player, but in a different server
       log = Setup.log!(Setup.server!().id, visible_by: player.id)
@@ -90,10 +79,7 @@ defmodule Game.Endpoint.Log.DeleteTest do
       assert reason == "log_not_found"
     end
 
-    test "returns an error if player does not have visibility over log" do
-      player = Setup.player!()
-      jwt = U.jwt_token(uid: player.external_id)
-
+    test "returns an error if player does not have visibility over log", %{jwt: jwt, player: player} do
       %{server: gateway, nip: nip} = Setup.server_full(entity_id: player.id)
       # The log exists in the Gateway but it isn't visible by the player
       log = Setup.log!(gateway.id)
@@ -105,10 +91,7 @@ defmodule Game.Endpoint.Log.DeleteTest do
       assert reason == "log_not_found"
     end
 
-    test "returns an error if log is already deleted" do
-      player = Setup.player!()
-      jwt = U.jwt_token(uid: player.external_id)
-
+    test "returns an error if log is already deleted", %{jwt: jwt, player: player} do
       %{server: gateway, nip: nip} = Setup.server_full(entity_id: player.id)
       log = Setup.log!(gateway.id, visible_by: player.id, is_deleted: true)
       assert log.is_deleted

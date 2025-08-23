@@ -6,7 +6,7 @@ defmodule Game.Index.PlayerTest do
 
   describe "index/1" do
     test "it returns the expected data" do
-      %{nip: nip, player: player} = Setup.server()
+      %{nip: nip, player: player, server: gateway} = Setup.server()
 
       index = Index.Player.index(player)
 
@@ -16,6 +16,7 @@ defmodule Game.Index.PlayerTest do
       end)
 
       # Keys have the expected values
+      assert index.mainframe_id == gateway.id
       assert index.mainframe_nip == nip
     end
 
@@ -40,11 +41,12 @@ defmodule Game.Index.PlayerTest do
 
   describe "render_index/1" do
     test "it returns the rendered version of the index" do
-      %{nip: nip, player: player} = Setup.server()
+      %{nip: nip, player: player, server: gateway} = Setup.server()
 
       index = Index.Player.index(player)
       rendered_index = Index.Player.render_index(index, player.id)
 
+      assert gateway.id == rendered_index.mainframe_id |> U.from_eid(player.id)
       assert rendered_index.mainframe_nip == nip |> NIP.to_external()
 
       # Rendered index conforms to the Norm contract

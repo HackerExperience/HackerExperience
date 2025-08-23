@@ -18,6 +18,8 @@ defmodule Core.Spec do
   def integer, do: spec(is_integer())
   def boolean, do: spec(is_boolean())
   def map, do: spec(is_map())
+  def null, do: spec(is_nil())
+  def maybe(s), do: one_of([s, null()])
 
   def enum(values) when is_list(values) do
     {:enum, get_enum_type(values), values}

@@ -1,13 +1,14 @@
 defmodule Game.Index.Player do
   use Norm
   import Core.Spec
-  alias Core.NIP
+  alias Core.{ID, NIP}
   alias Game.Services, as: Svc
   alias Game.Index
   alias Game.Player
 
   @type index ::
           %{
+            mainframe_id: ID.external(),
             mainframe_nip: NIP.t(),
             gateways: [Index.Server.gateway_index()],
             endpoints: [Index.Server.endpoint_index()]
@@ -15,6 +16,7 @@ defmodule Game.Index.Player do
 
   @type rendered_index ::
           %{
+            mainframe_id: binary(),
             mainframe_nip: NIP.external(),
             gateways: [Index.Server.rendered_gateway_index()],
             endpoints: [Index.Server.rendered_endpoint_index()]
@@ -24,11 +26,12 @@ defmodule Game.Index.Player do
     selection(
       schema(%{
         __openapi_name: "IdxPlayer",
+        mainframe_id: external_id(),
         mainframe_nip: nip(),
         gateways: coll_of(Index.Server.gateway_spec()),
         endpoints: coll_of(Index.Server.endpoint_spec())
       }),
-      [:mainframe_nip, :gateways, :endpoints]
+      [:mainframe_id, :mainframe_nip, :gateways, :endpoints]
     )
   end
 
@@ -43,8 +46,9 @@ defmodule Game.Index.Player do
     mainframe_nip = Svc.NetworkConnection.fetch!(by_server_id: mainframe.id).nip
 
     %{
+      mainframe_id: mainframe.id,
       mainframe_nip: mainframe_nip,
-      gateways: Enum.map(gateways, fn server -> Index.Server.gateway_index(entity, server) end)
+      gateways: Enum.map(gateways, fn server -> Index.Server.gateway_index(entity.id, server) end)
     }
     |> index_add_endpoints(entity)
   end
@@ -70,6 +74,7 @@ defmodule Game.Index.Player do
     # context switching.
     Core.with_context(:player, player_id, :read, fn ->
       %{
+        mainframe_id: index.mainframe_id |> ID.to_external(player_id),
         mainframe_nip: index.mainframe_nip |> NIP.to_external(),
         gateways:
           Enum.map(index.gateways, fn idx -> Index.Server.render_gateway_index(idx, entity.id) end),

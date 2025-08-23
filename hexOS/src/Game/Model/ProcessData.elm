@@ -6,17 +6,23 @@ module Game.Model.ProcessData exposing
 import API.Processes.Json as ProcessJD
 import API.Processes.Types as ProcessJD
 import Game.Model.LogID exposing (LogID)
+import Game.Model.SoftwareType as SoftwareType exposing (SoftwareType)
 import Json.Decode as JD
 
 
 type ProcessData
-    = FileDelete FileDeleteData
+    = AppStoreInstall AppStoreInstallData
+    | FileDelete FileDeleteData
     | FileInstall FileInstallData
     | FileTransfer FileTransferData
     | InstallationUninstall InstallationUninstallData
     | LogDelete LogDeleteData
     | LogEdit LogEditData
     | InvalidProcess String
+
+
+type alias AppStoreInstallData =
+    { softwareType : SoftwareType }
 
 
 type alias FileDeleteData =
@@ -46,6 +52,9 @@ type alias LogDeleteData =
 parse : { p | type_ : String, data : String } -> ProcessData
 parse idxProcess =
     case idxProcess.type_ of
+        "appstore_install" ->
+            parseData idxProcess ProcessJD.decodeAppstoreInstall appStoreInstallBuilder
+
         "file_delete" ->
             parseData idxProcess ProcessJD.decodeFileDelete fileDeleteBuilder
 
@@ -98,6 +107,11 @@ invalidData type_ =
 
 
 -- Data builders
+
+
+appStoreInstallBuilder : ProcessJD.AppstoreInstall -> ProcessData
+appStoreInstallBuilder { software_type } =
+    AppStoreInstall { softwareType = SoftwareType.typeFromString software_type }
 
 
 fileDeleteBuilder : ProcessJD.FileDelete -> ProcessData

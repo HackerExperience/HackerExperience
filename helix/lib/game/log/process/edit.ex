@@ -13,6 +13,12 @@ defmodule Game.Process.Log.Edit do
     }
   end
 
+  # TODO: Document/handle this edge case:
+  # Two players have access to the latest revision of a log: 3
+  # Then, player 1 creates a new revision (3 -> 4)
+  # Then, player 2 creates a new revision (3 -> 5?)
+  # This should have a LWW-like handling
+
   def get_process_type(_params, _meta) do
     :log_edit
   end

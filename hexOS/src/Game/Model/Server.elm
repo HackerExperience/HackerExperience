@@ -7,7 +7,12 @@ module Game.Model.Server exposing
     , handleProcessOperation
     , invalidGateway
     , invalidServer
+    , listFiles
     , listLogs
+    , onAppStoreInstalledEvent
+    , onFileDeletedEvent
+    , onFileInstalledEvent
+    , onInstallationUninstalledEvent
     , onLogDeletedEvent
     , onLogEditedEvent
     , onProcessCompletedEvent
@@ -23,11 +28,14 @@ module Game.Model.Server exposing
 import API.Events.Types as Events
 import Dict exposing (Dict)
 import Game.Bus exposing (Action)
+import Game.Model.File as File exposing (File, Files)
+import Game.Model.Installation as Installation exposing (Installations)
 import Game.Model.Log as Log exposing (Log, Logs)
 import Game.Model.NIP as NIP exposing (NIP, RawNIP)
 import Game.Model.Process as Process exposing (Process, Processes)
 import Game.Model.ProcessData as ProcessData
 import Game.Model.ProcessOperation as Operation exposing (Operation)
+import Game.Model.ServerID as ServerID exposing (ServerID)
 import Game.Model.Tunnel as Tunnel exposing (Tunnels)
 import Game.Model.TunnelID exposing (TunnelID)
 import OrderedDict
@@ -40,19 +48,28 @@ import OrderedDict
 type alias Server =
     { type_ : ServerType
     , nip : NIP
+    , installations : Installations
     , logs : Logs
+    , files : Files
     , tunnelId : Maybe TunnelID
     , processes : Processes
     }
 
 
+{-| Unless I change my mind, `Gateway` and `Endpoint` are deprecated, and we should stick to having
+all this information in the `Server` type. Just use `Maybe`s or whatever.
+-}
 type alias Gateway =
-    { nip : NIP
+    { id : ServerID
+    , nip : NIP
     , tunnels : Tunnels
     , activeEndpoint : Maybe NIP
     }
 
 
+{-| Unless I change my mind, `Gateway` and `Endpoint` are deprecated, and we should stick to having
+all this information in the `Server` type. Just use `Maybe`s or whatever.
+-}
 type alias Endpoint =
     { nip : NIP
     }
@@ -67,12 +84,22 @@ type ServerType
 -- Model > Server
 
 
-buildServer : ServerType -> NIP -> Maybe TunnelID -> List Events.IdxLog -> List Events.IdxProcess -> Server
-buildServer serverType nip tunnelId idxLogs idxProcesses =
+buildServer :
+    ServerType
+    -> NIP
+    -> Maybe TunnelID
+    -> List Events.IdxInstallation
+    -> List Events.IdxLog
+    -> List Events.IdxFile
+    -> List Events.IdxProcess
+    -> Server
+buildServer serverType nip tunnelId idxInstallations idxLogs idxFiles idxProcesses =
     { type_ = serverType
     , nip = nip
     , tunnelId = tunnelId
+    , installations = Installation.parse idxInstallations
     , logs = Log.parse idxLogs
+    , files = File.parse idxFiles
     , processes = Process.parse idxProcesses
     }
         |> applyProcessOperations
@@ -99,7 +126,14 @@ buildGatewayServers idxGateways =
     let
         buildGatewayServer =
             \gtw ->
-                buildServer ServerGateway gtw.nip Nothing gtw.logs gtw.processes
+                buildServer
+                    ServerGateway
+                    gtw.nip
+                    Nothing
+                    gtw.installations
+                    gtw.logs
+                    gtw.files
+                    gtw.processes
     in
     List.foldl (\gtw acc -> ( NIP.toString gtw.nip, buildGatewayServer gtw ) :: acc)
         []
@@ -116,7 +150,14 @@ buildEndpointServers allTunnels idxEndpoints =
 
         buildEndpointServer =
             \endp ->
-                buildServer ServerEndpoint endp.nip (findTunnel endp.nip) endp.logs endp.processes
+                buildServer
+                    ServerEndpoint
+                    endp.nip
+                    (findTunnel endp.nip)
+                    []
+                    endp.logs
+                    endp.files
+                    endp.processes
     in
     List.foldl (\endp acc -> ( NIP.toString endp.nip, buildEndpointServer endp ) :: acc)
         []
@@ -158,7 +199,9 @@ invalidServer =
     { type_ = ServerGateway
     , nip = NIP.invalidNip
     , tunnelId = Nothing
+    , installations = Dict.empty
     , logs = OrderedDict.empty
+    , files = Dict.empty
     , processes = OrderedDict.empty
     }
 
@@ -182,7 +225,8 @@ parseGateway gateway =
         activeEndpoint =
             Maybe.map (\t -> t.targetNip) (List.head tunnels)
     in
-    { nip = gateway.nip
+    { id = ServerID.fromValue gateway.id
+    , nip = gateway.nip
     , tunnels = Tunnel.parse gateway.tunnels
     , activeEndpoint = activeEndpoint
     }
@@ -190,7 +234,8 @@ parseGateway gateway =
 
 invalidGateway : Gateway
 invalidGateway =
-    { nip = NIP.invalidNip
+    { id = ServerID.fromValue "invalid"
+    , nip = NIP.invalidNip
     , tunnels = []
     , activeEndpoint = Nothing
     }
@@ -223,6 +268,15 @@ switchActiveEndpoint gateway endpointNip =
 
 
 
+-- Model > Files
+
+
+listFiles : Server -> List File
+listFiles server =
+    File.filesToList server.files
+
+
+
 -- Model > Logs
 
 
@@ -244,11 +298,19 @@ handleProcessOperation operation server =
         Operation.Starting (Operation.LogEdit _) ->
             handleProcessOperationLog operation server
 
+        Operation.Starting (Operation.AppStoreInstall _) ->
+            -- This is handled at Game directly
+            server
+
         Operation.Started (Operation.LogDelete _) _ ->
             handleProcessOperationLog operation server
 
         Operation.Started (Operation.LogEdit _) _ ->
             handleProcessOperationLog operation server
+
+        Operation.Started (Operation.AppStoreInstall _) _ ->
+            -- This is handled at Game directly
+            server
 
         Operation.Finished (Operation.LogDelete _) _ ->
             handleProcessOperationLog operation server
@@ -256,11 +318,19 @@ handleProcessOperation operation server =
         Operation.Finished (Operation.LogEdit _) _ ->
             handleProcessOperationLog operation server
 
+        Operation.Finished (Operation.AppStoreInstall _) _ ->
+            -- This is handled at Game directly
+            server
+
         Operation.StartFailed (Operation.LogDelete _) ->
             handleProcessOperationLog operation server
 
         Operation.StartFailed (Operation.LogEdit _) ->
             handleProcessOperationLog operation server
+
+        Operation.StartFailed (Operation.AppStoreInstall _) ->
+            -- This is handled at Game directly
+            server
 
 
 handleProcessOperationLog : Operation -> Server -> Server
@@ -270,6 +340,35 @@ handleProcessOperationLog operation server =
 
 
 -- Event handlers
+
+
+onAppStoreInstalledEvent : Events.AppstoreInstalled -> Server -> Server
+onAppStoreInstalledEvent event server =
+    { server
+        | files = File.onAppStoreInstalledEvent event.file server.files
+        , installations = Installation.onAppStoreInstalledEvent event.installation server.installations
+    }
+
+
+onFileDeletedEvent : Events.FileDeleted -> Server -> Server
+onFileDeletedEvent event server =
+    { server | files = File.onFileDeletedEvent event server.files }
+
+
+onFileInstalledEvent : Events.FileInstalled -> Server -> Server
+onFileInstalledEvent event server =
+    { server
+        | files = File.onFileInstalledEvent event.file server.files
+        , installations = Installation.onFileInstalledEvent event.installation server.installations
+    }
+
+
+onInstallationUninstalledEvent : Events.InstallationUninstalled -> Server -> Server
+onInstallationUninstalledEvent event server =
+    { server
+        | files = File.onInstallationUninstalledEvent event server.files
+        , installations = Installation.onInstallationUninstalledEvent event server.installations
+    }
 
 
 onLogDeletedEvent : Events.LogDeleted -> Server -> Server

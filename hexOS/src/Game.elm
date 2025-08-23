@@ -8,8 +8,13 @@ module Game exposing
     , getGateway
     , getGateways
     , getServer
+    , getServerById
     , handleProcessOperation
     , init
+    , onAppStoreInstalledEvent
+    , onFileDeletedEvent
+    , onFileInstalledEvent
+    , onInstallationUninstalledEvent
     , onLogDeletedEvent
     , onLogEditedEvent
     , onProcessCompletedEvent
@@ -23,10 +28,13 @@ import API.Events.Types as Events
 import API.Types
 import API.Utils
 import Dict exposing (Dict)
+import Dict.Extra as Dict
 import Game.Bus as Action exposing (Action)
 import Game.Model.NIP as NIP exposing (NIP, RawNIP)
 import Game.Model.ProcessOperation as Operation exposing (Operation)
 import Game.Model.Server as Server exposing (Endpoint, Gateway, Server, ServerType(..))
+import Game.Model.ServerID as ServerID exposing (ServerID)
+import Game.Model.Software as Software exposing (Manifest)
 import Game.Model.Tunnel as Tunnel exposing (Tunnels)
 import Game.Universe exposing (Universe(..))
 import Maybe.Extra as Maybe
@@ -34,11 +42,13 @@ import Maybe.Extra as Maybe
 
 type alias Model =
     { universe : Universe
+    , mainframeId : ServerID
     , mainframeNip : NIP
     , activeGateway : NIP
     , gateways : Dict RawNIP Gateway
     , endpoints : Dict RawNIP Endpoint
     , servers : Dict RawNIP Server
+    , manifest : Manifest
     , apiCtx : API.Types.InputContext
     }
 
@@ -54,11 +64,13 @@ init token universe index =
             Server.parseGateways index.player.gateways
     in
     { universe = universe
+    , mainframeId = ServerID.fromValue index.player.mainframe_id
     , mainframeNip = index.player.mainframe_nip
     , activeGateway = index.player.mainframe_nip
     , gateways = gateways
     , endpoints = Server.parseEndpoints index.player.endpoints
     , servers = Server.parseServers gateways index.player.gateways index.player.endpoints
+    , manifest = Software.parseManifest index.software.manifest
     , apiCtx = buildApiContext token universe
     }
 
@@ -73,6 +85,18 @@ getServer : Model -> NIP -> Server
 getServer model nip =
     findServer model nip
         |> Maybe.withDefault Server.invalidServer
+
+
+{-| Returns the Server (searching by ID), assuming it must exist.
+-}
+getServerById : Model -> ServerID -> Server
+getServerById model serverId =
+    case findNipByServerId model serverId of
+        Just nip ->
+            getServer model nip
+
+        Nothing ->
+            Server.invalidServer
 
 
 {-| Returns the Server, if it exists.
@@ -96,6 +120,12 @@ findEndpointServer : Model -> NIP -> Maybe Server
 findEndpointServer model nip =
     findServer model nip
         |> Maybe.filter (\server -> server.type_ == ServerEndpoint)
+
+
+findNipByServerId : Model -> ServerID -> Maybe NIP
+findNipByServerId model serverId =
+    Dict.find (\_ gtw -> gtw.id == serverId) model.gateways
+        |> Maybe.map (\( rawNip, _ ) -> NIP.fromString rawNip)
 
 
 {-| Updates the Server, if it exists. Perform a no-op if it doesn't.
@@ -227,14 +257,26 @@ switchActiveEndpoint newActiveEndpointNip model =
 handleProcessOperation : Model -> NIP -> Operation -> Model
 handleProcessOperation model nip operation =
     case operation of
+        Operation.Starting (Operation.AppStoreInstall _) ->
+            manifestProcessOperationHandler model operation
+
         Operation.Starting _ ->
             defaultProcessStartingHandler model nip operation
+
+        Operation.Started (Operation.AppStoreInstall _) _ ->
+            manifestProcessOperationHandler model operation
 
         Operation.Started _ _ ->
             defaultProcessStartedHandler model nip operation
 
+        Operation.Finished (Operation.AppStoreInstall _) _ ->
+            manifestProcessOperationHandler model operation
+
         Operation.Finished _ _ ->
             defaultProcessStartedHandler model nip operation
+
+        Operation.StartFailed (Operation.AppStoreInstall _) ->
+            manifestProcessOperationHandler model operation
 
         Operation.StartFailed _ ->
             defaultProcessStartedHandler model nip operation
@@ -250,6 +292,11 @@ defaultProcessStartedHandler model nip operation =
     updateServer nip (Server.handleProcessOperation operation) model
 
 
+manifestProcessOperationHandler : Model -> Operation -> Model
+manifestProcessOperationHandler model operation =
+    { model | manifest = Software.handleProcessOperation operation model.manifest }
+
+
 
 -- Model > Tunnels
 
@@ -262,6 +309,26 @@ getAllTunnels model =
 
 
 -- Event handlers
+
+
+onAppStoreInstalledEvent : Model -> Events.AppstoreInstalled -> Model
+onAppStoreInstalledEvent model event =
+    updateServer event.nip (Server.onAppStoreInstalledEvent event) model
+
+
+onFileDeletedEvent : Model -> Events.FileDeleted -> Model
+onFileDeletedEvent model event =
+    updateServer event.nip (Server.onFileDeletedEvent event) model
+
+
+onFileInstalledEvent : Model -> Events.FileInstalled -> Model
+onFileInstalledEvent model event =
+    updateServer event.nip (Server.onFileInstalledEvent event) model
+
+
+onInstallationUninstalledEvent : Model -> Events.InstallationUninstalled -> Model
+onInstallationUninstalledEvent model event =
+    updateServer event.nip (Server.onInstallationUninstalledEvent event) model
 
 
 onLogDeletedEvent : Model -> Events.LogDeleted -> Model

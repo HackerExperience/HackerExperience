@@ -265,6 +265,7 @@ defmodule Webserver.OpenApi.Spec.Generator do
           case definition.type do
             {:ref, ref_name} ->
               %{"$ref" => "\#/components/schemas/#{ref_name}"}
+              |> maybe_make_ref_nullable(definition[:nullable])
 
             {:array, {:ref, ref_name}} ->
               %{
@@ -275,11 +276,9 @@ defmodule Webserver.OpenApi.Spec.Generator do
               }
 
             scalar_type ->
-              if Map.has_key?(definition, :enum) do
-                %{type: scalar_type, enum: definition.enum}
-              else
-                %{type: scalar_type}
-              end
+              %{type: scalar_type}
+              |> Renatils.Map.merge_if(%{nullable: true}, definition[:nullable] == true)
+              |> Renatils.Map.merge_if(%{enum: definition[:enum]}, Map.has_key?(definition, :enum))
           end
 
         Map.put(acc, entry, property)
@@ -292,6 +291,16 @@ defmodule Webserver.OpenApi.Spec.Generator do
     }
   end
 
+  defp maybe_make_ref_nullable(ref, true) do
+    # As per the (confusing) OpenAPI docs for 3.1, $ref can be nullable if declared like this:
+    %{
+      allOf: [ref],
+      type: [:object, :null]
+    }
+  end
+
+  defp maybe_make_ref_nullable(ref, _), do: ref
+
   defp build_schema(%Norm.Core.Selection{required: required, schema: schema}, name, acc) do
     if Map.has_key?(acc, name) do
       # The schema identified by `name` has already been generated, no need to generate it again
@@ -301,6 +310,14 @@ defmodule Webserver.OpenApi.Spec.Generator do
       {schema, schema_refs} = openapi_schema_from_norm_spec(schema, required, name, acc)
       Map.put(schema_refs, name, schema)
     end
+  end
+
+  defp build_schema(
+         %Norm.Core.AnyOf{specs: [selection, %Norm.Core.Spec{predicate: "is_nil()"}]},
+         name,
+         acc
+       ) do
+    build_schema(selection, name, acc)
   end
 
   defp openapi_schema_from_norm_spec(%Norm.Core.Schema{specs: specs}, required, root_name, acc) do
@@ -315,8 +332,7 @@ defmodule Webserver.OpenApi.Spec.Generator do
 
       child_schemas =
         case type do
-          {:ref, _} ->
-            inner_spec_name = spec.schema.specs.__openapi_name
+          {:ref, inner_spec_name} ->
             build_schema(spec, inner_spec_name, acc)
 
           {:array, {:ref, _}} ->
@@ -353,6 +369,15 @@ defmodule Webserver.OpenApi.Spec.Generator do
     get_openapi_type_from_spec(left, name, acc)
   end
 
+  # Clause for maybe($type)
+  defp get_openapi_type_from_spec(
+         %Norm.Core.AnyOf{specs: [left, %Norm.Core.Spec{predicate: "is_nil()"}]},
+         name,
+         acc
+       ) do
+    get_openapi_type_from_spec(left, name, acc)
+  end
+
   defp get_openapi_type_from_spec(%Norm.Core.Spec{predicate: predicate}, _name, _acc),
     do: type_from_predicate(predicate)
 
@@ -361,6 +386,12 @@ defmodule Webserver.OpenApi.Spec.Generator do
 
   defp get_openapi_metadata_from_spec({:enum, _, values}),
     do: %{enum: values}
+
+  defp get_openapi_metadata_from_spec(%Norm.Core.AnyOf{
+         specs: [_, %Norm.Core.Spec{predicate: "is_nil()"}]
+       }) do
+    %{nullable: true}
+  end
 
   defp get_openapi_metadata_from_spec(%_{}), do: %{}
 

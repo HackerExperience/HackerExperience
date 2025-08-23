@@ -99,6 +99,8 @@ defmodule Webserver.Endpoint do
   end
 
   defp format_spec_error(spec_error) do
+    # TODO: Handle enum errors differently; right now it returns an anonymous function (literally)
+
     # Return the entire spec error except for the input (which may contain sensitive/PII data)
     spec_error
     |> Enum.map(fn error -> Map.drop(error, [:input]) end)

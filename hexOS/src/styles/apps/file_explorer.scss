@@ -1,0 +1,76 @@
+@use "../utils/colors" as *;
+@use "../utils/spacing" as *;
+@use "../utils/dimensions" as *;
+
+.app-file-explorer {
+    flex: 1;
+    height: 100%;
+}
+
+.a-fex-header {
+    height: 60px;
+    align-items: center;
+    border-bottom: 1px solid prim-500();
+}
+
+.a-fex-body {
+}
+
+.a-fex-file-row:first-child {
+    margin-top: s-2();
+}
+
+.a-fex-file-row {
+    background-color: sec-650();
+    border: 1px solid prim-600();
+    padding: s-2();
+    margin: s-1() s-2();
+    height: 50px;
+    align-items: center;
+
+    &:hover {
+        background-color: sec-600();
+    }
+}
+
+.a-fex-fr-icon {
+    font-size: 20px;
+    margin-right: s-2();
+}
+
+.a-fex-fr-name {
+    flex-grow: 1;
+}
+
+.a-fex-fr-extension {
+    color: gray;
+}
+
+.a-fex-fr-version {
+    font-family: 'Roboto';
+    padding: s-1();
+    margin-right: s-2();
+    font-size: 12px;
+    background-color: sec-600();
+    border: 1px solid prim-600();
+}
+
+.a-fex-fr-actions {
+    // visibility: hidden;
+    align-items: center;
+    min-width: 150px;
+    justify-content: flex-end;
+
+    .ui-icon {
+        font-size: 20px;
+    }
+}
+
+.a-fex-fr-a-entry {
+    padding: s-2() s-0();
+
+    &:hover {
+        cursor: pointer;
+        text-shadow: 0 0 2px #fff, 0 0 0px #fff, 0 0 0px #fff;
+    }
+}

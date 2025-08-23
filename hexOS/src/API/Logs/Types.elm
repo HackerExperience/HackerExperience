@@ -3,9 +3,12 @@
 
 module API.Logs.Types exposing (LogDataEmpty, LogDataLocalFile, LogDataNIP, LogDataNIPProxy, LogDataRemoteFile, LogDataText)
 
+import Game.Model.FileID as FileID exposing (FileID(..))
+import Game.Model.InstallationID as InstallationID exposing (InstallationID(..))
 import Game.Model.LogID as LogID exposing (LogID(..))
 import Game.Model.NIP as NIP exposing (NIP(..))
 import Game.Model.ProcessID as ProcessID exposing (ProcessID(..))
+import Game.Model.ServerID as ServerID exposing (ServerID(..))
 import Game.Model.TunnelID as TunnelID exposing (TunnelID(..))
 
 

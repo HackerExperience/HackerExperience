@@ -2,7 +2,9 @@ defmodule Core.ID do
   @type external :: binary()
   @type internal :: integer()
 
-  def to_external(%struct{id: id}, %_{} = player_id, domain_id \\ nil, subdomain_id \\ nil) do
+  def to_external(struct, player_id, domain_id \\ nil, subdomain_id \\ nil)
+
+  def to_external(%struct{id: id}, %_{} = player_id, domain_id, subdomain_id) do
     object_type =
       struct
       |> to_string()
@@ -24,6 +26,8 @@ defmodule Core.ID do
 
     __MODULE__.External.to_external(player_id, {id, object_type, domain_id, subdomain_id})
   end
+
+  def to_external(nil, _, _, _), do: nil
 
   def from_external(external_id, player_id) do
     __MODULE__.External.from_external(external_id, player_id)

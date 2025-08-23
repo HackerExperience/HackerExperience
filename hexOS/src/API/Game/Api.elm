@@ -2,8 +2,8 @@
 
 
 module API.Game.Api exposing
-    ( fileDeleteTask, fileInstallTask, fileTransferTask, installationUninstallTask, logDeleteTask, logEditTask
-    , playerSyncTask, serverLoginTask
+    ( appStoreInstallTask, fileDeleteTask, fileInstallTask, fileTransferTask, installationUninstallTask
+    , logDeleteTask, logEditTask, playerSyncTask, serverLoginTask
     )
 
 {-|
@@ -11,17 +11,20 @@ module API.Game.Api exposing
 
 ## Operations
 
-@docs fileDeleteTask, fileInstallTask, fileTransferTask, installationUninstallTask, logDeleteTask, logEditTask
-@docs playerSyncTask, serverLoginTask
+@docs appStoreInstallTask, fileDeleteTask, fileInstallTask, fileTransferTask, installationUninstallTask
+@docs logDeleteTask, logEditTask, playerSyncTask, serverLoginTask
 
 -}
 
 import API.Game.Json
 import API.Game.Types
 import Dict
+import Game.Model.FileID as FileID exposing (FileID(..))
+import Game.Model.InstallationID as InstallationID exposing (InstallationID(..))
 import Game.Model.LogID as LogID exposing (LogID(..))
 import Game.Model.NIP as NIP exposing (NIP(..))
 import Game.Model.ProcessID as ProcessID exposing (ProcessID(..))
+import Game.Model.ServerID as ServerID exposing (ServerID(..))
 import Game.Model.TunnelID as TunnelID exposing (TunnelID(..))
 import Http
 import Json.Decode
@@ -57,7 +60,7 @@ fileDeleteTask :
     { server : String
     , authorization : { authorization : String }
     , body : API.Game.Types.FileDeleteRequest
-    , params : { file_id : String, nip : NIP }
+    , params : { file_id : FileID, nip : NIP }
     }
     -> Task.Task (OpenApi.Common.Error e String) API.Game.Types.FileDeleteOkResponse
 fileDeleteTask config =
@@ -69,7 +72,7 @@ fileDeleteTask config =
                 , "server"
                 , NIP.toString config.params.nip
                 , "file"
-                , config.params.file_id
+                , FileID.toString config.params.file_id
                 , "delete"
                 ]
                 []
@@ -90,7 +93,7 @@ fileInstallTask :
     { server : String
     , authorization : { authorization : String }
     , body : API.Game.Types.FileInstallRequest
-    , params : { file_id : String, nip : NIP }
+    , params : { file_id : FileID, nip : NIP }
     }
     -> Task.Task (OpenApi.Common.Error e String) API.Game.Types.FileInstallOkResponse
 fileInstallTask config =
@@ -102,7 +105,7 @@ fileInstallTask config =
                 , "server"
                 , NIP.toString config.params.nip
                 , "file"
-                , config.params.file_id
+                , FileID.toString config.params.file_id
                 , "install"
                 ]
                 []
@@ -123,7 +126,7 @@ fileTransferTask :
     { server : String
     , authorization : { authorization : String }
     , body : API.Game.Types.FileTransferRequest
-    , params : { file_id : String, nip : NIP }
+    , params : { file_id : FileID, nip : NIP }
     }
     -> Task.Task (OpenApi.Common.Error e String) API.Game.Types.FileTransferOkResponse
 fileTransferTask config =
@@ -135,7 +138,7 @@ fileTransferTask config =
                 , "server"
                 , NIP.toString config.params.nip
                 , "file"
-                , config.params.file_id
+                , FileID.toString config.params.file_id
                 , "transfer"
                 ]
                 []
@@ -156,7 +159,7 @@ installationUninstallTask :
     { server : String
     , authorization : { authorization : String }
     , body : API.Game.Types.InstallationUninstallRequest
-    , params : { installation_id : String, nip : NIP }
+    , params : { installation_id : InstallationID, nip : NIP }
     }
     -> Task.Task (OpenApi.Common.Error e String) API.Game.Types.InstallationUninstallOkResponse
 installationUninstallTask config =
@@ -168,7 +171,7 @@ installationUninstallTask config =
                 , "server"
                 , NIP.toString config.params.nip
                 , "installation"
-                , config.params.installation_id
+                , InstallationID.toString config.params.installation_id
                 , "uninstall"
                 ]
                 []
@@ -279,5 +282,39 @@ serverLoginTask config =
                 API.Game.Json.decodeServerLoginOkResponse
         , body =
             Http.jsonBody (API.Game.Json.encodeServerLoginRequest config.body)
+        , timeout = Nothing
+        }
+
+
+appStoreInstallTask :
+    { server : String
+    , authorization : { authorization : String }
+    , body : API.Game.Types.AppStoreInstallRequest
+    , params : { server_id : ServerID, software_type : String }
+    }
+    -> Task.Task (OpenApi.Common.Error e String) API.Game.Types.AppStoreInstallOkResponse
+appStoreInstallTask config =
+    Http.task
+        { url =
+            Url.Builder.crossOrigin
+                config.server
+                [ "v1"
+                , "server"
+                , ServerID.toString config.params.server_id
+                , "appstore"
+                , config.params.software_type
+                , "install"
+                ]
+                []
+        , method = "POST"
+        , headers =
+            [ Http.header "Authorization" config.authorization.authorization ]
+        , resolver =
+            OpenApi.Common.jsonResolverCustom
+                (Dict.fromList [])
+                API.Game.Json.decodeAppStoreInstallOkResponse
+        , body =
+            Http.jsonBody
+                (API.Game.Json.encodeAppStoreInstallRequest config.body)
         , timeout = Nothing
         }

@@ -11,6 +11,10 @@ import Json.Decode as JD
 
 type Event
     = IndexRequested Events.IndexRequested Universe
+    | AppStoreInstalled Events.AppstoreInstalled Universe
+    | FileDeleted Events.FileDeleted Universe
+    | FileInstalled Events.FileInstalled Universe
+    | InstallationUninstalled Events.InstallationUninstalled Universe
     | LogDeleted Events.LogDeleted Universe
     | LogEdited Events.LogEdited Universe
     | ProcessCompleted Events.ProcessCompleted Universe
@@ -57,6 +61,18 @@ dataDecoder universe eventName =
                     JD.map (\x -> IndexRequested x universe)
                         Events.decodeIndexRequested
 
+                "appstore_installed" ->
+                    JD.map (\x -> AppStoreInstalled x universe)
+                        Events.decodeAppstoreInstalled
+
+                "file_deleted" ->
+                    JD.map (\x -> FileDeleted x universe)
+                        Events.decodeFileDeleted
+
+                "file_installed" ->
+                    JD.map (\x -> FileInstalled x universe)
+                        Events.decodeFileInstalled
+
                 "log_deleted" ->
                     JD.map (\x -> LogDeleted x universe)
                         Events.decodeLogDeleted
@@ -64,6 +80,10 @@ dataDecoder universe eventName =
                 "log_edited" ->
                     JD.map (\x -> LogEdited x universe)
                         Events.decodeLogEdited
+
+                "installation_uninstalled" ->
+                    JD.map (\x -> InstallationUninstalled x universe)
+                        Events.decodeInstallationUninstalled
 
                 "process_completed" ->
                     JD.map (\x -> ProcessCompleted x universe)

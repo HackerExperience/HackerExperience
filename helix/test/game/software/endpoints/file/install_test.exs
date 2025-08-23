@@ -5,11 +5,7 @@ defmodule Game.Endpoint.File.InstallTest do
   setup [:with_game_db, :with_game_webserver]
 
   describe "File.Install request" do
-    test "successfully starts a FileInstallProcess", %{shard_id: shard_id} do
-      # TODO: `player` (and `jwt`?) should automagically show up when `with_game_webserver`
-      player = Setup.player!()
-      jwt = U.jwt_token(uid: player.external_id)
-
+    test "successfully starts a FileInstallProcess", %{shard_id: shard_id, jwt: jwt, player: player} do
       %{server: gateway, nip: nip} = Setup.server_full(entity_id: player.id)
       file = Setup.file!(gateway.id, visible_by: player.id)
       DB.commit()
@@ -29,10 +25,7 @@ defmodule Game.Endpoint.File.InstallTest do
       assert process.registry.src_file_id == file.id
     end
 
-    test "returns an error if file is in another server" do
-      player = Setup.player!()
-      jwt = U.jwt_token(uid: player.external_id)
-
+    test "returns an error if file is in another server", %{jwt: jwt, player: player} do
       %{nip: nip} = Setup.server_full(entity_id: player.id)
       # The file exists and is visible by the player, but in a different server
       file = Setup.file!(Setup.server!().id, visible_by: player.id)
@@ -44,10 +37,10 @@ defmodule Game.Endpoint.File.InstallTest do
       assert reason == "file_not_found"
     end
 
-    test "returns an error if player does not have visibility over file" do
-      player = Setup.player!()
-      jwt = U.jwt_token(uid: player.external_id)
-
+    test "returns an error if player does not have visibility over file", %{
+      jwt: jwt,
+      player: player
+    } do
       %{server: gateway, nip: nip} = Setup.server_full(entity_id: player.id)
       # The file exists in the Gateway but it isn't visible by the player
       file = Setup.file!(gateway.id)

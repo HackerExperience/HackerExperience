@@ -5,11 +5,7 @@ defmodule Game.Endpoint.File.DeleteTest do
   setup [:with_game_db, :with_game_webserver]
 
   describe "File.Delete request" do
-    test "successfully starts a FileDeleteProcess (gateway)" do
-      # TODO: `player` (and `jwt`?) should automagically show up when `with_game_webserver`
-      player = Setup.player!()
-      jwt = U.jwt_token(uid: player.external_id)
-
+    test "successfully starts a FileDeleteProcess (gateway)", %{jwt: jwt, player: player} do
       %{server: gateway, nip: nip} = Setup.server_full(entity_id: player.id)
       file = Setup.file!(gateway.id, visible_by: player.id)
       DB.commit()
@@ -29,11 +25,7 @@ defmodule Game.Endpoint.File.DeleteTest do
       assert process.registry.tgt_file_id == file.id
     end
 
-    test "successfully starts a FileDeleteProcess (endpoint)" do
-      # TODO: `player` (and `jwt`?) should automagically show up when `with_game_webserver`
-      player = Setup.player!()
-      jwt = U.jwt_token(uid: player.external_id)
-
+    test "successfully starts a FileDeleteProcess (endpoint)", %{jwt: jwt, player: player} do
       # There is a Tunnel from Gateway -> Endpoint
       %{nip: gtw_nip, server: gateway} = Setup.server(entity_id: player.id)
       %{nip: endp_nip, server: endpoint} = Setup.server()
@@ -62,11 +54,10 @@ defmodule Game.Endpoint.File.DeleteTest do
       assert process.registry.tgt_file_id == file.id
     end
 
-    test "fails to delete a File remotely if a valid Tunnel is not provided" do
-      # TODO: `player` (and `jwt`?) should automagically show up when `with_game_webserver`
-      player = Setup.player!()
-      jwt = U.jwt_token(uid: player.external_id)
-
+    test "fails to delete a File remotely if a valid Tunnel is not provided", %{
+      jwt: jwt,
+      player: player
+    } do
       # Gateway and Endpoint are real servers, but there is no endpoint between them
       %{nip: gtw_nip, server: gateway} = Setup.server(entity_id: player.id)
       %{nip: endp_nip, server: endpoint} = Setup.server()
@@ -103,10 +94,7 @@ defmodule Game.Endpoint.File.DeleteTest do
       assert {:ok, %{status: 200}} = post(build_path(endp_nip, file, player.id), params, token: jwt)
     end
 
-    test "fails to delete a File if lacking Visibility" do
-      player = Setup.player!()
-      jwt = U.jwt_token(uid: player.external_id)
-
+    test "fails to delete a File if lacking Visibility", %{jwt: jwt, player: player} do
       %{server: gateway, nip: nip} = Setup.server_full(entity_id: player.id)
       # The file exists in the Gateway but it isn't visible by the player
       file = Setup.file!(gateway.id)
@@ -116,10 +104,7 @@ defmodule Game.Endpoint.File.DeleteTest do
                post(build_path(nip, file, player.id), %{}, token: jwt)
     end
 
-    test "returns an error if file is in another server" do
-      player = Setup.player!()
-      jwt = U.jwt_token(uid: player.external_id)
-
+    test "returns an error if file is in another server", %{jwt: jwt, player: player} do
       %{nip: nip} = Setup.server_full(entity_id: player.id)
       # The file exists, but in a different server
       file = Setup.file!(Setup.server!().id)

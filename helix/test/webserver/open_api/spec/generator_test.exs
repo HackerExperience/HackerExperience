@@ -161,13 +161,27 @@ defmodule Webserver.OpenApi.Spec.GeneratorTest do
       index_requested = Map.fetch!(schemas, "index_requested")
 
       assert index_requested.type == :object
-      assert index_requested.required == [:player]
+      assert index_requested.required == [:software, :player]
       assert index_requested.properties[:player] == %{"$ref" => "#/components/schemas/IdxPlayer"}
+      assert index_requested.properties[:software]["$ref"] == "#/components/schemas/IdxSoftware"
 
       # Supports the Enum type
       tunnel_created = Map.fetch!(schemas, "tunnel_created")
       assert tunnel_created.properties.access.type == :string
       assert tunnel_created.properties.access.enum == Game.Tunnel.access_types()
+
+      # Supports a nullable Scalar type
+      idx_installation = Map.fetch!(schemas, "IdxInstallation")
+      assert idx_installation.properties.file_id.type == :string
+      assert idx_installation.properties.file_id.nullable == true
+      assert :file_id in idx_installation.required
+
+      # Supports a nullable Ref
+      appstore_installed = Map.fetch!(schemas, "appstore_installed")
+      tmp_file_property = appstore_installed.properties.tmp_file
+      assert Enum.sort(tmp_file_property.type) == Enum.sort([:object, :null])
+      assert [%{"$ref" => ref}] = tmp_file_property.allOf
+      assert ref == "#/components/schemas/IdxFile"
     end
   end
 

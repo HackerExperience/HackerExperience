@@ -7,6 +7,7 @@ import Dict
 import Game exposing (Model)
 import Game.Model.NIP as NIP exposing (NIP)
 import Game.Model.Server exposing (Endpoint, Gateway, Server)
+import Game.Model.ServerID as ServerID
 import Game.Universe as Universe exposing (Universe(..))
 import HUD.ConnectionInfo as CI
 import OS
@@ -27,13 +28,16 @@ state =
         index =
             Mocks.indexRequested
 
+        gtwId =
+            ServerID.fromValue index.player.mainframe_id
+
         gtwNip =
             index.player.mainframe_nip
 
         spModel =
             Game.init (API.Types.InputToken "t0k3n") Singleplayer index
     in
-    State.init Singleplayer (WM.toLocalSessionId gtwNip) spModel spModel
+    State.init Singleplayer (WM.toLocalSessionId gtwId gtwNip) spModel spModel
         |> Tuple.first
 
 

@@ -5,6 +5,12 @@
     "schemas": {
       "IdxEndpoint": {
         "properties": {
+          "files": {
+            "items": {
+              "$ref": "#/components/schemas/IdxFile"
+            },
+            "type": "array"
+          },
           "logs": {
             "items": {
               "$ref": "#/components/schemas/IdxLog"
@@ -22,14 +28,70 @@
           }
         },
         "required": [
+          "files",
           "logs",
           "nip",
           "processes"
         ],
         "type": "object"
       },
+      "IdxFile": {
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "installation_id": {
+            "nullable": true,
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "path": {
+            "type": "string"
+          },
+          "size": {
+            "type": "integer"
+          },
+          "type": {
+            "enum": [
+              "cracker",
+              "log_editor"
+            ],
+            "type": "string"
+          },
+          "version": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "installation_id",
+          "name",
+          "path",
+          "size",
+          "type",
+          "version"
+        ],
+        "type": "object"
+      },
       "IdxGateway": {
         "properties": {
+          "files": {
+            "items": {
+              "$ref": "#/components/schemas/IdxFile"
+            },
+            "type": "array"
+          },
+          "id": {
+            "type": "string"
+          },
+          "installations": {
+            "items": {
+              "$ref": "#/components/schemas/IdxInstallation"
+            },
+            "type": "array"
+          },
           "logs": {
             "items": {
               "$ref": "#/components/schemas/IdxLog"
@@ -53,10 +115,45 @@
           }
         },
         "required": [
+          "files",
+          "id",
+          "installations",
           "logs",
           "nip",
           "processes",
           "tunnels"
+        ],
+        "type": "object"
+      },
+      "IdxInstallation": {
+        "properties": {
+          "file_id": {
+            "nullable": true,
+            "type": "string"
+          },
+          "file_type": {
+            "enum": [
+              "cracker",
+              "log_editor"
+            ],
+            "type": "string"
+          },
+          "file_version": {
+            "type": "integer"
+          },
+          "id": {
+            "type": "string"
+          },
+          "memory_usage": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "file_id",
+          "file_type",
+          "file_version",
+          "id",
+          "memory_usage"
         ],
         "type": "object"
       },
@@ -131,6 +228,9 @@
             },
             "type": "array"
           },
+          "mainframe_id": {
+            "type": "string"
+          },
           "mainframe_nip": {
             "type": "string"
           }
@@ -138,6 +238,7 @@
         "required": [
           "endpoints",
           "gateways",
+          "mainframe_id",
           "mainframe_nip"
         ],
         "type": "object"
@@ -161,6 +262,20 @@
         ],
         "type": "object"
       },
+      "IdxSoftware": {
+        "properties": {
+          "manifest": {
+            "items": {
+              "$ref": "#/components/schemas/SoftwareManifest"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "manifest"
+        ],
+        "type": "object"
+      },
       "IdxTunnel": {
         "properties": {
           "source_nip": {
@@ -177,6 +292,98 @@
           "source_nip",
           "target_nip",
           "tunnel_id"
+        ],
+        "type": "object"
+      },
+      "SoftwareConfig": {
+        "properties": {
+          "appstore": {
+            "$ref": "#/components/schemas/SoftwareConfigAppstore"
+          }
+        },
+        "required": [],
+        "type": "object"
+      },
+      "SoftwareConfigAppstore": {
+        "properties": {
+          "price": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "price"
+        ],
+        "type": "object"
+      },
+      "SoftwareManifest": {
+        "properties": {
+          "config": {
+            "$ref": "#/components/schemas/SoftwareConfig"
+          },
+          "extension": {
+            "type": "string"
+          },
+          "type": {
+            "enum": [
+              "cracker",
+              "log_editor"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "config",
+          "extension",
+          "type"
+        ],
+        "type": "object"
+      },
+      "appstore_install_failed": {
+        "properties": {
+          "process_id": {
+            "type": "string"
+          },
+          "reason": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "process_id",
+          "reason"
+        ],
+        "type": "object"
+      },
+      "appstore_installed": {
+        "properties": {
+          "file": {
+            "$ref": "#/components/schemas/IdxFile"
+          },
+          "installation": {
+            "$ref": "#/components/schemas/IdxInstallation"
+          },
+          "nip": {
+            "type": "string"
+          },
+          "process_id": {
+            "type": "string"
+          },
+          "tmp_file": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/IdxFile"
+              }
+            ],
+            "type": [
+              "null",
+              "object"
+            ]
+          }
+        },
+        "required": [
+          "file",
+          "installation",
+          "nip",
+          "process_id"
         ],
         "type": "object"
       },
@@ -200,12 +407,16 @@
           "file_id": {
             "type": "string"
           },
+          "nip": {
+            "type": "string"
+          },
           "process_id": {
             "type": "string"
           }
         },
         "required": [
           "file_id",
+          "nip",
           "process_id"
         ],
         "type": "object"
@@ -227,23 +438,23 @@
       },
       "file_installed": {
         "properties": {
-          "file_name": {
-            "type": "string"
+          "file": {
+            "$ref": "#/components/schemas/IdxFile"
           },
-          "installation_id": {
-            "type": "string"
+          "installation": {
+            "$ref": "#/components/schemas/IdxInstallation"
           },
-          "memory_usage": {
-            "type": "integer"
+          "nip": {
+            "type": "string"
           },
           "process_id": {
             "type": "string"
           }
         },
         "required": [
-          "file_name",
-          "installation_id",
-          "memory_usage",
+          "file",
+          "installation",
+          "nip",
           "process_id"
         ],
         "type": "object"
@@ -282,10 +493,14 @@
         "properties": {
           "player": {
             "$ref": "#/components/schemas/IdxPlayer"
+          },
+          "software": {
+            "$ref": "#/components/schemas/IdxSoftware"
           }
         },
         "required": [
-          "player"
+          "player",
+          "software"
         ],
         "type": "object"
       },
@@ -309,12 +524,16 @@
           "installation_id": {
             "type": "string"
           },
+          "nip": {
+            "type": "string"
+          },
           "process_id": {
             "type": "string"
           }
         },
         "required": [
           "installation_id",
+          "nip",
           "process_id"
         ],
         "type": "object"

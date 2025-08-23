@@ -1,0 +1,173 @@
+@use "../utils/colors" as *;
+@use "../utils/spacing" as *;
+@use "../utils/dimensions" as *;
+
+.app-appstore {
+    flex: 1;
+    height: 100%;
+}
+
+.a-ast-body {
+    overflow-y: scroll;
+    width: 100%;
+    height: 100%;
+}
+
+
+// Body > Tag: "Apps" > Index
+
+.a-ast-apps-index {
+    width: 100%;
+    padding: s-4();
+    gap: s-3();
+    flex-wrap: wrap;
+}
+
+.a-ast-apps-idx-entry {
+    min-width: 180px;
+    max-width: 200px;
+    height: 120px;
+
+    background-color: sec-650();
+    border: 1px solid sec-500();
+
+    align-items: center;
+    padding: s-2();
+
+    position: relative;
+
+    &:hover {
+        cursor: pointer;
+        background-color: sec-600();
+        border: 1px solid sec-400();
+
+        .a-ast-apps-idx-entry-icon {
+            opacity: 1;
+        }
+
+        .a-ast-apps-idx-entry-download-overlay {
+            display: flex;
+        }
+
+        .a-ast-apps-idx-entry-spinner-overlay {
+            display: flex;
+        }
+
+        .a-ast-apps-idx-entry-installed-overlay {
+            display: flex;
+        }
+    }
+}
+
+.a-ast-apps-idx-entry-icon {
+    flex: 1;
+    display: flex;
+    font-size: 60px;
+    align-items: center;
+    color: white;
+    opacity: 0.8;
+}
+
+.a-ast-apps-idx-entry-download-overlay {
+    display: none;
+    position: absolute;
+    right: 0;
+    top: 0;
+    padding: s-1();
+
+    &:hover {
+        background-color: sec-400();
+        border: 1px solid prim-400();
+    }
+}
+
+.a-ast-apps-idx-entry-spinner-overlay {
+    position: absolute;
+    padding: s-1();
+    right: 0;
+    top: 0;
+
+    .ui-icon {
+        color: prim-400();
+        font-size: 26px;
+        animation: spin 2s linear infinite;
+    }
+}
+
+.a-ast-apps-idx-entry-installed-overlay {
+    position: absolute;
+    padding: s-1();
+    right: 0;
+    top: 0;
+
+    .ui-icon {
+        color: green;
+        font-size: 26px;
+    }
+}
+
+// Body > Tag: "Apps" > Details
+
+.a-ast-apps-details {
+    width: 100%;
+    height: 100%;
+}
+
+.a-ast-apps-dtl-header {
+    display: flex;
+    width: 100%;
+    align-items: center;
+
+    border-bottom: 2px dotted sec-400();
+
+    .ui-span {
+        font-size: 20px;
+    }
+}
+
+.a-ast-apps-dtl-hdr-backicon {
+    margin: s-2();
+    padding: s-2();
+    border: 1px solid transparent;
+
+    &:hover {
+        cursor: pointer;
+        background-color: sec-600();
+        border: 1px solid sec-400();
+    }
+}
+
+.a-ast-apps-dtl-body {
+    padding: s-2() s-4();
+}
+
+// Sidebar
+
+.a-ast-sidebar {
+    min-width: 200px;
+    border-right: 1px solid sec-500();
+    background-color: sec-650();
+}
+
+.a-ast-sb-tab {
+    padding: s-1() s-3();
+    height: 50px;
+    align-items: center;
+
+    border-bottom: 1px solid sec-500();
+
+    &:hover {
+        background-color: sec-600();
+        cursor: pointer;
+    }
+}
+
+.a-ast-sb-tab-selected {
+    background-color: prim-600();
+
+    &:hover {
+        background-color: prim-600();
+        cursor: default;
+    }
+}
+

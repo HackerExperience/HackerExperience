@@ -6,11 +6,7 @@ defmodule Game.Endpoint.File.TransferTest do
   setup [:with_game_db, :with_game_webserver]
 
   describe "File.Transfer request" do
-    test "successfully starts a FileTransferProcess (download)" do
-      # TODO: `player` (and `jwt`?) should automagically show up when `with_game_webserver`
-      player = Setup.player!()
-      jwt = U.jwt_token(uid: player.external_id)
-
+    test "successfully starts a FileTransferProcess (download)", %{jwt: jwt, player: player} do
       # There is a Tunnel from Gateway -> Endpoint
       %{nip: gtw_nip, server: gateway} = Setup.server(entity_id: player.id)
       %{nip: endp_nip, server: endpoint} = Setup.server()
@@ -39,11 +35,7 @@ defmodule Game.Endpoint.File.TransferTest do
       assert process.data.endpoint_id == endpoint.id
     end
 
-    test "successfully starts a FileTransferProcess (upload)" do
-      # TODO: `player` (and `jwt`?) should automagically show up when `with_game_webserver`
-      player = Setup.player!()
-      jwt = U.jwt_token(uid: player.external_id)
-
+    test "successfully starts a FileTransferProcess (upload)", %{jwt: jwt, player: player} do
       # There is a Tunnel from Gateway -> Endpoint
       %{nip: gtw_nip, server: gateway} = Setup.server(entity_id: player.id)
       %{nip: endp_nip, server: endpoint} = Setup.server()
@@ -72,11 +64,10 @@ defmodule Game.Endpoint.File.TransferTest do
       assert process.data.endpoint_id == endpoint.id
     end
 
-    test "returns an error if player does not have visibility over file" do
-      # TODO: `player` (and `jwt`?) should automagically show up when `with_game_webserver`
-      player = Setup.player!()
-      jwt = U.jwt_token(uid: player.external_id)
-
+    test "returns an error if player does not have visibility over file", %{
+      jwt: jwt,
+      player: player
+    } do
       # There is a Tunnel from Gateway -> Endpoint
       %{nip: gtw_nip} = Setup.server(entity_id: player.id)
       %{nip: endp_nip, server: endpoint} = Setup.server()
@@ -92,11 +83,7 @@ defmodule Game.Endpoint.File.TransferTest do
                post(build_path(endp_nip, file, player.id), params, token: jwt)
     end
 
-    test "returns an error if file does not exist" do
-      # TODO: `player` (and `jwt`?) should automagically show up when `with_game_webserver`
-      player = Setup.player!()
-      jwt = U.jwt_token(uid: player.external_id)
-
+    test "returns an error if file does not exist", %{jwt: jwt, player: player} do
       # There is a Tunnel from Gateway -> Endpoint
       %{nip: gtw_nip} = Setup.server(entity_id: player.id)
       %{nip: endp_nip} = Setup.server()
@@ -112,10 +99,10 @@ defmodule Game.Endpoint.File.TransferTest do
                post(build_path(endp_nip, other_file, player.id), params, token: jwt)
     end
 
-    test "returns an error if player is attempting to download his own file" do
-      player = Setup.player!()
-      jwt = U.jwt_token(uid: player.external_id)
-
+    test "returns an error if player is attempting to download his own file", %{
+      jwt: jwt,
+      player: player
+    } do
       # There is a Tunnel from Gateway -> Endpoint
       %{nip: gtw_nip, server: gateway} = Setup.server(entity_id: player.id)
       %{nip: endp_nip} = Setup.server()
@@ -133,10 +120,10 @@ defmodule Game.Endpoint.File.TransferTest do
                post(build_path(gtw_nip, file, player.id), params, token: jwt)
     end
 
-    test "returns an error if player is attempting to upload endpoint's own file" do
-      player = Setup.player!()
-      jwt = U.jwt_token(uid: player.external_id)
-
+    test "returns an error if player is attempting to upload endpoint's own file", %{
+      jwt: jwt,
+      player: player
+    } do
       # There is a Tunnel from Gateway -> Endpoint
       %{nip: gtw_nip} = Setup.server(entity_id: player.id)
       %{nip: endp_nip, server: endpoint} = Setup.server()
@@ -154,10 +141,10 @@ defmodule Game.Endpoint.File.TransferTest do
                post(build_path(gtw_nip, file, player.id), params, token: jwt)
     end
 
-    test "returns an error if player is attempting to transfer a file without a valid tunnel" do
-      player = Setup.player!()
-      jwt = U.jwt_token(uid: player.external_id)
-
+    test "returns an error if player is attempting to transfer a file without a valid tunnel", %{
+      jwt: jwt,
+      player: player
+    } do
       %{server: gateway} = Setup.server(entity_id: player.id)
       %{nip: endp_nip, server: endpoint} = Setup.server()
 

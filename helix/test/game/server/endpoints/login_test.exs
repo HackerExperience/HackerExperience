@@ -6,11 +6,8 @@ defmodule Game.Endpoint.Server.LoginTest do
   setup [:with_game_db, :with_game_webserver]
 
   describe "Server.Login request" do
-    test "successfully logs into the endpoint (direct connection)", %{shard_id: shard_id} = ctx do
-      # TODO: `player` (and `jwt`?) should automagically show up when `with_game_webserver`
-      player = Setup.player!()
-      jwt = U.jwt_token(uid: player.external_id)
-
+    test "successfully logs into the endpoint (direct connection)",
+         %{shard_id: shard_id, jwt: jwt, player: player} = ctx do
       %{nip: gtw_nip} = Setup.server_full(entity_id: player.id)
       %{nip: endp_nip} = Setup.server_full()
       DB.commit()
@@ -84,10 +81,8 @@ defmodule Game.Endpoint.Server.LoginTest do
       end
     end
 
-    test "successfully logs into the endpoint (using tunnel)", %{shard_id: shard_id} = ctx do
-      player = Setup.player!()
-      jwt = U.jwt_token(uid: player.external_id)
-
+    test "successfully logs into the endpoint (using tunnel)",
+         %{shard_id: shard_id, jwt: jwt, player: player} = ctx do
       %{nip: gtw_nip} = Setup.server_full(entity_id: player.id)
       %{nip: endp_nip} = Setup.server_full()
 
@@ -192,9 +187,11 @@ defmodule Game.Endpoint.Server.LoginTest do
     test "successfully logs into the endpoint (using VPN)", %{shard_id: _shard_id} = _ctx do
     end
 
-    test "on successful login, log entries are created accordingly", %{shard_id: shard_id} do
-      player = Setup.player!()
-      jwt = U.jwt_token(uid: player.external_id)
+    test "on successful login, log entries are created accordingly", %{
+      shard_id: shard_id,
+      jwt: jwt,
+      player: player
+    } do
       x_request_id = Random.uuid()
 
       %{nip: gtw_nip, server: gateway} = Setup.server_full(entity_id: player.id)
@@ -256,10 +253,11 @@ defmodule Game.Endpoint.Server.LoginTest do
       assert [] == U.get_all_log_visibilities(endpoint_entity.id)
     end
 
-    test "can't connect if the endpoint NIP does not exist", %{shard_id: shard_id} do
-      player = Setup.player!()
-      jwt = U.jwt_token(uid: player.external_id)
-
+    test "can't connect if the endpoint NIP does not exist", %{
+      shard_id: shard_id,
+      jwt: jwt,
+      player: player
+    } do
       %{nip: gtw_nip} = Setup.server_full(entity_id: player.id)
       endp_nip = Map.put(gtw_nip, :ip, Random.ip())
       DB.commit()
@@ -273,10 +271,11 @@ defmodule Game.Endpoint.Server.LoginTest do
     test "can't connect with an incorrect password", %{shard_id: _shard_id} do
     end
 
-    test "can't use someone else's server as gateway", %{shard_id: shard_id} do
-      player = Setup.player!()
-      jwt = U.jwt_token(uid: player.external_id)
-
+    test "can't use someone else's server as gateway", %{
+      shard_id: shard_id,
+      jwt: jwt,
+      player: player
+    } do
       %{server: other_server, nip: other_nip} = Setup.server_full()
       %{nip: endp_nip} = Setup.server_full()
       DB.commit()
@@ -290,10 +289,7 @@ defmodule Game.Endpoint.Server.LoginTest do
                post(build_path(other_nip, endp_nip), %{}, shard_id: shard_id, token: jwt)
     end
 
-    test "can't connect to the same server", %{shard_id: shard_id} do
-      player = Setup.player!()
-      jwt = U.jwt_token(uid: player.external_id)
-
+    test "can't connect to the same server", %{shard_id: shard_id, jwt: jwt, player: player} do
       %{nip: nip} = Setup.server_full(entity_id: player.id)
       DB.commit()
 
@@ -302,10 +298,11 @@ defmodule Game.Endpoint.Server.LoginTest do
                post(build_path(nip, nip), %{}, shard_id: shard_id, token: jwt)
     end
 
-    test "can't connect to another of the player's own gateway", %{shard_id: shard_id} do
-      player = Setup.player!()
-      jwt = U.jwt_token(uid: player.external_id)
-
+    test "can't connect to another of the player's own gateway", %{
+      shard_id: shard_id,
+      jwt: jwt,
+      player: player
+    } do
       %{nip: gtw_1_nip} = Setup.server_full(entity_id: player.id)
       %{nip: gtw_2_nip} = Setup.server_full(entity_id: player.id)
       DB.commit()
@@ -327,10 +324,7 @@ defmodule Game.Endpoint.Server.LoginTest do
     test "can't connect with cycles in the route", %{shard_id: _shard_id} do
     end
 
-    test "fails if tunnel does not exist", %{shard_id: shard_id} do
-      player = Setup.player!()
-      jwt = U.jwt_token(uid: player.external_id)
-
+    test "fails if tunnel does not exist", %{shard_id: shard_id, jwt: jwt, player: player} do
       %{nip: nip} = Setup.server_full(entity_id: player.id)
       DB.commit()
 
@@ -366,10 +360,11 @@ defmodule Game.Endpoint.Server.LoginTest do
       # Implement once you support closing Tunnels
     end
 
-    test "fails if tunnel is in a different gateway", %{shard_id: shard_id} do
-      player = Setup.player!()
-      jwt = U.jwt_token(uid: player.external_id)
-
+    test "fails if tunnel is in a different gateway", %{
+      shard_id: shard_id,
+      jwt: jwt,
+      player: player
+    } do
       # Player has 2 gateways
       %{nip: gtw_1_nip} = Setup.server_full(entity_id: player.id)
       %{nip: gtw_2_nip, server: gateway_2} = Setup.server_full(entity_id: player.id)
@@ -386,9 +381,7 @@ defmodule Game.Endpoint.Server.LoginTest do
                post(build_path(gtw_1_nip, endp_nip), params, shard_id: shard_id, token: jwt)
     end
 
-    test "fails if NIPs are invalid", %{shard_id: shard_id} do
-      player = Setup.player!()
-      jwt = U.jwt_token(uid: player.external_id)
+    test "fails if NIPs are invalid", %{shard_id: shard_id, jwt: jwt} do
       params = %{}
       DB.commit()
 
@@ -423,9 +416,7 @@ defmodule Game.Endpoint.Server.LoginTest do
       end)
     end
 
-    test "fails if tunnel_id is invalid", %{shard_id: shard_id} do
-      player = Setup.player!()
-      jwt = U.jwt_token(uid: player.external_id)
+    test "fails if tunnel_id is invalid", %{shard_id: shard_id, jwt: jwt} do
       DB.commit()
 
       [

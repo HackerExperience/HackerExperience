@@ -158,13 +158,13 @@ update msg state =
 updateAction : State -> Action -> ( State, Effect Msg )
 updateAction state action =
     case action of
-        SwitchGateway universe nip ->
+        SwitchGateway universe gatewayId nip ->
             let
                 newState =
                     state
                         |> switchUniverse universe
                         |> switchActiveGateway nip
-                        |> switchSession (WM.toLocalSessionId nip)
+                        |> switchSession (WM.toLocalSessionId gatewayId nip)
             in
             ( newState, Effect.none )
 
@@ -189,7 +189,11 @@ updateAction state action =
                 newSessionId =
                     case gateway.activeEndpoint of
                         Just endpointNip ->
-                            WM.toggleSession game.activeGateway endpointNip state.currentSession
+                            WM.toggleSession
+                                gateway.id
+                                game.activeGateway
+                                endpointNip
+                                state.currentSession
 
                         Nothing ->
                             state.currentSession
@@ -213,6 +217,46 @@ updateAction state action =
 updateEvent : State -> Event -> ( State, Effect Msg )
 updateEvent state event_ =
     case event_ of
+        Event.AppStoreInstalled event universe ->
+            let
+                game =
+                    getUniverse state universe
+
+                newModel =
+                    Game.onAppStoreInstalledEvent game event
+            in
+            ( replaceUniverse state newModel universe, Effect.none )
+
+        Event.FileDeleted event universe ->
+            let
+                game =
+                    getUniverse state universe
+
+                newModel =
+                    Game.onFileDeletedEvent game event
+            in
+            ( replaceUniverse state newModel universe, Effect.none )
+
+        Event.FileInstalled event universe ->
+            let
+                game =
+                    getUniverse state universe
+
+                newModel =
+                    Game.onFileInstalledEvent game event
+            in
+            ( replaceUniverse state newModel universe, Effect.none )
+
+        Event.InstallationUninstalled event universe ->
+            let
+                game =
+                    getUniverse state universe
+
+                newModel =
+                    Game.onInstallationUninstalledEvent game event
+            in
+            ( replaceUniverse state newModel universe, Effect.none )
+
         Event.LogDeleted event universe ->
             let
                 game =

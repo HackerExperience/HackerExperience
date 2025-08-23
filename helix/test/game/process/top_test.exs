@@ -420,8 +420,8 @@ defmodule Game.Process.TOPTest do
       end)
 
       Enum.reduce_while(1..10, 0, fn i, _ ->
-        # Wait 10s (for Registry to be updated and return the new TOP pid)
-        :timer.sleep(10)
+        # Wait 15ms (for Registry to be updated and return the new TOP pid)
+        :timer.sleep(15)
 
         # Grab the pid for the "current" TOP
         pid = fetch_top_pid!(server.id, ctx)
@@ -433,7 +433,7 @@ defmodule Game.Process.TOPTest do
             {:halt, :ok}
 
           i == 10 ->
-            flunk("TOP never completed the process")
+            flunk("TOP never completed the process: #{inspect(:sys.get_state(pid))}")
 
           true ->
             # Force-kill the TOP GenServer

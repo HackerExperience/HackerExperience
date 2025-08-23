@@ -3,6 +3,7 @@ module TestHelpers.Models.Server exposing (..)
 import API.Events.Types as Events
 import Game.Model.Log exposing (Log, Logs)
 import Game.Model.Server as Server exposing (Endpoint, Gateway, Server, ServerType(..))
+import Game.Model.ServerID as ServerID
 import TestHelpers.Mocks.Events as Mocks
 import TestHelpers.Models.Log as TMLog
 
@@ -18,7 +19,14 @@ new =
 
 fromIdxGateway : Events.IdxGateway -> Server
 fromIdxGateway idxGtw =
-    Server.buildServer ServerGateway idxGtw.nip Nothing idxGtw.logs idxGtw.processes
+    Server.buildServer
+        ServerGateway
+        idxGtw.nip
+        Nothing
+        idxGtw.installations
+        idxGtw.logs
+        idxGtw.files
+        idxGtw.processes
 
 
 
@@ -27,7 +35,9 @@ fromIdxGateway idxGtw =
 
 gatewayFromServer : Server -> Gateway
 gatewayFromServer server =
-    { nip = server.nip
+    -- Using a hard-coded ID for now. Not sure yet how tests will use this function
+    { id = ServerID.fromValue "todo"
+    , nip = server.nip
     , tunnels = []
     , activeEndpoint = Nothing
     }

@@ -1,6 +1,6 @@
 defmodule Game.File do
   use Core.Schema
-  alias Game.Server
+  alias Game.{Server}
 
   # TODO
   @type t :: term()
@@ -10,13 +10,14 @@ defmodule Game.File do
   @context :server
   @table :files
 
-  @file_types [
-    :log_editor
-  ]
+  @file_types_fn fn ->
+    # `Software.types(:all)` without the transitive compile-time dependency
+    apply(:"Elixir.Game.Software", :types, [:all])
+  end
 
   @schema [
     {:id, ID.Definition.ref(:file_id)},
-    {:type, {:enum, values: @file_types}},
+    {:type, {:enum, values: @file_types_fn}},
     {:name, :string},
     {:version, :integer},
     {:size, :integer},

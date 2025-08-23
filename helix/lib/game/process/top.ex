@@ -152,6 +152,8 @@ defmodule Game.Process.TOP do
   # GenServer API
 
   def init({universe, universe_shard_id, server_id}) do
+    Logger.debug("Starting TOP for server #{server_id}")
+
     # PS: shard_id may not be necessary here, but overall I think it's better to relay the full ctx
     Elixir.Process.put(:helix_universe, universe)
     Elixir.Process.put(:helix_universe_shard_id, universe_shard_id)
@@ -339,9 +341,9 @@ defmodule Game.Process.TOP do
   @spec run_schedule(state, [Process.t()], scheduler_run_reason, [Event.t()]) ::
           %{state: state, dropped: [Process.t()], paused: [Process.t()]}
   defp run_schedule(state, processes, reason, events) when is_list(processes) do
+    Logger.debug("Scheduling #{length(processes)} processes...")
     {duration, result} = :timer.tc(fn -> do_run_schedule(state, processes, reason) end)
-
-    duration = get_duration(duration)
+    duration = Renatils.Timer.format_duration(duration)
 
     case result.state.next do
       {_, time_left, _} ->
@@ -516,9 +518,4 @@ defmodule Game.Process.TOP do
   defp with_registry(key) do
     {:via, Registry, {TOP.Registry.name(), key}}
   end
-
-  defp get_duration(d) when d < 1000, do: "#{d}μs"
-  defp get_duration(d) when d < 10_000, do: "#{Float.round(d / 1000, 2)}ms"
-  defp get_duration(d) when d < 100_000, do: "#{Float.round(d / 1000, 1)}ms"
-  defp get_duration(d), do: "#{trunc(d / 1000)}ms"
 end
