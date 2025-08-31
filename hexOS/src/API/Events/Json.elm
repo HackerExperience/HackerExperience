@@ -9,7 +9,7 @@ module API.Events.Json exposing
     , encodeIndexRequested, encodeInstallationUninstallFailed, encodeInstallationUninstalled
     , encodeLogDeleteFailed, encodeLogDeleted, encodeLogEditFailed, encodeLogEdited, encodeProcessCompleted
     , encodeProcessCreated, encodeProcessKilled, encodeSoftwareConfig, encodeSoftwareConfigAppstore
-    , encodeSoftwareManifest, encodeTunnelCreated
+    , encodeSoftwareManifest, encodeTunnelCreateFailed, encodeTunnelCreated
     , decodeAppstoreInstallFailed, decodeAppstoreInstalled, decodeFileDeleteFailed, decodeFileDeleted
     , decodeFileInstallFailed, decodeFileInstalled, decodeFileTransferFailed, decodeFileTransferred
     , decodeIdxEndpoint, decodeIdxFile, decodeIdxGateway, decodeIdxInstallation, decodeIdxLog
@@ -17,7 +17,7 @@ module API.Events.Json exposing
     , decodeIndexRequested, decodeInstallationUninstallFailed, decodeInstallationUninstalled
     , decodeLogDeleteFailed, decodeLogDeleted, decodeLogEditFailed, decodeLogEdited, decodeProcessCompleted
     , decodeProcessCreated, decodeProcessKilled, decodeSoftwareConfig, decodeSoftwareConfigAppstore
-    , decodeSoftwareManifest, decodeTunnelCreated
+    , decodeSoftwareManifest, decodeTunnelCreateFailed, decodeTunnelCreated
     )
 
 {-|
@@ -32,7 +32,7 @@ module API.Events.Json exposing
 @docs encodeIndexRequested, encodeInstallationUninstallFailed, encodeInstallationUninstalled
 @docs encodeLogDeleteFailed, encodeLogDeleted, encodeLogEditFailed, encodeLogEdited, encodeProcessCompleted
 @docs encodeProcessCreated, encodeProcessKilled, encodeSoftwareConfig, encodeSoftwareConfigAppstore
-@docs encodeSoftwareManifest, encodeTunnelCreated
+@docs encodeSoftwareManifest, encodeTunnelCreateFailed, encodeTunnelCreated
 
 
 ## Decoders
@@ -44,7 +44,7 @@ module API.Events.Json exposing
 @docs decodeIndexRequested, decodeInstallationUninstallFailed, decodeInstallationUninstalled
 @docs decodeLogDeleteFailed, decodeLogDeleted, decodeLogEditFailed, decodeLogEdited, decodeProcessCompleted
 @docs decodeProcessCreated, decodeProcessKilled, decodeSoftwareConfig, decodeSoftwareConfigAppstore
-@docs decodeSoftwareManifest, decodeTunnelCreated
+@docs decodeSoftwareManifest, decodeTunnelCreateFailed, decodeTunnelCreated
 
 -}
 
@@ -101,6 +101,24 @@ encodeTunnelCreated rec =
         , ( "source_nip", Json.Encode.string (NIP.toString rec.source_nip) )
         , ( "target_nip", Json.Encode.string (NIP.toString rec.target_nip) )
         , ( "tunnel_id", Json.Encode.string (TunnelID.toValue rec.tunnel_id) )
+        ]
+
+
+decodeTunnelCreateFailed : Json.Decode.Decoder API.Events.Types.TunnelCreateFailed
+decodeTunnelCreateFailed =
+    Json.Decode.succeed
+        (\process_id reason -> { process_id = process_id, reason = reason })
+        |> OpenApi.Common.jsonDecodeAndMap
+            (Json.Decode.field "process_id" (Json.Decode.map ProcessID Json.Decode.string))
+        |> OpenApi.Common.jsonDecodeAndMap
+            (Json.Decode.field "reason" Json.Decode.string)
+
+
+encodeTunnelCreateFailed : API.Events.Types.TunnelCreateFailed -> Json.Encode.Value
+encodeTunnelCreateFailed rec =
+    Json.Encode.object
+        [ ( "process_id", Json.Encode.string (ProcessID.toValue rec.process_id) )
+        , ( "reason", Json.Encode.string rec.reason )
         ]
 
 

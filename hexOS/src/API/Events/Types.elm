@@ -6,7 +6,8 @@ module API.Events.Types exposing
     , FileTransferFailed, FileTransferred, IdxEndpoint, IdxFile, IdxGateway, IdxInstallation, IdxLog
     , IdxLogRevision, IdxPlayer, IdxProcess, IdxSoftware, IdxTunnel, IndexRequested, InstallationUninstallFailed
     , InstallationUninstalled, LogDeleteFailed, LogDeleted, LogEditFailed, LogEdited, ProcessCompleted
-    , ProcessCreated, ProcessKilled, SoftwareConfig, SoftwareConfigAppstore, SoftwareManifest, TunnelCreated
+    , ProcessCreated, ProcessKilled, SoftwareConfig, SoftwareConfigAppstore, SoftwareManifest
+    , TunnelCreateFailed, TunnelCreated
     )
 
 {-|
@@ -18,7 +19,8 @@ module API.Events.Types exposing
 @docs FileTransferFailed, FileTransferred, IdxEndpoint, IdxFile, IdxGateway, IdxInstallation, IdxLog
 @docs IdxLogRevision, IdxPlayer, IdxProcess, IdxSoftware, IdxTunnel, IndexRequested, InstallationUninstallFailed
 @docs InstallationUninstalled, LogDeleteFailed, LogDeleted, LogEditFailed, LogEdited, ProcessCompleted
-@docs ProcessCreated, ProcessKilled, SoftwareConfig, SoftwareConfigAppstore, SoftwareManifest, TunnelCreated
+@docs ProcessCreated, ProcessKilled, SoftwareConfig, SoftwareConfigAppstore, SoftwareManifest
+@docs TunnelCreateFailed, TunnelCreated
 
 -}
 
@@ -39,6 +41,10 @@ type alias TunnelCreated =
     , target_nip : NIP
     , tunnel_id : TunnelID
     }
+
+
+type alias TunnelCreateFailed =
+    { process_id : ProcessID, reason : String }
 
 
 type alias ProcessKilled =
