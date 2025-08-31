@@ -9,12 +9,16 @@ defmodule Test.WebCase do
       import Test.HTTPClient
       import Test.Setup.Shared
       import Test.Web
+      import Test.Assertions
 
       alias Feeb.DB
       alias Renatils.Random
+
       alias Test.Setup
+      alias Test.Random, as: R
       alias Test.Utils, as: U
 
+      # Common Core/Game aliases
       alias Core.ID
       alias Core.NIP
       alias Game.Services, as: Svc
