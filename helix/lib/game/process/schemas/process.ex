@@ -38,6 +38,7 @@ defmodule Game.Process do
     :installation_uninstall,
     :log_delete,
     :log_edit,
+    :server_login,
     # Below are test processes; they do not exist in production
     :noop_cpu,
     :noop_dlk
@@ -107,6 +108,7 @@ defmodule Game.Process do
   def process_mod(:installation_uninstall), do: Process.Installation.Uninstall
   def process_mod(:log_delete), do: Process.Log.Delete
   def process_mod(:log_edit), do: Process.Log.Edit
+  def process_mod(:server_login), do: Process.Server.Login
   def process_mod(:noop_cpu), do: Test.Process.NoopCPU
   def process_mod(:noop_dlk), do: Test.Process.NoopDLK
 

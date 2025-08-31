@@ -3,9 +3,9 @@
 
 module API.Processes.Json exposing
     ( encodeAppstoreInstall, encodeFileDelete, encodeFileInstall, encodeFileTransfer
-    , encodeInstallationUninstall, encodeLogDelete, encodeLogEdit
+    , encodeInstallationUninstall, encodeLogDelete, encodeLogEdit, encodeServerLogin
     , decodeAppstoreInstall, decodeFileDelete, decodeFileInstall, decodeFileTransfer
-    , decodeInstallationUninstall, decodeLogDelete, decodeLogEdit
+    , decodeInstallationUninstall, decodeLogDelete, decodeLogEdit, decodeServerLogin
     )
 
 {-|
@@ -14,13 +14,13 @@ module API.Processes.Json exposing
 ## Encoders
 
 @docs encodeAppstoreInstall, encodeFileDelete, encodeFileInstall, encodeFileTransfer
-@docs encodeInstallationUninstall, encodeLogDelete, encodeLogEdit
+@docs encodeInstallationUninstall, encodeLogDelete, encodeLogEdit, encodeServerLogin
 
 
 ## Decoders
 
 @docs decodeAppstoreInstall, decodeFileDelete, decodeFileInstall, decodeFileTransfer
-@docs decodeInstallationUninstall, decodeLogDelete, decodeLogEdit
+@docs decodeInstallationUninstall, decodeLogDelete, decodeLogEdit, decodeServerLogin
 
 -}
 
@@ -35,6 +35,16 @@ import Game.Model.TunnelID as TunnelID exposing (TunnelID(..))
 import Json.Decode
 import Json.Encode
 import OpenApi.Common
+
+
+decodeServerLogin : Json.Decode.Decoder API.Processes.Types.ServerLogin
+decodeServerLogin =
+    Json.Decode.succeed {}
+
+
+encodeServerLogin : API.Processes.Types.ServerLogin -> Json.Encode.Value
+encodeServerLogin rec =
+    Json.Encode.object []
 
 
 decodeLogEdit : Json.Decode.Decoder API.Processes.Types.LogEdit

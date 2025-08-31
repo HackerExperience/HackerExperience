@@ -155,4 +155,70 @@ defmodule Game.Henforcers.Server do
         upstream_error
     end
   end
+
+  @type can_login_relay :: term
+  @type can_login_error :: term
+
+  @doc """
+  Henforces that the player can login to the target NIP
+  """
+  @spec can_login?(Entity.id(), NIP.t(), NIP.t(), String.t(), term) ::
+          {true, can_login_relay}
+          | {false, term, term}
+  def can_login?(entity_id, %NIP{} = s_nip, %NIP{} = t_nip, _password, access_ids) do
+    # TODO: Move `resolve_bounce_hops/2` to NetworkHenforcer (maybe as part of can_resolve_route)
+    # It could also be a part of the Process itself, as long as the checks are moved to henforcers
+    with {:ok, bounce_hops} <- resolve_bounce_hops(s_nip, access_ids),
+         {true, %{route_map: %{gateway: gateway, endpoint: endpoint} = route_map}} <-
+           Henforcers.Network.can_resolve_route?(s_nip, t_nip, bounce_hops),
+
+         # Surely the user is not trying to connect (remotely) to their own server...
+         # TODO: Not sure about this henforcement. It _should_ happen, but not here and applied to
+         # any connection within the entire tunnel (what if VPN has a Gateway in it?).
+         true <- gateway.entity_id != endpoint.entity_id || {:error, {:route, :self_connection}},
+
+         # Gateway always belongs to the user making the action
+         true <- gateway.entity_id == entity_id || {:error, {:route, :invalid_gateway}},
+
+         # TODO: Check {username, password} pair
+         true <- true do
+      %{
+        gateway: gateway,
+        endpoint: endpoint,
+        bounce_hops: bounce_hops,
+        route_map: route_map
+      }
+      |> Henforcer.success()
+    else
+      {:error, reason} ->
+        Henforcer.fail(reason)
+
+      {false, _, _} = upstream_error ->
+        upstream_error
+    end
+  end
+
+  # No tunnel or VPN ID -> it's a direct tunnel
+  defp resolve_bounce_hops(_, {nil, nil}), do: {:ok, []}
+
+  # Using a Tunnel to create an implicit bounce
+  defp resolve_bounce_hops(source_nip, {%Tunnel.ID{} = tunnel_id, nil}) do
+    with {true, %{tunnel: tunnel}} <- Henforcers.Network.tunnel_exists?(tunnel_id),
+         true <- tunnel.source_nip == source_nip || {:error, {:tunnel, :not_authorized}},
+         true <- tunnel.status == :open || {:error, {:tunnel, :not_open}} do
+      {:ok, Svc.Network.resolve_bounce_hops(tunnel)}
+    else
+      {false, _, _} = upstream_error ->
+        upstream_error
+
+      {:error, reason} ->
+        Henforcer.fail(reason)
+    end
+  end
+
+  defp resolve_bounce_hops(_source_nip, {nil, _vpn_id}) do
+    raise "TODO"
+  end
+
+  defp resolve_bounce_hops(_, _), do: {:error, :cant_use_vpn_and_tunnel_at_same_time}
 end
