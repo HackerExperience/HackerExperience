@@ -20,16 +20,18 @@ defmodule Game.Process.Resources do
 
   alias Game.Process
   alias __MODULE__.Behaviour.Default.Implementation, as: DefaultImplementation
+  alias __MODULE__.Behaviour.Time.Implementation, as: TimeImplementation
 
   @zero Decimal.new(0)
-  defstruct cpu: @zero, ram: @zero, dlk: @zero, ulk: @zero
+  defstruct cpu: @zero, ram: @zero, dlk: @zero, ulk: @zero, time: @zero
 
   @type t ::
           %__MODULE__{
             cpu: DefaultImplementation.v(),
             ram: DefaultImplementation.v(),
             dlk: DefaultImplementation.v(),
-            ulk: DefaultImplementation.v()
+            ulk: DefaultImplementation.v(),
+            time: TimeImplementation.v()
           }
 
   @typedoc "Name that identifies each dimension (resource)."
@@ -38,16 +40,18 @@ defmodule Game.Process.Resources do
           | :ram
           | :dlk
           | :ulk
+          | :time
 
   @typedoc "Acceptable value for each dimension (resource)."
   @type value ::
-          DefaultImplementation.v()
+          DefaultImplementation.v() | TimeImplementation.v()
 
   @resources [
     :cpu,
     :ram,
     :dlk,
-    :ulk
+    :ulk,
+    :time
   ]
 
   @resources_modules Enum.map(@resources, fn resource ->
@@ -55,6 +59,7 @@ defmodule Game.Process.Resources do
                          resource
                          |> to_string()
                          |> String.upcase()
+                         |> String.replace("TIME", "Time")
                          |> String.to_atom()
 
                        {resource, Module.concat(__MODULE__, resource_module_name)}
@@ -72,7 +77,8 @@ defmodule Game.Process.Resources do
       ram: fmt_value(:ram, resources[:ram]),
       cpu: fmt_value(:cpu, resources[:cpu]),
       dlk: fmt_value(:dlk, resources[:dlk]),
-      ulk: fmt_value(:ulk, resources[:ulk])
+      ulk: fmt_value(:ulk, resources[:ulk]),
+      time: fmt_value(:time, resources[:time])
     }
   end
 
@@ -91,6 +97,15 @@ defmodule Game.Process.Resources do
           t
   def initial,
     do: dispatch_create(:initial)
+
+  @doc """
+  Creates an "empty" Resource, i.e. the full Resource map filled entirely with the corresponding
+  empty (zero) values for each resource.
+  """
+  @spec empty() ::
+          t
+  def empty,
+    do: dispatch_create(:empty)
 
   @doc """
   Maps over the Resource, returning a new Resource with the function applied. Similar to Enum.map/2.

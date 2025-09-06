@@ -6,7 +6,7 @@ defmodule Game.Process.TOP.AllocatorTest do
   setup [:with_game_db]
 
   describe "allocate/3" do
-    test "allocates resources accordingly" do
+    test "allocates resources accordingly (single resource - CPU)" do
       server = Setup.server!()
 
       proc_1 = Setup.process!(server.id, objective: %{cpu: 1000})
@@ -32,6 +32,70 @@ defmodule Game.Process.TOP.AllocatorTest do
       # Each process received the minimum static allocation
       assert_decimal_eq(alloc_1.ram, proc_1.resources.static.running.ram)
       assert_decimal_eq(alloc_2.ram, proc_2.resources.static.running.ram)
+    end
+
+    test "allocates resources accordingly (single resource - time)" do
+      server = Setup.server!()
+
+      proc_1 = Setup.process!(server.id, dynamic: [], objective: %{time: 5_000})
+      proc_2 = Setup.process!(server.id, dynamic: [], objective: %{time: 2_500})
+
+      assert proc_1.resources.dynamic == []
+      assert proc_1.resources.objective.time == Decimal.new(5_000)
+      assert proc_2.resources.dynamic == []
+      assert proc_2.resources.objective.time == Decimal.new(2_500)
+
+      # TODO: This should come from a util
+      server_resources =
+        %{
+          cpu: 2000,
+          ram: 300,
+          time: 1
+        }
+        |> Resources.from_map()
+
+      assert {:ok, allocated_processes} = Allocator.allocate(server_resources, [proc_1, proc_2])
+
+      assert [%{next_allocation: alloc_1}, %{next_allocation: alloc_2}] =
+               Enum.sort_by(allocated_processes, fn p -> p.id end)
+
+      # Each process received exactly 1s each of time allocation
+      assert_decimal_eq(alloc_1.time, Decimal.new(1))
+      assert_decimal_eq(alloc_2.time, Decimal.new(1))
+    end
+
+    test "allocates resources accordingly (multiple resources - CPU + time)" do
+      server = Setup.server!()
+
+      proc_1 = Setup.process!(server.id, dynamic: [:cpu], objective: %{cpu: 4_000, time: 5_000})
+
+      proc_2 =
+        Setup.process!(server.id, dynamic: [:cpu], objective: %{cpu: 2_000, time: 2_500})
+
+      assert proc_1.resources.dynamic == [:cpu]
+      assert proc_1.resources.objective.time == Decimal.new(5_000)
+      assert proc_2.resources.dynamic == [:cpu]
+      assert proc_2.resources.objective.time == Decimal.new(2_500)
+
+      # TODO: This should come from a util
+      server_resources =
+        %{
+          cpu: 2000,
+          ram: 300,
+          time: 1
+        }
+        |> Resources.from_map()
+
+      assert {:ok, allocated_processes} = Allocator.allocate(server_resources, [proc_1, proc_2])
+
+      assert [%{next_allocation: alloc_1}, %{next_allocation: alloc_2}] =
+               Enum.sort_by(allocated_processes, fn p -> p.id end)
+
+      # Each process received their share of CPU *and* 1ms/ms of time each
+      assert_decimal_eq(alloc_1.cpu, 1000)
+      assert_decimal_eq(alloc_1.time, 1)
+      assert_decimal_eq(alloc_2.cpu, 1000)
+      assert_decimal_eq(alloc_2.time, 1)
     end
 
     test "takes `limit` into consideration" do

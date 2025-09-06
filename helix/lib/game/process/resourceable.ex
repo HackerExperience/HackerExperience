@@ -18,7 +18,8 @@ defmodule Game.Process.Resourceable do
       cpu: apply(resourceable, :cpu, args),
       ram: apply(resourceable, :ram, args),
       dlk: apply(resourceable, :dlk, args),
-      ulk: apply(resourceable, :ulk, args)
+      ulk: apply(resourceable, :ulk, args),
+      time: apply(resourceable, :time, args)
     }
     |> Enum.reject(fn {_, v} -> is_nil(v) end)
     |> Resources.from_map()

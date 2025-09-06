@@ -19,6 +19,7 @@ defmodule Game.Index.LogTest do
       # `entity` has no visible logs in `other_server`, while `other_entity` has only one
       other_log_1 = Setup.log!(other_server.id, id: 1, visible_by: other_entity.id)
       _other_log_2 = Setup.log!(other_server.id, id: 2)
+      DB.commit()
 
       # `entity` can see both logs, but won't see log from other entity. Order is correct
       assert [{2, [{gtw_log_2, 1, "self"}]}, {1, [{gtw_log_1, 1, "self"}]}] ==
@@ -47,6 +48,7 @@ defmodule Game.Index.LogTest do
       log_2_rev_3 = Setup.log!(gateway.id, id: log_2.id, revision_id: 3, visible_by: entity.id)
       log_2_rev_4 = Setup.log!(gateway.id, id: log_2.id, revision_id: 4, visible_by: entity.id)
       _log_2_rev_5 = Setup.log!(gateway.id, id: log_2.id, revision_id: 5)
+      DB.commit()
 
       # Log 2 comes first because it is older than log 1
       assert [{log_2_raw_id, log_2_entries}, {log_1_raw_id, log_1_entries}] =
@@ -68,6 +70,7 @@ defmodule Game.Index.LogTest do
 
       gtw_log_1 = Setup.log!(gateway.id, id: 1, visible_by: entity.id)
       gtw_log_2 = Setup.log!(gateway.id, id: 2, visible_by: entity.id)
+      DB.commit()
 
       rendered_index =
         entity.id
@@ -106,6 +109,7 @@ defmodule Game.Index.LogTest do
       _log_2_rev_3 = Setup.log!(gateway.id, id: log_2.id, revision_id: 3, visible_by: entity.id)
       _log_2_rev_4 = Setup.log!(gateway.id, id: log_2.id, revision_id: 4, visible_by: entity.id)
       _log_2_rev_5 = Setup.log!(gateway.id, id: log_2.id, revision_id: 5)
+      DB.commit()
 
       rendered_index =
         entity.id
@@ -148,6 +152,8 @@ defmodule Game.Index.LogTest do
         data: %LogData.NIP{nip: nip},
         visible_by: entity.id
       )
+
+      DB.commit()
 
       rendered_index =
         entity.id

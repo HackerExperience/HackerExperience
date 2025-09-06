@@ -13,6 +13,9 @@ defmodule Game.Process.Resources.Behaviour.Default.Implementation do
   @spec initial(name) :: v
   def initial(_), do: build(@zero)
 
+  @spec empty(name) :: v
+  def empty(res), do: initial(res)
+
   @spec fmt_value(name, nil | integer | float | Decimal.t()) :: v
   def fmt_value(res, nil), do: initial(res)
   def fmt_value(_, v), do: Renatils.Decimal.to_decimal(v)
