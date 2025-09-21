@@ -11,6 +11,7 @@ defmodule Game.ProcessTest do
       server = Setup.server_lite!()
 
       %{data: noop_dlk_data} = Setup.process_spec(server.id, entity.id, type: :noop_dlk)
+      DB.commit()
 
       %{message: error} =
         assert_raise RuntimeError, fn ->

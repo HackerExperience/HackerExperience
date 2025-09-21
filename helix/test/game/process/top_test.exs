@@ -837,6 +837,7 @@ defmodule Game.Process.TOPTest do
       # It should take ~2s for `cpu_proc` to complete and ~1s for `time_proc` to complete
       _cpu_proc = Setup.process!(server.id, objective: %{cpu: 10_000})
       time_proc = Setup.process!(server.id, objective: %{time: 1}, dynamic: [])
+      DB.commit()
 
       assert time_proc.resources.dynamic == []
 
