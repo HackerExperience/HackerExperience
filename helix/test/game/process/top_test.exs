@@ -572,6 +572,47 @@ defmodule Game.Process.TOPTest do
       process = Svc.Process.fetch!(server.id, by_id: process.id)
       assert {:error, {:cant_pause, :paused}} == TOP.pause(process)
     end
+
+    test "pausing a time-based process does not make it progress towards its objective", ctx do
+      server = Setup.server!()
+      proc = Setup.process!(server.id, %{objective: %{time: 0.02}})
+      DB.commit()
+
+      # The time-based process is currently running and "next" in line to be completed
+      assert :ok == TOP.on_boot({ctx.db_context, ctx.shard_id})
+      pid = fetch_top_pid!(server.id, ctx)
+      state = :sys.get_state(pid)
+      assert state.next
+
+      # Refetch the time-based process from DB to make sure it has the `running` state
+      running_proc = Svc.Process.fetch!(server.id, by_id: proc.id)
+      assert running_proc.status == :running
+
+      # We'll pause it now, causing the process to have 0 allocated Time resources
+      assert {:ok, paused_proc} = TOP.pause(running_proc)
+      assert_decimal_eq(paused_proc.resources.allocated.time, 0)
+
+      # Naturally there won't be any "next" for this TOP
+      pid = fetch_top_pid!(server.id, ctx)
+      state = :sys.get_state(pid)
+      refute state.next
+
+      # Let's wait 30ms (total time needed for process to complete + jitter) and resume it
+      :timer.sleep(30)
+      assert {:ok, resumed_proc} = TOP.resume(paused_proc)
+
+      # Now that it's been resumed, the process is back to having "1" allocated for Time resource
+      assert_decimal_eq(resumed_proc.resources.allocated.time, 1)
+
+      # But the processed amount remains unchanged
+      assert resumed_proc.resources.processed.time == paused_proc.resources.processed.time
+
+      # Since it's resumed, it's now next in line to be completed
+      assert :ok == TOP.on_boot({ctx.db_context, ctx.shard_id})
+      pid = fetch_top_pid!(server.id, ctx)
+      state = :sys.get_state(pid)
+      assert state.next
+    end
   end
 
   describe "resume/1" do
@@ -786,6 +827,48 @@ defmodule Game.Process.TOPTest do
       top_recalcado_events = wait_events_on_server!(server.id, :top_recalcado, 2)
       assert Enum.find(top_recalcado_events, &(&1.data.reason == :boot))
       assert Enum.find(top_recalcado_events, &(&1.data.reason == {:killed, process.id}))
+    end
+  end
+
+  describe "time-based processes" do
+    test "schedules `next` process correctly", ctx do
+      server = Setup.server!(resources: %{cpu: 5_000})
+
+      # It should take ~2s for `cpu_proc` to complete and ~1s for `time_proc` to complete
+      _cpu_proc = Setup.process!(server.id, objective: %{cpu: 10_000})
+      time_proc = Setup.process!(server.id, objective: %{time: 1}, dynamic: [])
+
+      assert time_proc.resources.dynamic == []
+
+      # Let's start the TOP
+      assert :ok == TOP.on_boot({ctx.db_context, ctx.shard_id})
+      pid = fetch_top_pid!(server.id, ctx)
+      state = :sys.get_state(pid)
+
+      # The `time_proc` is the next to be completed, in ~approximately 1s
+      assert elem(state.next, 0).id == time_proc.id
+      assert_decimal_eq(elem(state.next, 1), 1000, 100)
+    end
+
+    test "running time-based process to its completion", ctx do
+      # This process will complete in 10ms
+      server = Setup.server!()
+      proc = Setup.process!(server.id, objective: %{time: 0.01}, dynamic: [])
+      DB.commit()
+
+      # Let's start the TOP
+      assert :ok == TOP.on_boot({ctx.db_context, ctx.shard_id})
+      pid = fetch_top_pid!(server.id, ctx)
+      state = :sys.get_state(pid)
+
+      assert elem(state.next, 0).id == proc.id
+
+      # Wait 30ms for the process to complete (time to complete + jitter + message handling)
+      :timer.sleep(30)
+
+      # Now there is no `next` process for this TOP.
+      state = :sys.get_state(pid)
+      refute state.next
     end
   end
 

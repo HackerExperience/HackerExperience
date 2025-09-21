@@ -77,21 +77,17 @@ defmodule Game.Process.Resources.Behaviour.Time.Implementation do
 
   @spec sum(name, v, v) :: v
   def sum(_, %Decimal{} = a, %Decimal{} = b),
-    do: Decimal.add(a, b) |> with_limit(@one)
+    do: Decimal.add(a, b)
 
   @spec sub(name, v, v) :: v
   def sub(_, %Decimal{} = a, %Decimal{} = b),
-    do: Decimal.sub(a, b) |> with_limit(@one)
+    do: Decimal.sub(a, b)
 
   @spec mul(name, v, v) :: v
   def mul(_, %Decimal{} = a, %Decimal{} = b),
-    do: Decimal.mult(a, b) |> with_limit(@one)
+    do: Decimal.mult(a, b)
 
   @spec div(name, v, v) :: v
   def div(res, %Decimal{} = a, %Decimal{} = b),
-    do: ResourceUtils.safe_div(a, b, fn -> initial(res) end) |> with_limit(@one)
-
-  defp with_limit(v, limit) do
-    if Decimal.gt?(v, limit), do: limit, else: v
-  end
+    do: ResourceUtils.safe_div(a, b, fn -> initial(res) end)
 end
