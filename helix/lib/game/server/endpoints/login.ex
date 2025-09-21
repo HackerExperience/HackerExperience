@@ -50,6 +50,9 @@ defmodule Game.Endpoint.Server.Login do
   def get_context(request, params, session) do
     entity_id = session.data.entity_id
 
+    # We are skipping several important verifications here (e.g. does `target_nip` even exist?) and
+    # that's on purpose. Due to specific characteristics of the endpoint, we chose to only apply
+    # these checks at the completion of the ServerLoginProcess.
     with {true, %{server: gateway}} <- Henforcers.Network.nip_exists?(params.source_nip),
          {true, %{entity: entity}} <- Henforcers.Server.belongs_to_entity?(gateway, entity_id) do
       context =
