@@ -98,12 +98,9 @@ defmodule Game.Process.Server.Login do
   defmodule Resourceable do
     use Game.Process.Resourceable.Definition
 
-    def cpu(_, _, _) do
-      # TODO: Use a Time resource instead (which still needs to be implemeneted)
-      1_000
-    end
+    def time(_, _, _), do: 5
 
-    def dynamic(_, _, _), do: [:cpu]
+    def dynamic(_, _, _), do: []
 
     def static(_, _, _) do
       %{

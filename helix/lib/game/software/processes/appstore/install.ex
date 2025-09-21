@@ -95,12 +95,9 @@ defmodule Game.Process.AppStore.Install do
   defmodule Resourceable do
     use Game.Process.Resourceable.Definition
 
-    def cpu(_factors, _param, _meta) do
-      # TODO (probably time-bound)
-      5000
-    end
+    def time(_, _, _), do: 5
 
-    def dynamic(_, _, _), do: [:cpu]
+    def dynamic(_, _, _), do: []
 
     def static(_, _, _) do
       %{
