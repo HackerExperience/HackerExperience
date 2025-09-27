@@ -118,15 +118,12 @@ defmodule Game.Index.Server do
 
   @spec render_endpoint_index(endpoint_index, Entity.id()) ::
           rendered_endpoint_index
-  def render_endpoint_index(index, _entity_id) do
+  def render_endpoint_index(index, entity_id) do
     %{
       nip: index.nip |> NIP.to_external(),
-      # TODO
-      files: [],
-      # TODO
-      logs: [],
-      # TODO
-      processes: []
+      files: Index.File.render_index(index.files, entity_id),
+      logs: Index.Log.render_index(index.logs, entity_id),
+      processes: Index.Process.render_index(index.processes, entity_id)
     }
   end
 end
