@@ -186,9 +186,16 @@ defmodule Game.Process.TOP.Allocator do
       |> Enum.reduce(Map.from_struct(@initial), fn {_, entity_allocated_processes}, acc ->
         uniq_resources_in_use =
           Enum.reduce(entity_allocated_processes, [], fn {process, _}, iacc ->
-            # TODO: This will break in the event of multiple resources
-            [res] = process.resources.dynamic
-            if res not in iacc, do: [res | iacc], else: iacc
+            case process.resources.dynamic do
+              [] ->
+                iacc
+
+              [res] ->
+                if res not in iacc, do: [res | iacc], else: iacc
+
+              [_ | _] ->
+                raise "TODO: Handle multiple dynamic resources in the same process"
+            end
           end)
 
         Enum.map(acc, fn {res, v} ->

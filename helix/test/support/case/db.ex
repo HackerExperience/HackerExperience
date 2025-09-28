@@ -6,12 +6,11 @@ defmodule Test.DBCase do
       import ExUnit.CaptureLog
       import Test.Setup.Shared
       import Test.Assertions
-      # import Test.Finders
-      # import Test.Utils
       import Core.Spec, only: [validate_spec: 2]
 
       alias Renatils.Random
       alias Test.Setup
+      alias Test.Random, as: R
       alias Test.Utils, as: U
       alias Feeb.DB
 

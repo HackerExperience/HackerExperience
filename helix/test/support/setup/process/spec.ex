@@ -11,6 +11,7 @@ defmodule Test.Setup.Process.Spec do
   alias Game.Process.Installation.Uninstall, as: InstallationUninstallProcess
   alias Game.Process.Log.Delete, as: LogDeleteProcess
   alias Game.Process.Log.Edit, as: LogEditProcess
+  alias Game.Process.Server.Login, as: ServerLoginProcess
   alias Test.Process.NoopCPU, as: NoopCPUProcess
   alias Test.Process.NoopDLK, as: NoopDLKProcess
 
@@ -21,7 +22,8 @@ defmodule Test.Setup.Process.Spec do
     :file_transfer,
     :installation_uninstall,
     :log_delete,
-    :log_edit
+    :log_edit,
+    :server_login
   ]
 
   @doc """
@@ -171,6 +173,38 @@ defmodule Test.Setup.Process.Spec do
     meta = opts[:meta] || default_meta.()
 
     build_spec(LogEditProcess, server_id, entity_id, params, meta, %{})
+  end
+
+  def spec(:server_login, server_id, entity_id, opts) do
+    %{nip: gtw_nip} = Svc.NetworkConnection.fetch!(by_server_id: server_id)
+
+    {endpoint, target_nip} =
+      cond do
+        endpoint = opts[:endpoint] ->
+          %{nip: endp_nip} = Svc.NetworkConnection.fetch!(by_server_id: endpoint.id)
+          {endpoint, endp_nip}
+
+        target_nip = opts[:target_nip] ->
+          {nil, target_nip}
+
+        true ->
+          %{server: endpoint, nip: endp_nip} = S.server()
+          {endpoint, endp_nip}
+      end
+
+    params =
+      %{
+        source_nip: gtw_nip,
+        target_nip: target_nip,
+        tunnel_id: opts[:tunnel_id],
+        vpn_id: opts[:vpn_id]
+      }
+
+    meta = %{}
+
+    relay = %{endpoint: endpoint, target_nip: target_nip}
+
+    build_spec(ServerLoginProcess, server_id, entity_id, params, meta, relay)
   end
 
   defp build_spec(mod, server_id, entity_id, params, meta, relay) do

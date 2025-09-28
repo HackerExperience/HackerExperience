@@ -81,7 +81,7 @@ defmodule Game.Henforcers.Network do
   - Are there cycles?
   - Does the user have HDB access for all intermediary hops?
 
-  Do keep in mind this does not check if the user has HDB access to the gateway, since the endpoint
+  Do keep in mind this does not check if the user has HDB access to the endpoint, since the endpoint
   password is an *input* of the request hitting this henforcer.
   """
   @spec can_resolve_route?(nip :: term(), nip :: term(), [nip :: term()]) ::
@@ -113,6 +113,7 @@ defmodule Game.Henforcers.Network do
     end
   end
 
+  # TODO: Move this (and parsed link thingie) to TunnelService
   # This is an important data structure that may be used outside Henforcer. Move it to TunnelService
   defp build_route_map(gtw_nip, endp_nip, hops, nips_servers) do
     nips_servers

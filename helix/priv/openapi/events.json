@@ -679,6 +679,21 @@
         ],
         "type": "object"
       },
+      "tunnel_create_failed": {
+        "properties": {
+          "process_id": {
+            "type": "string"
+          },
+          "reason": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "process_id",
+          "reason"
+        ],
+        "type": "object"
+      },
       "tunnel_created": {
         "properties": {
           "access": {

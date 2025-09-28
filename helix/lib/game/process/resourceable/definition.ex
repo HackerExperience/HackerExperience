@@ -30,7 +30,7 @@ defmodule Game.Process.Resourceable.Definition do
       end
 
     # Add default value for each resource
-    resources = [:cpu, :ram, :dlk, :ulk]
+    resources = [:cpu, :ram, :dlk, :ulk, :time]
 
     resources_block =
       for resource <- resources do

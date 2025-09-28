@@ -8,6 +8,9 @@ defmodule Webserver.Dispatcher do
   @behaviour :cowboy_handler
   @env Mix.env()
 
+  # Send a ping message every 60s so Cowboy does not hit the `inactivity_timeout`.
+  @ping_timer 60_000
+
   @impl :cowboy_handler
   def init(cowboy_request, args) do
     {duration, {:ok, result, request}} = :timer.tc(fn -> do_dispatch(cowboy_request, args) end)
@@ -28,6 +31,12 @@ defmodule Webserver.Dispatcher do
   def info({:DOWN, _ref, :process, _, _status}, req, state) do
     # TODO: A possible improvement is checking `ref` is the same `ref` as above
     {:ok, req, state}
+  end
+
+  def info(:sse_ping, req, %{dispatcher: :sse} = state) do
+    result = Webserver.SSE.ping(req, state)
+    start_ping_timer()
+    result
   end
 
   def info(event, req, %{dispatcher: :sse} = state) do
@@ -100,6 +109,7 @@ defmodule Webserver.Dispatcher do
           {:ok, request.cowboy_request, %{}}
 
         {{:start_sse, state}, _conveyor} ->
+          start_ping_timer()
           {:cowboy_loop, request.cowboy_request, state}
 
         # Request never reached the end of the conveyor belt because it was halted mid-way. As such,
@@ -131,5 +141,9 @@ defmodule Webserver.Dispatcher do
     # TODO: Test how the async process handles the parent request dying. This doesn't happen in the
     # SSE request because, in that case, the process lives indefinitely (see `:start_sse` above)
     Event.emit_async(events)
+  end
+
+  defp start_ping_timer do
+    Process.send_after(self(), :sse_ping, @ping_timer)
   end
 end

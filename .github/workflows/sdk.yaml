@@ -28,6 +28,7 @@ jobs:
       - name: npm ci
         if: steps.node_modules_cache.outputs.cache-hit != 'true'
         run: npm ci
+        working-directory: ./hexOS
 
       - name: Setup backend environment
         uses: erlef/setup-beam@v1

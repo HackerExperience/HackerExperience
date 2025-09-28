@@ -58,6 +58,11 @@
           "log_id"
         ],
         "type": "object"
+      },
+      "server_login": {
+        "properties": {},
+        "required": [],
+        "type": "object"
       }
     },
     "securitySchemes": {

@@ -9,8 +9,11 @@ defmodule Lobby.Endpoint.User.RegisterTest do
 
   describe "User.Register request" do
     test "succeeds with correct input", %{shard_id: shard_id} do
+      DB.commit()
       params = valid_raw()
       assert {:ok, %{data: %{id: external_id}}} = post(@path, params, shard_id: shard_id)
+
+      Core.begin_context(:universe, :read)
 
       # The user was correctly inserted into the database
       assert [user] = DB.all(Lobby.User)

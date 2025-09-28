@@ -97,6 +97,27 @@ defmodule Core do
     end
   end
 
+  @doc """
+  Upgrades the current connection access mode from :read to :write. No-ops if already :write mode.
+  """
+  def upgrade_to_write do
+    {ctx, shard_id, current_mode} = get_current_context()
+
+    if current_mode == :read do
+      :ok = Core.commit()
+
+      domain = ctx_to_domain(ctx)
+
+      if domain == :universe do
+        Core.begin_context(:universe, :write)
+      else
+        Core.begin_context(domain, shard_id, :write)
+      end
+    else
+      :ok
+    end
+  end
+
   @docp """
   It is possible than the context we need is already the context we are currently in. That's what
   this function does: it returns `true` if we can reuse the current context, `false` otherwise.
@@ -179,6 +200,13 @@ defmodule Core do
   defp player_ctx(:multiplayer), do: :mp_player
   defp server_ctx(:singleplayer), do: :sp_server
   defp server_ctx(:multiplayer), do: :mp_server
+
+  defp ctx_to_domain(:singleplayer), do: :universe
+  defp ctx_to_domain(:multiplayer), do: :universe
+  defp ctx_to_domain(:sp_player), do: :player
+  defp ctx_to_domain(:mp_player), do: :player
+  defp ctx_to_domain(:sp_server), do: :server
+  defp ctx_to_domain(:mp_server), do: :server
 
   defp to_shard_id(%{id: id}), do: id
   defp to_shard_id(id) when is_integer(id), do: id

@@ -30,7 +30,8 @@ defmodule Game.Services.Server do
         cpu: 1000,
         ram: 128,
         dlk: 100,
-        ulk: 10
+        ulk: 10,
+        time: 1
       }
       |> Process.Resources.from_map()
 
