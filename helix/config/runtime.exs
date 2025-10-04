@@ -28,6 +28,14 @@ config :feebdb,
     mp_server: %{
       shard_type: :dedicated,
       domains: [:server]
+    },
+    sp_scanner: %{
+      shard_type: :global,
+      domains: [:scanner]
+    },
+    mp_scanner: %{
+      shard_type: :global,
+      domains: [:scanner]
     }
   }
 
