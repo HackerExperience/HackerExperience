@@ -36,6 +36,9 @@ defmodule Test.Utils do
   defdelegate simulate_process_completion(process), to: U.Process
   defdelegate start_top(server_id, opts \\ []), to: U.Process
 
+  # Scanner
+  defdelegate get_all_scanner_instances, to: U.Scanner
+
   # Misc
   defdelegate sleep_on_ci(duration), to: U.CI
 end

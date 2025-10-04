@@ -34,6 +34,12 @@ defmodule Test.Setup do
   defdelegate log(server_id, opts \\ []), to: S.Log, as: :new
   defdelegate log!(server_id, opts \\ []), to: S.Log, as: :new!
 
+  # Scanner
+  defdelegate scanner_instance(opts \\ []), to: S.Scanner, as: :new_instance
+  defdelegate scanner_instance!(opts \\ []), to: S.Scanner, as: :new_instance!
+  defdelegate scanner_instances(opts \\ []), to: S.Scanner, as: :new_instances
+  defdelegate scanner_instances!(opts \\ []), to: S.Scanner, as: :new_instances!
+
   # Player
   defdelegate file_visibility(player_id, opts \\ []), to: S.File, as: :new_visibility
   defdelegate file_visibility!(player_id, opts \\ []), to: S.File, as: :new_visibility!
