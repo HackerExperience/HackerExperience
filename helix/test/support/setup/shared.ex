@@ -36,6 +36,18 @@ defmodule Test.Setup.Shared do
     :ok
   end
 
+  def with_scanner_db(%{shard_id: shard_id, db_context: db_context}) do
+    Process.put(:db_context_for_this_test, db_context)
+    Process.put(:shard_id_for_this_test, shard_id)
+    DB.begin(db_context, shard_id, :write)
+    :ok
+  end
+
+  def with_scanner_db_readonly(%{shard_id: shard_id, db_context: db_context}) do
+    DB.begin(db_context, shard_id, :read)
+    :ok
+  end
+
   defdelegate with_random_autoincrement(opts \\ []), to: Test.DB
 
   # Webserver
