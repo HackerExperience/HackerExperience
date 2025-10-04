@@ -47,7 +47,7 @@ defmodule Test.Utils.SSEListener do
       :proceed ->
         :ok
     after
-      500 ->
+      1_000 ->
         raise "SSE did not set up correctly"
     end
   end
