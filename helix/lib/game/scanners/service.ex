@@ -1,14 +1,15 @@
 defmodule Game.Services.Scanner do
   require Logger
   alias Feeb.DB
-  alias Game.{Entity, ScannerInstance, Server}
+  alias Renatils.Random
+  alias Game.{Entity, ScannerInstance, ScannerTask, Server}
 
   @doc """
   Returns a ScannerInstance that matches the given filter.
   """
-  @spec fetch(list, list) ::
+  @spec fetch_instance(list, list) ::
           ScannerInstance.t() | nil
-  def fetch(filter_params, opts \\ []) do
+  def fetch_instance(filter_params, opts \\ []) do
     filters = [
       by_entity_server_type: {:one, {:instances, :by_entity_server_type}}
     ]
@@ -21,7 +22,7 @@ defmodule Game.Services.Scanner do
   @doc """
   Returns all ScannerInstances that match the given filter.
   """
-  def list(filter_params, opts \\ []) do
+  def list_instances(filter_params, opts \\ []) do
     filters = [
       by_entity_server: {:all, {:instances, :by_entity_server}}
     ]
@@ -44,9 +45,14 @@ defmodule Game.Services.Scanner do
 
   If a Gateway instance is found to already exist, nothing needs to be done. If an Endpoint instance
   is found to already exist, we make sure that the `tunnel_id` is updated -- by recreating it.
+
+  # Companion tasks
+
+  For each newly created Instance, a Task is also created. At first, this task has no target -- it
+  will eventually be retargeted by the corresponding worker.
   """
   def setup_instances(%Entity.ID{} = entity_id, %Server.ID{} = server_id, maybe_tunnel_id) do
-    case list(by_entity_server: [entity_id, server_id]) do
+    case list_instances(by_entity_server: [entity_id, server_id]) do
       # There are no instances, regular set up
       [] ->
         with {:ok, instances} <- do_setup_instances(entity_id, server_id, maybe_tunnel_id) do
@@ -72,38 +78,38 @@ defmodule Game.Services.Scanner do
   @doc """
   Destroys all Scanner instances for the given (entity_id, server_id) target.
   """
-  def destroy_instances(%Entity.ID{} = entity_id, %Server.ID{} = server_id) do
+  def destroy_instances(%Entity.ID{} = e_id, %Server.ID{} = s_id) do
     Core.with_context(:scanner, :write, fn ->
-      with {:ok, _} <-
-             DB.delete_all({:instances, :delete_by_entity_server}, [entity_id, server_id]) do
-        Logger.info("Deleted scanner instances for (e=#{entity_id}, s=#{server_id})")
+      with {:ok, _} <- DB.delete_all({:tasks, :delete_by_entity_server}, [e_id, s_id]),
+           {:ok, _} <- DB.delete_all({:instances, :delete_by_entity_server}, [e_id, s_id]) do
+        Logger.info("Deleted scanner instances for (e=#{e_id}, s=#{s_id})")
         :ok
       end
     end)
   end
 
   defp do_setup_instances(entity_id, server_id, tunnel_id) do
-    create_fn = fn type ->
+    create_instance_fn = fn type ->
       create_instance(entity_id, server_id, type, tunnel_id, %{})
     end
 
+    create_task_fn = fn instance ->
+      # TODO: Jitter
+      create_task(instance, target: nil, duration: 60)
+    end
+
     Core.with_context(:scanner, :write, fn ->
-      # This duplicate `list` call is here in the event of an (unlikely) race condition. Unique DB
-      # constriant checks would apply at the DB layer, but better to handle it gracefully here
-      with {:initial_state, []} <- {:initial_state, list(by_entity_server: [entity_id, server_id])},
-           {:connection, {:ok, conn_instance}} <- {:connection, create_fn.(:connection)},
-           {:file, {:ok, file_instance}} <- {:file, create_fn.(:file)},
-           {:log, {:ok, log_instance}} <- {:log, create_fn.(:log)} do
+      with {:i_conn, {:ok, conn_instance}} <- {:i_conn, create_instance_fn.(:connection)},
+           {:i_file, {:ok, file_instance}} <- {:i_file, create_instance_fn.(:file)},
+           {:i_log, {:ok, log_instance}} <- {:i_log, create_instance_fn.(:log)},
+           {:t_conn, {:ok, _conn_task}} <- {:t_conn, create_task_fn.(conn_instance)},
+           {:t_file, {:ok, _file_task}} <- {:t_file, create_task_fn.(file_instance)},
+           {:t_log, {:ok, _log_task}} <- {:t_log, create_task_fn.(log_instance)} do
         {:ok, [conn_instance, file_instance, log_instance]}
       else
-        {:initial_state, instances} ->
-          Logger.warning("Race condition detected -- returning recently created instances")
-          {:ok, instances}
-
         {step, {:error, reason}} ->
-          Logger.error(
-            "Unable to setup instance\nStep: #{inspect(step)}\nReason: #{inspect(reason)}"
-          )
+          Logger.error("Unable to setup instance\n#{inspect(step)} - #{inspect(reason)}")
+          {:error, reason}
       end
     end)
   end
@@ -126,6 +132,32 @@ defmodule Game.Services.Scanner do
       target_params: target_params
     }
     |> ScannerInstance.new()
+    |> DB.insert()
+  end
+
+  defp create_task(%ScannerInstance{} = instance, opts) do
+    target_id = Keyword.fetch!(opts, :target)
+    duration = Keyword.fetch!(opts, :duration)
+    now = DateTime.utc_now()
+
+    completion_date =
+      now
+      |> DateTime.add(duration, :second)
+      |> DateTime.to_unix()
+
+    %{
+      instance_id: instance.id,
+      run_id: Random.uuid(),
+      entity_id: instance.entity_id,
+      server_id: instance.server_id,
+      type: instance.type,
+      target_id: target_id,
+      scheduled_at: now,
+      completion_date: completion_date,
+      next_backoff: opts[:next_backoff],
+      failed_attempts: opts[:failed_attempts] || 0
+    }
+    |> ScannerTask.new()
     |> DB.insert()
   end
 end

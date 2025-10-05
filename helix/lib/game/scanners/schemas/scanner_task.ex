@@ -21,7 +21,7 @@ defmodule Game.ScannerTask do
     {:type, {:enum, values: @instance_types_fn}},
     # A nullable target means the scanner is sleeping
     {:target_id, {:integer, nullable: true}},
-    {:scheduled_at, {:datetime_utc, [precision: :millisecond], mod: :inserted_at}},
+    {:scheduled_at, {:datetime_utc, [precision: :millisecond]}},
     {:completion_date, :integer},
     {:next_backoff, {:integer, nullable: true}},
     {:failed_attempts, {:integer, default: 0}}

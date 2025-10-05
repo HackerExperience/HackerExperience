@@ -1,13 +1,15 @@
 defmodule Game.Services.ScannerTest do
   use Test.DBCase, async: true
-  alias Game.Services, as: Svc
 
+  alias Game.Services, as: Svc
   alias Game.{ScannerInstance}
 
-  describe "fetch/2 - by_entity_server_type" do
+  describe "fetch_instance/2 - by_entity_server_type" do
     test "returns the instance when it exists" do
       i = Setup.scanner_instance!()
-      assert i == Svc.Scanner.fetch(by_entity_server_type: [i.entity_id, i.server_id, i.type])
+
+      assert i ==
+               Svc.Scanner.fetch_instance(by_entity_server_type: [i.entity_id, i.server_id, i.type])
     end
 
     test "returns empty when there are no results" do
@@ -15,11 +17,11 @@ defmodule Game.Services.ScannerTest do
       entity_id = R.entity_id()
       type = Enum.random(ScannerInstance.types())
 
-      refute Svc.Scanner.fetch(by_entity_server_type: [entity_id, server_id, type])
+      refute Svc.Scanner.fetch_instance(by_entity_server_type: [entity_id, server_id, type])
     end
   end
 
-  describe "list/2 - by_entity_server" do
+  describe "list_instances/2 - by_entity_server" do
     test "returns a list of matching instances" do
       server_id = R.server_id()
       entity_id = R.entity_id()
@@ -27,14 +29,14 @@ defmodule Game.Services.ScannerTest do
       instances = Setup.scanner_instances!(entity_id: entity_id, server_id: server_id)
 
       assert Enum.sort(instances) ==
-               Enum.sort(Svc.Scanner.list(by_entity_server: [entity_id, server_id]))
+               Enum.sort(Svc.Scanner.list_instances(by_entity_server: [entity_id, server_id]))
     end
 
     test "returns empty when there are no results" do
       server_id = R.server_id()
       entity_id = R.entity_id()
 
-      assert [] == Svc.Scanner.list(by_entity_server: [entity_id, server_id])
+      assert [] == Svc.Scanner.list_instances(by_entity_server: [entity_id, server_id])
     end
   end
 
@@ -58,6 +60,24 @@ defmodule Game.Services.ScannerTest do
       assert instance_connection.server_id == server_id
       assert instance_connection.tunnel_id == nil
       assert instance_connection.target_params == %{}
+
+      # A task is created for each instance
+      tasks = U.get_all_scanner_tasks()
+      assert [task_connection, task_file, task_log] = Enum.sort_by(tasks, & &1.type)
+
+      assert task_connection.instance_id == instance_connection.id
+      assert task_connection.type == :connection
+      assert task_connection.entity_id == instance_connection.entity_id
+      assert task_connection.server_id == instance_connection.server_id
+      assert task_connection.run_id
+
+      # By default the task starts with no target
+      assert task_connection.target_id == nil
+      assert task_connection.next_backoff == nil
+      assert task_connection.failed_attempts == 0
+
+      assert task_file.instance_id == instance_file.id
+      assert task_log.instance_id == instance_log.id
     end
 
     test "recreates instances when they have a different tunnel_id" do
@@ -69,14 +89,24 @@ defmodule Game.Services.ScannerTest do
       # Create the instances normally at first
       assert {:ok, instances_1, :setup} = Svc.Scanner.setup_instances(e_id, s_id, tunnel_id_1)
       assert List.first(instances_1).tunnel_id == tunnel_id_1
+      tasks_1 = U.get_all_scanner_tasks()
 
       # Recreates when asked to create on same entity/server target with different tunnel
       assert {:ok, instances_2, :recreated} = Svc.Scanner.setup_instances(e_id, s_id, tunnel_id_2)
       assert List.first(instances_2).tunnel_id == tunnel_id_2
+      tasks_2 = U.get_all_scanner_tasks()
 
-      # After all of this, we have only two instances (`instances_2` -- last write wins)
+      # After all of this, we have only three instances (`instances_2` -- last write wins)
       refute instances_1 == instances_2
       assert instances_2 == U.get_all_scanner_instances()
+
+      # The tasks, too, were recreated
+      refute tasks_1 == tasks_2
+
+      # They now point to the newly created instances
+      Enum.each(tasks_2, fn task ->
+        assert task.instance_id in Enum.map(instances_2, & &1.id)
+      end)
     end
 
     test "performs a no-op when identical instances already exist" do
@@ -111,8 +141,11 @@ defmodule Game.Services.ScannerTest do
       # Destroy 'em!
       assert :ok == Svc.Scanner.destroy_instances(i.entity_id, i.server_id)
 
-      # Nothing afterwards
+      # No instances afterwards
       assert [] == U.get_all_scanner_instances()
+
+      # Tasks were deleted too
+      assert [] == U.get_all_scanner_tasks()
     end
   end
 end

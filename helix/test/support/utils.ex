@@ -38,6 +38,7 @@ defmodule Test.Utils do
 
   # Scanner
   defdelegate get_all_scanner_instances, to: U.Scanner
+  defdelegate get_all_scanner_tasks, to: U.Scanner
 
   # Misc
   defdelegate sleep_on_ci(duration), to: U.CI
