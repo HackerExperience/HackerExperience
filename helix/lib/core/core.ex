@@ -10,6 +10,12 @@ defmodule Core do
     DB.begin(universe, shard_id, access_type)
   end
 
+  def begin_context(:scanner, access_type) do
+    universe = Process.get(:helix_universe) || raise "Universe not set"
+    shard_id = Process.get(:helix_universe_shard_id) || raise "Universe shard not set"
+    DB.begin(scanner_ctx(universe), shard_id, access_type)
+  end
+
   def begin_context(:player, player_id, access_type) do
     universe = Process.get(:helix_universe) || raise "Universe not set"
     DB.begin(player_ctx(universe), to_shard_id(player_id), access_type)
@@ -48,6 +54,22 @@ defmodule Core do
     else
       DB.with_context(fn ->
         Core.begin_context(:universe, access_type)
+        result = callback.()
+        DB.commit()
+        result
+      end)
+    end
+  end
+
+  def with_context(:scanner, access_type, callback) do
+    universe_shard_id = Process.get(:helix_universe_shard_id)
+
+    if can_reuse_current_context?([:sp_scanner, :mp_scanner], universe_shard_id, access_type) do
+      # Already in the requested context, so do nothing special. Caller is responsible for COMMITing
+      callback.()
+    else
+      DB.with_context(fn ->
+        Core.begin_context(:scanner, access_type)
         result = callback.()
         DB.commit()
         result
@@ -196,6 +218,8 @@ defmodule Core do
       do: raise("Bad context: expected player_id #{expected_player_id}, got: #{context_id}")
   end
 
+  defp scanner_ctx(:singleplayer), do: :sp_scanner
+  defp scanner_ctx(:multiplayer), do: :mp_scanner
   defp player_ctx(:singleplayer), do: :sp_player
   defp player_ctx(:multiplayer), do: :mp_player
   defp server_ctx(:singleplayer), do: :sp_server
@@ -203,6 +227,8 @@ defmodule Core do
 
   defp ctx_to_domain(:singleplayer), do: :universe
   defp ctx_to_domain(:multiplayer), do: :universe
+  defp ctx_to_domain(:sp_scanner), do: :scanner
+  defp ctx_to_domain(:mp_scanner), do: :scanner
   defp ctx_to_domain(:sp_player), do: :player
   defp ctx_to_domain(:mp_player), do: :player
   defp ctx_to_domain(:sp_server), do: :server
