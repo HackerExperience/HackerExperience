@@ -1,21 +1,50 @@
 defmodule Core.Event.Relay do
-  alias Game.Process
+  alias Core.Event
+  alias Game.{Process, ScannerTask}
 
-  defstruct [:source, :server_id, :process_id, :request_id, :x_request_id]
+  defstruct [
+    :source_event_id,
+    :process_id,
+    :request_id,
+    :scanner_instance_id,
+    :scanner_task_id,
+    :server_id,
+    :source,
+    :x_request_id
+  ]
 
-  @available_sources [:request, :top, :process]
+  @available_sources [:event, :process, :request, :scanner, :top]
 
-  def set(%Process{} = process),
-    do: set(:process, %{server_id: process.server_id, process_id: process.id})
+  def new(%Process{server_id: server_id, id: process_id}),
+    do: new(:process, %{server_id: server_id, process_id: process_id})
 
-  def set(source, data) when source in @available_sources do
+  def new(%ScannerTask{run_id: task_id, instance_id: instance_id, server_id: server_id}) do
+    new(:scanner, %{
+      server_id: server_id,
+      scanner_instance_id: instance_id,
+      scanner_task_id: task_id
+    })
+  end
+
+  def new(%Event{id: parent_event_id}),
+    do: new(:event, %{source_event_id: parent_event_id})
+
+  def new(source, data) when source in @available_sources do
     %__MODULE__{
       source: source,
-      server_id: data[:server_id],
+      source_event_id: data[:source_event_id],
       process_id: data[:process_id],
       request_id: data[:request_id],
+      scanner_instance_id: data[:scanner_instance_id],
+      scanner_task_id: data[:scanner_task_id],
+      server_id: data[:server_id],
       x_request_id: data[:x_request_id]
     }
-    |> tap(&Elixir.Process.put(:helix_event_relay, &1))
   end
+
+  def set_env(%__MODULE__{} = relay),
+    do: Elixir.Process.put(:helix_event_relay, relay)
+
+  def put(%Event{relay: nil} = event, %__MODULE__{} = relay),
+    do: %{event | relay: relay}
 end

@@ -29,6 +29,7 @@ defmodule Core.Event do
   require Logger
   alias Feeb.DB
   alias Renatils.Random
+  alias __MODULE__, as: Event
 
   defstruct [:id, :name, :data, :relay]
 
@@ -146,24 +147,30 @@ defmodule Core.Event do
           {:ok, acc_events}
 
         {:ok, ok_events} when is_list(ok_events) ->
+          ok_events = put_event_relay(ok_events, event)
           {:ok, acc_events ++ ok_events}
 
         {:ok, %__MODULE__{} = ok_event} ->
+          ok_event = put_event_relay(ok_event, event)
           {:ok, acc_events ++ [ok_event]}
 
         :error ->
           on_emit_error(acc_events, {[], nil}, {event, handler_mod})
 
         {:error, details, error_events} when is_list(error_events) ->
+          error_events = put_event_relay(error_events, event)
           on_emit_error(acc_events, {error_events, details}, {event, handler_mod})
 
         {:error, error_events} when is_list(error_events) ->
+          error_events = put_event_relay(error_events, event)
           on_emit_error(acc_events, {error_events, nil}, {event, handler_mod})
 
         {:error, details, %__MODULE__{} = error_event} ->
+          error_event = put_event_relay(error_event, event)
           on_emit_error(acc_events, {[error_event], details}, {event, handler_mod})
 
         {:error, %__MODULE__{} = error_event} ->
+          error_event = put_event_relay(error_event, event)
           on_emit_error(acc_events, {[error_event], nil}, {event, handler_mod})
 
         invalid_result ->
@@ -258,5 +265,23 @@ defmodule Core.Event do
     else
       @default_behaviour_teardown_db_on_failure
     end
+  end
+
+  defp put_event_relay([_ | _] = events, parent_event) do
+    relay = Event.Relay.new(parent_event)
+
+    Enum.map(events, fn
+      %_{relay: nil} = event ->
+        Event.Relay.put(event, relay)
+
+      %_{} = event_with_relay ->
+        event_with_relay
+    end)
+  end
+
+  defp put_event_relay(%_{} = event, parent_event) do
+    [event]
+    |> put_event_relay(parent_event)
+    |> List.first()
   end
 end
