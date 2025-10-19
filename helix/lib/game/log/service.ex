@@ -18,12 +18,24 @@ defmodule Game.Services.Log do
     end)
   end
 
-  @spec fetch(Server.id(), list, list) ::
+  @spec fetch!(Server.id(), list, list) ::
           Log.t() | no_return
   def fetch!(%Server.ID{} = server_id, filter_params, opts \\ []) do
     server_id
     |> fetch(filter_params, opts)
     |> Core.Fetch.assert_non_empty_result!(filter_params, opts)
+  end
+
+  @spec list(Server.id(), list, list) ::
+          [Log.t()]
+  def list(%Server.ID{} = server_id, filter_params, opts \\ []) do
+    filters = [
+      by_scanneable: {:all, {:logs, :get_scanneable_logs}}
+    ]
+
+    Core.with_context(:server, server_id, :read, fn ->
+      Core.Fetch.query(filter_params, opts, filters)
+    end)
   end
 
   @doc """
@@ -48,6 +60,7 @@ defmodule Game.Services.Log do
           [LogVisibility.t()]
   def list_visibility(%Entity.ID{} = entity_id, filter_params, opts \\ []) do
     filters = [
+      by_server: {:all, {:log_visibilities, :by_server}},
       visible_on_server: {:all, {:log_visibilities, :by_server_ordered}, format: :raw}
     ]
 
@@ -94,6 +107,16 @@ defmodule Game.Services.Log do
           error
       end
     end)
+  end
+
+  def find_log(%Log{} = log, %Entity.ID{} = entity_id, %Server.ID{} = server_id) do
+    case insert_visibility(entity_id, server_id, log, :scanner) do
+      {:ok, visibility} ->
+        {:ok, visibility}
+
+      {:error, reason, _} ->
+        {:error, reason}
+    end
   end
 
   def delete(%Log{is_deleted: false} = log, %Entity.ID{} = entity_id) do

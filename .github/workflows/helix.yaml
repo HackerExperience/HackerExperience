@@ -27,7 +27,7 @@ jobs:
           version-type: strict
 
       - name: Setup database directories
-        run: mkdir -p tmp/helix_test/{lobby,singleplayer,multiplayer,sp_player,mp_player,sp_server,mp_server}
+        run: mkdir -p tmp/helix_test/{lobby,singleplayer,multiplayer,sp_player,mp_player,sp_server,mp_server,sp_scanner,mp_scanner}
 
       - name: Restore deps cache
         uses: actions/cache@v4

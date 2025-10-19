@@ -260,4 +260,32 @@ defmodule Game.Events.Log do
         do: %{player: entity_id}
     end
   end
+
+  defmodule Scanned do
+    @moduledoc """
+    The LogScannedEvent is emitted when a ScannerTaskCompletedEvent is processed, meaning the
+    LogScanner successfully found a new log.
+
+    This event is published to the Client.
+    """
+
+    use Core.Event.Definition
+
+    alias Game.{LogVisibility}
+
+    defstruct [:log_visibility]
+
+    @type t :: %__MODULE__{
+            log_visibility: LogVisibility.t()
+          }
+
+    @name :log_scanned
+
+    def new(%LogVisibility{} = visibility) do
+      %__MODULE__{log_visibility: visibility}
+      |> Event.new()
+    end
+
+    # TODO: Publishable
+  end
 end

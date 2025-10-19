@@ -22,7 +22,7 @@ defmodule Core.Fetch do
   we can run N+1 queries without any kind of worries.
   """
   def query(filter_params, opts, filters_spec, opts_spec \\ []) when is_list(filter_params) do
-    filters_spec = normalize_filters_spec(filters_spec)
+    filters_spec = normalize_filters_spec(filters_spec, opts)
 
     acc = %{}
 
@@ -84,14 +84,23 @@ defmodule Core.Fetch do
     end
   end
 
-  defp normalize_filters_spec(filters_spec) do
+  defp normalize_filters_spec(filters_spec, db_opts) do
     # Add the `opts` for :all/:one queries when not set
     Enum.map(filters_spec, fn
-      {name, {:all, query_id, opts}} -> {name, {:all, query_id, opts}}
-      {name, {:all, query_id}} -> {name, {:all, query_id, []}}
-      {name, {:one, query_id, opts}} -> {name, {:one, query_id, opts}}
-      {name, {:one, query_id}} -> {name, {:one, query_id, []}}
-      {name, custom_callback} -> {name, custom_callback}
+      {name, {:all, query_id, opts}} ->
+        {name, {:all, query_id, Keyword.merge(db_opts, opts)}}
+
+      {name, {:all, query_id}} ->
+        {name, {:all, query_id, db_opts}}
+
+      {name, {:one, query_id, opts}} ->
+        {name, {:one, query_id, Keyword.merge(db_opts, opts)}}
+
+      {name, {:one, query_id}} ->
+        {name, {:one, query_id, db_opts}}
+
+      {name, custom_callback} ->
+        {name, custom_callback}
     end)
   end
 end

@@ -11,6 +11,7 @@ defmodule Game.Services.Scanner do
           ScannerInstance.t() | nil
   def fetch_instance(filter_params, opts \\ []) do
     filters = [
+      by_id: {:one, {:instances, :by_id}},
       by_entity_server_type: {:one, {:instances, :by_entity_server_type}}
     ]
 
@@ -19,12 +20,33 @@ defmodule Game.Services.Scanner do
     end)
   end
 
+  @spec fetch_instance!(list, list) ::
+          ScannerInstance.t() | no_return
+  def fetch_instance!(filter_params, opts \\ []) do
+    filter_params
+    |> fetch_instance(opts)
+    |> Core.Fetch.assert_non_empty_result!(filter_params, opts)
+  end
+
   @doc """
   Returns all ScannerInstances that match the given filter.
   """
   def list_instances(filter_params, opts \\ []) do
     filters = [
       by_entity_server: {:all, {:instances, :by_entity_server}}
+    ]
+
+    Core.with_context(:scanner, :read, fn ->
+      Core.Fetch.query(filter_params, opts, filters)
+    end)
+  end
+
+  @doc """
+  Returns all ScannerTasks that match the given filter.
+  """
+  def list_tasks(filter_params, opts \\ []) do
+    filters = [
+      by_completed: {:all, {:tasks, :by_completion_date_lte}}
     ]
 
     Core.with_context(:scanner, :read, fn ->
@@ -88,6 +110,51 @@ defmodule Game.Services.Scanner do
     end)
   end
 
+  @doc """
+  Archives the old task and creates a new one with the given target.
+  """
+  def retarget_task(%ScannerTask{} = task, next_target_id, duration) do
+    now = DateTime.utc_now()
+
+    {target_id, target_sub_id} =
+      case next_target_id do
+        nil ->
+          {nil, nil}
+
+        {_target_id, _target_sub_id} ->
+          next_target_id
+
+        target_id when is_integer(target_id) ->
+          {target_id, nil}
+      end
+
+    completion_date =
+      now
+      |> DateTime.add(duration, :second)
+      |> DateTime.to_unix()
+
+    changes = %{
+      run_id: Random.uuid(),
+      target_id: target_id,
+      target_sub_id: target_sub_id,
+      scheduled_at: now,
+      completion_date: completion_date
+    }
+
+    Core.with_context(:scanner, :write, fn ->
+      with {:ok, updated_task} <- do_update_task(task, changes) do
+        # TODO: Archive the previous run
+        {:ok, updated_task}
+      end
+    end)
+  end
+
+  defp do_update_task(task, changes) do
+    task
+    |> ScannerTask.update(changes)
+    |> DB.update()
+  end
+
   defp do_setup_instances(entity_id, server_id, tunnel_id) do
     create_instance_fn = fn type ->
       create_instance(entity_id, server_id, type, tunnel_id, %{})
@@ -95,7 +162,7 @@ defmodule Game.Services.Scanner do
 
     create_task_fn = fn instance ->
       # TODO: Jitter
-      create_task(instance, target: nil, duration: 60)
+      create_task(instance, duration: 60)
     end
 
     Core.with_context(:scanner, :write, fn ->
@@ -136,7 +203,6 @@ defmodule Game.Services.Scanner do
   end
 
   defp create_task(%ScannerInstance{} = instance, opts) do
-    target_id = Keyword.fetch!(opts, :target)
     duration = Keyword.fetch!(opts, :duration)
     now = DateTime.utc_now()
 
@@ -151,7 +217,8 @@ defmodule Game.Services.Scanner do
       entity_id: instance.entity_id,
       server_id: instance.server_id,
       type: instance.type,
-      target_id: target_id,
+      target_id: nil,
+      target_sub_id: nil,
       scheduled_at: now,
       completion_date: completion_date,
       next_backoff: opts[:next_backoff],

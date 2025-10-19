@@ -25,3 +25,12 @@ SELECT MAX(id) FROM logs LIMIT 1;
 
 -- :get_log_last_revision_id
 SELECT MAX(revision_id) FROM logs WHERE id = ?;
+
+-- :get_scanneable_logs
+SELECT *
+FROM logs
+WHERE
+  inserted_at >= datetime('now', '-14 days')
+  AND deleted_at IS NULL
+ORDER BY inserted_at DESC
+LIMIT 1000;

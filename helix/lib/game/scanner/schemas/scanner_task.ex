@@ -13,7 +13,10 @@ defmodule Game.ScannerTask do
     apply(:"Elixir.Game.ScannerInstance", :types, [])
   end
 
+  @primary_keys [:instance_id]
+
   @schema [
+    # Maybe rename `run_id` to simply `id`? But keep PK as instnace_id
     {:instance_id, ID.Definition.ref(:scanner_instance_id)},
     {:run_id, :string},
     {:entity_id, ID.Definition.ref(:entity_id)},
@@ -21,6 +24,7 @@ defmodule Game.ScannerTask do
     {:type, {:enum, values: @instance_types_fn}},
     # A nullable target means the scanner is sleeping
     {:target_id, {:integer, nullable: true}},
+    {:target_sub_id, {:integer, nullable: true}},
     {:scheduled_at, {:datetime_utc, [precision: :millisecond]}},
     {:completion_date, :integer},
     {:next_backoff, {:integer, nullable: true}},
@@ -31,5 +35,10 @@ defmodule Game.ScannerTask do
     params
     |> Schema.cast()
     |> Schema.create()
+  end
+
+  def update(%_{} = task, changes) do
+    task
+    |> Schema.update(changes)
   end
 end

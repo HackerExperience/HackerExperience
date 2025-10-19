@@ -18,6 +18,7 @@ CREATE TABLE tasks (
     server_id INTEGER NOT NULL,
     type TEXT NOT NULL,
     target_id INTEGER,
+    target_sub_id INTEGER,
     scheduled_at TEXT NOT NULL,
     completion_date INTEGER NOT NULL,
     next_backoff INTEGER,

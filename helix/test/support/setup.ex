@@ -39,6 +39,8 @@ defmodule Test.Setup do
   defdelegate scanner_instance!(opts \\ []), to: S.Scanner, as: :new_instance!
   defdelegate scanner_instances(opts \\ []), to: S.Scanner, as: :new_instances
   defdelegate scanner_instances!(opts \\ []), to: S.Scanner, as: :new_instances!
+  defdelegate scanner_task(opts \\ []), to: S.Scanner, as: :new_task
+  defdelegate scanner_task!(opts \\ []), to: S.Scanner, as: :new_task!
 
   # Player
   defdelegate file_visibility(player_id, opts \\ []), to: S.File, as: :new_visibility

@@ -2,15 +2,14 @@
 ----------------------------------- SELECTS ------------------------------------
 --------------------------------------------------------------------------------
 
+-- :by_id
+SELECT * FROM instances WHERE id = ?;
+
 -- :by_entity_server
-SELECT *
-FROM instances
-WHERE entity_id = ? AND server_id = ?;
+SELECT * FROM instances WHERE entity_id = ? AND server_id = ?;
 
 -- :by_entity_server_type
-SELECT *
-FROM instances
-WHERE entity_id = ? AND server_id = ? AND type = ?;
+SELECT * FROM instances WHERE entity_id = ? AND server_id = ? AND type = ?;
 
 --------------------------------------------------------------------------------
 ----------------------------------- INSERTS ------------------------------------

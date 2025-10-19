@@ -26,6 +26,8 @@ defmodule Core.Event do
   handlers. A record is left stating that an event happened, but for the sole purpose of debugging.
   """
 
+  @behaviour __MODULE__
+
   require Logger
   alias Feeb.DB
   alias Renatils.Random
@@ -42,6 +44,9 @@ defmodule Core.Event do
           relay: term
         }
 
+  @callback emit([t()]) :: term
+  @callback emit_async([t()]) :: term
+
   @env Mix.env()
 
   @native_triggers [
@@ -49,6 +54,8 @@ defmodule Core.Event do
     :"Elixir.Core.Event.Publishable"
   ]
 
+  # TODO: Rethink this default (and maybe the thought of having "Managed DB" here). Why not push
+  # this responsibility for each handler?
   @default_behaviour_on_prepare_db {:universe, :read}
   @default_behaviour_teardown_db_on_success :commit
   @default_behaviour_teardown_db_on_failure :rollback
