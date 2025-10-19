@@ -12,9 +12,12 @@ defmodule Game.Index.ServerTest do
       assert index = Index.Server.gateway_index(entity.id, gateway)
 
       # Index contains all the expected keys
-      Enum.each(expected_endpoint_keys(), fn key ->
+      Enum.each(expected_gateway_keys(), fn key ->
         assert Map.has_key?(index, key)
       end)
+
+      # It has no additional keys on top of what is expected
+      assert %{} == Map.take(index, Map.keys(index) -- expected_gateway_keys())
 
       # Keys have the expected values
       assert index.id == gateway.id
@@ -24,6 +27,7 @@ defmodule Game.Index.ServerTest do
       assert index.files == []
       assert index.logs == []
       assert index.processes == []
+      assert index.scanner_instances == []
     end
   end
 
@@ -59,6 +63,9 @@ defmodule Game.Index.ServerTest do
         assert Map.has_key?(index, key)
       end)
 
+      # It has no additional keys on top of what is expected
+      assert %{} == Map.take(index, Map.keys(index) -- expected_endpoint_keys())
+
       # Keys have the expected values
       assert index.nip == endp_nip
       assert index.files == []
@@ -92,6 +99,12 @@ defmodule Game.Index.ServerTest do
       # Rendered index conforms to the Norm contract
       assert {:ok, _} = Norm.conform(rendered_index, Index.Server.endpoint_spec())
     end
+  end
+
+  defp expected_gateway_keys do
+    Index.Server.gateway_spec().schema.specs
+    |> Map.keys()
+    |> Enum.reject(fn key -> key in [:__openapi_name] end)
   end
 
   defp expected_endpoint_keys do

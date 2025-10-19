@@ -4,10 +4,10 @@
 module API.Events.Types exposing
     ( AppstoreInstallFailed, AppstoreInstalled, FileDeleteFailed, FileDeleted, FileInstallFailed, FileInstalled
     , FileTransferFailed, FileTransferred, IdxEndpoint, IdxFile, IdxGateway, IdxInstallation, IdxLog
-    , IdxLogRevision, IdxPlayer, IdxProcess, IdxSoftware, IdxTunnel, IndexRequested, InstallationUninstallFailed
-    , InstallationUninstalled, LogDeleteFailed, LogDeleted, LogEditFailed, LogEdited, ProcessCompleted
-    , ProcessCreated, ProcessKilled, SoftwareConfig, SoftwareConfigAppstore, SoftwareManifest
-    , TunnelCreateFailed, TunnelCreated
+    , IdxLogRevision, IdxPlayer, IdxProcess, IdxScannerInstance, IdxSoftware, IdxTunnel, IndexRequested
+    , InstallationUninstallFailed, InstallationUninstalled, LogDeleteFailed, LogDeleted, LogEditFailed
+    , LogEdited, ProcessCompleted, ProcessCreated, ProcessKilled, SoftwareConfig, SoftwareConfigAppstore
+    , SoftwareManifest, TunnelCreateFailed, TunnelCreated
     )
 
 {-|
@@ -17,10 +17,10 @@ module API.Events.Types exposing
 
 @docs AppstoreInstallFailed, AppstoreInstalled, FileDeleteFailed, FileDeleted, FileInstallFailed, FileInstalled
 @docs FileTransferFailed, FileTransferred, IdxEndpoint, IdxFile, IdxGateway, IdxInstallation, IdxLog
-@docs IdxLogRevision, IdxPlayer, IdxProcess, IdxSoftware, IdxTunnel, IndexRequested, InstallationUninstallFailed
-@docs InstallationUninstalled, LogDeleteFailed, LogDeleted, LogEditFailed, LogEdited, ProcessCompleted
-@docs ProcessCreated, ProcessKilled, SoftwareConfig, SoftwareConfigAppstore, SoftwareManifest
-@docs TunnelCreateFailed, TunnelCreated
+@docs IdxLogRevision, IdxPlayer, IdxProcess, IdxScannerInstance, IdxSoftware, IdxTunnel, IndexRequested
+@docs InstallationUninstallFailed, InstallationUninstalled, LogDeleteFailed, LogDeleted, LogEditFailed
+@docs LogEdited, ProcessCompleted, ProcessCreated, ProcessKilled, SoftwareConfig, SoftwareConfigAppstore
+@docs SoftwareManifest, TunnelCreateFailed, TunnelCreated
 
 -}
 
@@ -165,6 +165,10 @@ type alias IdxSoftware =
     { manifest : List SoftwareManifest }
 
 
+type alias IdxScannerInstance =
+    { id : String, type_ : Maybe String }
+
+
 type alias IdxProcess =
     { data : String, process_id : ProcessID, type_ : String }
 
@@ -211,6 +215,7 @@ type alias IdxGateway =
     , logs : List IdxLog
     , nip : NIP
     , processes : List IdxProcess
+    , scanner_instances : List IdxScannerInstance
     , tunnels : List IdxTunnel
     }
 
@@ -231,4 +236,5 @@ type alias IdxEndpoint =
     , logs : List IdxLog
     , nip : NIP
     , processes : List IdxProcess
+    , scanner_instances : List IdxScannerInstance
     }

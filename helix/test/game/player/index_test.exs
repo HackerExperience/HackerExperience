@@ -15,6 +15,9 @@ defmodule Game.Index.PlayerTest do
         assert Map.has_key?(index, key)
       end)
 
+      # It has no additional keys on top of what is expected
+      assert %{} == Map.take(index, Map.keys(index) -- expected_keys())
+
       # Keys have the expected values
       assert index.mainframe_id == gateway.id
       assert index.mainframe_nip == nip

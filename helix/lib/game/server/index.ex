@@ -14,7 +14,8 @@ defmodule Game.Index.Server do
             tunnels: Index.Tunnel.index(),
             files: Index.File.index(),
             logs: Index.Log.index(),
-            processes: Index.Process.index()
+            processes: Index.Process.index(),
+            scanner_instances: Index.Scanner.index()
           }
 
   @type endpoint_index ::
@@ -22,7 +23,8 @@ defmodule Game.Index.Server do
             nip: NIP.t(),
             files: Index.File.index(),
             logs: Index.Log.index(),
-            processes: Index.Process.index()
+            processes: Index.Process.index(),
+            scanner_instances: Index.Scanner.index()
           }
 
   @type rendered_gateway_index ::
@@ -33,7 +35,8 @@ defmodule Game.Index.Server do
             tunnels: Index.Tunnel.rendered_index(),
             files: Index.File.rendered_index(),
             logs: Index.Log.rendered_index(),
-            processes: Index.Process.rendered_index()
+            processes: Index.Process.rendered_index(),
+            scanner_instances: Index.Scanner.rendered_index()
           }
 
   @type rendered_endpoint_index ::
@@ -41,7 +44,8 @@ defmodule Game.Index.Server do
             nip: NIP.external(),
             files: Index.File.rendered_index(),
             logs: Index.Log.rendered_index(),
-            processes: Index.Process.rendered_index()
+            processes: Index.Process.rendered_index(),
+            scanner_instances: Index.Scanner.rendered_index()
           }
 
   def gateway_spec do
@@ -54,9 +58,10 @@ defmodule Game.Index.Server do
         tunnels: coll_of(Index.Tunnel.spec()),
         files: coll_of(Index.File.spec()),
         logs: coll_of(Index.Log.spec()),
-        processes: coll_of(Index.Process.spec())
+        processes: coll_of(Index.Process.spec()),
+        scanner_instances: coll_of(Index.Scanner.spec())
       }),
-      [:id, :nip, :installations, :tunnels, :files, :logs, :processes]
+      [:id, :nip, :installations, :tunnels, :files, :logs, :processes, :scanner_instances]
     )
   end
 
@@ -67,9 +72,10 @@ defmodule Game.Index.Server do
         nip: binary(),
         files: coll_of(Index.File.spec()),
         logs: coll_of(Index.Log.spec()),
-        processes: coll_of(Index.Process.spec())
+        processes: coll_of(Index.Process.spec()),
+        scanner_instances: coll_of(Index.Scanner.spec())
       }),
-      [:nip, :files, :logs, :processes]
+      [:nip, :files, :logs, :processes, :scanner_instances]
     )
   end
 
@@ -87,7 +93,8 @@ defmodule Game.Index.Server do
       tunnels: Index.Tunnel.index(nip),
       files: Index.File.index(entity_id, server.id, installations),
       logs: Index.Log.index(entity_id, server.id),
-      processes: Index.Process.index(entity_id, server.id)
+      processes: Index.Process.index(entity_id, server.id),
+      scanner_instances: Index.Scanner.index(entity_id, server.id)
     }
   end
 
@@ -98,7 +105,8 @@ defmodule Game.Index.Server do
       nip: nip,
       files: Index.File.index(entity_id, server_id, []),
       logs: Index.Log.index(entity_id, server_id),
-      processes: Index.Process.index(entity_id, server_id)
+      processes: Index.Process.index(entity_id, server_id),
+      scanner_instances: Index.Scanner.index(entity_id, server_id)
     }
   end
 
@@ -112,7 +120,8 @@ defmodule Game.Index.Server do
       tunnels: Index.Tunnel.render_index(index.tunnels, index.id, entity_id),
       files: Index.File.render_index(index.files, entity_id),
       logs: Index.Log.render_index(index.logs, entity_id),
-      processes: Index.Process.render_index(index.processes, entity_id)
+      processes: Index.Process.render_index(index.processes, entity_id),
+      scanner_instances: Index.Scanner.render_index(index.scanner_instances, entity_id)
     }
   end
 
@@ -123,7 +132,8 @@ defmodule Game.Index.Server do
       nip: index.nip |> NIP.to_external(),
       files: Index.File.render_index(index.files, entity_id),
       logs: Index.Log.render_index(index.logs, entity_id),
-      processes: Index.Process.render_index(index.processes, entity_id)
+      processes: Index.Process.render_index(index.processes, entity_id),
+      scanner_instances: Index.Scanner.render_index(index.scanner_instances, entity_id)
     }
   end
 end

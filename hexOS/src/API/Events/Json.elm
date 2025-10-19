@@ -5,16 +5,16 @@ module API.Events.Json exposing
     ( encodeAppstoreInstallFailed, encodeAppstoreInstalled, encodeFileDeleteFailed, encodeFileDeleted
     , encodeFileInstallFailed, encodeFileInstalled, encodeFileTransferFailed, encodeFileTransferred
     , encodeIdxEndpoint, encodeIdxFile, encodeIdxGateway, encodeIdxInstallation, encodeIdxLog
-    , encodeIdxLogRevision, encodeIdxPlayer, encodeIdxProcess, encodeIdxSoftware, encodeIdxTunnel
-    , encodeIndexRequested, encodeInstallationUninstallFailed, encodeInstallationUninstalled
+    , encodeIdxLogRevision, encodeIdxPlayer, encodeIdxProcess, encodeIdxScannerInstance, encodeIdxSoftware
+    , encodeIdxTunnel, encodeIndexRequested, encodeInstallationUninstallFailed, encodeInstallationUninstalled
     , encodeLogDeleteFailed, encodeLogDeleted, encodeLogEditFailed, encodeLogEdited, encodeProcessCompleted
     , encodeProcessCreated, encodeProcessKilled, encodeSoftwareConfig, encodeSoftwareConfigAppstore
     , encodeSoftwareManifest, encodeTunnelCreateFailed, encodeTunnelCreated
     , decodeAppstoreInstallFailed, decodeAppstoreInstalled, decodeFileDeleteFailed, decodeFileDeleted
     , decodeFileInstallFailed, decodeFileInstalled, decodeFileTransferFailed, decodeFileTransferred
     , decodeIdxEndpoint, decodeIdxFile, decodeIdxGateway, decodeIdxInstallation, decodeIdxLog
-    , decodeIdxLogRevision, decodeIdxPlayer, decodeIdxProcess, decodeIdxSoftware, decodeIdxTunnel
-    , decodeIndexRequested, decodeInstallationUninstallFailed, decodeInstallationUninstalled
+    , decodeIdxLogRevision, decodeIdxPlayer, decodeIdxProcess, decodeIdxScannerInstance, decodeIdxSoftware
+    , decodeIdxTunnel, decodeIndexRequested, decodeInstallationUninstallFailed, decodeInstallationUninstalled
     , decodeLogDeleteFailed, decodeLogDeleted, decodeLogEditFailed, decodeLogEdited, decodeProcessCompleted
     , decodeProcessCreated, decodeProcessKilled, decodeSoftwareConfig, decodeSoftwareConfigAppstore
     , decodeSoftwareManifest, decodeTunnelCreateFailed, decodeTunnelCreated
@@ -28,8 +28,8 @@ module API.Events.Json exposing
 @docs encodeAppstoreInstallFailed, encodeAppstoreInstalled, encodeFileDeleteFailed, encodeFileDeleted
 @docs encodeFileInstallFailed, encodeFileInstalled, encodeFileTransferFailed, encodeFileTransferred
 @docs encodeIdxEndpoint, encodeIdxFile, encodeIdxGateway, encodeIdxInstallation, encodeIdxLog
-@docs encodeIdxLogRevision, encodeIdxPlayer, encodeIdxProcess, encodeIdxSoftware, encodeIdxTunnel
-@docs encodeIndexRequested, encodeInstallationUninstallFailed, encodeInstallationUninstalled
+@docs encodeIdxLogRevision, encodeIdxPlayer, encodeIdxProcess, encodeIdxScannerInstance, encodeIdxSoftware
+@docs encodeIdxTunnel, encodeIndexRequested, encodeInstallationUninstallFailed, encodeInstallationUninstalled
 @docs encodeLogDeleteFailed, encodeLogDeleted, encodeLogEditFailed, encodeLogEdited, encodeProcessCompleted
 @docs encodeProcessCreated, encodeProcessKilled, encodeSoftwareConfig, encodeSoftwareConfigAppstore
 @docs encodeSoftwareManifest, encodeTunnelCreateFailed, encodeTunnelCreated
@@ -40,8 +40,8 @@ module API.Events.Json exposing
 @docs decodeAppstoreInstallFailed, decodeAppstoreInstalled, decodeFileDeleteFailed, decodeFileDeleted
 @docs decodeFileInstallFailed, decodeFileInstalled, decodeFileTransferFailed, decodeFileTransferred
 @docs decodeIdxEndpoint, decodeIdxFile, decodeIdxGateway, decodeIdxInstallation, decodeIdxLog
-@docs decodeIdxLogRevision, decodeIdxPlayer, decodeIdxProcess, decodeIdxSoftware, decodeIdxTunnel
-@docs decodeIndexRequested, decodeInstallationUninstallFailed, decodeInstallationUninstalled
+@docs decodeIdxLogRevision, decodeIdxPlayer, decodeIdxProcess, decodeIdxScannerInstance, decodeIdxSoftware
+@docs decodeIdxTunnel, decodeIndexRequested, decodeInstallationUninstallFailed, decodeInstallationUninstalled
 @docs decodeLogDeleteFailed, decodeLogDeleted, decodeLogEditFailed, decodeLogEdited, decodeProcessCompleted
 @docs decodeProcessCreated, decodeProcessKilled, decodeSoftwareConfig, decodeSoftwareConfigAppstore
 @docs decodeSoftwareManifest, decodeTunnelCreateFailed, decodeTunnelCreated
@@ -806,6 +806,32 @@ encodeIdxSoftware rec =
         [ ( "manifest", Json.Encode.list encodeSoftwareManifest rec.manifest ) ]
 
 
+decodeIdxScannerInstance : Json.Decode.Decoder API.Events.Types.IdxScannerInstance
+decodeIdxScannerInstance =
+    Json.Decode.succeed
+        (\id type_ -> { id = id, type_ = type_ })
+        |> OpenApi.Common.jsonDecodeAndMap
+            (Json.Decode.field "id" Json.Decode.string)
+        |> OpenApi.Common.jsonDecodeAndMap
+            (OpenApi.Common.decodeOptionalField
+                "type"
+                Json.Decode.string
+            )
+
+
+encodeIdxScannerInstance : API.Events.Types.IdxScannerInstance -> Json.Encode.Value
+encodeIdxScannerInstance rec =
+    Json.Encode.object
+        (List.filterMap
+            Basics.identity
+            [ Just ( "id", Json.Encode.string rec.id )
+            , Maybe.map
+                (\mapUnpack -> ( "type", Json.Encode.string mapUnpack ))
+                rec.type_
+            ]
+        )
+
+
 decodeIdxProcess : Json.Decode.Decoder API.Events.Types.IdxProcess
 decodeIdxProcess =
     Json.Decode.succeed
@@ -1036,13 +1062,14 @@ encodeIdxInstallation rec =
 decodeIdxGateway : Json.Decode.Decoder API.Events.Types.IdxGateway
 decodeIdxGateway =
     Json.Decode.succeed
-        (\files id installations logs nip processes tunnels ->
+        (\files id installations logs nip processes scanner_instances tunnels ->
             { files = files
             , id = id
             , installations = installations
             , logs = logs
             , nip = nip
             , processes = processes
+            , scanner_instances = scanner_instances
             , tunnels = tunnels
             }
         )
@@ -1078,6 +1105,13 @@ decodeIdxGateway =
             )
         |> OpenApi.Common.jsonDecodeAndMap
             (Json.Decode.field
+                "scanner_instances"
+                (Json.Decode.list
+                    decodeIdxScannerInstance
+                )
+            )
+        |> OpenApi.Common.jsonDecodeAndMap
+            (Json.Decode.field
                 "tunnels"
                 (Json.Decode.list
                     decodeIdxTunnel
@@ -1096,6 +1130,9 @@ encodeIdxGateway rec =
         , ( "logs", Json.Encode.list encodeIdxLog rec.logs )
         , ( "nip", Json.Encode.string (NIP.toString rec.nip) )
         , ( "processes", Json.Encode.list encodeIdxProcess rec.processes )
+        , ( "scanner_instances"
+          , Json.Encode.list encodeIdxScannerInstance rec.scanner_instances
+          )
         , ( "tunnels", Json.Encode.list encodeIdxTunnel rec.tunnels )
         ]
 
@@ -1177,8 +1214,13 @@ encodeIdxFile rec =
 decodeIdxEndpoint : Json.Decode.Decoder API.Events.Types.IdxEndpoint
 decodeIdxEndpoint =
     Json.Decode.succeed
-        (\files logs nip processes ->
-            { files = files, logs = logs, nip = nip, processes = processes }
+        (\files logs nip processes scanner_instances ->
+            { files = files
+            , logs = logs
+            , nip = nip
+            , processes = processes
+            , scanner_instances = scanner_instances
+            }
         )
         |> OpenApi.Common.jsonDecodeAndMap
             (Json.Decode.field "files" (Json.Decode.list decodeIdxFile))
@@ -1199,6 +1241,13 @@ decodeIdxEndpoint =
                     decodeIdxProcess
                 )
             )
+        |> OpenApi.Common.jsonDecodeAndMap
+            (Json.Decode.field
+                "scanner_instances"
+                (Json.Decode.list
+                    decodeIdxScannerInstance
+                )
+            )
 
 
 encodeIdxEndpoint : API.Events.Types.IdxEndpoint -> Json.Encode.Value
@@ -1208,4 +1257,7 @@ encodeIdxEndpoint rec =
         , ( "logs", Json.Encode.list encodeIdxLog rec.logs )
         , ( "nip", Json.Encode.string (NIP.toString rec.nip) )
         , ( "processes", Json.Encode.list encodeIdxProcess rec.processes )
+        , ( "scanner_instances"
+          , Json.Encode.list encodeIdxScannerInstance rec.scanner_instances
+          )
         ]
