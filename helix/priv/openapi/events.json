@@ -291,7 +291,8 @@
           }
         },
         "required": [
-          "id"
+          "id",
+          "type"
         ],
         "type": "object"
       },
@@ -709,6 +710,24 @@
         "required": [
           "process_id",
           "reason"
+        ],
+        "type": "object"
+      },
+      "scanner_instances_created": {
+        "properties": {
+          "instances": {
+            "items": {
+              "$ref": "#/components/schemas/IdxScannerInstance"
+            },
+            "type": "array"
+          },
+          "nip": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "instances",
+          "nip"
         ],
         "type": "object"
       },

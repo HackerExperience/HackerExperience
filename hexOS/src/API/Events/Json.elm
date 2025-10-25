@@ -8,16 +8,16 @@ module API.Events.Json exposing
     , encodeIdxLogRevision, encodeIdxPlayer, encodeIdxProcess, encodeIdxScannerInstance, encodeIdxSoftware
     , encodeIdxTunnel, encodeIndexRequested, encodeInstallationUninstallFailed, encodeInstallationUninstalled
     , encodeLogDeleteFailed, encodeLogDeleted, encodeLogEditFailed, encodeLogEdited, encodeProcessCompleted
-    , encodeProcessCreated, encodeProcessKilled, encodeSoftwareConfig, encodeSoftwareConfigAppstore
-    , encodeSoftwareManifest, encodeTunnelCreateFailed, encodeTunnelCreated
+    , encodeProcessCreated, encodeProcessKilled, encodeScannerInstancesCreated, encodeSoftwareConfig
+    , encodeSoftwareConfigAppstore, encodeSoftwareManifest, encodeTunnelCreateFailed, encodeTunnelCreated
     , decodeAppstoreInstallFailed, decodeAppstoreInstalled, decodeFileDeleteFailed, decodeFileDeleted
     , decodeFileInstallFailed, decodeFileInstalled, decodeFileTransferFailed, decodeFileTransferred
     , decodeIdxEndpoint, decodeIdxFile, decodeIdxGateway, decodeIdxInstallation, decodeIdxLog
     , decodeIdxLogRevision, decodeIdxPlayer, decodeIdxProcess, decodeIdxScannerInstance, decodeIdxSoftware
     , decodeIdxTunnel, decodeIndexRequested, decodeInstallationUninstallFailed, decodeInstallationUninstalled
     , decodeLogDeleteFailed, decodeLogDeleted, decodeLogEditFailed, decodeLogEdited, decodeProcessCompleted
-    , decodeProcessCreated, decodeProcessKilled, decodeSoftwareConfig, decodeSoftwareConfigAppstore
-    , decodeSoftwareManifest, decodeTunnelCreateFailed, decodeTunnelCreated
+    , decodeProcessCreated, decodeProcessKilled, decodeScannerInstancesCreated, decodeSoftwareConfig
+    , decodeSoftwareConfigAppstore, decodeSoftwareManifest, decodeTunnelCreateFailed, decodeTunnelCreated
     )
 
 {-|
@@ -31,8 +31,8 @@ module API.Events.Json exposing
 @docs encodeIdxLogRevision, encodeIdxPlayer, encodeIdxProcess, encodeIdxScannerInstance, encodeIdxSoftware
 @docs encodeIdxTunnel, encodeIndexRequested, encodeInstallationUninstallFailed, encodeInstallationUninstalled
 @docs encodeLogDeleteFailed, encodeLogDeleted, encodeLogEditFailed, encodeLogEdited, encodeProcessCompleted
-@docs encodeProcessCreated, encodeProcessKilled, encodeSoftwareConfig, encodeSoftwareConfigAppstore
-@docs encodeSoftwareManifest, encodeTunnelCreateFailed, encodeTunnelCreated
+@docs encodeProcessCreated, encodeProcessKilled, encodeScannerInstancesCreated, encodeSoftwareConfig
+@docs encodeSoftwareConfigAppstore, encodeSoftwareManifest, encodeTunnelCreateFailed, encodeTunnelCreated
 
 
 ## Decoders
@@ -43,8 +43,8 @@ module API.Events.Json exposing
 @docs decodeIdxLogRevision, decodeIdxPlayer, decodeIdxProcess, decodeIdxScannerInstance, decodeIdxSoftware
 @docs decodeIdxTunnel, decodeIndexRequested, decodeInstallationUninstallFailed, decodeInstallationUninstalled
 @docs decodeLogDeleteFailed, decodeLogDeleted, decodeLogEditFailed, decodeLogEdited, decodeProcessCompleted
-@docs decodeProcessCreated, decodeProcessKilled, decodeSoftwareConfig, decodeSoftwareConfigAppstore
-@docs decodeSoftwareManifest, decodeTunnelCreateFailed, decodeTunnelCreated
+@docs decodeProcessCreated, decodeProcessKilled, decodeScannerInstancesCreated, decodeSoftwareConfig
+@docs decodeSoftwareConfigAppstore, decodeSoftwareManifest, decodeTunnelCreateFailed, decodeTunnelCreated
 
 -}
 
@@ -119,6 +119,29 @@ encodeTunnelCreateFailed rec =
     Json.Encode.object
         [ ( "process_id", Json.Encode.string (ProcessID.toValue rec.process_id) )
         , ( "reason", Json.Encode.string rec.reason )
+        ]
+
+
+decodeScannerInstancesCreated : Json.Decode.Decoder API.Events.Types.ScannerInstancesCreated
+decodeScannerInstancesCreated =
+    Json.Decode.succeed
+        (\instances nip -> { instances = instances, nip = nip })
+        |> OpenApi.Common.jsonDecodeAndMap
+            (Json.Decode.field
+                "instances"
+                (Json.Decode.list decodeIdxScannerInstance)
+            )
+        |> OpenApi.Common.jsonDecodeAndMap
+            (Json.Decode.field "nip" (Json.Decode.map (\nip -> NIP.fromString nip) Json.Decode.string))
+
+
+encodeScannerInstancesCreated : API.Events.Types.ScannerInstancesCreated -> Json.Encode.Value
+encodeScannerInstancesCreated rec =
+    Json.Encode.object
+        [ ( "instances"
+          , Json.Encode.list encodeIdxScannerInstance rec.instances
+          )
+        , ( "nip", Json.Encode.string (NIP.toString rec.nip) )
         ]
 
 
@@ -813,23 +836,15 @@ decodeIdxScannerInstance =
         |> OpenApi.Common.jsonDecodeAndMap
             (Json.Decode.field "id" Json.Decode.string)
         |> OpenApi.Common.jsonDecodeAndMap
-            (OpenApi.Common.decodeOptionalField
-                "type"
-                Json.Decode.string
-            )
+            (Json.Decode.field "type" Json.Decode.string)
 
 
 encodeIdxScannerInstance : API.Events.Types.IdxScannerInstance -> Json.Encode.Value
 encodeIdxScannerInstance rec =
     Json.Encode.object
-        (List.filterMap
-            Basics.identity
-            [ Just ( "id", Json.Encode.string rec.id )
-            , Maybe.map
-                (\mapUnpack -> ( "type", Json.Encode.string mapUnpack ))
-                rec.type_
-            ]
-        )
+        [ ( "id", Json.Encode.string rec.id )
+        , ( "type", Json.Encode.string rec.type_ )
+        ]
 
 
 decodeIdxProcess : Json.Decode.Decoder API.Events.Types.IdxProcess

@@ -20,7 +20,7 @@ defmodule Game.Index.Scanner do
         id: external_id(),
         type: enum(ScannerInstance.types() |> Enum.map(&to_string/1))
       }),
-      [:id]
+      [:id, :type]
     )
   end
 
@@ -32,7 +32,7 @@ defmodule Game.Index.Scanner do
     Enum.map(index, &render_instance(&1, entity_id))
   end
 
-  defp render_instance(%ScannerInstance{} = instance, entity_id) do
+  def render_instance(%ScannerInstance{} = instance, entity_id) do
     %{
       id: ID.to_external(instance.id, entity_id),
       type: "#{instance.type}"

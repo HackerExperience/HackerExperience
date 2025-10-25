@@ -13,6 +13,7 @@ defmodule Core.Event.Publishable.Definition do
       import Core.Spec
 
       alias Core.{ID, NIP}
+      alias Game.Index
       alias Game.Services, as: Svc
 
       @before_compile unquote(__MODULE__)

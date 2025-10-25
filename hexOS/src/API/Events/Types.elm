@@ -6,8 +6,8 @@ module API.Events.Types exposing
     , FileTransferFailed, FileTransferred, IdxEndpoint, IdxFile, IdxGateway, IdxInstallation, IdxLog
     , IdxLogRevision, IdxPlayer, IdxProcess, IdxScannerInstance, IdxSoftware, IdxTunnel, IndexRequested
     , InstallationUninstallFailed, InstallationUninstalled, LogDeleteFailed, LogDeleted, LogEditFailed
-    , LogEdited, ProcessCompleted, ProcessCreated, ProcessKilled, SoftwareConfig, SoftwareConfigAppstore
-    , SoftwareManifest, TunnelCreateFailed, TunnelCreated
+    , LogEdited, ProcessCompleted, ProcessCreated, ProcessKilled, ScannerInstancesCreated, SoftwareConfig
+    , SoftwareConfigAppstore, SoftwareManifest, TunnelCreateFailed, TunnelCreated
     )
 
 {-|
@@ -19,8 +19,8 @@ module API.Events.Types exposing
 @docs FileTransferFailed, FileTransferred, IdxEndpoint, IdxFile, IdxGateway, IdxInstallation, IdxLog
 @docs IdxLogRevision, IdxPlayer, IdxProcess, IdxScannerInstance, IdxSoftware, IdxTunnel, IndexRequested
 @docs InstallationUninstallFailed, InstallationUninstalled, LogDeleteFailed, LogDeleted, LogEditFailed
-@docs LogEdited, ProcessCompleted, ProcessCreated, ProcessKilled, SoftwareConfig, SoftwareConfigAppstore
-@docs SoftwareManifest, TunnelCreateFailed, TunnelCreated
+@docs LogEdited, ProcessCompleted, ProcessCreated, ProcessKilled, ScannerInstancesCreated, SoftwareConfig
+@docs SoftwareConfigAppstore, SoftwareManifest, TunnelCreateFailed, TunnelCreated
 
 -}
 
@@ -45,6 +45,10 @@ type alias TunnelCreated =
 
 type alias TunnelCreateFailed =
     { process_id : ProcessID, reason : String }
+
+
+type alias ScannerInstancesCreated =
+    { instances : List IdxScannerInstance, nip : NIP }
 
 
 type alias ProcessKilled =
@@ -166,7 +170,7 @@ type alias IdxSoftware =
 
 
 type alias IdxScannerInstance =
-    { id : String, type_ : Maybe String }
+    { id : String, type_ : String }
 
 
 type alias IdxProcess =
