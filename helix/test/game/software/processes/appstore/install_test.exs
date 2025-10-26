@@ -213,17 +213,17 @@ defmodule Game.Process.AppStore.InstallTest do
         )
 
       DB.commit()
-      U.start_sse_listener(ctx, player, total_expected_events: 2)
+      U.start_sse_listener(ctx, player, last_event: :appstore_installed)
 
       # Complete the Process
       U.simulate_process_completion(process)
 
       # SSE events were published
-      proc_completed_event = U.wait_sse_event!("process_completed")
+      proc_completed_event = U.wait_sse_event!(:process_completed)
       assert proc_completed_event.data.process_id |> U.from_eid(player.id) == process.id
       assert proc_completed_event.data.data == "{\"software_type\":\"cracker\"}"
 
-      appstore_installed_event = U.wait_sse_event!("appstore_installed")
+      appstore_installed_event = U.wait_sse_event!(:appstore_installed)
       assert appstore_installed_event.data.file
       assert appstore_installed_event.data.installation
     end

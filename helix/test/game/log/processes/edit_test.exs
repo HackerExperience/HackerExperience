@@ -115,16 +115,16 @@ defmodule Game.Process.Log.EditTest do
 
       DB.commit()
 
-      U.start_sse_listener(ctx, player, total_expected_events: 2)
+      U.start_sse_listener(ctx, player, last_event: :log_edited)
 
       # Complete the Process
       U.simulate_process_completion(process)
 
       # SSE events were published
-      proc_completed_sse = U.wait_sse_event!("process_completed")
+      proc_completed_sse = U.wait_sse_event!(:process_completed)
       assert proc_completed_sse.data.process_id |> U.from_eid(player.id) == process.id
 
-      log_edited_sse = U.wait_sse_event!("log_edited")
+      log_edited_sse = U.wait_sse_event!(:log_edited)
       assert log_edited_sse.data.nip == nip |> NIP.to_external()
       assert log_edited_sse.data.process_id |> U.from_eid(player.id) == process.id
       assert log_edited_sse.data.log_id |> U.from_eid(player.id) == log_rev_2.id

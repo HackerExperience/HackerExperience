@@ -189,16 +189,16 @@ defmodule Game.Process.Log.DeleteTest do
 
       DB.commit()
 
-      U.start_sse_listener(ctx, player, total_expected_events: 2)
+      U.start_sse_listener(ctx, player, last_event: :log_deleted)
 
       # Complete the Process
       U.simulate_process_completion(process)
 
       # SSE events were published
-      proc_completed_sse = U.wait_sse_event!("process_completed")
+      proc_completed_sse = U.wait_sse_event!(:process_completed)
       assert proc_completed_sse.data.process_id |> U.from_eid(player.id) == process.id
 
-      log_deleted_sse = U.wait_sse_event!("log_deleted")
+      log_deleted_sse = U.wait_sse_event!(:log_deleted)
       assert log_deleted_sse.data.nip == nip |> NIP.to_external()
       assert log_deleted_sse.data.process_id |> U.from_eid(player.id) == process.id
       assert log_deleted_sse.data.log_id |> U.from_eid(player.id) == log_rev_2.id
@@ -243,16 +243,16 @@ defmodule Game.Process.Log.DeleteTest do
 
       DB.commit()
 
-      U.start_sse_listener(ctx, player)
-      U.start_sse_listener(ctx, other_player, total_expected_events: 2)
+      U.start_sse_listener(ctx, player, last_event: :process_killed)
+      U.start_sse_listener(ctx, other_player, last_event: :log_deleted)
 
       U.simulate_process_completion(other_process)
 
-      process_killed_event = U.wait_sse_event!("process_killed")
+      process_killed_event = U.wait_sse_event!(:process_killed)
       assert process_killed_event.data.process_id |> U.from_eid(player.id) == process.id
       assert process_killed_event.data.reason == "killed"
 
-      process_completed_event = U.wait_sse_event!("process_completed")
+      process_completed_event = U.wait_sse_event!(:process_completed)
 
       assert process_completed_event.data.process_id |> U.from_eid(other_player.id) ==
                other_process.id
@@ -261,7 +261,7 @@ defmodule Game.Process.Log.DeleteTest do
       assert process_completed_event.data.type == "log_delete"
       assert process_completed_event.data.data =~ "\"log_id\":"
 
-      log_deleted_event = U.wait_sse_event!("log_deleted")
+      log_deleted_event = U.wait_sse_event!(:log_deleted)
       assert log_deleted_event.data.log_id |> U.from_eid(other_player.id) == log_rev_2.id
     end
   end

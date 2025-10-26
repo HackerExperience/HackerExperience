@@ -204,17 +204,17 @@ defmodule Game.Process.File.TransferTest do
 
       DB.commit()
 
-      U.start_sse_listener(ctx, player, total_expected_events: 2)
+      U.start_sse_listener(ctx, player, last_event: :file_transferred)
 
       # Complete the Process
       U.simulate_process_completion(process)
 
       # First the Client is notified about the process being complete
-      proc_completed_sse = U.wait_sse_event!("process_completed")
+      proc_completed_sse = U.wait_sse_event!(:process_completed)
       assert proc_completed_sse.data.process_id |> U.from_eid(player.id) == process.id
 
       # Then he is notified about the file transfer event
-      file_transferred_sse = U.wait_sse_event!("file_transferred")
+      file_transferred_sse = U.wait_sse_event!(:file_transferred)
       assert file_transferred_sse.data.process_id |> U.from_eid(player.id) == process.id
       new_file_id = file_transferred_sse.data.file_id |> U.from_eid(player.id)
 
@@ -243,17 +243,17 @@ defmodule Game.Process.File.TransferTest do
 
       DB.commit()
 
-      U.start_sse_listener(ctx, player, total_expected_events: 2)
+      U.start_sse_listener(ctx, player, last_event: :file_transferred)
 
       # Complete the Process
       U.simulate_process_completion(process)
 
       # First the Client is notified about the process being complete
-      proc_completed_sse = U.wait_sse_event!("process_completed")
+      proc_completed_sse = U.wait_sse_event!(:process_completed)
       assert proc_completed_sse.data.process_id |> U.from_eid(player.id) == process.id
 
       # Then he is notified about the file transfer event
-      file_transferred_sse = U.wait_sse_event!("file_transferred")
+      file_transferred_sse = U.wait_sse_event!(:file_transferred)
       assert file_transferred_sse.data.process_id |> U.from_eid(player.id) == process.id
 
       # Now the endpoint has a new file!
@@ -319,7 +319,7 @@ defmodule Game.Process.File.TransferTest do
 
       target_nip = Svc.NetworkConnection.fetch!(by_server_id: file.server_id).nip
 
-      U.start_sse_listener(ctx, player, total_expected_events: 1)
+      U.start_sse_listener(ctx, player, last_event: :process_killed)
 
       # FileTransferProcess is running nicely
       assert [_] = U.get_all_processes(gateway.id)
@@ -347,7 +347,7 @@ defmodule Game.Process.File.TransferTest do
       U.simulate_process_completion(file_delete_process)
 
       # Player eventually received a ProcessKilledEvent
-      process_killed_event = U.wait_sse_event!("process_killed")
+      process_killed_event = U.wait_sse_event!(:process_killed)
       assert process_killed_event.data.process_id |> U.from_eid(player.id) == transfer_process.id
       assert process_killed_event.data.reason == "killed"
 
