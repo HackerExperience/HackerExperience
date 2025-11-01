@@ -84,6 +84,30 @@ defmodule Game.Endpoint.Player.SyncTest do
       assert index_event.name == "index_requested"
       assert Map.has_key?(index_event.data, :player)
     end
+
+    test "client receives Scanner Instances after sync", ctx do
+      %{server: gateway, nip: gtw_nip, entity: entity, player: player} = Setup.server()
+      DB.commit()
+
+      U.start_sse_listener(ctx, player, last_event: :scanner_instances_created)
+
+      scanner_instances_created_ev = U.wait_sse_event!(:scanner_instances_created)
+
+      assert scanner_instances_created_ev.name == "scanner_instances_created"
+      assert scanner_instances_created_ev.data.nip == gtw_nip |> NIP.to_external()
+      scanner_instances = scanner_instances_created_ev.data.instances
+
+      # Let's make sure each instance can be found in the DB
+      Enum.each(scanner_instances, fn %{"id" => instance_eid, "type" => raw_instance_type} ->
+        assert instance_id = instance_eid |> U.from_eid(entity.id)
+        instance = Svc.Scanner.fetch_instance!(by_id: instance_id)
+
+        assert instance.server_id == gateway.id
+        assert instance.entity_id == entity.id
+        assert instance.tunnel_id == nil
+        assert "#{instance.type}" == raw_instance_type
+      end)
+    end
   end
 
   defp make_sse_request_async(jwt, shard_id) do
