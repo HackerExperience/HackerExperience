@@ -73,36 +73,16 @@ defmodule Game.Endpoint.Player.SyncTest do
   end
 
   describe "Player.Sync request (E2E with curl)" do
-    test "client receives pushed events", %{shard_id: shard_id} = ctx do
+    test "client receives IndexRequestedEvent after sync", ctx do
       player = Setup.player!()
       DB.commit()
 
-      jwt = U.jwt_token(uid: player.external_id)
+      U.start_sse_listener(ctx, player, total_expected_events: 0)
 
-      # TODO: URL/port logic should be in a shared module
-      port = if ctx.db_context == :singleplayer, do: 5001, else: 5002
+      index_event = U.wait_sse_event!(:index_requested)
 
-      cmd =
-        "curl -s -H 'Content-Type: application/json' -H 'test-game-shard-id: #{shard_id}' -N " <>
-          "http://localhost:#{port}/v1/player/sync?token=#{jwt}"
-
-      port = Port.open({:spawn, cmd}, [:binary, :use_stdio])
-
-      receive do
-        {^port, {:data, sse_payload}} ->
-          event =
-            sse_payload
-            |> String.slice(6..-1//1)
-            |> String.replace("\n\n", "")
-            |> JSON.decode!()
-            |> Renatils.Map.atomify_keys()
-
-          assert event.name == "index_requested"
-          assert Map.has_key?(event.data, :player)
-      after
-        5000 ->
-          raise "No output from curl"
-      end
+      assert index_event.name == "index_requested"
+      assert Map.has_key?(index_event.data, :player)
     end
   end
 

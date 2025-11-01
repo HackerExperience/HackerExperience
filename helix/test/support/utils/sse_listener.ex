@@ -85,6 +85,9 @@ defmodule Test.Utils.SSEListener do
     receive do
       {:event, %{name: ^expected_event_name} = event} ->
         event
+
+      {:index, %{name: ^expected_event_name} = event} ->
+        event
     after
       2000 -> raise "SSE event #{name} never arrived"
     end
