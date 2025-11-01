@@ -99,7 +99,7 @@ defmodule Game.Process.File.DeleteTest do
 
       DB.commit()
 
-      U.start_sse_listener(ctx, player, last_event: :file_deleted)
+      U.start_sse_listener(ctx, player, last_event: :process_killed)
 
       # Initially we had two running processes
       assert [_, _] = U.get_all_process_registries()

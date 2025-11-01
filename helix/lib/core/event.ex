@@ -136,7 +136,11 @@ defmodule Core.Event do
       |> Enum.map(fn trigger_mod -> trigger_mod.probe(event) end)
       |> Enum.reject(&is_nil/1)
 
-    custom_handlers ++ native_handlers ++ test_handler()
+    # Future improvement: currently, every handler is handled synchronously and in this order. This
+    # is certainly the safest approach, but we may benefit from performance wins if we let handlers
+    # specify how they want to be handled: sync or async. For example, we may want to fire the
+    # Publishable trigger right away (async), whereas other handlers have a determinsitic order.
+    native_handlers ++ custom_handlers ++ test_handler()
   end
 
   if @env == :test do

@@ -337,13 +337,14 @@ defmodule Game.Process.Server.LoginTest do
       process_completed = U.wait_sse_event!(:process_completed)
       assert process_completed.data.process_id |> U.from_eid(player.id) == process.id
 
-      assert [_inner_tunnel, tunnel] = U.get_all_tunnels()
-
       # Then he is notified about the tunnel created event
       tunnel_created = U.wait_sse_event!(:tunnel_created)
-      assert tunnel_created.data.tunnel_id |> U.from_eid(player.id) == tunnel.id
+      assert tunnel_id = tunnel_created.data.tunnel_id |> U.from_eid(player.id)
       assert tunnel_created.data.source_nip == gtw_nip |> NIP.to_external()
       assert tunnel_created.data.target_nip == endp_nip |> NIP.to_external()
+
+      assert [_inner_tunnel, tunnel] = U.get_all_tunnels()
+      assert tunnel.id == tunnel_id
     end
 
     test "on successful login, log entries are created accordingly" do
