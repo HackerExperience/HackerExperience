@@ -5,6 +5,7 @@ defmodule Game.Handlers.ScannerTest do
   alias Game.{Player}
 
   alias Game.Events.Player.IndexRequested, as: IndexRequestedEvent
+  alias Game.Events.Network.TunnelCreated, as: TunnelCreatedEvent
 
   setup [:with_game_db]
 
@@ -51,6 +52,32 @@ defmodule Game.Handlers.ScannerTest do
       assert {:ok, []} = ScannerHandler.on_event(event.data, event)
 
       # We have 3 instances in the DB
+      assert [_, _, _] = U.get_all_scanner_instances()
+    end
+  end
+
+  describe "on_event/1 - TunnelCreatedEvent" do
+    test "sets up missing instances in the Endpoint server" do
+      %{nip: gtw_nip, server: gateway, entity: entity} = Setup.server()
+      %{nip: endp_nip, server: endpoint} = Setup.server()
+      tunnel = Setup.tunnel_lite!(source_nip: gtw_nip, target_nip: endp_nip)
+
+      tunnel_created_ev = TunnelCreatedEvent.new(tunnel, entity.id, gateway.id, endpoint.id)
+
+      # Handler returned an event
+      assert {:ok, [event]} = ScannerHandler.on_event(tunnel_created_ev.data, tunnel_created_ev)
+
+      # ScannerInstancesCreatedEvent contains the expected data
+      assert event.name == :scanner_instances_created
+      assert [_, _, _] = event.data.instances
+      assert event.data.server_id == endpoint.id
+      assert event.data.entity_id == entity.id
+
+      # We can expect to find these 3 instances in the DB
+      assert [_, _, _] = U.get_all_scanner_instances()
+
+      # Performs a no-op when instances already exist
+      assert {:ok, []} == ScannerHandler.on_event(tunnel_created_ev.data, tunnel_created_ev)
       assert [_, _, _] = U.get_all_scanner_instances()
     end
   end
