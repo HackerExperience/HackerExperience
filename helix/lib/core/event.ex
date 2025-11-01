@@ -290,6 +290,8 @@ defmodule Core.Event do
     end)
   end
 
+  defp put_event_relay([], _), do: []
+
   defp put_event_relay(%_{} = event, parent_event) do
     [event]
     |> put_event_relay(parent_event)

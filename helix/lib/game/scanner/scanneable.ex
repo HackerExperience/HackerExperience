@@ -12,7 +12,7 @@ defmodule Game.Scanner.Scanneable do
     do: LogScanner.retarget(task)
 
   def retarget(%{type: _}) do
-    raise "TODO"
+    # TODO
     {:ok, :empty}
   end
 end
