@@ -32,6 +32,12 @@ RETURNING *;
 ----------------------------------- DELETES ------------------------------------
 --------------------------------------------------------------------------------
 
+-- NOTE: These DELETEs are unused due to CASCADE DELETE on the Instance side
+
 -- :delete_by_entity_server
 DELETE FROM tasks WHERE entity_id = ? AND server_id = ?;
 
+-- :delete_by_tunnel
+DELETE FROM TASKS WHERE instance_id IN (
+  SELECT id FROM Instances WHERE tunnel_id = ?
+);

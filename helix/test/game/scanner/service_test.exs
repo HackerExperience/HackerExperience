@@ -132,14 +132,32 @@ defmodule Game.Services.ScannerTest do
     end
   end
 
-  describe "destroy_instances/2" do
+  describe "destroy_instances/1 - by_entity_server" do
     test "destroys instances" do
       # We have three instances initially
       Setup.scanner_instances()
       assert [i, _, _] = U.get_all_scanner_instances()
 
       # Destroy 'em!
-      assert :ok == Svc.Scanner.destroy_instances(i.entity_id, i.server_id)
+      assert :ok == Svc.Scanner.destroy_instances(by_entity_server: {i.entity_id, i.server_id})
+
+      # No instances afterwards
+      assert [] == U.get_all_scanner_instances()
+
+      # Tasks were deleted too
+      assert [] == U.get_all_scanner_tasks()
+    end
+  end
+
+  describe "destroy_instances/1 - by_tunnel" do
+    test "destroys instances" do
+      # We have three instances initially
+      Setup.scanner_instances(tunnel_id: 1)
+      assert [i, _, _] = U.get_all_scanner_instances()
+      assert i.tunnel_id
+
+      # Destroy 'em!
+      assert :ok == Svc.Scanner.destroy_instances(by_tunnel: i.tunnel_id)
 
       # No instances afterwards
       assert [] == U.get_all_scanner_instances()

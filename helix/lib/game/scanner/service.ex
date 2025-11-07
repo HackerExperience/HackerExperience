@@ -2,7 +2,7 @@ defmodule Game.Services.Scanner do
   require Logger
   alias Feeb.DB
   alias Renatils.Random
-  alias Game.{Entity, ScannerInstance, ScannerTask, Server}
+  alias Game.{Entity, ScannerInstance, ScannerTask, Server, Tunnel}
 
   @doc """
   Returns a ScannerInstance that matches the given filter.
@@ -98,13 +98,21 @@ defmodule Game.Services.Scanner do
   end
 
   @doc """
-  Destroys all Scanner instances for the given (entity_id, server_id) target.
+  Destroys all Scanner instances for the given target (entity/server or tunnel).
   """
-  def destroy_instances(%Entity.ID{} = e_id, %Server.ID{} = s_id) do
+  def destroy_instances(by_entity_server: {%Entity.ID{} = e_id, %Server.ID{} = s_id}) do
     Core.with_context(:scanner, :write, fn ->
-      with {:ok, _} <- DB.delete_all({:tasks, :delete_by_entity_server}, [e_id, s_id]),
-           {:ok, _} <- DB.delete_all({:instances, :delete_by_entity_server}, [e_id, s_id]) do
+      with {:ok, _} <- DB.delete_all({:instances, :delete_by_entity_server}, [e_id, s_id]) do
         Logger.info("Deleted scanner instances for (e=#{e_id}, s=#{s_id})")
+        :ok
+      end
+    end)
+  end
+
+  def destroy_instances(by_tunnel: %Tunnel.ID{} = tunnel_id) do
+    Core.with_context(:scanner, :write, fn ->
+      with {:ok, _} <- DB.delete_all({:instances, :delete_by_tunnel}, [tunnel_id]) do
+        Logger.info("Deleted scanner instances for tunnel_id=#{tunnel_id}")
         :ok
       end
     end)
@@ -183,7 +191,7 @@ defmodule Game.Services.Scanner do
 
   defp recreate_setup_instances(entity_id, server_id, tunnel_id) do
     Core.with_context(:scanner, :write, fn ->
-      with :ok <- destroy_instances(entity_id, server_id),
+      with :ok <- destroy_instances(by_entity_server: {entity_id, server_id}),
            {:ok, instances} <- do_setup_instances(entity_id, server_id, tunnel_id) do
         {:ok, instances, :recreated}
       end

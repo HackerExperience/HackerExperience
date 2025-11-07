@@ -4,8 +4,9 @@ defmodule Game.Handlers.ScannerTest do
   alias Game.Handlers.Scanner, as: ScannerHandler
   alias Game.{Player}
 
-  alias Game.Events.Player.IndexRequested, as: IndexRequestedEvent
+  alias Game.Events.Network.TunnelClosed, as: TunnelClosedEvent
   alias Game.Events.Network.TunnelCreated, as: TunnelCreatedEvent
+  alias Game.Events.Player.IndexRequested, as: IndexRequestedEvent
 
   setup [:with_game_db]
 
@@ -79,6 +80,31 @@ defmodule Game.Handlers.ScannerTest do
       # Performs a no-op when instances already exist
       assert {:ok, []} == ScannerHandler.on_event(tunnel_created_ev.data, tunnel_created_ev)
       assert [_, _, _] = U.get_all_scanner_instances()
+    end
+  end
+
+  describe "on_event/1 - TunnelClosedEvent" do
+    test "destroys the instances" do
+      %{nip: gtw_nip, server: gateway, entity: entity} = Setup.server()
+      %{nip: endp_nip, server: endpoint} = Setup.server()
+      tunnel = Setup.tunnel_lite!(source_nip: gtw_nip, target_nip: endp_nip)
+
+      # Let's use a TunnelCreatedEvent to set up the instances initially
+      tunnel_created_ev = TunnelCreatedEvent.new(tunnel, entity.id, gateway.id, endpoint.id)
+      assert {:ok, [_]} = ScannerHandler.on_event(tunnel_created_ev.data, tunnel_created_ev)
+
+      # We have 3 instances in the DB
+      assert [_, _, _] = U.get_all_scanner_instances()
+
+      # Now we'll simulate the Tunnel being closed
+      tunnel_closed_ev = TunnelClosedEvent.new(tunnel, :normal)
+      assert {:ok, []} == ScannerHandler.on_event(tunnel_closed_ev.data, tunnel_closed_ev)
+
+      # We don't have scanner instances anymore
+      assert [] = U.get_all_scanner_instances()
+
+      # We can trigger the event again (when there are no instances in the server). Nothing happens
+      assert {:ok, []} == ScannerHandler.on_event(tunnel_closed_ev.data, tunnel_closed_ev)
     end
   end
 end

@@ -10,6 +10,7 @@ CREATE TABLE instances (
 ) STRICT;
 
 CREATE UNIQUE INDEX instances_entity_id_server_id_idx ON instances(entity_id, server_id, type);
+CREATE INDEX instances_tunnel_id ON instances(tunnel_id) WHERE tunnel_id IS NOT NULL;
 
 CREATE TABLE tasks (
     instance_id INTEGER PRIMARY KEY,
@@ -23,7 +24,7 @@ CREATE TABLE tasks (
     completion_date INTEGER NOT NULL,
     next_backoff INTEGER,
     failed_attempts INTEGER NOT NULL,
-    FOREIGN KEY(instance_id) REFERENCES instances(id)
+    FOREIGN KEY(instance_id) REFERENCES instances(id) ON DELETE CASCADE
 ) STRICT;
 
 CREATE UNIQUE INDEX tasks_entity_id_server_id_idx ON tasks(entity_id, server_id, type);

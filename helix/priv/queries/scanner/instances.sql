@@ -30,3 +30,5 @@ RETURNING *;
 -- :delete_by_entity_server
 DELETE FROM instances WHERE entity_id = ? AND server_id = ?;
 
+-- :delete_by_tunnel
+DELETE FROM instances WHERE tunnel_id = ?;

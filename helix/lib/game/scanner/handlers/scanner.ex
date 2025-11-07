@@ -8,6 +8,7 @@ defmodule Game.Handlers.Scanner do
   alias Game.Services, as: Svc
   alias Game.{Entity, Server, Tunnel}
 
+  alias Game.Events.Network.TunnelClosed, as: TunnelClosedEvent
   alias Game.Events.Network.TunnelCreated, as: TunnelCreatedEvent
   alias Game.Events.Player.IndexRequested, as: IndexRequestedEvent
   alias Game.Events.Scanner.InstancesCreated, as: ScannerInstancesCreatedEvent
@@ -35,6 +36,14 @@ defmodule Game.Handlers.Scanner do
         _
       ) do
     {:ok, create_scanner_instances(entity_id, endpoint_id, tunnel_id: tunnel.id)}
+  end
+
+  @docp """
+  Every time a Tunnel is closed, we have to delete any Instances that are linked to it.
+  """
+  def on_event(%TunnelClosedEvent{tunnel: tunnel}, _) do
+    Svc.Scanner.destroy_instances(by_tunnel: tunnel.id)
+    {:ok, []}
   end
 
   @spec create_scanner_instances(Entity.id(), Server.id(), tunnel_id: Tunnel.id() | nil) ::
