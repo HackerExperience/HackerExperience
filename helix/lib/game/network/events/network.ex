@@ -170,4 +170,40 @@ defmodule Game.Events.Network do
         do: %{player: entity_id}
     end
   end
+
+  defmodule TunnelClosed do
+    @moduledoc """
+    The TunnelClosedEvent is emitted when a Tunnel is closed. There are multiple reasons why this
+    could happen, including:
+
+    - Player logs out from remote server
+
+    This event is published to the Client.
+    """
+
+    # NOTE: This event is mostly TODO. I'm adding it here as a placeholder to implement the
+    # expected Scanner reaction/side-effect.
+
+    use Core.Event.Definition
+
+    alias Game.{Tunnel}
+
+    defstruct [:tunnel, :reason]
+
+    @type t :: %__MODULE__{
+            tunnel: Tunnel.t(),
+            reason: term()
+          }
+
+    @name :tunnel_closed
+
+    def new(%Tunnel{} = tunnel, reason) do
+      %__MODULE__{tunnel: tunnel, reason: reason}
+      |> Event.new()
+    end
+
+    def handlers(_, _) do
+      [Handlers.Scanner]
+    end
+  end
 end
