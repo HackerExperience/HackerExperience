@@ -11,9 +11,14 @@ defmodule Test.Setup.Process.Spec do
   alias Game.Process.Installation.Uninstall, as: InstallationUninstallProcess
   alias Game.Process.Log.Delete, as: LogDeleteProcess
   alias Game.Process.Log.Edit, as: LogEditProcess
+  alias Game.Process.Scanner.Edit, as: ScannerEditProcess
   alias Game.Process.Server.Login, as: ServerLoginProcess
   alias Test.Process.NoopCPU, as: NoopCPUProcess
   alias Test.Process.NoopDLK, as: NoopDLKProcess
+
+  alias Game.Scanner.Params.Connection, as: ScannerConnParams
+  alias Game.Scanner.Params.File, as: ScannerFileParams
+  alias Game.Scanner.Params.Log, as: ScannerLogParams
 
   @implementations [
     :appstore_install,
@@ -23,6 +28,7 @@ defmodule Test.Setup.Process.Spec do
     :installation_uninstall,
     :log_delete,
     :log_edit,
+    :scanner_edit,
     :server_login
   ]
 
@@ -173,6 +179,34 @@ defmodule Test.Setup.Process.Spec do
     meta = opts[:meta] || default_meta.()
 
     build_spec(LogEditProcess, server_id, entity_id, params, meta, %{})
+  end
+
+  def spec(:scanner_edit, server_id, entity_id, opts) do
+    instance =
+      case opts[:instance] do
+        %{} = instance -> instance
+        nil -> S.scanner_instance!(entity_id: entity_id, server_id: server_id)
+      end
+
+    default_target_params =
+      case instance.type do
+        :connection -> %ScannerConnParams{}
+        :file -> %ScannerFileParams{}
+        :log -> %ScannerLogParams{}
+      end
+
+    default_params = fn ->
+      %{
+        instance_id: instance.id,
+        target_params: opts[:target_params] || default_target_params
+      }
+    end
+
+    params = opts[:params] || default_params.()
+    meta = opts[:meta] || %{instance: instance, tunnel: opts[:tunnel]}
+    relay = %{instance: instance}
+
+    build_spec(ScannerEditProcess, server_id, entity_id, params, meta, relay)
   end
 
   def spec(:server_login, server_id, entity_id, opts) do

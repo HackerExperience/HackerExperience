@@ -132,6 +132,30 @@ defmodule Game.Services.ScannerTest do
     end
   end
 
+  describe "retarget_instance/2" do
+    test "updates instance's `target_params` and recreates its task" do
+      instance = Setup.scanner_instance!()
+      old_task = Setup.scanner_task!(instance: instance, target_id: 1)
+      assert old_task.instance_id == instance.id
+      assert old_task.target_id == 1
+
+      # The instance had its `target_params` changed
+      new_target_params = %LogParams{type: :file_deleted, direction: :self}
+      assert {:ok, instance} = Svc.Scanner.retarget_instance(instance, new_target_params)
+      assert instance.target_params == new_target_params
+
+      Core.begin_context(:scanner, :read)
+
+      # The instance has a new task
+      new_task = U.get_task_for_scanner_instance(instance)
+      refute new_task.run_id == old_task.run_id
+
+      # It has no target and will complete soon
+      refute new_task.target_id
+      assert new_task.completion_date - Renatils.DateTime.ts_now() <= 5
+    end
+  end
+
   describe "destroy_instances/1 - by_entity_server" do
     test "destroys instances" do
       # We have three instances initially

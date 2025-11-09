@@ -3,9 +3,9 @@
 
 module API.Processes.Json exposing
     ( encodeAppstoreInstall, encodeFileDelete, encodeFileInstall, encodeFileTransfer
-    , encodeInstallationUninstall, encodeLogDelete, encodeLogEdit, encodeServerLogin
+    , encodeInstallationUninstall, encodeLogDelete, encodeLogEdit, encodeScannerEdit, encodeServerLogin
     , decodeAppstoreInstall, decodeFileDelete, decodeFileInstall, decodeFileTransfer
-    , decodeInstallationUninstall, decodeLogDelete, decodeLogEdit, decodeServerLogin
+    , decodeInstallationUninstall, decodeLogDelete, decodeLogEdit, decodeScannerEdit, decodeServerLogin
     )
 
 {-|
@@ -14,13 +14,13 @@ module API.Processes.Json exposing
 ## Encoders
 
 @docs encodeAppstoreInstall, encodeFileDelete, encodeFileInstall, encodeFileTransfer
-@docs encodeInstallationUninstall, encodeLogDelete, encodeLogEdit, encodeServerLogin
+@docs encodeInstallationUninstall, encodeLogDelete, encodeLogEdit, encodeScannerEdit, encodeServerLogin
 
 
 ## Decoders
 
 @docs decodeAppstoreInstall, decodeFileDelete, decodeFileInstall, decodeFileTransfer
-@docs decodeInstallationUninstall, decodeLogDelete, decodeLogEdit, decodeServerLogin
+@docs decodeInstallationUninstall, decodeLogDelete, decodeLogEdit, decodeScannerEdit, decodeServerLogin
 
 -}
 
@@ -45,6 +45,19 @@ decodeServerLogin =
 encodeServerLogin : API.Processes.Types.ServerLogin -> Json.Encode.Value
 encodeServerLogin rec =
     Json.Encode.object []
+
+
+decodeScannerEdit : Json.Decode.Decoder API.Processes.Types.ScannerEdit
+decodeScannerEdit =
+    Json.Decode.succeed
+        (\instance_id -> { instance_id = instance_id })
+        |> OpenApi.Common.jsonDecodeAndMap
+            (Json.Decode.field "instance_id" Json.Decode.string)
+
+
+encodeScannerEdit : API.Processes.Types.ScannerEdit -> Json.Encode.Value
+encodeScannerEdit rec =
+    Json.Encode.object [ ( "instance_id", Json.Encode.string rec.instance_id ) ]
 
 
 decodeLogEdit : Json.Decode.Decoder API.Processes.Types.LogEdit

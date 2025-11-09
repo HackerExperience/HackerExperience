@@ -14,4 +14,12 @@ defmodule Test.Utils.Scanner do
       DB.all(ScannerTask)
     end)
   end
+
+  def get_task_for_scanner_instance(%ScannerInstance{id: instance_id}),
+    do: get_task_for_scanner_instance(instance_id)
+
+  def get_task_for_scanner_instance(%ScannerInstance.ID{} = instance_id) do
+    get_all_scanner_tasks()
+    |> Enum.find(&(&1.instance_id == instance_id))
+  end
 end

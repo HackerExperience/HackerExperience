@@ -42,6 +42,19 @@ defmodule Game.Services.Scanner do
   end
 
   @doc """
+  Returns a ScannerTask that matches the given filter.
+  """
+  def fetch_task(filter_params, opts \\ []) do
+    filters = [
+      by_instance: {:one, {:tasks, :by_instance_id}}
+    ]
+
+    Core.with_context(:scanner, :read, fn ->
+      Core.Fetch.query(filter_params, opts, filters)
+    end)
+  end
+
+  @doc """
   Returns all ScannerTasks that match the given filter.
   """
   def list_tasks(filter_params, opts \\ []) do
@@ -98,6 +111,26 @@ defmodule Game.Services.Scanner do
   end
 
   @doc """
+  Updates the `target_params` of an instance.
+
+  When doing so, we also delete the current task and add a new one with no target. This new task
+  will be picked up by the TaskCompletionWorker and then properly retargeted.
+
+  `retarget_instance` is called when the Player modifies an Instance's `target_params`. Not to
+  confuse with `retarget_task`.
+  """
+  def retarget_instance(%ScannerInstance{} = instance, target_params) do
+    Core.with_context(:scanner, :write, fn ->
+      with {:ok, instance} <- do_update_instance(instance, %{target_params: target_params}),
+           {:ok, _} <- DB.delete_all({:tasks, :delete_by_instance_id}, [instance.id]),
+           {:ok, _} <- create_task(instance, duration: 5) do
+        Logger.info("Retarget instance")
+        {:ok, instance}
+      end
+    end)
+  end
+
+  @doc """
   Destroys all Scanner instances for the given target (entity/server or tunnel).
   """
   def destroy_instances(by_entity_server: {%Entity.ID{} = e_id, %Server.ID{} = s_id}) do
@@ -120,6 +153,9 @@ defmodule Game.Services.Scanner do
 
   @doc """
   Archives the old task and creates a new one with the given target.
+
+  `retarget_task` is called when the TaskCompletionWOrker finishes and a new target is selected. Not
+  to confuse with `retarget_instance`.
   """
   def retarget_task(%ScannerTask{} = task, next_target_id, duration) do
     now = DateTime.utc_now()
@@ -155,6 +191,12 @@ defmodule Game.Services.Scanner do
         {:ok, updated_task}
       end
     end)
+  end
+
+  defp do_update_instance(instance, changes) do
+    instance
+    |> ScannerInstance.update(changes)
+    |> DB.update()
   end
 
   defp do_update_task(task, changes) do

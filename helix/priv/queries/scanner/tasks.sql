@@ -2,10 +2,11 @@
 ----------------------------------- SELECTS ------------------------------------
 --------------------------------------------------------------------------------
 
+-- :by_instance_id
+SELECT * FROM tasks WHERE instance_id = ?;
+
 -- :by_completion_date_lte
-SELECT *
-FROM tasks
-WHERE completion_date <= ?;
+SELECT * FROM tasks WHERE completion_date <= ?;
 
 --------------------------------------------------------------------------------
 ----------------------------------- INSERTS ------------------------------------
@@ -32,12 +33,5 @@ RETURNING *;
 ----------------------------------- DELETES ------------------------------------
 --------------------------------------------------------------------------------
 
--- NOTE: These DELETEs are unused due to CASCADE DELETE on the Instance side
-
--- :delete_by_entity_server
-DELETE FROM tasks WHERE entity_id = ? AND server_id = ?;
-
--- :delete_by_tunnel
-DELETE FROM TASKS WHERE instance_id IN (
-  SELECT id FROM Instances WHERE tunnel_id = ?
-);
+-- :delete_by_instance_id
+DELETE FROM tasks WHERE instance_id = ?;
