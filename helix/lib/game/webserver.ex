@@ -16,7 +16,8 @@ defmodule Game.Webserver do
       {"/v1/server/:nip/installation/:installation_id/uninstall",
        %{handler: E.Installation.Uninstall, method: :post}},
       {"/v1/server/:server_id/appstore/:software_type/install",
-       %{handler: E.AppStore.Install, method: :post}}
+       %{handler: E.AppStore.Install, method: :post}},
+      {"/v1/server/:nip/scanner/:instance_id/edit", %{handler: E.Scanner.Edit, method: :post}}
     ]
   end
 
