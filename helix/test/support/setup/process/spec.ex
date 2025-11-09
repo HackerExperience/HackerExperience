@@ -172,7 +172,7 @@ defmodule Test.Setup.Process.Spec do
 
     default_meta = fn ->
       log = opts[:log] || S.log!(server_id)
-      %{log: log}
+      %{log: log, tunnel: opts[:tunnel]}
     end
 
     params = opts[:params] || default_params.()
