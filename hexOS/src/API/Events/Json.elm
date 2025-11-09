@@ -8,16 +8,18 @@ module API.Events.Json exposing
     , encodeIdxLogRevision, encodeIdxPlayer, encodeIdxProcess, encodeIdxScannerInstance, encodeIdxSoftware
     , encodeIdxTunnel, encodeIndexRequested, encodeInstallationUninstallFailed, encodeInstallationUninstalled
     , encodeLogDeleteFailed, encodeLogDeleted, encodeLogEditFailed, encodeLogEdited, encodeProcessCompleted
-    , encodeProcessCreated, encodeProcessKilled, encodeScannerInstancesCreated, encodeSoftwareConfig
-    , encodeSoftwareConfigAppstore, encodeSoftwareManifest, encodeTunnelCreateFailed, encodeTunnelCreated
+    , encodeProcessCreated, encodeProcessKilled, encodeScannerInstanceEditFailed, encodeScannerInstanceEdited
+    , encodeScannerInstancesCreated, encodeSoftwareConfig, encodeSoftwareConfigAppstore, encodeSoftwareManifest
+    , encodeTunnelCreateFailed, encodeTunnelCreated
     , decodeAppstoreInstallFailed, decodeAppstoreInstalled, decodeFileDeleteFailed, decodeFileDeleted
     , decodeFileInstallFailed, decodeFileInstalled, decodeFileTransferFailed, decodeFileTransferred
     , decodeIdxEndpoint, decodeIdxFile, decodeIdxGateway, decodeIdxInstallation, decodeIdxLog
     , decodeIdxLogRevision, decodeIdxPlayer, decodeIdxProcess, decodeIdxScannerInstance, decodeIdxSoftware
     , decodeIdxTunnel, decodeIndexRequested, decodeInstallationUninstallFailed, decodeInstallationUninstalled
     , decodeLogDeleteFailed, decodeLogDeleted, decodeLogEditFailed, decodeLogEdited, decodeProcessCompleted
-    , decodeProcessCreated, decodeProcessKilled, decodeScannerInstancesCreated, decodeSoftwareConfig
-    , decodeSoftwareConfigAppstore, decodeSoftwareManifest, decodeTunnelCreateFailed, decodeTunnelCreated
+    , decodeProcessCreated, decodeProcessKilled, decodeScannerInstanceEditFailed, decodeScannerInstanceEdited
+    , decodeScannerInstancesCreated, decodeSoftwareConfig, decodeSoftwareConfigAppstore, decodeSoftwareManifest
+    , decodeTunnelCreateFailed, decodeTunnelCreated
     )
 
 {-|
@@ -31,8 +33,9 @@ module API.Events.Json exposing
 @docs encodeIdxLogRevision, encodeIdxPlayer, encodeIdxProcess, encodeIdxScannerInstance, encodeIdxSoftware
 @docs encodeIdxTunnel, encodeIndexRequested, encodeInstallationUninstallFailed, encodeInstallationUninstalled
 @docs encodeLogDeleteFailed, encodeLogDeleted, encodeLogEditFailed, encodeLogEdited, encodeProcessCompleted
-@docs encodeProcessCreated, encodeProcessKilled, encodeScannerInstancesCreated, encodeSoftwareConfig
-@docs encodeSoftwareConfigAppstore, encodeSoftwareManifest, encodeTunnelCreateFailed, encodeTunnelCreated
+@docs encodeProcessCreated, encodeProcessKilled, encodeScannerInstanceEditFailed, encodeScannerInstanceEdited
+@docs encodeScannerInstancesCreated, encodeSoftwareConfig, encodeSoftwareConfigAppstore, encodeSoftwareManifest
+@docs encodeTunnelCreateFailed, encodeTunnelCreated
 
 
 ## Decoders
@@ -43,8 +46,9 @@ module API.Events.Json exposing
 @docs decodeIdxLogRevision, decodeIdxPlayer, decodeIdxProcess, decodeIdxScannerInstance, decodeIdxSoftware
 @docs decodeIdxTunnel, decodeIndexRequested, decodeInstallationUninstallFailed, decodeInstallationUninstalled
 @docs decodeLogDeleteFailed, decodeLogDeleted, decodeLogEditFailed, decodeLogEdited, decodeProcessCompleted
-@docs decodeProcessCreated, decodeProcessKilled, decodeScannerInstancesCreated, decodeSoftwareConfig
-@docs decodeSoftwareConfigAppstore, decodeSoftwareManifest, decodeTunnelCreateFailed, decodeTunnelCreated
+@docs decodeProcessCreated, decodeProcessKilled, decodeScannerInstanceEditFailed, decodeScannerInstanceEdited
+@docs decodeScannerInstancesCreated, decodeSoftwareConfig, decodeSoftwareConfigAppstore, decodeSoftwareManifest
+@docs decodeTunnelCreateFailed, decodeTunnelCreated
 
 -}
 
@@ -142,6 +146,53 @@ encodeScannerInstancesCreated rec =
           , Json.Encode.list encodeIdxScannerInstance rec.instances
           )
         , ( "nip", Json.Encode.string (NIP.toString rec.nip) )
+        ]
+
+
+decodeScannerInstanceEdited : Json.Decode.Decoder API.Events.Types.ScannerInstanceEdited
+decodeScannerInstanceEdited =
+    Json.Decode.succeed
+        (\instance nip -> { instance = instance, nip = nip })
+        |> OpenApi.Common.jsonDecodeAndMap
+            (Json.Decode.field "instance" decodeIdxScannerInstance)
+        |> OpenApi.Common.jsonDecodeAndMap
+            (Json.Decode.field "nip" (Json.Decode.map (\nip -> NIP.fromString nip) Json.Decode.string))
+
+
+encodeScannerInstanceEdited : API.Events.Types.ScannerInstanceEdited -> Json.Encode.Value
+encodeScannerInstanceEdited rec =
+    Json.Encode.object
+        [ ( "instance", encodeIdxScannerInstance rec.instance )
+        , ( "nip", Json.Encode.string (NIP.toString rec.nip) )
+        ]
+
+
+decodeScannerInstanceEditFailed : Json.Decode.Decoder API.Events.Types.ScannerInstanceEditFailed
+decodeScannerInstanceEditFailed =
+    Json.Decode.succeed
+        (\nip process_id reason ->
+            { nip = nip, process_id = process_id, reason = reason }
+        )
+        |> OpenApi.Common.jsonDecodeAndMap
+            (Json.Decode.field "nip" (Json.Decode.map (\nip -> NIP.fromString nip) Json.Decode.string))
+        |> OpenApi.Common.jsonDecodeAndMap
+            (Json.Decode.field
+                "process_id"
+                (Json.Decode.map ProcessID Json.Decode.string)
+            )
+        |> OpenApi.Common.jsonDecodeAndMap
+            (Json.Decode.field
+                "reason"
+                Json.Decode.string
+            )
+
+
+encodeScannerInstanceEditFailed : API.Events.Types.ScannerInstanceEditFailed -> Json.Encode.Value
+encodeScannerInstanceEditFailed rec =
+    Json.Encode.object
+        [ ( "nip", Json.Encode.string (NIP.toString rec.nip) )
+        , ( "process_id", Json.Encode.string (ProcessID.toValue rec.process_id) )
+        , ( "reason", Json.Encode.string rec.reason )
         ]
 
 

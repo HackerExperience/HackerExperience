@@ -65,6 +65,127 @@ defmodule Game.Events.Scanner do
     end
   end
 
+  defmodule InstanceEdited do
+    @moduledoc """
+    The ScannerInstanceEditedEvent is emitted after a ScannerInstance is edited, which is the direct
+    result of a ScannerEditProcess reaching completion.
+
+    This event is published to the client.
+    """
+
+    use Core.Event.Definition
+
+    alias Game.{Process, ScannerInstance}
+
+    defstruct [:process, :instance]
+
+    @type t :: %__MODULE__{
+            instance: ScannerInstance.t(),
+            process: Process.t(:scanner_edit)
+          }
+
+    @name :scanner_instance_edited
+
+    def new(instance = %ScannerInstance{}, process = %Process{}) do
+      %__MODULE__{instance: instance, process: process}
+      |> Event.new()
+    end
+
+    defmodule Publishable do
+      use Core.Event.Publishable.Definition
+
+      def spec do
+        selection(
+          schema(%{
+            nip: nip(),
+            instance: Index.Scanner.spec()
+          }),
+          [:nip, :instance]
+        )
+      end
+
+      def generate_payload(%{data: %{process: process, instance: instance}}) do
+        %{nip: nip} = Svc.NetworkConnection.fetch!(by_server_id: process.server_id)
+
+        payload =
+          %{
+            nip: NIP.to_external(nip),
+            instance: Index.Scanner.render_instance(instance, process.entity_id)
+          }
+
+        {:ok, payload}
+      end
+
+      @doc """
+      Only the Process owner receives the event.
+      """
+      def whom_to_publish(%{data: %{process: %{entity_id: entity_id}}}),
+        do: %{player: entity_id}
+    end
+  end
+
+  defmodule InstanceEditFailed do
+    @moduledoc """
+    The ScannerInstanceEditFailedEvent is emitted when the attempt to edit a ScannerInstance has
+    failed. This may happen when the pre-requisites of the ScannerEditProcess are not met.
+
+    This event is published to the Client.
+    """
+
+    use Core.Event.Definition
+
+    alias Game.{Process}
+
+    defstruct [:reason, :process]
+
+    @type t :: %__MODULE__{
+            reason: term,
+            process: Process.t(:scanner_edit)
+          }
+
+    @name :scanner_instance_edit_failed
+
+    def new(reason, %Process{} = process) do
+      %__MODULE__{reason: reason, process: process}
+      |> Event.new()
+    end
+
+    defmodule Publishable do
+      use Core.Event.Publishable.Definition
+
+      def spec do
+        selection(
+          schema(%{
+            nip: nip(),
+            reason: binary(),
+            process_id: external_id()
+          }),
+          [:nip, :reason, :process_id]
+        )
+      end
+
+      def generate_payload(%{data: %{process: process, reason: reason}}) do
+        %{nip: nip} = Svc.NetworkConnection.fetch!(by_server_id: process.server_id)
+
+        payload =
+          %{
+            nip: NIP.to_external(nip),
+            reason: reason,
+            process_id: process.id,
+            instance_id: process.data.instance_id
+          }
+
+        {:ok, payload}
+      end
+
+      @doc """
+      Only the Process owner receives the event.
+      """
+      def whom_to_publish(%{data: %{process: %{entity_id: entity_id}}}),
+        do: %{player: entity_id}
+    end
+  end
+
   defmodule TaskCompleted do
     @moduledoc """
     The ScannerTaskCompletedEvent is emitted after a Scanner task reached its target completion

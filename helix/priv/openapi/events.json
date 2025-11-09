@@ -713,6 +713,40 @@
         ],
         "type": "object"
       },
+      "scanner_instance_edit_failed": {
+        "properties": {
+          "nip": {
+            "type": "string"
+          },
+          "process_id": {
+            "type": "string"
+          },
+          "reason": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "nip",
+          "process_id",
+          "reason"
+        ],
+        "type": "object"
+      },
+      "scanner_instance_edited": {
+        "properties": {
+          "instance": {
+            "$ref": "#/components/schemas/IdxScannerInstance"
+          },
+          "nip": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "instance",
+          "nip"
+        ],
+        "type": "object"
+      },
       "scanner_instances_created": {
         "properties": {
           "instances": {
