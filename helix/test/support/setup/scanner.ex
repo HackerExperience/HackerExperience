@@ -2,6 +2,10 @@ defmodule Test.Setup.Scanner do
   use Test.Setup.Definition
   alias Game.{ScannerInstance, ScannerTask}
 
+  alias Game.Scanner.Params.Connection, as: ConnParams
+  alias Game.Scanner.Params.File, as: FileParams
+  alias Game.Scanner.Params.Log, as: LogParams
+
   def new_instance(opts \\ []) do
     Core.with_context(:scanner, :write, fn ->
       instance =
@@ -81,13 +85,22 @@ defmodule Test.Setup.Scanner do
     do: opts |> new_task() |> Map.fetch!(:task)
 
   def instance_params(opts \\ []) do
+    type = Kw.get(opts, :type, Enum.random(ScannerInstance.types()))
+
+    default_params =
+      case type do
+        :connection -> %ConnParams{}
+        :file -> %FileParams{}
+        :log -> %LogParams{}
+      end
+
     %{
       id: Kw.get(opts, :id, Random.int()),
       entity_id: Kw.get(opts, :entity_id, R.entity_id()),
       server_id: Kw.get(opts, :server_id, R.server_id()),
-      type: Kw.get(opts, :type, Enum.random(ScannerInstance.types())),
+      type: type,
       tunnel_id: Kw.get(opts, :tunnel_id, nil),
-      target_params: Kw.get(opts, :target_params, %{})
+      target_params: Kw.get(opts, :target_params, default_params)
     }
   end
 

@@ -207,7 +207,7 @@ defmodule Game.Services.Scanner do
 
   defp do_setup_instances(entity_id, server_id, tunnel_id) do
     create_instance_fn = fn type ->
-      create_instance(entity_id, server_id, type, tunnel_id, %{})
+      create_instance(entity_id, server_id, type, tunnel_id)
     end
 
     create_task_fn = fn instance ->
@@ -240,13 +240,13 @@ defmodule Game.Services.Scanner do
     end)
   end
 
-  defp create_instance(entity_id, server_id, type, tunnel_id, target_params) do
+  defp create_instance(entity_id, server_id, type, tunnel_id) do
     %{
       entity_id: entity_id,
       server_id: server_id,
       type: type,
       tunnel_id: tunnel_id,
-      target_params: target_params
+      target_params: ScannerInstance.get_empty_params(type)
     }
     |> ScannerInstance.new()
     |> DB.insert()

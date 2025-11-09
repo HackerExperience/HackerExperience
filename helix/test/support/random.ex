@@ -3,6 +3,7 @@ defmodule Test.Random do
 
   # IDs
   defdelegate entity_id, to: R.ID
+  defdelegate scanner_instance_id, to: R.ID
   defdelegate server_id, to: R.ID
   defdelegate tunnel_id, to: R.ID
 

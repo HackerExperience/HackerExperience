@@ -4,6 +4,9 @@ defmodule Game.Services.ScannerTest do
   alias Game.Services, as: Svc
   alias Game.{ScannerInstance}
 
+  alias Game.Scanner.Params.Connection, as: ConnParams
+  alias Game.Scanner.Params.Log, as: LogParams
+
   describe "fetch_instance/2 - by_entity_server_type" do
     test "returns the instance when it exists" do
       i = Setup.scanner_instance!()
@@ -59,7 +62,7 @@ defmodule Game.Services.ScannerTest do
       assert instance_connection.entity_id == entity_id
       assert instance_connection.server_id == server_id
       assert instance_connection.tunnel_id == nil
-      assert instance_connection.target_params == %{}
+      assert instance_connection.target_params == %ConnParams{}
 
       # A task is created for each instance
       tasks = U.get_all_scanner_tasks()

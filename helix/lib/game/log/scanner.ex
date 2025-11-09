@@ -3,6 +3,7 @@ defmodule Game.Scanner.Log do
 
   alias Game.{ScannerTask}
   alias Game.Services, as: Svc
+  alias Game.Scanner.Params.Log, as: LogParams
 
   # Prioritize scans on 25% most recent logs
   @recent_factor 0.25
@@ -29,7 +30,11 @@ defmodule Game.Scanner.Log do
         select: [:id, :revision_id]
       )
 
-    case find_log({logs, length(logs)}, {visibilities, length(visibilities)}, target_params) do
+    case find_log(
+           {logs, length(logs)},
+           {visibilities, length(visibilities)},
+           {LogParams.empty?(target_params), target_params}
+         ) do
       [log_id, revision_id] ->
         # TODO: duration
         {:ok, {log_id, revision_id}, 60}
@@ -42,8 +47,7 @@ defmodule Game.Scanner.Log do
   # There are no logs in the Server
   def find_log({_, 0}, _, _), do: :empty
 
-  def find_log({logs, len_logs}, {visibilities, _len_visibilities}, target_params)
-      when map_size(target_params) == 0 do
+  def find_log({logs, len_logs}, {visibilities, _len_visibilities}, {true, _}) do
     # Let's focus initial lookup on the @recent_factor% most recent log entries
     recent_n = :math.ceil(len_logs * @recent_factor) |> trunc()
     {recent_logs, _older_logs} = Enum.split(logs, recent_n)
@@ -87,7 +91,7 @@ defmodule Game.Scanner.Log do
     end
   end
 
-  def find_log(_logs, _visibilities, _target_params) do
+  def find_log(_logs, _visibilities, {false, _target_params}) do
     raise "TODO: find_log with target_params"
   end
 

@@ -113,7 +113,7 @@ defmodule Game.Scanner.LogTest do
       visibilities = []
 
       # At 10 log entries with 30% as `@recent_factor`, one of the first 3 logs must be picked
-      assert [selected_log_id, _] = LogScanner.find_log({logs, 10}, {visibilities, 0}, %{})
+      assert [selected_log_id, _] = LogScanner.find_log({logs, 10}, {visibilities, 0}, {true, %{}})
       assert selected_log_id in [10, 9, 8]
     end
 
@@ -122,7 +122,7 @@ defmodule Game.Scanner.LogTest do
       visibilities = [[10, 1], [9, 1]]
 
       # {8, 1} *must* be selected, as it's the only one in the recent list that hasn't been found
-      assert [8, 1] == LogScanner.find_log({logs, 10}, {visibilities, 2}, %{})
+      assert [8, 1] == LogScanner.find_log({logs, 10}, {visibilities, 2}, {true, %{}})
     end
 
     test "fallbacks to 'old' list when recent is fully visible" do
@@ -130,7 +130,7 @@ defmodule Game.Scanner.LogTest do
       visibilities = [[10, 1], [9, 1], [8, 1]]
 
       # Since the recent list is fully visible, falls back to the older logs and picks one of them
-      assert [selected_log_id, _] = LogScanner.find_log({logs, 10}, {visibilities, 3}, %{})
+      assert [selected_log_id, _] = LogScanner.find_log({logs, 10}, {visibilities, 3}, {true, %{}})
       assert selected_log_id in [7, 6, 5, 4, 3, 2, 1]
     end
   end
