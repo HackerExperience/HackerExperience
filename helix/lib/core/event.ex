@@ -26,9 +26,12 @@ defmodule Core.Event do
   handlers. A record is left stating that an event happened, but for the sole purpose of debugging.
   """
 
+  @behaviour __MODULE__
+
   require Logger
   alias Feeb.DB
   alias Renatils.Random
+  alias __MODULE__, as: Event
 
   defstruct [:id, :name, :data, :relay]
 
@@ -41,6 +44,9 @@ defmodule Core.Event do
           relay: term
         }
 
+  @callback emit([t()]) :: term
+  @callback emit_async([t()]) :: term
+
   @env Mix.env()
 
   @native_triggers [
@@ -48,6 +54,8 @@ defmodule Core.Event do
     :"Elixir.Core.Event.Publishable"
   ]
 
+  # TODO: Rethink this default (and maybe the thought of having "Managed DB" here). Why not push
+  # this responsibility for each handler?
   @default_behaviour_on_prepare_db {:universe, :read}
   @default_behaviour_teardown_db_on_success :commit
   @default_behaviour_teardown_db_on_failure :rollback
@@ -128,7 +136,11 @@ defmodule Core.Event do
       |> Enum.map(fn trigger_mod -> trigger_mod.probe(event) end)
       |> Enum.reject(&is_nil/1)
 
-    custom_handlers ++ native_handlers ++ test_handler()
+    # Future improvement: currently, every handler is handled synchronously and in this order. This
+    # is certainly the safest approach, but we may benefit from performance wins if we let handlers
+    # specify how they want to be handled: sync or async. For example, we may want to fire the
+    # Publishable trigger right away (async), whereas other handlers have a determinsitic order.
+    native_handlers ++ custom_handlers ++ test_handler()
   end
 
   if @env == :test do
@@ -146,24 +158,30 @@ defmodule Core.Event do
           {:ok, acc_events}
 
         {:ok, ok_events} when is_list(ok_events) ->
+          ok_events = put_event_relay(ok_events, event)
           {:ok, acc_events ++ ok_events}
 
         {:ok, %__MODULE__{} = ok_event} ->
+          ok_event = put_event_relay(ok_event, event)
           {:ok, acc_events ++ [ok_event]}
 
         :error ->
           on_emit_error(acc_events, {[], nil}, {event, handler_mod})
 
         {:error, details, error_events} when is_list(error_events) ->
+          error_events = put_event_relay(error_events, event)
           on_emit_error(acc_events, {error_events, details}, {event, handler_mod})
 
         {:error, error_events} when is_list(error_events) ->
+          error_events = put_event_relay(error_events, event)
           on_emit_error(acc_events, {error_events, nil}, {event, handler_mod})
 
         {:error, details, %__MODULE__{} = error_event} ->
+          error_event = put_event_relay(error_event, event)
           on_emit_error(acc_events, {[error_event], details}, {event, handler_mod})
 
         {:error, %__MODULE__{} = error_event} ->
+          error_event = put_event_relay(error_event, event)
           on_emit_error(acc_events, {[error_event], nil}, {event, handler_mod})
 
         invalid_result ->
@@ -258,5 +276,25 @@ defmodule Core.Event do
     else
       @default_behaviour_teardown_db_on_failure
     end
+  end
+
+  defp put_event_relay([_ | _] = events, parent_event) do
+    relay = Event.Relay.new(parent_event)
+
+    Enum.map(events, fn
+      %_{relay: nil} = event ->
+        Event.Relay.put(event, relay)
+
+      %_{} = event_with_relay ->
+        event_with_relay
+    end)
+  end
+
+  defp put_event_relay([], _), do: []
+
+  defp put_event_relay(%_{} = event, parent_event) do
+    [event]
+    |> put_event_relay(parent_event)
+    |> List.first()
   end
 end

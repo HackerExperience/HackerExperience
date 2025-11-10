@@ -13,6 +13,11 @@ RETURNING *;
 ----------------------------------- SELECTS ------------------------------------
 --------------------------------------------------------------------------------
 
+-- :by_server
+SELECT *
+FROM log_visibilities
+WHERE server_id = ?;
+
 
 -- :by_server_ordered
 SELECT log_id, revision_id, source

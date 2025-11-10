@@ -99,7 +99,7 @@ defmodule Game.Process.File.DeleteTest do
 
       DB.commit()
 
-      U.start_sse_listener(ctx, player, total_expected_events: 3)
+      U.start_sse_listener(ctx, player, last_event: :process_killed)
 
       # Initially we had two running processes
       assert [_, _] = U.get_all_process_registries()
@@ -108,16 +108,16 @@ defmodule Game.Process.File.DeleteTest do
       U.simulate_process_completion(proc_delete)
 
       # First the Client is notified about the process being complete
-      proc_completed_sse = U.wait_sse_event!("process_completed")
+      proc_completed_sse = U.wait_sse_event!(:process_completed)
       assert proc_completed_sse.data.process_id |> U.from_eid(player.id) == proc_delete.id
 
-      # Then he is notified about the side-effect of the process completion
-      file_deleted_sse = U.wait_sse_event!("file_deleted")
+      # He is notified about the side-effect of the process completion
+      file_deleted_sse = U.wait_sse_event!(:file_deleted)
       assert file_deleted_sse.data.nip == nip |> NIP.to_external()
       assert file_deleted_sse.data.file_id |> U.from_eid(player.id) == file.id
 
-      # And then he is notified about `proc_install` being killed
-      process_killed_sse = U.wait_sse_event!("process_killed")
+      # And he is notified about `proc_install` being killed
+      process_killed_sse = U.wait_sse_event!(:process_killed)
       assert process_killed_sse.data.process_id |> U.from_eid(player.id) == proc_install.id
       assert process_killed_sse.data.reason == "killed"
 
@@ -213,15 +213,15 @@ defmodule Game.Process.File.DeleteTest do
 
       DB.commit()
 
-      U.start_sse_listener(ctx, player, total_expected_events: 2)
+      U.start_sse_listener(ctx, player, last_event: :file_delete_failed)
 
       # Complete the Process
       U.simulate_process_completion(proc_delete)
 
-      proc_completed_sse = U.wait_sse_event!("process_completed")
+      proc_completed_sse = U.wait_sse_event!(:process_completed)
       assert proc_completed_sse.data.process_id |> U.from_eid(player.id) == proc_delete.id
 
-      file_delete_failed_sse = U.wait_sse_event!("file_delete_failed")
+      file_delete_failed_sse = U.wait_sse_event!(:file_delete_failed)
       assert file_delete_failed_sse.data.process_id |> U.from_eid(player.id) == proc_delete.id
       assert file_delete_failed_sse.data.reason == "tunnel_not_found"
     end

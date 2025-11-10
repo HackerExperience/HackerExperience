@@ -328,25 +328,26 @@ defmodule Game.Process.Server.LoginTest do
 
       DB.commit()
 
-      U.start_sse_listener(ctx, player, total_expected_events: 2)
+      U.start_sse_listener(ctx, player, last_event: :tunnel_created)
 
       # Complete the Process
       U.simulate_process_completion(process)
 
       # First the Client is notified about the process being complete
-      process_completed = U.wait_sse_event!("process_completed")
+      process_completed = U.wait_sse_event!(:process_completed)
       assert process_completed.data.process_id |> U.from_eid(player.id) == process.id
 
-      assert [_inner_tunnel, tunnel] = U.get_all_tunnels()
-
       # Then he is notified about the tunnel created event
-      tunnel_created = U.wait_sse_event!("tunnel_created")
-      assert tunnel_created.data.tunnel_id |> U.from_eid(player.id) == tunnel.id
+      tunnel_created = U.wait_sse_event!(:tunnel_created)
+      assert tunnel_id = tunnel_created.data.tunnel_id |> U.from_eid(player.id)
       assert tunnel_created.data.source_nip == gtw_nip |> NIP.to_external()
       assert tunnel_created.data.target_nip == endp_nip |> NIP.to_external()
+
+      assert [_inner_tunnel, tunnel] = U.get_all_tunnels()
+      assert tunnel.id == tunnel_id
     end
 
-    test "on successful login, log entries are created accordingly", ctx do
+    test "on successful login, log entries are created accordingly" do
       %{server: gateway, nip: gtw_nip, player: player} = Setup.server()
       %{server: endpoint, nip: endp_nip, entity: endpoint_entity} = Setup.server()
 
@@ -366,13 +367,10 @@ defmodule Game.Process.Server.LoginTest do
 
       DB.commit()
 
-      U.start_sse_listener(ctx, player, total_expected_events: 2)
-
       # Complete the Process
       U.simulate_process_completion(process)
 
-      # TODO: Maybe I should wait on a (hypothetical) LogCreatedEvent?
-      :timer.sleep(100)
+      wait_events_on_server!(gateway.id, :tunnel_created)
 
       # Gateway -> InnerHop
       assert [log] = U.get_all_logs(gateway.id)
@@ -408,6 +406,56 @@ defmodule Game.Process.Server.LoginTest do
 
       # `endpoint_entity` does not have visibility on any logs
       assert [] == U.get_all_log_visibilities(endpoint_entity.id)
+    end
+
+    test "on successful login, scanner instances are created", ctx do
+      %{server: gateway, entity: entity, player: player} = Setup.server()
+      %{server: endpoint, nip: endp_nip} = Setup.server()
+
+      process =
+        Setup.process!(gateway.id,
+          type: :server_login,
+          spec: [target_nip: endp_nip],
+          completed?: true
+        )
+
+      DB.commit()
+
+      # We expect to receive 2 `ScannerInstancesCreated` events: one for the player immediately
+      # after the sync, and another for the remote server login (that we are testing here).
+      U.start_sse_listener(ctx, player,
+        last_event: :scanner_instances_created,
+        total_expected_events: 2
+      )
+
+      # Complete the Process
+      U.simulate_process_completion(process)
+
+      # Disregard the first ScannerInstancesCreated event -- that's for the gateway, and out of
+      # scope for this test
+      _gateway_scanner_instances_created = U.wait_sse_event!(:scanner_instances_created)
+
+      # This is the Tunnel that got created (we'll assert it against the Instances afterwards)
+      tunnel_created_ev = U.wait_sse_event!(:tunnel_created)
+      assert tunnel_id = tunnel_created_ev.data.tunnel_id |> U.from_eid(entity.id)
+
+      # At some point the Client will receive the ScannerInstancesCreated event for the Endpoint
+      scanner_instances_created_ev = U.wait_sse_event!(:scanner_instances_created)
+
+      assert scanner_instances_created_ev.name == "scanner_instances_created"
+      assert scanner_instances_created_ev.data.nip == endp_nip |> NIP.to_external()
+      scanner_instances = scanner_instances_created_ev.data.instances
+
+      # Let's make sure each instance can be found in the DB
+      Enum.each(scanner_instances, fn %{"id" => instance_eid, "type" => raw_instance_type} ->
+        assert instance_id = instance_eid |> U.from_eid(entity.id)
+        instance = Svc.Scanner.fetch_instance!(by_id: instance_id)
+
+        assert instance.server_id == endpoint.id
+        assert instance.entity_id == entity.id
+        assert instance.tunnel_id == tunnel_id
+        assert "#{instance.type}" == raw_instance_type
+      end)
     end
   end
 end

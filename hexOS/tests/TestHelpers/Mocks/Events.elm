@@ -34,6 +34,7 @@ idxGateway =
     , files = []
     , logs = []
     , processes = []
+    , scanner_instances = []
     }
 
 

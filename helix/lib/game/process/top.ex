@@ -158,7 +158,9 @@ defmodule Game.Process.TOP do
     Elixir.Process.put(:helix_universe, universe)
     Elixir.Process.put(:helix_universe_shard_id, universe_shard_id)
 
-    Event.Relay.set(:top, %{server_id: server_id})
+    :top
+    |> Event.Relay.new(%{server_id: server_id})
+    |> Event.Relay.set_env()
 
     data = %{
       server_id: server_id,

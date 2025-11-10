@@ -9,6 +9,7 @@ module API.Processes.Types exposing
     , InstallationUninstall
     , LogDelete
     , LogEdit
+    , ScannerEdit
     , ServerLogin
     )
 
@@ -27,11 +28,15 @@ import Game.Model.TunnelID as TunnelID exposing (TunnelID(..))
 ## Aliases
 
 @docs AppstoreInstall, FileDelete, FileInstall, FileTransfer, InstallationUninstall, LogDelete, LogEdit
-@docs ServerLogin
+@docs ScannerEdit, ServerLogin
 
 -}
 type alias ServerLogin =
     {}
+
+
+type alias ScannerEdit =
+    { instance_id : String }
 
 
 type alias LogEdit =

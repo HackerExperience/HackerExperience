@@ -29,11 +29,35 @@ defmodule Test.Utils.SSEListener do
           # This first event (the index payload from IndexRequested) is sent as a separate message
           # because, usually, the test does not care about it. It simply is an "automatic" event
           # that comes up every time we establish the SSE connection.
-          [index_event] = get_events_from_payload(index_payload)
+          [index_event | other_events] = get_events_from_payload(index_payload)
           send(test_pid, {:index, index_event})
 
-          # From now on, loop `total_expected_event` times and notify each event to the test
-          loop_notify_events(port, test_pid, opts[:total_expected_events] || 1)
+          # It's possible we already got some events (other than the IndexRequested) in this first
+          # batch. That's why we need to make sure our `current_count` has a proper start
+          current_count =
+            case {other_events, opts[:last_event]} do
+              {[], _} ->
+                0
+
+              {[_ | _], nil} ->
+                Enum.count(other_events)
+
+              {[_ | _], target_event} ->
+                other_events
+                |> Enum.filter(&(&1.name == "#{target_event}"))
+                |> Enum.count()
+            end
+
+          expected_count = opts[:total_expected_events] || 1
+
+          # We'll loop until one of the conditions defined by test are satisfied. Either:
+          # - Loop until `last_event` is received `expected_count` times; or
+          # - Loop until `expected_count` events are received.
+          if opts[:last_event] do
+            loop_until_event(port, test_pid, opts[:last_event], expected_count, current_count)
+          else
+            loop_until_count(port, test_pid, expected_count, current_count)
+          end
       after
         1000 ->
           raise "No event received after 1s"
@@ -47,7 +71,7 @@ defmodule Test.Utils.SSEListener do
       :proceed ->
         :ok
     after
-      500 ->
+      1_000 ->
         raise "SSE did not set up correctly"
     end
   end
@@ -56,16 +80,22 @@ defmodule Test.Utils.SSEListener do
   Waits for the Event that was handled by `start/2`.
   """
   def wait_sse_event!(name) do
+    expected_event_name = "#{name}"
+
     receive do
-      {:event, %{name: ^name} = event} ->
+      {:event, %{name: ^expected_event_name} = event} ->
+        event
+
+      {:index, %{name: ^expected_event_name} = event} ->
         event
     after
       2000 -> raise "SSE event #{name} never arrived"
     end
   end
 
-  defp loop_notify_events(port, test_pid, total_to_notify, total_notified \\ 0) do
-    if total_to_notify > total_notified do
+  # Loop until `target_event` arrived `expected_count` times
+  defp loop_until_event(port, test_pid, target_event, expected_count, current_count) do
+    if expected_count > current_count do
       receive do
         {^port, {:data, sse_payload}} ->
           events = get_events_from_payload(sse_payload)
@@ -74,7 +104,34 @@ defmodule Test.Utils.SSEListener do
             send(test_pid, {:event, event})
           end)
 
-          loop_notify_events(port, test_pid, total_to_notify, total_notified + Enum.count(events))
+          # Only increment the counter if the target_event was found
+          target_event_count =
+            events
+            |> Enum.filter(&(&1.name == "#{target_event}"))
+            |> Enum.count()
+
+          next_current_count = current_count + target_event_count
+
+          loop_until_event(port, test_pid, target_event, expected_count, next_current_count)
+      after
+        1000 ->
+          raise "No event received after 1s (inside loop)"
+      end
+    end
+  end
+
+  # Loop until we've got `expected_count` events
+  defp loop_until_count(port, test_pid, expected_count, current_count) do
+    if expected_count > current_count do
+      receive do
+        {^port, {:data, sse_payload}} ->
+          events = get_events_from_payload(sse_payload)
+
+          Enum.each(events, fn event ->
+            send(test_pid, {:event, event})
+          end)
+
+          loop_until_count(port, test_pid, expected_count, current_count + Enum.count(events))
       after
         1000 ->
           raise "No event received after 1s (inside loop)"

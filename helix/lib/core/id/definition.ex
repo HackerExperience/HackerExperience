@@ -45,6 +45,7 @@ defmodule Core.ID.Definition do
   def ref(:log_revision_id), do: :"Elixir.Game.LogRevision.ID"
   def ref(:player_id), do: :"Elixir.Game.Player.ID"
   def ref(:process_id), do: :"Elixir.Game.Process.ID"
+  def ref(:scanner_instance_id), do: :"Elixir.Game.ScannerInstance.ID"
   def ref(:server_id), do: :"Elixir.Game.Server.ID"
   def ref(:tunnel_id), do: :"Elixir.Game.Tunnel.ID"
 end

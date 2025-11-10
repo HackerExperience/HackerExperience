@@ -13,6 +13,9 @@ defmodule Test.Event do
   Returns a list with the events found *or* raises. It should never return an empty list.
 
   Filtering opts are:
+  - source_event_id
+  - scanner_task_id
+  - scanner_instance_id
   - x_request_id
   - request_id
   - server_id
@@ -26,17 +29,26 @@ defmodule Test.Event do
   def wait_events!(opts) when is_list(opts) do
     key_filter =
       cond do
+        source_event_id = Keyword.get(opts, :source_event_id) ->
+          fn {{_, _, _, _, _, _, event_id}, _} -> event_id == source_event_id end
+
+        scanner_task_id = Keyword.get(opts, :scanner_task_id) ->
+          fn {{_, _, _, _, _, task_id, _}, _} -> task_id == scanner_task_id end
+
+        scanner_instance_id = Keyword.get(opts, :scanner_instance_id) ->
+          fn {{_, _, _, _, instance_id, _, _}, _} -> instance_id == scanner_instance_id end
+
         x_request_id = Keyword.get(opts, :x_request_id) ->
-          fn {{_, _, _, x_req_id}, _} -> x_req_id == x_request_id end
+          fn {{_, _, _, x_req_id, _, _, _}, _} -> x_req_id == x_request_id end
 
         request_id = Keyword.get(opts, :request_id) ->
-          fn {{_, _, req_id, _}, _} -> req_id == request_id end
+          fn {{_, _, req_id, _, _, _, _}, _} -> req_id == request_id end
 
         server_id = Keyword.get(opts, :server_id) ->
-          fn {{_, s_id, _, _}, _} -> s_id == server_id end
+          fn {{_, s_id, _, _, _, _, _}, _} -> s_id == server_id end
 
         event_id = Keyword.get(opts, :event_id) ->
-          fn {{ev_id, _, _, _}, _} -> ev_id == event_id end
+          fn {{ev_id, _, _, _, _, _, _}, _} -> ev_id == event_id end
 
         event_name = Keyword.get(opts, :event_name) ->
           fn {_, %{event: %{name: e_name}}} -> e_name == event_name end
@@ -76,7 +88,7 @@ defmodule Test.Event do
       when is_atom(event_name) do
     wait_events!(
       filter: fn
-        {_, s_id, _, _}, %{event: %{name: e_name}} ->
+        {_, s_id, _, _, _, _, _}, %{event: %{name: e_name}} ->
           s_id == server_id and e_name == event_name
 
         _, _ ->
@@ -89,7 +101,7 @@ defmodule Test.Event do
   def refute_events_on_server!(%Server.ID{} = server_id, event_name) do
     refute_events!(
       filter: fn
-        {_, s_id, _, _}, %{event: %{name: e_name}} ->
+        {_, s_id, _, _, _, _, _}, %{event: %{name: e_name}} ->
           s_id == server_id and e_name == event_name
 
         _, _ ->

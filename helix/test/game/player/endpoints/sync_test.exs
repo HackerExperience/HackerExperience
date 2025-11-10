@@ -73,36 +73,40 @@ defmodule Game.Endpoint.Player.SyncTest do
   end
 
   describe "Player.Sync request (E2E with curl)" do
-    test "client receives pushed events", %{shard_id: shard_id} = ctx do
+    test "client receives IndexRequestedEvent after sync", ctx do
       player = Setup.player!()
       DB.commit()
 
-      jwt = U.jwt_token(uid: player.external_id)
+      U.start_sse_listener(ctx, player, total_expected_events: 0)
 
-      # TODO: URL/port logic should be in a shared module
-      port = if ctx.db_context == :singleplayer, do: 5001, else: 5002
+      index_event = U.wait_sse_event!(:index_requested)
 
-      cmd =
-        "curl -s -H 'Content-Type: application/json' -H 'test-game-shard-id: #{shard_id}' -N " <>
-          "http://localhost:#{port}/v1/player/sync?token=#{jwt}"
+      assert index_event.name == "index_requested"
+      assert Map.has_key?(index_event.data, :player)
+    end
 
-      port = Port.open({:spawn, cmd}, [:binary, :use_stdio])
+    test "client receives Scanner Instances after sync", ctx do
+      %{server: gateway, nip: gtw_nip, entity: entity, player: player} = Setup.server()
+      DB.commit()
 
-      receive do
-        {^port, {:data, sse_payload}} ->
-          event =
-            sse_payload
-            |> String.slice(6..-1//1)
-            |> String.replace("\n\n", "")
-            |> JSON.decode!()
-            |> Renatils.Map.atomify_keys()
+      U.start_sse_listener(ctx, player, last_event: :scanner_instances_created)
 
-          assert event.name == "index_requested"
-          assert Map.has_key?(event.data, :player)
-      after
-        5000 ->
-          raise "No output from curl"
-      end
+      scanner_instances_created_ev = U.wait_sse_event!(:scanner_instances_created)
+
+      assert scanner_instances_created_ev.name == "scanner_instances_created"
+      assert scanner_instances_created_ev.data.nip == gtw_nip |> NIP.to_external()
+      scanner_instances = scanner_instances_created_ev.data.instances
+
+      # Let's make sure each instance can be found in the DB
+      Enum.each(scanner_instances, fn %{"id" => instance_eid, "type" => raw_instance_type} ->
+        assert instance_id = instance_eid |> U.from_eid(entity.id)
+        instance = Svc.Scanner.fetch_instance!(by_id: instance_id)
+
+        assert instance.server_id == gateway.id
+        assert instance.entity_id == entity.id
+        assert instance.tunnel_id == nil
+        assert "#{instance.type}" == raw_instance_type
+      end)
     end
   end
 

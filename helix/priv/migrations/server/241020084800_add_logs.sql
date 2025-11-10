@@ -11,3 +11,5 @@ CREATE TABLE logs (
   deleted_by INTEGER NULL,
   UNIQUE (id, revision_id)
 ) STRICT;
+
+CREATE INDEX logs_inserted_at ON logs(inserted_at);

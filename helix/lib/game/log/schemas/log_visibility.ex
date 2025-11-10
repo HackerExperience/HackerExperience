@@ -9,7 +9,8 @@ defmodule Game.LogVisibility do
 
   @visibility_sources [
     :self,
-    :edit
+    :edit,
+    :scanner
   ]
 
   @primary_keys [:server_id, :log_id, :revision_id]

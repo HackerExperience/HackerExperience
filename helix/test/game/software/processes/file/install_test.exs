@@ -87,7 +87,7 @@ defmodule Game.Process.File.InstallTest do
 
       DB.commit()
 
-      U.start_sse_listener(ctx, player, total_expected_events: 2)
+      U.start_sse_listener(ctx, player, last_event: :file_installed)
 
       # There are no Installations initially
       Core.with_context(:server, server.id, :read, fn ->
@@ -98,11 +98,11 @@ defmodule Game.Process.File.InstallTest do
       U.simulate_process_completion(process)
 
       # First the Client is notified about the process being complete
-      process_completed_sse = U.wait_sse_event!("process_completed")
+      process_completed_sse = U.wait_sse_event!(:process_completed)
       assert process_completed_sse.data.process_id |> U.from_eid(player.id) == process.id
 
       # Then it is notified about the side-effect of the process completion
-      file_installed_sse = U.wait_sse_event!("file_installed")
+      file_installed_sse = U.wait_sse_event!(:file_installed)
       assert file_installed_sse.data.nip == nip |> NIP.to_external()
       assert file_installed_sse.data.file.id |> U.from_eid(player.id) == file.id
 

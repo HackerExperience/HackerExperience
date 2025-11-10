@@ -11,7 +11,8 @@ defmodule Core.Supervisor do
     children =
       [
         {Session.State.Supervisor, name: Session.State.Supervisor},
-        {Game.Process.Supervisor, name: Game.Process.Supervisor}
+        {Game.Process.Supervisor, name: Game.Process.Supervisor},
+        {Game.Scanner.Supervisor, name: Game.Scanner.Supervisor}
       ]
 
     Supervisor.init(children, strategy: :one_for_one)

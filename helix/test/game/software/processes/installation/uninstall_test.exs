@@ -96,17 +96,17 @@ defmodule Game.Process.Installation.UninstallTest do
         assert installation.file_id == file.id
       end)
 
-      U.start_sse_listener(ctx, player, total_expected_events: 2)
+      U.start_sse_listener(ctx, player, last_event: :installation_uninstalled)
 
       # Complete the Process
       U.simulate_process_completion(process)
 
       # First the Client is notified about the process being complete
-      process_completed_sse = U.wait_sse_event!("process_completed")
+      process_completed_sse = U.wait_sse_event!(:process_completed)
       assert process_completed_sse.data.process_id |> U.from_eid(player.id) == process.id
 
       # Then it is notified about the side-effect of the process completion
-      inst_uninstalled_sse = U.wait_sse_event!("installation_uninstalled")
+      inst_uninstalled_sse = U.wait_sse_event!(:installation_uninstalled)
       assert inst_uninstalled_sse.data.nip == nip |> NIP.to_external()
       assert inst_uninstalled_sse.data.installation_id |> U.from_eid(player.id) == installation.id
 
