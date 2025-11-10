@@ -575,7 +575,7 @@ defmodule Game.Process.TOPTest do
 
     test "pausing a time-based process does not make it progress towards its objective", ctx do
       server = Setup.server!()
-      proc = Setup.process!(server.id, %{objective: %{time: 0.03}})
+      proc = Setup.process!(server.id, %{objective: %{time: 0.06}})
       DB.commit()
 
       # The time-based process is currently running and "next" in line to be completed
@@ -597,8 +597,8 @@ defmodule Game.Process.TOPTest do
       state = :sys.get_state(pid)
       refute state.next
 
-      # Let's wait 40ms (total time needed for process to complete + jitter) and resume it
-      :timer.sleep(40)
+      # Let's wait 70ms (total time needed for process to complete + jitter) and resume it
+      :timer.sleep(70)
       assert {:ok, resumed_proc} = TOP.resume(paused_proc)
 
       # Now that it's been resumed, the process is back to having "1" allocated for Time resource
