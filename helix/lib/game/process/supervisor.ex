@@ -8,24 +8,42 @@ defmodule Game.Process.Supervisor do
   end
 
   def init(_) do
-    children =
+    role = Helix.get_role()
+
+    base_children =
       [
         {Registry, TOP.Registry.start_link_opts()},
-        TOP.Supervisor,
-        {Task,
-         fn ->
-           # Let's wait for FeebDB to be fully booted (so the queries are available)
-           Feeb.DB.Boot.wait_boot!()
-
-           # The "global" shards with ID 1 don't really exist in the test environment; no need to
-           # run them.
-           if Mix.env() != :test do
-             TOP.on_boot({:multiplayer, 1})
-             TOP.on_boot({:singleplayer, 1})
-           end
-         end}
+        TOP.Supervisor
       ]
 
+    children =
+      case {role, Mix.env()} do
+        {:lobby, _} -> []
+        {_, :test} -> base_children
+        {_, _} -> base_children ++ [top_boot(role)]
+      end
+
     Supervisor.init(children, strategy: :one_for_one)
+  end
+
+  defp top_boot(:singleplayer),
+    do: top_boot_task(fn -> TOP.on_boot({:singleplayer, 1}) end)
+
+  defp top_boot(:multiplayer),
+    do: top_boot_task(fn -> TOP.on_boot({:multiplayer, 1}) end)
+
+  defp top_boot(:all) do
+    top_boot_task(fn ->
+      TOP.on_boot({:singleplayer, 1})
+      TOP.on_boot({:multiplayer, 1})
+    end)
+  end
+
+  defp top_boot_task(boot_callback) do
+    {Task,
+     fn ->
+       Feeb.DB.Boot.wait_boot!()
+       boot_callback.()
+     end}
   end
 end

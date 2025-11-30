@@ -8,17 +8,27 @@ defmodule Core.Session.State.Supervisor do
   end
 
   def init(_) do
+    role = Helix.get_role()
+
+    singleplayer_child =
+      %{
+        id: :sse_sp,
+        start: {State.SSEMapping, :start_link, [:singleplayer]}
+      }
+
+    multiplayer_child =
+      %{
+        id: :sse_mp,
+        start: {State.SSEMapping, :start_link, [:multiplayer]}
+      }
+
     children =
-      [
-        %{
-          id: :sse_sp,
-          start: {State.SSEMapping, :start_link, [:singleplayer]}
-        },
-        %{
-          id: :sse_mp,
-          start: {State.SSEMapping, :start_link, [:multiplayer]}
-        }
-      ]
+      case role do
+        :lobby -> []
+        :singleplayer -> [singleplayer_child]
+        :multiplayer -> [multiplayer_child]
+        :all -> [singleplayer_child, multiplayer_child]
+      end
 
     Supervisor.init(children, strategy: :one_for_one)
   end

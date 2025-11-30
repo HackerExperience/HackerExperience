@@ -39,6 +39,19 @@ config :feebdb,
     }
   }
 
+# Determines which role this server is taking:
+# - lobby: Dedicated Lobby server
+# - singleplayer: Dedicated SP server
+# - multiplayer: Dedicated MP server
+# - all: All-in-one (for easier dev/testing but discouraged for Production usage)
+role = System.get_env("HELIX_ROLE", "all") |> String.to_atom()
+
+if role not in [:singleplayer, :multiplayer, :lobby, :all],
+  do: raise("Invalid role specified: #{inspect(role)}")
+
+config :helix,
+  role: role
+
 config :helix, Lobby.Webserver, port: if(Mix.env() != :test, do: 4000, else: 5000)
 
 config :helix, Game.Webserver.Singleplayer,
@@ -49,5 +62,12 @@ config :helix, Game.Webserver.Multiplayer,
   port: if(Mix.env() != :test, do: 4002, else: 5002),
   hooks_module: Game.Webserver.Hooks
 
-config :helix, :webserver,
-  webservers: [Game.Webserver.Singleplayer, Game.Webserver.Multiplayer, Lobby.Webserver]
+enabled_webservers =
+  case role do
+    :lobby -> [Lobby.Webserver]
+    :singleplayer -> [Game.Webserver.Singleplayer]
+    :multiplayer -> [Game.Webserver.Multiplayer]
+    :all -> [Game.Webserver.Singleplayer, Game.Webserver.Multiplayer, Lobby.Webserver]
+  end
+
+config :helix, :webserver, webservers: enabled_webservers
