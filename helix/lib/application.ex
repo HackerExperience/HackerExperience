@@ -6,8 +6,17 @@ defmodule Helix.Application do
 
   @impl true
   def start(_type, _args) do
+    Logger.add_handlers(:helix)
+
+    Core.Telemetry.setup()
+
     children =
       [
+        # Start the Hotel supervisor first, so the LogExporter is always ready
+        {Hotel.Supervisor, name: Hotel.Supervisor},
+
+        # Start the FeebDB supervisor next
+        {Feeb.DB.Supervisor, name: Feeb.DB.Supervisor},
         {Task,
          fn ->
            # Loading Helix modules will block the Webserver from starting

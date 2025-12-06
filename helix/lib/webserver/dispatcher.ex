@@ -1,11 +1,15 @@
 defmodule Webserver.Dispatcher do
-  require Logger
+  @behaviour :cowboy_handler
+
   use Webserver.Conveyor.Belt
+
+  require Logger
+  require Hotel.Tracer
+
   alias Feeb.DB
   alias Webserver.{Conveyor, Endpoint, Hooks, Request}
   alias Core.Event
 
-  @behaviour :cowboy_handler
   @env Mix.env()
 
   # Send a ping message every 60s so Cowboy does not hit the `inactivity_timeout`.
@@ -15,10 +19,12 @@ defmodule Webserver.Dispatcher do
   def init(cowboy_request, args) do
     {duration, {:ok, result, request}} = :timer.tc(fn -> do_dispatch(cowboy_request, args) end)
 
+    log_metadata = Logger.metadata()
+
     # Log in a different process because sometimes Cowboy kills the request
     # process as soon as the response is sent and we may lose logs.
     # Note this may not happen in prod, but at least in dev it happens.
-    spawn(fn -> log_request(duration, request) end)
+    spawn(fn -> log_request(duration, request, log_metadata) end)
 
     result
   end
@@ -67,21 +73,11 @@ defmodule Webserver.Dispatcher do
     session = req.session
     true = not is_nil(session)
 
-    with {:ok, req} <- Endpoint.validate_input(req, endpoint, req.raw_params),
-         {:ok, req} <- Hooks.on_input_validated(req),
-         {:ok, req} <- endpoint.get_params(req, req.parsed_params, session),
-         params = req.params,
-         {:ok, req} <- Hooks.on_get_params_ok(req),
-         {:ok, req} <- endpoint.get_context(req, params, session),
-         context = req.context,
-         {:ok, req} <- endpoint.handle_request(req, params, context, session),
-         {:ok, req} <- Hooks.on_handle_request_ok(req),
-         # store_events!(req.events),
-         # DB.commit(),
-         emit_events(req),
-         result = req.result,
-         {:ok, req} <- endpoint.render_response(req, result, session) do
-      Endpoint.render_response(req, endpoint)
+    with {:ok, req} <- endpoint_validate_and_get_params(endpoint, req, session),
+         {:ok, req} <- endpoint_get_context(endpoint, req, req.params, session),
+         {:ok, req} <- endpoint_handle_request(endpoint, req, req.params, req.context, session),
+         {:ok, response} <- endpoint_render_response(endpoint, req, req.result, session) do
+      response
     else
       {:error, req} ->
         if DB.LocalState.has_current_context?() do
@@ -93,6 +89,41 @@ defmodule Webserver.Dispatcher do
 
         Endpoint.render_response(req, endpoint)
     end
+  end
+
+  defp endpoint_validate_and_get_params(endpoint, req, session) do
+    Hotel.Tracer.with_span("Endpoint:get_params", fn ->
+      with {:ok, req} <- Endpoint.validate_input(req, endpoint, req.raw_params),
+           {:ok, req} <- Hooks.on_input_validated(req),
+           {:ok, req} <- endpoint.get_params(req, req.parsed_params, session),
+           {:ok, req} <- Hooks.on_get_params_ok(req) do
+        {:ok, req}
+      end
+    end)
+  end
+
+  defp endpoint_get_context(endpoint, req, params, session) do
+    Hotel.Tracer.with_span("Endpoint:get_context", fn ->
+      endpoint.get_context(req, params, session)
+    end)
+  end
+
+  defp endpoint_handle_request(endpoint, req, params, context, session) do
+    Hotel.Tracer.with_span("Endpoint:handle_request", fn ->
+      with {:ok, req} <- endpoint.handle_request(req, params, context, session),
+           {:ok, req} <- Hooks.on_handle_request_ok(req) do
+        emit_events(req)
+        {:ok, req}
+      end
+    end)
+  end
+
+  defp endpoint_render_response(endpoint, req, result, session) do
+    Hotel.Tracer.with_span("Endpoint:handle_response", fn ->
+      with {:ok, req} <- endpoint.render_response(req, result, session) do
+        {:ok, Endpoint.render_response(req, endpoint)}
+      end
+    end)
   end
 
   # defp do_dispatch(cowboy_request, %{handler: endpoint, scope: scope}) do
@@ -124,11 +155,12 @@ defmodule Webserver.Dispatcher do
     {:ok, cowboy_result, request}
   end
 
-  defp log_request(duration, %{cowboy_request: cowboy_request, conveyor: conveyor}) do
+  defp log_request(duration, %{cowboy_request: cowboy_request, conveyor: conveyor}, log_metadata) do
     method = cowboy_request.method |> String.upcase()
     path = cowboy_request.path
     resp_status = conveyor.response_status
     duration = Renatils.Timer.format_duration(duration)
+    Logger.metadata(log_metadata)
     Logger.info("#{method} #{path} - Served #{resp_status} in #{duration}")
   end
 

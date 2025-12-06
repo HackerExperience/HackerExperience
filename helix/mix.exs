@@ -54,11 +54,13 @@ defmodule Helix.MixProject do
       {:jose, "~> 1.11"},
       {:norm, "~> 0.13"},
       {:renatils, "~> 0.1.4"},
+      {:hotel, path: "~/hotel"},
       {:docp, "~> 1.0"},
+      {:telemetry, "~> 1.3"},
       {:dialyxir, "~> 1.4", only: [:dev], runtime: false},
       {:mox, "~> 1.2", only: :test},
       {:excoveralls, "~> 0.18.5", only: :test},
-      {:req, "~> 0.5.10", only: :test},
+      {:req, "~> 0.5.15"},
       {:mix_test_watch, "~> 1.3", only: [:dev, :test], runtime: false}
     ]
   end

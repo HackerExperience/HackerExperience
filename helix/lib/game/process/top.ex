@@ -7,7 +7,7 @@ defmodule Game.Process.TOP do
   instance of the TOP.
   """
 
-  use GenServer
+  use Hotel.TracedGenServer
   use Docp
 
   require Logger
@@ -81,12 +81,16 @@ defmodule Game.Process.TOP do
 
   # GenServer callbacks
 
-  def start_link({%Server.ID{id: raw_id} = server_id, helix_universe, helix_universe_shard_id}) do
+  def start_link(
+        {{%Server.ID{id: raw_id} = server_id, helix_universe, helix_universe_shard_id}, tracer_ctx}
+      ) do
     # TODO: Find a way to move to a single module "dirty" state like this (see also Dispatcher)
     # helix_universe = Process.get(:helix_universe)
     # helix_universe_shard_id = Process.get(:helix_universe_shard_id) || raise "Missing helix data"
 
-    GenServer.start_link(
+    Hotel.Tracer.set_ctx(tracer_ctx)
+
+    TracedGenServer.start_link(
       __MODULE__,
       {helix_universe, helix_universe_shard_id, server_id},
       name: with_registry({raw_id, helix_universe, helix_universe_shard_id})
@@ -99,7 +103,7 @@ defmodule Game.Process.TOP do
   def execute(process_mod, server_id, entity_id, params, meta) do
     server_id
     |> TOP.Registry.fetch!()
-    |> GenServer.call({:execute, process_mod, entity_id, params, meta})
+    |> TracedGenServer.call({:execute, process_mod, entity_id, params, meta})
   end
 
   @spec pause(Process.t()) ::
@@ -108,7 +112,7 @@ defmodule Game.Process.TOP do
   def pause(%Process{server_id: server_id} = process) do
     server_id
     |> TOP.Registry.fetch!()
-    |> GenServer.call({:pause, process})
+    |> TracedGenServer.call({:pause, process})
   end
 
   @spec resume(Process.t()) ::
@@ -117,7 +121,7 @@ defmodule Game.Process.TOP do
   def resume(%Process{server_id: server_id} = process) do
     server_id
     |> TOP.Registry.fetch!()
-    |> GenServer.call({:resume, process})
+    |> TracedGenServer.call({:resume, process})
   end
 
   @spec renice(Process.t(), Process.priority()) ::
@@ -126,7 +130,7 @@ defmodule Game.Process.TOP do
   def renice(%Process{server_id: server_id} = process, priority) when is_integer(priority) do
     server_id
     |> TOP.Registry.fetch!()
-    |> GenServer.call({:renice, process, priority})
+    |> TracedGenServer.call({:renice, process, priority})
   end
 
   @doc """
@@ -138,7 +142,7 @@ defmodule Game.Process.TOP do
   def signal(%Process{server_id: server_id} = process, signal, xargs \\ []) do
     server_id
     |> TOP.Registry.fetch!()
-    |> GenServer.call({:signal, process, signal, xargs})
+    |> TracedGenServer.call({:signal, process, signal, xargs})
   end
 
   @spec on_server_resources_changed(Server.id()) ::
@@ -146,12 +150,19 @@ defmodule Game.Process.TOP do
   def on_server_resources_changed(server_id) do
     server_id
     |> TOP.Registry.fetch!()
-    |> GenServer.call({:on_server_resources_changed})
+    |> TracedGenServer.call({:on_server_resources_changed})
   end
 
   # GenServer API
 
-  def init({universe, universe_shard_id, server_id}) do
+  def traced_init({universe, universe_shard_id, server_id}) do
+    Logger.metadata(
+      server_id: server_id,
+      worker_type: :top,
+      universe: universe,
+      shard_id: universe_shard_id
+    )
+
     Logger.debug("Starting TOP for server #{server_id}")
 
     # PS: shard_id may not be necessary here, but overall I think it's better to relay the full ctx
@@ -172,7 +183,7 @@ defmodule Game.Process.TOP do
     {:ok, data, {:continue, :bootstrap}}
   end
 
-  def handle_continue(:bootstrap, state) do
+  def traced_handle_continue(:bootstrap, state) do
     {state, processes} = fetch_initial_data(state)
     schedule = run_schedule(state, processes, :boot)
     {:noreply, schedule.state}
@@ -192,7 +203,7 @@ defmodule Game.Process.TOP do
     {state, processes}
   end
 
-  def handle_call({:execute, process_mod, entity_id, params, meta}, _from, state) do
+  def traced_handle_call({:execute, process_mod, entity_id, params, meta}, _from, state) do
     with {:ok, new_process, creation_events} <-
            Executable.execute(process_mod, state.server_id, entity_id, params, meta),
          %{dropped: [], state: new_state} <-
@@ -209,7 +220,7 @@ defmodule Game.Process.TOP do
     end
   end
 
-  def handle_call({:pause, process}, _from, state) do
+  def traced_handle_call({:pause, process}, _from, state) do
     with {:signal_action, :pause} <- {:signal_action, Signalable.sigstop(process)},
          {:ok, _, [process_paused_event]} <- Svc.Process.pause(process) do
       result = run_schedule(state, state.server_id, {:pause, process.id}, [process_paused_event])
@@ -224,7 +235,7 @@ defmodule Game.Process.TOP do
     end
   end
 
-  def handle_call({:resume, process}, _from, state) do
+  def traced_handle_call({:resume, process}, _from, state) do
     with {:signal_action, :resume} <- {:signal_action, Signalable.sigcont(process)},
          {:ok, _, [process_resumed_event]} <- Svc.Process.resume(process),
          %{dropped: [], paused: [], state: new_state} <-
@@ -244,7 +255,7 @@ defmodule Game.Process.TOP do
     end
   end
 
-  def handle_call({:renice, process, priority}, _from, state) do
+  def traced_handle_call({:renice, process, priority}, _from, state) do
     # Re-fetch the process inside the TOP to avoid race conditions
     process = refetch_process!(process)
 
@@ -259,7 +270,7 @@ defmodule Game.Process.TOP do
     end
   end
 
-  def handle_call({:signal, process, signal, xargs}, _from, state) do
+  def traced_handle_call({:signal, process, signal, xargs}, _from, state) do
     action = apply(Signalable, signal, [process, xargs])
 
     {should_reschedule?, reschedule_reason, signal_events} =
@@ -280,36 +291,42 @@ defmodule Game.Process.TOP do
     end
   end
 
-  def handle_call({:on_server_resources_changed}, _from, state) do
+  def traced_handle_call({:on_server_resources_changed}, _from, state) do
     {state, processes} = fetch_initial_data(state)
     schedule = run_schedule(state, processes, :resources_changed)
     {:reply, :ok, schedule.state}
   end
 
   def handle_info(:next_process_completed, %{next: {process, _, _}} = state) do
-    process = refetch_process!(process)
+    Hotel.Tracer.with_span("TOP.info:next_process_completed", fn ->
+      process = refetch_process!(process)
 
-    case {TOP.Scheduler.is_completed?(process), Signalable.sigterm(process)} do
-      # Process completed and we are supposed to delete it
-      {true, :delete} ->
-        {:ok, process_completed_event} = Svc.Process.delete(process, :completed)
-        remaining_processes = Svc.Process.list(state.server_id, query: :all)
+      case {TOP.Scheduler.is_completed?(process), Signalable.sigterm(process)} do
+        # Process completed and we are supposed to delete it
+        {true, :delete} ->
+          {:ok, process_completed_event} = Svc.Process.delete(process, :completed)
+          remaining_processes = Svc.Process.list(state.server_id, query: :all)
 
-        schedule =
-          run_schedule(state, remaining_processes, :completion, [process_completed_event])
+          schedule =
+            run_schedule(state, remaining_processes, :completion, [process_completed_event])
 
-        {:noreply, schedule.state}
+          {:noreply, schedule.state}
 
-      # Process completed and we have to retarget it
-      {true, {:retarget, _new_objective, _registry_changes}} ->
-        raise "TODO"
+        # Process completed and we have to retarget it
+        {true, {:retarget, _new_objective, _registry_changes}} ->
+          raise "TODO"
 
-      # Process hasn't really completed; warn and re-run the scheduler
-      {{false, {resource, objective_left}}, _} ->
-        i = "there are #{inspect(objective_left)} units of #{resource} left to be processed"
-        Logger.warning("Attempted to complete process #{process.id.id} but it isn't finished: #{i}")
-        {:stop, :wrong_schedule, state}
-    end
+        # Process hasn't really completed; warn and re-run the scheduler
+        {{false, {resource, objective_left}}, _} ->
+          i = "there are #{inspect(objective_left)} units of #{resource} left to be processed"
+
+          Logger.warning(
+            "Attempted to complete process #{process.id.id} but it isn't finished: #{i}"
+          )
+
+          {:stop, :wrong_schedule, state}
+      end
+    end)
   end
 
   def handle_info(:next_process_completed, %{next: nil} = state) do
@@ -344,9 +361,17 @@ defmodule Game.Process.TOP do
           %{state: state, dropped: [Process.t()], paused: [Process.t()]}
   defp run_schedule(state, processes, reason, events) when is_list(processes) do
     Logger.debug("Scheduling #{length(processes)} processes...")
-    {duration, result} = :timer.tc(fn -> do_run_schedule(state, processes, reason) end)
+
+    {duration, result} =
+      :timer.tc(fn ->
+        Hotel.Tracer.with_span("TOP.run_schedule", fn ->
+          do_run_schedule(state, processes, reason)
+        end)
+      end)
+
     duration = Renatils.Timer.format_duration(duration)
 
+    # TODO: Now that I have traces, maybe I don't need this kind of logging anymore?
     case result.state.next do
       {_, time_left, _} ->
         Logger.debug("Scheduled processes in #{duration}; will wake up in #{time_left}ms")
@@ -520,4 +545,13 @@ defmodule Game.Process.TOP do
   defp with_registry(key) do
     {:via, Registry, {TOP.Registry.name(), key}}
   end
+
+  def span_name({:continue, _}), do: "TOP.post_init"
+  def span_name({_, request}), do: "TOP.#{elem(request, 0)}"
+
+  def should_trace?({:init, _}), do: false
+  def should_trace?({:continue, _}), do: true
+  def should_trace?({:info, :next_process_completed}), do: true
+  def should_trace?({:info, _}), do: false
+  def should_trace?(_), do: true
 end

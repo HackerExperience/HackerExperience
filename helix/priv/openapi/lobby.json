@@ -148,12 +148,20 @@
       },
       "UserLoginOutput": {
         "properties": {
+          "id": {
+            "type": "string"
+          },
           "token": {
+            "type": "string"
+          },
+          "username": {
             "type": "string"
           }
         },
         "required": [
-          "token"
+          "id",
+          "token",
+          "username"
         ],
         "type": "object"
       },

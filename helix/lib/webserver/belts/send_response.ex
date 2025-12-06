@@ -8,6 +8,11 @@ defmodule Webserver.Belt.SendResponse do
         # Set required headers for a SSE connection
         cowboy_request = set_sse_headers(cowboy_request)
 
+        if not is_nil(request.before_send) do
+          # TODO: Better API for this
+          request.before_send.(request)
+        end
+
         # Start streaming
         cowboy_request = :cowboy_req.stream_reply(200, cowboy_request)
 
@@ -18,18 +23,24 @@ defmodule Webserver.Belt.SendResponse do
 
       e when e >= 400 ->
         # In the event of an error, we immediatelly return the error code
-        cowboy_request = push_conveyor_response(cowboy_request, conveyor)
+        cowboy_request = push_conveyor_response(request, conveyor)
         %{request | cowboy_request: cowboy_request, cowboy_return: :ok}
     end
   end
 
   def call(%{cowboy_request: cowboy_request} = request, conveyor, _) do
-    cowboy_request = push_conveyor_response(cowboy_request, conveyor)
+    cowboy_request = push_conveyor_response(request, conveyor)
     %{request | cowboy_request: cowboy_request, cowboy_return: :ok}
   end
 
-  defp push_conveyor_response(cowboy_request, conveyor) do
+  defp push_conveyor_response(%{cowboy_request: cowboy_request} = request, conveyor) do
     body = JSON.encode!(conveyor.response_message)
+
+    if not is_nil(request.before_send) do
+      # TODO: Better API for this
+      request.before_send.(request)
+    end
+
     :cowboy_req.reply(conveyor.response_status, %{}, body, cowboy_request)
   end
 

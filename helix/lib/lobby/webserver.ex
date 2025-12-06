@@ -12,6 +12,7 @@ defmodule Lobby.Webserver do
 
   def belts do
     [
+      Core.Webserver.Belt.Telemetry,
       {Core.Webserver.Belt.Entrypoint, universe: :lobby},
       Webserver.Belt.RequestId,
       Lobby.Webserver.Belt.HandleCors,
