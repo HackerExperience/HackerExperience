@@ -16,7 +16,9 @@ defmodule Lobby.Endpoint.User.LoginTest do
 
       # I can login with the correct password
       params = %{email: user.email, password: password}
-      assert {:ok, %{data: %{token: jwt}}} = post(@path, params, shard_id: shard_id)
+
+      assert {:ok, %{data: %{token: jwt, id: external_id, username: username}}} =
+               post(@path, params, shard_id: shard_id)
 
       # The JWT is valid
       assert {true, %{fields: claims}, %{alg: alg}} = Core.Crypto.JWT.verify(jwt)
@@ -28,6 +30,10 @@ defmodule Lobby.Endpoint.User.LoginTest do
       # TODO: Properly test iat/exp once I figure out a proper value for them
       assert claims["exp"]
       assert claims["iat"]
+
+      # The external_id and username are correct
+      assert external_id == user.external_id
+      assert username == user.username
     end
 
     test "fails with incorrect email", %{shard_id: shard_id} do

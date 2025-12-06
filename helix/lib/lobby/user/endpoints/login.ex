@@ -23,9 +23,11 @@ defmodule Lobby.Endpoint.User.Login do
   def output_spec(200) do
     selection(
       schema(%{
-        token: binary()
+        token: binary(),
+        id: binary(),
+        username: binary()
       }),
-      [:token]
+      [:token, :id, :username]
     )
   end
 
@@ -59,7 +61,8 @@ defmodule Lobby.Endpoint.User.Login do
 
     case Svc.Session.create(user) do
       {:ok, jwt} ->
-        {:ok, %{request | result: %{jwt: jwt}}}
+        result = %{jwt: jwt, external_id: user.external_id, username: user.username}
+        {:ok, %{request | result: result}}
 
         # TODO: Add the "error" block when Svc.Session can return an error
         # {:error, reason} ->
@@ -68,8 +71,8 @@ defmodule Lobby.Endpoint.User.Login do
     end
   end
 
-  def render_response(request, %{jwt: jwt}, _session) do
-    {:ok, %{request | response: {200, %{token: jwt}}}}
+  def render_response(request, %{jwt: jwt, external_id: external_id, username: username}, session) do
+    {:ok, %{request | response: {200, %{token: jwt, username: username, id: external_id}}}}
   end
 
   # Private

@@ -4,6 +4,7 @@ defmodule Core.Webserver.Belt.Session do
   # TODO: Maybe convert the session and session.data maps in proper structs (YES PLEASE)
 
   alias Feeb.DB
+  alias Hotel.Tracer
   alias Webserver.Conveyor
   alias Core.Crypto
   alias Game.Services, as: Svc
@@ -55,6 +56,10 @@ defmodule Core.Webserver.Belt.Session do
 
               entity_id = Entity.ID.new(player.id)
               Process.put(:helix_session_entity_id, entity_id)
+              Process.put(:helix_session_external_id, player.external_id)
+
+              Logger.metadata(player_id: player.external_id)
+              Tracer.put_attribute(:player_id, player.external_id)
 
               %{
                 type: :authenticated,
@@ -92,6 +97,10 @@ defmodule Core.Webserver.Belt.Session do
 
       entity_id = Entity.ID.new(player.id)
       Process.put(:helix_session_entity_id, entity_id)
+      Process.put(:helix_session_external_id, player.external_id)
+
+      Logger.metadata(player_id: player.external_id)
+      Tracer.put_attribute(:player_id, player.external_id)
 
       session_data = %{
         type: :authenticated,

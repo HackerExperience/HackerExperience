@@ -42,7 +42,7 @@ type alias UserRegisterInput =
 
 
 type alias UserLoginOutput =
-    { token : String }
+    { id : String, token : String, username : String }
 
 
 type alias UserLoginInput =

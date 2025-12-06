@@ -82,17 +82,25 @@ encodeUserRegisterInput rec =
 decodeUserLoginOutput : Json.Decode.Decoder API.Lobby.Types.UserLoginOutput
 decodeUserLoginOutput =
     Json.Decode.succeed
-        (\token -> { token = token })
+        (\id token username -> { id = id, token = token, username = username })
+        |> OpenApi.Common.jsonDecodeAndMap
+            (Json.Decode.field "id" Json.Decode.string)
+        |> OpenApi.Common.jsonDecodeAndMap
+            (Json.Decode.field "token" Json.Decode.string)
         |> OpenApi.Common.jsonDecodeAndMap
             (Json.Decode.field
-                "token"
+                "username"
                 Json.Decode.string
             )
 
 
 encodeUserLoginOutput : API.Lobby.Types.UserLoginOutput -> Json.Encode.Value
 encodeUserLoginOutput rec =
-    Json.Encode.object [ ( "token", Json.Encode.string rec.token ) ]
+    Json.Encode.object
+        [ ( "id", Json.Encode.string rec.id )
+        , ( "token", Json.Encode.string rec.token )
+        , ( "username", Json.Encode.string rec.username )
+        ]
 
 
 decodeUserLoginInput : Json.Decode.Decoder API.Lobby.Types.UserLoginInput
