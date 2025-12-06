@@ -40,3 +40,6 @@ priv/native
 
 # Graphql-generated schemas
 priv/graphql
+
+# Local ENV file
+.local.env
