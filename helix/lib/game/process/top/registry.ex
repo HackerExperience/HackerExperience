@@ -1,4 +1,6 @@
 defmodule Game.Process.TOP.Registry do
+  require Hotel.Tracer
+
   alias Game.Process.TOP
   alias Game.Server
 
@@ -16,13 +18,15 @@ defmodule Game.Process.TOP.Registry do
   end
 
   def fetch_or_create({server_id, universe, universe_shard_id}) do
-    case TOP.Supervisor.create({server_id, universe, universe_shard_id}) do
-      {:ok, pid} ->
-        {:ok, pid}
+    Hotel.Tracer.with_span("TOP.Registry.fetch_or_create", fn ->
+      case TOP.Supervisor.create({server_id, universe, universe_shard_id}) do
+        {:ok, pid} ->
+          {:ok, pid}
 
-      {:error, {:already_started, pid}} ->
-        {:ok, pid}
-    end
+        {:error, {:already_started, pid}} ->
+          {:ok, pid}
+      end
+    end)
   end
 
   def name, do: @name

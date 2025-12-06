@@ -29,6 +29,8 @@ defmodule Core.Event do
   @behaviour __MODULE__
 
   require Logger
+  require Hotel.Tracer
+
   alias Feeb.DB
   alias Renatils.Random
   alias __MODULE__, as: Event
@@ -91,18 +93,20 @@ defmodule Core.Event do
       event
       |> get_handlers()
       |> Enum.reduce(acc, fn handler_mod, acc_events ->
-        # Before dispatching to the handler, `prepare_db/2` will start a transaction, unless
-        # instructed otherwise via the `on_prepare_db/2` behaviour callback.
-        prepare_db(handler_mod, event)
+        Hotel.Tracer.with_span("Event:#{inspect(event.name)}@#{inspect(handler_mod)}", fn ->
+          # Before dispatching to the handler, `prepare_db/2` will start a transaction, unless
+          # instructed otherwise via the `on_prepare_db/2` behaviour callback.
+          prepare_db(handler_mod, event)
 
-        # Dispatch the event to the handler
-        {result, new_acc_events} = do_emit(handler_mod, event, acc_events)
+          # Dispatch the event to the handler
+          {result, new_acc_events} = do_emit(handler_mod, event, acc_events)
 
-        # After the event has been processed, teardown the DB transaction. By default, will COMMIT
-        # on success and ROLLBACK on failure, but the default behaviour can be changed based on the
-        # `teardown_db_on_success/2` and `teardown_db_on_failure/2` callbacks.
-        teardown_db(result, handler_mod, event)
-        new_acc_events
+          # After the event has been processed, teardown the DB transaction. By default, will COMMIT
+          # on success and ROLLBACK on failure, but the default behaviour can be changed based on the
+          # `teardown_db_on_success/2` and `teardown_db_on_failure/2` callbacks.
+          teardown_db(result, handler_mod, event)
+          new_acc_events
+        end)
       end)
     end)
     # Emit any events that were created and returned by the handlers themselves
@@ -117,6 +121,7 @@ defmodule Core.Event do
     helix_universe = Process.get(:helix_universe)
     helix_universe_shard_id = Process.get(:helix_universe_shard_id)
 
+    # TODO: Inherit tracer ctx
     Task.Supervisor.async_nolink(
       {:via, PartitionSupervisor, {Helix.TaskSupervisor, self()}},
       fn ->

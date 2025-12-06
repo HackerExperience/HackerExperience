@@ -11,6 +11,7 @@ defmodule Webserver.Request do
     :conveyor,
     :belts,
     :endpoint,
+    :endpoint_str,
     :endpoint_mock,
     :webserver,
     :session,
@@ -22,13 +23,15 @@ defmodule Webserver.Request do
     :events,
     :response,
     :universe,
-    :xargs
+    :xargs,
+    :before_send
   ]
 
   def new(cowboy_request, endpoint, webserver, xargs \\ %{}) do
     %__MODULE__{
       cowboy_request: cowboy_request,
       endpoint: endpoint,
+      endpoint_str: endpoint |> to_string |> String.replace("Elixir.", ""),
       endpoint_mock: xargs[:endpoint_mock],
       webserver: webserver,
       belts: get_belts(webserver, xargs, @env),

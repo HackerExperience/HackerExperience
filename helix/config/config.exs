@@ -18,9 +18,7 @@ end
 Enum.each([".env", ".local.env"], read_env_file)
 
 # Configures Elixir's Logger
-config :logger, :console,
-  format: "$time $metadata[$level] $message\n",
-  metadata: [:request_id]
+config :logger, :default_handler, config: []
 
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.

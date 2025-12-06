@@ -8,7 +8,9 @@ defmodule Game.Process.TOP.Supervisor do
   end
 
   def create({server_id, universe, universe_shard_id}) do
-    DynamicSupervisor.start_child(__MODULE__, {TOP, {server_id, universe, universe_shard_id}})
+    tracer_ctx = Elixir.Process.get({:hotel, :context})
+    opts = {server_id, universe, universe_shard_id}
+    DynamicSupervisor.start_child(__MODULE__, {TOP, {opts, tracer_ctx}})
   end
 
   def init(_) do

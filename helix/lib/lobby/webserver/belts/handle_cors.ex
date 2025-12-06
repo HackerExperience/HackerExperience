@@ -5,11 +5,12 @@ defmodule Lobby.Webserver.Belt.HandleCors do
     req = :cowboy_req.set_resp_header("content-type", "application/json", req)
     req = :cowboy_req.set_resp_header("Access-Control-Allow-Origin", "*", req)
     req = :cowboy_req.set_resp_header("Access-Control-Allow-Credentials", "true", req)
+    req = :cowboy_req.set_resp_header("Timing-Allow-Origin", "*", req)
 
     req =
       :cowboy_req.set_resp_header(
         "Access-Control-Allow-Headers",
-        "Authorization,Content-Type",
+        "Authorization,Content-Type,traceparent",
         req
       )
 

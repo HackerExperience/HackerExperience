@@ -23,6 +23,7 @@ defmodule Game.Webserver do
 
   def belts(env) when env in [:singleplayer, :multiplayer] do
     [
+      Core.Webserver.Belt.Telemetry,
       {Core.Webserver.Belt.Entrypoint, universe: {:game, env}},
       Webserver.Belt.RequestId,
       # TODO: Cors belt should be Core?

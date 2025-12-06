@@ -9,4 +9,5 @@ config :feebdb,
 
 config :helix,
   event: Core.EventMock,
-  scanneable: Game.Scanner.ScanneableMock
+  scanneable: Game.Scanner.ScanneableMock,
+  hotel_exporter: Hotel.Log.ExporterMock
