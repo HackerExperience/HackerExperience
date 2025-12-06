@@ -1,66 +1,78 @@
 services:
-  grafana:
-    image: grafana/grafana:latest
-    container_name: grafana
+  clickhouse:
+    image: clickhouse/clickhouse-server:latest
+    container_name: clickhouse
+    restart: unless-stopped
     ports:
-      - "3000:3000"
+      - "8123:8123"
+      - "9000:9000"
+      - "9009:9009"
+    ulimits:
+      nofile:
+        soft: 262144
+        hard: 262144
+    volumes:
+      - clickhouse-data:/var/lib/clickhouse
+      - clickhouse-logs:/var/log/clickhouse-server
+      - clickhouse-config:/etc/clickhouse-server
+    networks:
+      - observability
+
+  mongo:
+    image: mongo:7
+    container_name: hyperdx-mongo
+    restart: unless-stopped
     environment:
-      - GF_SECURITY_ADMIN_USER=admin
-      - GF_SECURITY_ADMIN_PASSWORD=admin
+      MONGO_INITDB_DATABASE: hyperdx
     volumes:
-      - /he2_infra/grafana:/var/lib/grafana
+      - mongo-data:/data/db
     networks:
       - observability
 
-  prometheus:
-    image: prom/prometheus:latest
-    container_name: prometheus
+  hyperdx:
+    image: docker.hyperdx.io/hyperdx/hyperdx:latest
+    container_name: hyperdx
+    restart: unless-stopped
+    environment:
+      MONGO_URI: mongodb://mongo:27017/hyperdx
+      HYPERDX_LOG_LEVEL: info
+      HYPERDX_OPAMP_PORT: 4320
     ports:
-      - "9090:9090"
-    volumes:
-      - ./prometheus:/etc/prometheus:ro
-    command:
-      - "--config.file=/etc/prometheus/prometheus.yml"
-    networks:
-      - observability
-
-  loki:
-    image: grafana/loki:latest
-    container_name: loki
-    ports:
-      - "3100:3100"
-    command: -config.file=/etc/loki/config.yml
-    volumes:
-      - ./loki:/etc/loki:ro
-      - /he2_infra/loki:/loki
-    networks:
-      - observability
-
-  tempo:
-    image: grafana/tempo:latest
-    container_name: tempo
-    ports:
-      - "3200:3200"
-      - "4319:4318"
-    command: -config.file=/etc/tempo/tempo.yml
-    volumes:
-      - ./tempo:/etc/tempo:ro
-      - /he2_infra/tempo:/tmp/tempo
+      - "8050:8080"
+      - "4320:4320"  # OpAMP for collector management
+    depends_on:
+      - mongo
     networks:
       - observability
 
   otel-collector:
-    image: otel/opentelemetry-collector-contrib:latest
-    container_name: otel-collector
-    command: ["--config=/etc/otel-collector/config.yml"]
-    volumes:
-      - ./otel-collector:/etc/otel-collector:ro
+    image: hyperdx/hyperdx-otel-collector:latest
+    container_name: hyperdx-otel-collector
+    restart: unless-stopped
+    environment:
+      CLICKHOUSE_ENDPOINT: http://clickhouse:8123
+      CLICKHOUSE_USER: default
+      CLICKHOUSE_PASSWORD: ""
+
+      OPAMP_SERVER_URL: http://hyperdx:4320
+
+      HYPERDX_LOG_LEVEL: info
     ports:
-      - "4318:4318"
-      - "9464:9464"
+      - "4317:4317" # OTLP gRPC
+      - "4318:4318"  # OTLP HTTP
+      - "13133:13133"  # health check
+      - "8888:8888"  # metrics
+    depends_on:
+      - clickhouse
+      - hyperdx
     networks:
       - observability
 
+volumes:
+  clickhouse-data:
+  clickhouse-logs:
+  clickhouse-config:
+  mongo-data:
+
 networks:
   observability:
-
